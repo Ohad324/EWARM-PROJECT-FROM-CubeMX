@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/TouchGFXProjects//**)",
+      "Read(//c/TouchGFXProjects/**)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(echo:*)",
+      "Read(//c/Users/Ohad/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup//**)",
+      "Read(//c/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup//**)",
+      "Bash(objdump:*)",
+      "Bash(powershell -Command \"Get-ChildItem 'C:\\\\NORA_BLE\\\\nora_wifi_ble_translate' | Select-Object Name\")",
+      "Read(//cygdrive/c/NORA_BLE/nora_wifi_ble_translate/**)",
+      "Bash(powershell -Command \"Select-String -Path ''C:\\\\NORA_BLE\\\\nora_wifi_ble_translate\\\\sdkconfig'' -Pattern ''coex|COEX'' -CaseSensitive:$false | Select-Object Line\")",
+      "Bash(grep:*)"
+    ]
+  }
+}

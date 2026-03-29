@@ -1,0 +1,6 @@
+CM7/TouchGFX/generated/texts/src/TypedTextDatabase.cpp:32:43:const touchgfx::TypedText::TypedTextData* TypedTextDatabase::getInstance(touchgfx::LanguageId)	0	static
+CM7/TouchGFX/generated/texts/src/TypedTextDatabase.cpp:37:10:uint16_t TypedTextDatabase::getInstanceSize()	0	static
+CM7/TouchGFX/generated/texts/src/TypedTextDatabase.cpp:42:24:const touchgfx::Font** TypedTextDatabase::getFonts()	0	static
+CM7/TouchGFX/generated/texts/src/TypedTextDatabase.cpp:47:23:const touchgfx::Font* TypedTextDatabase::setFont(touchgfx::FontId, const touchgfx::Font*)	0	static
+CM7/TouchGFX/generated/texts/src/TypedTextDatabase.cpp:54:6:void TypedTextDatabase::resetFont(touchgfx::FontId)	8	static
+CM7/TouchGFX/generated/texts/src/TypedTextDatabase.cpp:69:1:cpp)	8	static

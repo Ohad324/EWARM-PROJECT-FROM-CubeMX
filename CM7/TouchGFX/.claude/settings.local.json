@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Program Files/IAR Systems//**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(ls \"/c/Program Files \\(x86\\)/IAR Systems/\")",
+      "Read(//c//**)",
+      "Read(//d/Program Files/**)",
+      "Read(//c/iar/ewarm-9.60.3//**)",
+      "Read(//c/iar/ewarm-9.60.3/common/bin//**)",
+      "Bash(\"/c/iar/ewarm-9.60.3/iarbuild.exe\" \"/c/TouchGFXProjects/MyApplication/EWARM/Project.eww\" -build \"STM32H747I-DISCO_CM7\" 2>&1)"
+    ]
+  }
+}

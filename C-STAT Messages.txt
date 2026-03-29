@@ -1,0 +1,311 @@
+c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c
+  Overrun in memmove. Size parameter `(BLE_HIST_ROWS-1u)*BLE_HIST_COLS' is 288 bytes, pointer `&bleHistory[1][0]' points to 32 bytes	LIB-memcpy-overrun	High	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c:98
+    History_Push	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c
+      if (xQueueSemaphoreTake(xBleHistMutex, ((xSemaphoreTake*configTICK_RATE_HZ)/pdMS_TO_TICKS))==pdTRUE) is true	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c:95
+      MISRAC2012-Rule-1.3_t,LIB-memcpy-overrun	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c:98
+  Overrun in memmove. Size parameter `(BLE_HIST_ROWS-1u)*BLE_HIST_COLS' is 288 bytes, pointer `&bleHistory[0][0]' points to 32 bytes	LIB-memcpy-overrun	High	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c:99
+    History_Push	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c
+      if (xQueueSemaphoreTake(xBleHistMutex, ((xSemaphoreTake*configTICK_RATE_HZ)/pdMS_TO_TICKS))==pdTRUE) is true	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c:95
+      MISRAC2012-Rule-1.3_t,LIB-memcpy-overrun	c:\touchgfxprojects\myapplication\cm7\core\src\ble_uart.c:99
+c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp
+  Class member `currentFileGlyphNode' is not initialized in constructor `touchgfx::FontCache::FontCache'	COP-member-uninit	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp:13
+  Class member `byteAlignRow' is not initialized in constructor `touchgfx::FontCache::FontCache'	COP-member-uninit	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp:13
+  Class member `bpp' is not initialized in constructor `touchgfx::FontCache::FontCache'	COP-member-uninit	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp:13
+  Class member `currentFileGlyphNumber' is not initialized in constructor `touchgfx::FontCache::FontCache'	COP-member-uninit	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp:13
+  Class member `numGlyphs' is not initialized in constructor `touchgfx::FontCache::FontCache'	COP-member-uninit	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp:13
+  Class member `glyphDataOffset' is not initialized in constructor `touchgfx::FontCache::FontCache'	COP-member-uninit	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp:13
+  Class member `sortedString' is not initialized in constructor `touchgfx::FontCache::FontCache'	COP-member-uninit	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\FontCache.cpp:13
+c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:630
+    osThreadNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if ((IRQ_Context()==0) && (func!=_NULL)) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:586
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:593
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:624
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:628
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:631
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:631
+    osThreadNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if ((IRQ_Context()==0) && (func!=_NULL)) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:586
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:593
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:624
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:628
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:631
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1246
+    osTimerNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if ((IRQ_Context()==0) && (func!=_NULL)) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1179
+      if ((attr!=_NULL) && (attr->cb_mem!=_NULL)) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1186
+      if (callb==_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1196
+      if (callb!=_NULL) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1206
+      if (type==osTimerOnce) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1210
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1219
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1235
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1244
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1246
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1443
+    osEventFlagsNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if (IRQ_Context()==0) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1422
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1425
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1437
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1441
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1443
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1707
+    osMutexNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if (IRQ_Context()==0) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1671
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1672
+      type = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1674
+      if ((type&osMutexRecursive)==osMutexRecursive) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1678
+      if ((type&osMutexRobust)!=osMutexRobust) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1684
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1687
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1699
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1703
+      if (rmtx!=0) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1705
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1711
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1711
+    osMutexNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if (IRQ_Context()==0) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1671
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1672
+      type = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1674
+      if ((type&osMutexRecursive)==osMutexRecursive) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1678
+      if ((type&osMutexRobust)!=osMutexRobust) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1684
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1687
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1699
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1703
+      if (rmtx!=0) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1705
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1711
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1923
+    osSemaphoreNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if ((IRQ_Context()==0) && (max_count>0) && (initial_count<=max_count)) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1900
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1903
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1915
+      if (mem!=-1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1919
+      if (max_count==1U) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1920
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1940
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1942
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1942
+    osSemaphoreNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if ((IRQ_Context()==0) && (max_count>0) && (initial_count<=max_count)) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1900
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1903
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1915
+      if (mem!=-1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1919
+      if (max_count==1U) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1920
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1940
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:1942
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2129
+    osMessageQueueNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if ((IRQ_Context()==0) && (msg_count>0) && (msg_size>0)) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2106
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2109
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2123
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2127
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2129
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2129
+    osMessageQueueNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if ((IRQ_Context()==0) && (msg_count>0) && (msg_size>0)) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2106
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2109
+      mem = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2123
+      if (mem==1) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2127
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2129
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2459
+    osMemoryPoolNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if (IRQ_Context()!=0) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2405
+      if ((block_count==0) || (block_size==0)) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2408
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2419
+      mem_cb = 0;mem_mp = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2450
+      if (mem_cb==0) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2456
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2459
+  Pointer `attr' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2477
+    osMemoryPoolNew	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c
+      if (IRQ_Context()!=0) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2405
+      if ((block_count==0) || (block_size==0)) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2408
+      if (attr!=_NULL) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2419
+      mem_cb = 0;mem_mp = 0	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2450
+      if (mem_cb==0) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2456
+      Dereference of pointer `attr'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\cmsis_rtos_v2\cmsis_os2.c:2459
+c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\GeneratedFont.cpp
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\generated\fonts\src\GeneratedFont.cpp:25
+c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c
+  Expression `xWantedSize += xAdditionalRequiredSize' with range [10,4294967302] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:176
+  Expression `pxBlock->xBlockSize = xWantedSize' with range [1,4294967302] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:243
+  Pointer `pxBlockToInsert' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:460
+    prvInsertBlockIntoFreeList	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c
+      for (pxIterator = &xStart;pxIterator->pxNextFreeBlock<pxBlockToInsert;pxIterator = pxIterator->pxNextFreeBlock) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:449
+      puc = (unsigned_char *)pxIterator	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:456
+      if ((puc+pxIterator->xBlockSize)==(unsigned_char *)pxBlockToInsert) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:458
+      Dereference of pointer `pxBlockToInsert'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:460
+  Pointer `pxBlockToInsert' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:472
+    prvInsertBlockIntoFreeList	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c
+      for (pxIterator = &xStart;pxIterator->pxNextFreeBlock<pxBlockToInsert;pxIterator = pxIterator->pxNextFreeBlock) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:449
+      puc = (unsigned_char *)pxIterator	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:456
+      if ((puc+pxIterator->xBlockSize)==(unsigned_char *)pxBlockToInsert) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:458
+      Dereference of pointer `pxBlockToInsert'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:460
+  Pointer `pxBlockToInsert' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:477
+    prvInsertBlockIntoFreeList	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c
+      for (pxIterator = &xStart;pxIterator->pxNextFreeBlock<pxBlockToInsert;pxIterator = pxIterator->pxNextFreeBlock) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:449
+      puc = (unsigned_char *)pxIterator	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:456
+      if ((puc+pxIterator->xBlockSize)==(unsigned_char *)pxBlockToInsert) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:458
+      Dereference of pointer `pxBlockToInsert'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:460
+  Pointer `pxBlockToInsert' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:478
+    prvInsertBlockIntoFreeList	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c
+      for (pxIterator = &xStart;pxIterator->pxNextFreeBlock<pxBlockToInsert;pxIterator = pxIterator->pxNextFreeBlock) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:449
+      puc = (unsigned_char *)pxIterator	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:456
+      if ((puc+pxIterator->xBlockSize)==(unsigned_char *)pxBlockToInsert) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:458
+      Dereference of pointer `pxBlockToInsert'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:460
+  Pointer `pxBlockToInsert' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:482
+    prvInsertBlockIntoFreeList	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c
+      for (pxIterator = &xStart;pxIterator->pxNextFreeBlock<pxBlockToInsert;pxIterator = pxIterator->pxNextFreeBlock) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:449
+      puc = (unsigned_char *)pxIterator	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:456
+      if ((puc+pxIterator->xBlockSize)==(unsigned_char *)pxBlockToInsert) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:458
+      Dereference of pointer `pxBlockToInsert'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:460
+  Pointer `pxBlockToInsert' is compared with NULL, then dereferenced	PTR-null-cmp-bef	High	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:487
+    prvInsertBlockIntoFreeList	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c
+      for (pxIterator = &xStart;pxIterator->pxNextFreeBlock<pxBlockToInsert;pxIterator = pxIterator->pxNextFreeBlock) is false	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:449
+      puc = (unsigned_char *)pxIterator	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:456
+      if ((puc+pxIterator->xBlockSize)==(unsigned_char *)pxBlockToInsert) is true	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:458
+      Dereference of pointer `pxBlockToInsert'	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\memmang\heap_4.c:460
+c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:122
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:122
+  RHS argument is in interval 8 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:122
+  RHS argument is in interval 8 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:129
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:130
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:131
+  RHS argument is in interval 8 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:142
+  RHS argument is in interval 8 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:149
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:731
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:731
+  RHS argument is in interval 18 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\HardwareMJPEGDecoder.cpp:731
+c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp
+  Overrun in memmove. Size parameter `((MSG_LOG_SIZE-1)*BLE_MSG_LEN)' is 576 bytes, pointer `&this->messageLog[1][0]' points to 1 bytes	LIB-memcpy-overrun	High	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:27
+    Model::tick	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp
+      if (xQueueReceive(xBleQueue, msg, 0)==pdTRUE) is true	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:15
+      if (this->modelListener) is true	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:18
+      if (strncmp(msg, "RESULT:", 7)==0) is true	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:22
+      MISRAC2012-Rule-1.3_t,LIB-memcpy-overrun	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:27
+  Overrun in memmove. Size parameter `((MSG_LOG_SIZE-1)*BLE_MSG_LEN)' is 576 bytes, pointer `&this->messageLog[0][0]' points to 1 bytes	LIB-memcpy-overrun	High	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:28
+    Model::tick	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp
+      if (xQueueReceive(xBleQueue, msg, 0)==pdTRUE) is true	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:15
+      if (this->modelListener) is true	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:18
+      if (strncmp(msg, "RESULT:", 7)==0) is true	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:22
+      MISRAC2012-Rule-1.3_t,LIB-memcpy-overrun	c:\touchgfxprojects\myapplication\cm7\touchgfx\gui\src\model\Model.cpp:28
+c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c
+  Local variable `color_k' is not checked against 0 before it is used as a divisor	ATH-div-0-unchk-local	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:927
+    JPEG_ARGB_MCU_YCCK_ConvertBlocks	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c
+      non_float_cast_divide	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:927
+      non_float_cast_divide	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:925
+      non_float_cast_divide	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:926
+      non_float_cast_divide	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:927
+      while (currentMCU<(numberMCU+BlockIndex)) is false	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:885
+      return	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:939
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1164
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1343
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1475
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1817
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1819
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1862
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1863
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1868
+  LHS argument of right shift operator may be negative. Its range is [-INF,INF]	ATH-shift-neg	Medium	c:\touchgfxprojects\myapplication\utilities\jpeg\jpeg_utils.c:1869
+c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\iar\arm_cm4f\port.c
+  Invalid use of function pointer `prvTaskExitError'	FPT-misuse	Low	c:\touchgfxprojects\myapplication\middlewares\third_party\freertos\source\portable\iar\arm_cm4f\port.c:204
+c:\touchgfxprojects\myapplication\drivers\bsp\components\mt25tl01g\mt25tl01g.c
+  RHS argument is in interval 8 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\drivers\bsp\components\mt25tl01g\mt25tl01g.c:154
+  RHS argument is in interval 8 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\drivers\bsp\components\mt25tl01g\mt25tl01g.c:195
+  RHS argument is in interval 8 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\drivers\bsp\components\mt25tl01g\mt25tl01g.c:196
+c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:194
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:206
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:206
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:212
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:222
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:222
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:227
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:241
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:241
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:244
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:292
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:292
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:295
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:306
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:306
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:309
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:319
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:319
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:350
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:367
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:370
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:370
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:387
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:482
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:485
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:485
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:502
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:535
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:535
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:538
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:549
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:549
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:577
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:577
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:580
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:616
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:616
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:624
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:638
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:681
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:681
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:684
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:684
+  RHS argument is in interval 16 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:692
+  RHS argument is in interval 24 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\generated\STM32DMA.cpp:706
+c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_qspi.c
+  Expression `((reg&(~MODIFY_REG))|((MT25TL01G_DUMMY_CYCLES_READ_QUAD<<MODIFY_REG)|(MT25TL01G_DUMMY_CYCLES_READ_QUAD<<MODIFY_REG)))' with range [32896,2147454863] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_qspi.c:1029
+  RHS argument is in interval 12 which is out of range of the shift operator	ATH-shift-bounds	Medium	c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_qspi.c:1029
+c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_ts.c
+  Variable `ret' may be uninitialized	SPC-uninit-var-some	High	c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_ts.c:670
+    FT6X06_Probe	c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_ts.c
+      for (i = 0;i<2UL;i++) is false	c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_ts.c:635
+      Read of `ret'	c:\touchgfxprojects\myapplication\drivers\bsp\stm32h747i-discovery\stm32h747i_discovery_ts.c:670
+c:\touchgfxprojects\myapplication\cm7\touchgfx\target\STM32H7Instrumentation.cpp
+  Local variable `uwTimclock' is not checked against 0 before it is used as a divisor	ATH-div-0-unchk-local	Medium	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\STM32H7Instrumentation.cpp:36
+    touchgfx::STM32H7Instrumentation::init	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\STM32H7Instrumentation.cpp
+      if (!uwD2Prescaler) is true	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\STM32H7Instrumentation.cpp:27
+      non_float_cast_divide	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\STM32H7Instrumentation.cpp:36
+      return	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\STM32H7Instrumentation.cpp:12
+c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma_ex.c
+  Expression `*ifcRegister_Base = (0x3f<<(hdma->StreamIndex&0x1f))' with range [63,135291469824] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma_ex.c:160
+  Expression `*ifcRegister_Base = (0x3f<<(hdma->StreamIndex&0x1f))' with range [63,135291469824] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma_ex.c:256
+c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c
+  Expression `regs_dma->IFCR = (0x3f<<(hdma->StreamIndex&0x1f))' with range [63,135291469824] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:353
+  Expression `regs_dma->IFCR = (0x3f<<(hdma->StreamIndex&0x1f))' with range [63,135291469824] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:503
+  Expression `regs_dma->IFCR = (0x3f<<(hdma->StreamIndex&0x1f))' with range [63,135291469824] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:854
+  Expression `cpltlevel_mask = DMA_FLAG_TCIF0_4<<(hdma->StreamIndex&0x1f)' with range [32,68719476736] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1017
+  Expression `cpltlevel_mask = DMA_FLAG_HTIF0_4<<(hdma->StreamIndex&0x1f)' with range [16,34359738368] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1022
+  Expression `cpltlevel_mask = BDMA_FLAG_TC0<<(hdma->StreamIndex&0x1f)' with range [2,4294967296] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1041
+  Expression `cpltlevel_mask = BDMA_FLAG_HT0<<(hdma->StreamIndex&0x1f)' with range [4,8589934592] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1046
+  Expression `(*ifcr_reg) = DMA_FLAG_DMEIF0_4<<(hdma->StreamIndex&0x1f)' with range [4,8589934592] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1072
+  Expression `(*ifcr_reg) = DMA_FLAG_TEIF0_4<<(hdma->StreamIndex&0x1f)' with range [8,17179869184] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1081
+  Expression `(*ifcr_reg) = (DMA_FLAG_HTIF0_4|DMA_FLAG_TCIF0_4)<<(hdma->StreamIndex&0x1f)' with range [48,103079215104] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1171
+  Expression `(*ifcr_reg) = (BDMA_FLAG_TC0<<(hdma->StreamIndex&0x1f))' with range [2,4294967296] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1175
+  Expression `(*ifcr_reg) = DMA_FLAG_HTIF0_4<<(hdma->StreamIndex&0x1f)' with range [16,34359738368] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1188
+  Expression `(*ifcr_reg) = (BDMA_FLAG_HT0<<(hdma->StreamIndex&0x1f))' with range [4,8589934592] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1192
+  Expression `regs_dma->IFCR = DMA_FLAG_TEIF0_4<<(hdma->StreamIndex&0x1f)' with range [8,17179869184] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1230
+  Expression `regs_dma->IFCR = DMA_FLAG_DMEIF0_4<<(hdma->StreamIndex&0x1f)' with range [4,8589934592] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1254
+  Expression `regs_dma->IFCR = DMA_FLAG_HTIF0_4<<(hdma->StreamIndex&0x1f)' with range [16,34359738368] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1266
+  Expression `regs_dma->IFCR = DMA_FLAG_TCIF0_4<<(hdma->StreamIndex&0x1f)' with range [32,68719476736] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1313
+  Expression `regs_dma->IFCR = (0x3f<<(hdma->StreamIndex&0x1f))' with range [63,135291469824] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1327
+  Expression `regs_bdma->IFCR = ((BDMA_ISR_HTIF0_Msk<<BDMA_ISR_HTIF0_Pos)<<(hdma->StreamIndex&0x1f))' with range [4,8589934592] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1436
+  Expression `regs_bdma->IFCR = ((BDMA_ISR_TCIF0_Msk<<BDMA_ISR_TCIF0_Pos)<<(hdma->StreamIndex&0x1f))' with range [2,4294967296] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1483
+  Expression `regs_dma->IFCR = (0x3f<<(hdma->StreamIndex&0x1f))' with range [63,135291469824] may overflow	ATH-overflow	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_dma.c:1791
+c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,7]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2743
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,87]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2817
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2891
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2905
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2920
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2941
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2969
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:2997
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:3025
+  Array pointer `address' is accessed with index [0,4294967295] which may be out of array bounds [0,102]	ARR-inv-index-ptr-pos	Medium	c:\touchgfxprojects\myapplication\drivers\stm32h7xx_hal_driver\src\stm32h7xx_hal_jpeg.c:3047
+c:\touchgfxprojects\myapplication\cm7\touchgfx\target\TouchGFXGPIO.cpp
+  Array `GPIO_InvertedLevels' 1st subscript interval [0,4] may be out of bounds [0,3]	ARR-inv-index-pos	High	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\TouchGFXGPIO.cpp:64
+  Array `GPIO_InvertedLevels' 1st subscript interval [0,4] may be out of bounds [0,3]	ARR-inv-index-pos	High	c:\touchgfxprojects\myapplication\cm7\touchgfx\target\TouchGFXGPIO.cpp:66

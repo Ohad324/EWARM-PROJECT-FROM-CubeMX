@@ -1,0 +1,4 @@
+Expression	Value	Location	Type	
+*(unsigned int*)0x52001004	0	0x5200'1004	unsigned int	
+*(unsigned int*)0x52001004	0	0x5200'1004	unsigned int	
+*(unsigned int*)0x5200103C	3'489'660'928	0x5200'103c	unsigned int	

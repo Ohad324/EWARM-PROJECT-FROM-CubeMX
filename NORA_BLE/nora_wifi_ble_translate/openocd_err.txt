@@ -1,0 +1,26 @@
+Open On-Chip Debugger v0.12.0-esp32-20251215 (2025-12-15-18:17)
+Licensed under GNU GPL v2
+For bug reports, read
+	http://openocd.org/doc/doxygen/bugs.html
+Warn : DEPRECATED: auto-selecting transport "jtag". Use 'transport select jtag' to suppress this message.
+Info : Listening on port 6666 for tcl connections
+Info : Listening on port 4444 for telnet connections
+Warn : An adapter speed is not selected in the init scripts. OpenOCD will try to run the adapter at very low speed (100 kHz).
+Warn : To remove this warnings and achieve reasonable communication speed with the target, set "adapter speed" or "jtag_rclk" in the init scripts.
+Info : J-Link Ultra V7 compiled Jan 30 2025 09:03:56
+Info : Hardware version: 7.00
+Info : VTarget = 3.282 V
+Info : clock speed 100 kHz
+Error: JTAG scan chain interrogation failed: all zeroes
+Error: Check JTAG interface, timings, target power, etc.
+Error: JTAG scan chain interrogation failed: all zeroes
+Error: Check JTAG interface, timings, target power, etc.
+embedded:startup.tcl:126: Error: 
+Traceback (most recent call last):
+  File "../src/jtag/core.c", line 1697
+    jtag_init
+  File "embedded:startup.tcl", line 109, in jtag_init
+    init_reset startup
+  File "embedded:startup.tcl", line 126, in init_reset
+    {jtag arp_init-reset}
+

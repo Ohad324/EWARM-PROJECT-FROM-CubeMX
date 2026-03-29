@@ -1,0 +1,19 @@
+# IAR build output
+EWARM/Debug/
+EWARM/Release/
+EWARM/*.dep
+EWARM/*.pbd
+EWARM/*.dni
+
+# ESP-IDF build
+NORA_BLE/nora_wifi_ble_translate/build/
+NORA_BLE/nora_ble_bridge/build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db

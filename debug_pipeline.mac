@@ -1,0 +1,14 @@
+execUserSetup()
+{
+    // Model: xQueueReceive dequeues a message
+    __setCodeBreak("{Model.cpp}15", 0, "", 0, "");
+
+    // Model: onBleMessage forwarded to Presenter/View
+    __setCodeBreak("{Model.cpp}38", 0, "", 0, "");
+
+    // View: entry of setBleMessage
+    __setCodeBreak("{Screen1View.cpp}38", 0, "", 0, "");
+
+    // View: wildcard buffer written to TextArea
+    __setCodeBreak("{Screen1View.cpp}103", 0, "", 0, "");
+}

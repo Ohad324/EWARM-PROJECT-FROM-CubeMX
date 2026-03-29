@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+<settings>
+    <TerminalIO>
+        <InputSource>2</InputSource>
+        <InputMode2>6</InputMode2>
+        <Filename>$PROJ_DIR$\TERMINAL.txt</Filename>
+        <InputEcho>2</InputEcho>
+        <ShowReset>1</ShowReset>
+        <InputEncodingICU>2</InputEncodingICU>
+        <OutputEncodingICU>2</OutputEncodingICU>
+    </TerminalIO>
+    <Stack>
+        <FillEnabled>1</FillEnabled>
+        <OverflowWarningsEnabled>1</OverflowWarningsEnabled>
+        <WarningThreshold>90</WarningThreshold>
+        <SpWarningsEnabled>1</SpWarningsEnabled>
+        <WarnLogOnly>1</WarnLogOnly>
+        <UseTrigger>1</UseTrigger>
+        <TriggerName>main</TriggerName>
+        <LimitSize>0</LimitSize>
+        <ByteLimit>50</ByteLimit>
+    </Stack>
+    <PlDriver>
+        <MemConfigValue>C:\iar\ewarm-9.60.3\arm\config\debugger\ST\STM32H747XI_M7.ddf</MemConfigValue>
+        <FirstRun>0</FirstRun>
+    </PlDriver>
+    <ArmDriver>
+        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
+        <EnableCache>0</EnableCache>
+    </ArmDriver>
+    <JLinkDriver>
+        <TraceBufferSize>0x10000</TraceBufferSize>
+        <TraceStallIfFIFOFull>0x0</TraceStallIfFIFOFull>
+        <TracePortSize>0x0</TracePortSize>
+        <jlinkResetStyle>12</jlinkResetStyle>
+        <jlinkResetStrategy>3</jlinkResetStrategy>
+        <MultiCoreRunAll>0</MultiCoreRunAll>
+        <LeaveTargetRunning>_ 0</LeaveTargetRunning>
+        <CStepIntDis>_ 0</CStepIntDis>
+    </JLinkDriver>
+    <DebugChecksum>
+        <Checksum>4102933947</Checksum>
+    </DebugChecksum>
+    <Exceptions>
+        <StopOnUncaught>_ 0</StopOnUncaught>
+        <StopOnThrow>_ 0</StopOnThrow>
+    </Exceptions>
+    <Disassembly>
+        <InstrCount>0</InstrCount>
+        <MixedMode>1</MixedMode>
+    </Disassembly>
+    <Trace1>
+        <Enabled>0</Enabled>
+        <ShowSource>1</ShowSource>
+    </Trace1>
+    <CallStack>
+        <ShowArgs>0</ShowArgs>
+    </CallStack>
+    <SWOTraceHWSettings>
+        <OverrideDefaultClocks>0</OverrideDefaultClocks>
+        <CpuClock>480000000</CpuClock>
+        <ClockAutoDetect>1</ClockAutoDetect>
+        <ClockWanted>50000000</ClockWanted>
+        <JtagSpeed>49230769</JtagSpeed>
+        <Prescaler>10</Prescaler>
+        <TimeStampPrescIndex>0</TimeStampPrescIndex>
+        <TimeStampPrescData>0</TimeStampPrescData>
+        <PcSampCYCTAP>1</PcSampCYCTAP>
+        <PcSampPOSTCNT>13</PcSampPOSTCNT>
+        <PcSampIndex>2</PcSampIndex>
+        <DataLogMode>2</DataLogMode>
+        <ITMportsEnable>63</ITMportsEnable>
+        <ITMportsTermIO>1</ITMportsTermIO>
+        <ITMportsLogFile>0</ITMportsLogFile>
+        <ITMlogFile>$PROJ_DIR$\ITM.log</ITMlogFile>
+    </SWOTraceHWSettings>
+    <StLinkDriver>
+        <stlinkserialNo>0045001E3137511439383538</stlinkserialNo>
+        <stlinkfoundProbes />
+        <stlinkResetStyle>0</stlinkResetStyle>
+        <stlinkResetStrategy>0</stlinkResetStrategy>
+        <LeaveTargetRunning>_ 0</LeaveTargetRunning>
+        <CStepIntDis>_ 0</CStepIntDis>
+    </StLinkDriver>
+    <SWOTraceWindow>
+        <PcSampling>1</PcSampling>
+        <InterruptLogs>0</InterruptLogs>
+        <ForcedTimeStamps>1</ForcedTimeStamps>
+        <EventCPI>0</EventCPI>
+        <EventEXC>0</EventEXC>
+        <EventFOLD>0</EventFOLD>
+        <EventLSU>0</EventLSU>
+        <EventSLEEP>0</EventSLEEP>
+    </SWOTraceWindow>
+    <PowerLog>
+        <GraphEnabled>0</GraphEnabled>
+        <LogEnabled>0</LogEnabled>
+        <ShowTimeLog>1</ShowTimeLog>
+        <Title_0>I0</Title_0>
+        <Symbol_0>0 4 0</Symbol_0>
+        <LiveEnabled>0</LiveEnabled>
+        <LiveFile />
+    </PowerLog>
+    <DataLog>
+        <GraphEnabled>0</GraphEnabled>
+        <LogEnabled>1</LogEnabled>
+        <ShowTimeLog>1</ShowTimeLog>
+        <SumEnabled>0</SumEnabled>
+        <ShowTimeSum>1</ShowTimeSum>
+    </DataLog>
+    <InterruptLog>
+        <GraphEnabled>0</GraphEnabled>
+        <LogEnabled>1</LogEnabled>
+        <ShowTimeLog>1</ShowTimeLog>
+        <SumEnabled>1</SumEnabled>
+        <ShowTimeSum>1</ShowTimeSum>
+        <SumSortOrder>3</SumSortOrder>
+    </InterruptLog>
+    <EventLog>
+        <GraphEnabled>0</GraphEnabled>
+        <LogEnabled>1</LogEnabled>
+        <ShowTimeLog>0</ShowTimeLog>
+        <Title_0>Ch3</Title_0>
+        <Symbol_0>0 0 1</Symbol_0>
+        <Title_1>Ch2</Title_1>
+        <Symbol_1>0 0 1</Symbol_1>
+        <Title_2>Ch1</Title_2>
+        <Symbol_2>0 0 1</Symbol_2>
+        <Title_3>Ch0</Title_3>
+        <Symbol_3>0 0 1</Symbol_3>
+        <SumEnabled>1</SumEnabled>
+        <ShowTimeSum>1</ShowTimeSum>
+        <SumSortOrder>0</SumSortOrder>
+    </EventLog>
+    <DriverProfiling>
+        <Enabled>0</Enabled>
+        <Mode>3</Mode>
+        <Graph>0</Graph>
+        <Symbiont>0</Symbiont>
+        <Exclusions />
+    </DriverProfiling>
+    <PowerProbe>
+        <Frequency>10000</Frequency>
+        <Probe0>I0</Probe0>
+        <ProbeSetup0>2 1 1 2 0 0</ProbeSetup0>
+    </PowerProbe>
+    <Trace2>
+        <Enabled>0</Enabled>
+        <ShowSource>0</ShowSource>
+    </Trace2>
+    <TermIOLog>
+        <LoggingEnabled>_ 0</LoggingEnabled>
+        <LogFile>_ ""</LogFile>
+    </TermIOLog>
+    <DisassembleMode>
+        <mode>0</mode>
+    </DisassembleMode>
+    <Breakpoints2>
+        <Count>0</Count>
+    </Breakpoints2>
+    <Aliases>
+        <Count>0</Count>
+        <SuppressDialog>0</SuppressDialog>
+    </Aliases>
+</settings>

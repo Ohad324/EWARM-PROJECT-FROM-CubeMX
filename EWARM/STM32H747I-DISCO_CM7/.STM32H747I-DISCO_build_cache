@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BuildDb>
+    <Tool>
+        <Name>linker</Name>
+        <Parent>
+            <Path>C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out</Path>
+            <Output>
+                <Path>C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\List\STM32H747I-DISCO_CM7.map</Path>
+            </Output>
+        </Parent>
+    </Tool>
+</BuildDb>

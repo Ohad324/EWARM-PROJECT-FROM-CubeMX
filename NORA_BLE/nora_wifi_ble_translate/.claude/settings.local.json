@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//proc/registry/HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Enum/USB/**)",
+      "Bash(cat:*)",
+      "Bash(cmd.exe /c \"dir C:\\\\Espressif\\\\frameworks\\\\esp-idf-v5.5.3\\\\tools\\\\idf.py 2>nul && dir C:\\\\Espressif\\\\launch.bat 2>nul && dir C:\\\\Espressif\\\\idf_cmd_init.bat 2>nul && dir C:\\\\Espressif\\\\*.bat 2>nul\" 2>&1)",
+      "Bash(cmd.exe /c \"dir C:\\\\Espressif 2>&1\" && echo \"cmd worked\")",
+      "Bash(export:*)",
+      "Bash(grep:*)",
+      "Read(//cygdrive/c/**)",
+      "Read(//cygdrive/**)",
+      "Bash(cmd.exe /c \"idf.py build 2>&1\")",
+      "Bash(cmd.exe /c \"idf.py build\" 2>&1)",
+      "Bash(cmd.exe /c \"C:\\\\\\\\Espressif\\\\\\\\idf_cmd_init.bat && cd C:\\\\\\\\NORA_BLE\\\\\\\\nora_wifi_ble_translate && idf.py build\" 2>&1)",
+      "Bash(powershell.exe -Command \"cd 'C:\\\\NORA_BLE\\\\nora_wifi_ble_translate'; & 'C:\\\\Espressif\\\\tools\\\\idf-exe\\\\1.0.3\\\\idf.py.exe' build 2>&1\")",
+      "Bash(IDF_PATH=\"C:/Espressif/frameworks/esp-idf-v5.5.3\" \\\\\nIDF_PYTHON_ENV_PATH=\"C:/Espressif/python_env/idf5.5_py3.11_env\" \\\\\nPATH=\"C:/Espressif/python_env/idf5.5_py3.11_env/Scripts:C:/Espressif/tools/idf-exe/1.0.3:$PATH\" \\\\\npython \"C:/Espressif/frameworks/esp-idf-v5.5.3/tools/idf.py\" --version 2>&1)",
+      "Bash(find:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:www.googleapis.com)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"\n[System.Environment]::SetEnvironmentVariable\\('MSYSTEM', \\\\$null, 'Process'\\)\n\\\\$env:IDF_PATH = 'C:\\\\Espressif\\\\frameworks\\\\esp-idf-v5.5.3'\n\\\\$python = 'C:\\\\Espressif\\\\python_env\\\\idf5.5_py3.11_env\\\\Scripts\\\\python.exe'\n\\\\$result = & \\\\$python -c 'import os; print\\(\\\\\"MSYSTEM\\\\\" in os.environ\\)' 2>&1\n\\\\$result\n\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\NORA_BLE\\\\nora_wifi_ble_translate\\\\build_nora.ps1\" 2>&1)",
+      "Bash(powershell.exe -NoProfile -Command \"Get-PnpDevice -Class Ports -Status OK | Select-Object FriendlyName | Sort-Object FriendlyName\" 2>&1)",
+      "Read(//c/NORA_BLE//**)",
+      "Read(//mnt/c/**)"
+    ]
+  }
+}

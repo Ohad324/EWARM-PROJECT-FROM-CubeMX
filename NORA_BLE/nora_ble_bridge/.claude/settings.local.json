@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//proc/registry/HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Enum/USB/**)",
+      "Bash(cat:*)",
+      "Bash(cmd.exe /c \"dir C:\\\\Espressif\\\\frameworks\\\\esp-idf-v5.5.3\\\\tools\\\\idf.py 2>nul && dir C:\\\\Espressif\\\\launch.bat 2>nul && dir C:\\\\Espressif\\\\idf_cmd_init.bat 2>nul && dir C:\\\\Espressif\\\\*.bat 2>nul\" 2>&1)",
+      "Bash(cmd.exe /c \"dir C:\\\\Espressif 2>&1\" && echo \"cmd worked\")",
+      "Bash(export:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}
