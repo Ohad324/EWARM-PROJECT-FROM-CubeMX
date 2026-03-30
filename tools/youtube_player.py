@@ -101,7 +101,7 @@ def _youtube_search_first_id(query: str) -> str | None:
         match = re.search(r'"videoId":"([a-zA-Z0-9_-]{11})"', html)
         if match:
             video_id = match.group(1)
-            print(f"[search] Resolved \"{query}\" → videoId={video_id}")
+            print(f"[search] Resolved \"{query}\" -> videoId={video_id}")
             return video_id
     except Exception as e:
         print(f"[search] Failed to resolve \"{query}\": {e}")
@@ -127,7 +127,6 @@ def _fetch_and_open_thumbnail(video_id: str) -> None:
             with open(THUMB_PATH, "wb") as f:
                 f.write(data)
             print(f"[thumb]  Saved: {THUMB_PATH}  ({len(data):,} bytes)")
-            _open_file(THUMB_PATH)
             return
         except Exception as e:
             print(f"[thumb]  {url_tpl.split('/')[-1]} failed: {e}")
@@ -366,13 +365,12 @@ class Handler(BaseHTTPRequestHandler):
             # No videoId from NORA — search YouTube ourselves and open the first result directly
             video_id = _youtube_search_first_id(query)
             if not video_id:
-                # Search scrape failed — use fallback videoId so STM32 still gets a thumbnail.
-                # TODO: fix scraping or restore real search when API key is working.
-                video_id = "dQw4w9WgXcQ"
-                print(f"[player] Scrape failed — using fallback videoId={video_id}")
+                # Scrape failed — open search results page but return no videoId.
+                # NORA will not send a THUMB, LCD keeps its current image.
+                print(f"[player] Scrape failed for \"{query}\" — no videoId resolved")
                 url = YOUTUBE_SEARCH.format(query=urllib.parse.quote(query))
                 open_youtube_search(url)
-                self._respond(200, {"status": "ok", "videoId": video_id, "query": query})
+                self._respond(200, {"status": "ok", "query": query})
                 return
             title = title if title != "Unknown" else query
 
