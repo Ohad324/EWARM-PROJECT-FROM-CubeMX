@@ -75,6 +75,9 @@ extern void BLE_UART_DMA_IRQHandler(void);
 /* AudioRec_DMA_IRQHandler() wraps HAL_DMA_IRQHandler(&s_hdma_dfsdm).
    The DMA handle is private to audio_rec.c; same pattern as BLE UART. */
 extern void AudioRec_DMA_IRQHandler(void);
+/* AudioSD_SDMMC_IRQHandler() wraps HAL_SD_IRQHandler(&s_hsd1).
+   The SD handle is private to audio_sd.c; same trampoline pattern. */
+extern void AudioSD_SDMMC_IRQHandler(void);
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -331,6 +334,16 @@ void EXTI15_10_IRQHandler(void)
 void DMA1_Stream1_IRQHandler(void)
 {
     AudioRec_DMA_IRQHandler(); /* delegate to audio_rec.c private handler */
+}
+
+/**
+ * SDMMC1_IRQHandler — handles SDMMC1 transfer and command completion events.
+ * Routed through AudioSD_SDMMC_IRQHandler() to keep the SD handle private
+ * to audio_sd.c.  Priority 5: FreeRTOS-safe level.
+ */
+void SDMMC1_IRQHandler(void)
+{
+    AudioSD_SDMMC_IRQHandler();
 }
 
 /* USER CODE END 1 */

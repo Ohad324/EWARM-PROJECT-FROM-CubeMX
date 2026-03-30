@@ -32,6 +32,8 @@
 #include "ble_queue.h"
 #include "ble_uart.h"            /* DMA+IDLE driver, bleHistory, BLE_UART_Init() */
 #include "audio_rec.h"           /* button-triggered MEMS recording, AudioRec_Init() */
+#include "audio_sd.h"            /* SD card WAV recording — AudioSD_Init()           */
+#include "command_handler.h"     /* voice CMD: receiver — CommandHandler_Init()       */
 #include "log_mutex.h"           /* LOG() macro — outputs to SEGGER RTT */
 #include "music_display_task.h"  /* Music_Init(), xMusicQueue, music_msg_t */
 #include "cmsis_os2.h"           /* osKernelGetTickCount() */
@@ -269,7 +271,11 @@ Error_Handler();
   /* Initialise DFSDM mic, DMA, and button EXTI for audio recording.
      Must run after MX_GPIO_Init() (GPIOC clock already on) and before
      osKernelStart() so RTOS objects (semaphore, queue) are created first. */
-  /* AudioRec_Init(); */ /* DISABLED: testing thumbnail pipeline without audio */
+  /* AudioRec_Init() DISABLED — DFSDM/GPIO conflict crashes BLE_UART_StartDMA.
+     Re-enable only after root cause is identified. */
+  // AudioRec_Init();   /* ENABLED: DFSDM mic + button EXTI + DMA                   */
+  AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
+  CommandHandler_Init(); /* create CMD: message queue                              */
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -306,7 +312,13 @@ Error_Handler();
   /* AudioRecTask: waits for button press, records mic via DFSDM DMA, sends PCM over UART8.
      Stack 4096 bytes: needs ~1 KB for pcm16[] static buffer + FreeRTOS overhead.
      Priority normal: same as TouchGFX — audio send is bursty, not latency-critical. */
-  /* xTaskCreate(AudioRec_TaskEntry, "AudioRec", 4096u, NULL, osPriorityNormal, NULL); */ /* DISABLED */
+  /* AudioRec DISABLED — DFSDM/GPIO conflict crashes thumbnail pipeline.
+     Re-enable only after thumbnail display is stable. */
+  // xTaskCreate(AudioRec_TaskEntry, "AudioRec", 4096u, NULL, osPriorityNormal, NULL);
+  /* CommandHandler: receives CMD: messages from NORA, dispatches to screen.
+     Stack 1024 words.  Priority below normal: display updates are not time-critical. */
+  xTaskCreate(CommandHandler_TaskEntry, "CmdHandler", 1024u, NULL,
+              osPriorityBelowNormal, NULL);
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);
@@ -971,6 +983,14 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         strncpy(m.error.reason, msg + 6, sizeof(m.error.reason) - 1u);
         if (xQueueSend(xMusicQueue, &m, 0) != pdTRUE)
             LOG("[WARN] xMusicQueue full -- ERROR dropped\n");
+    }
+    else if (strncmp(msg, "CMD:", 4) == 0)
+    {
+        /* Voice command routed back from NORA (Rule B / Rule C).
+         * Hand off to CommandHandler task — non-blocking; drop if queue full. */
+        LOG("[CMD] routing to CommandHandler: \"%s\"\n", msg);
+        if (CommandHandler_Post(msg) == 0)
+            LOG("[WARN] CMD queue full -- dropped: \"%s\"\n", msg);
     }
 }
 

@@ -27,13 +27,13 @@
 
 /* ── Configuration ──────────────────────────────────────────────────────── */
 #define MUSIC_TAG              "MUSIC"
-#define YOUTUBE_API_KEY        "AIzaSyB-ClvuzNPEIwXGz_NSb0yApeRye-Gt13g"
+#define YOUTUBE_API_KEY        "REPLACE_WITH_NEW_KEY"  /* old key blocked (HTTP 403) */
 #define YOUTUBE_SEARCH_URL     "https://www.googleapis.com/youtube/v3/search"
 #define UART_PORT              UART_NUM_1
 #define THUMB_STREAM_CHUNK     512  /* bytes per UART write during streaming */
 #define THUMB_MIN_BYTES        5000 /* below this → YouTube placeholder image */
 #define UART_MUTEX_TIMEOUT_MS  5000
-#define PC_PLAYER_URL          "http://nora-player.local:5000/play"
+#define PC_PLAYER_URL          "http://192.168.10.18:5000/play"
 
 /* ── Request struct ─────────────────────────────────────────────────────── */
 typedef struct {
@@ -135,7 +135,7 @@ static bool youtube_search(void)
     bool ok = false;
     cJSON *items = cJSON_GetObjectItem(root, "items");
     if (!items || cJSON_GetArraySize(items) == 0) {
-        ESP_LOGW(MUSIC_TAG, "YouTube: no results found");
+        ESP_LOGW(MUSIC_TAG, "YouTube: no results found — body: %.200s", s_json_buf);
         cJSON_Delete(root);
         return false;
     }
@@ -327,6 +327,76 @@ static void post_to_pc_player(const char *video_id, const char *title, const cha
     esp_http_client_cleanup(client);
 }
 
+/* ── Ask PC player to search + open Chrome, return resolved videoId ─────── *
+ * POSTs {"query":"..."} to PC_PLAYER_URL.                                   *
+ * PC player scrapes YouTube (no API key), opens Chrome, returns:            *
+ *   {"status":"ok","videoId":"xxxxxxxxxxx"}                                 *
+ * On success: fills s_video_id_buf, s_title_buf, s_url_buf (ytimg CDN).     *
+ * Returns true if a videoId was resolved and thumbnail URL is ready.        *
+ * ─────────────────────────────────────────────────────────────────────── */
+static bool search_via_pc(const char *query)
+{
+    char body[256];
+    int  blen = snprintf(body, sizeof(body), "{\"query\":\"%s\"}", query);
+
+    esp_http_client_config_t cfg = {
+        .url        = PC_PLAYER_URL,
+        .timeout_ms = 15000,   /* PC scrapes YouTube — allow up to 15 s */
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&cfg);
+    if (!client) { ESP_LOGE(MUSIC_TAG, "search_via_pc: init failed"); return false; }
+
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+
+    esp_err_t err = esp_http_client_open(client, blen);
+    if (err != ESP_OK) {
+        ESP_LOGE(MUSIC_TAG, "search_via_pc: open failed: %s", esp_err_to_name(err));
+        esp_http_client_cleanup(client);
+        return false;
+    }
+
+    esp_http_client_write(client, body, blen);
+    esp_http_client_fetch_headers(client);
+    int status = esp_http_client_get_status_code(client);
+
+    char resp[256] = {0};
+    int  read = 0, n;
+    while ((n = esp_http_client_read(client, resp + read,
+                                     (int)sizeof(resp) - 1 - read)) > 0)
+        read += n;
+    resp[read] = '\0';
+
+    esp_http_client_close(client);
+    esp_http_client_cleanup(client);
+
+    ESP_LOGI(MUSIC_TAG, "search_via_pc: HTTP %d  body=%s", status, resp);
+
+    if (status != 200 || read <= 0) return false;
+
+    /* Parse {"status":"ok","videoId":"xxxxxxxxxxx"} */
+    cJSON *root = cJSON_Parse(resp);
+    if (!root) return false;
+
+    cJSON *jId = cJSON_GetObjectItem(root, "videoId");
+    bool ok = false;
+    if (jId && cJSON_IsString(jId) && jId->valuestring[0] != '\0') {
+        strncpy(s_video_id_buf, jId->valuestring, sizeof(s_video_id_buf) - 1);
+        /* Thumbnail direct from YouTube CDN — no API key needed */
+        snprintf(s_url_buf, sizeof(s_url_buf),
+                 "https://img.youtube.com/vi/%s/mqdefault.jpg", s_video_id_buf);
+        /* Use query as title since we have no metadata from scrape */
+        strncpy(s_title_buf,   query, sizeof(s_title_buf)   - 1);
+        s_channel_buf[0] = '\0';
+        ESP_LOGI(MUSIC_TAG, "search_via_pc: videoId=%s  thumb=%s",
+                 s_video_id_buf, s_url_buf);
+        ok = true;
+    }
+
+    cJSON_Delete(root);
+    return ok;
+}
+
 /* ── Music FreeRTOS task ────────────────────────────────────────────────── */
 static void music_task(void *param)
 {
@@ -346,72 +416,63 @@ static void music_task(void *param)
             if (q != s_query_buf) memmove(s_query_buf, q, strlen(q) + 1);
         }
 
-        ESP_LOGI(MUSIC_TAG, "Searching YouTube: \"%s\"", s_query_buf);
+        ESP_LOGI(MUSIC_TAG, "BLE search mode: \"%s\"", s_query_buf);
 
-        /* Step 3: clear result buffers */
-        s_title_buf[0]    = '\0';
-        s_channel_buf[0]  = '\0';
-        s_video_id_buf[0] = '\0';
-        s_url_buf[0]      = '\0';
+        /* YouTube API search — fills s_title_buf, s_channel_buf,
+           s_video_id_buf, s_url_buf */
+        bool found = youtube_search();
 
-        /* Step 4: YouTube search */
-        if (!youtube_search()) {
-            if (xSemaphoreTake(s_uart_mutex, pdMS_TO_TICKS(UART_MUTEX_TIMEOUT_MS)) == pdTRUE) {
-                uart_write_bytes(UART_PORT, "ERROR:not_found\n", 16);
-                xSemaphoreGive(s_uart_mutex);
-            } else {
-                ESP_LOGE(MUSIC_TAG, "UART mutex timeout — error not sent");
-            }
-            continue;
-        }
+        /* Step A: resolve videoId + thumbnail URL.
+         *   - API working: youtube_search() fills s_url_buf directly, no PC wait.
+         *   - API broken:  search_via_pc() asks PC to scrape YouTube (must wait for
+         *                  videoId), PC also opens Chrome as part of this call.
+         * Either way, once we have s_url_buf the STM32 pipeline runs with no
+         * further PC dependency. */
+        if (!found)
+            found = search_via_pc(s_query_buf);
 
-        /* Notify connected BLE device (iPhone) with YouTube URL */
-        char yt_url[64];
-        snprintf(yt_url, sizeof(yt_url), "https://youtu.be/%s", s_video_id_buf);
-        ble_notify_send(yt_url);
-
-        /* POST YouTube URL to PC player over Wi-Fi */
-        post_to_pc_player(s_video_id_buf, s_title_buf, s_channel_buf);
-
-        /* Step 5: take UART mutex for the full TRACK + THUMB transfer */
-        /* Step 6: take UART mutex for the full TRACK + THUMB transfer */
+        /* Step B: STM32 pipeline — independent of PC acknowledgment.
+         * TRACK + THUMB reach the STM32 before we notify the PC. */
         if (xSemaphoreTake(s_uart_mutex, pdMS_TO_TICKS(UART_MUTEX_TIMEOUT_MS)) != pdTRUE) {
-            ESP_LOGE(MUSIC_TAG, "UART mutex timeout — transfer skipped");
+            ESP_LOGE(MUSIC_TAG, "UART mutex timeout — TRACK not sent");
             continue;
         }
 
-        /* Step 7: send TRACK: */
-        ESP_LOGI(MUSIC_TAG, "Sending TRACK: to STM32");
         char track_msg[512];
-        int  tlen = snprintf(track_msg, sizeof(track_msg),
-                             "TRACK:%s|%s|%s\n",
-                             s_title_buf, s_channel_buf, s_video_id_buf);
+        int  tlen;
+        if (found) {
+            tlen = snprintf(track_msg, sizeof(track_msg),
+                            "TRACK:%s|%s|%s\n",
+                            s_title_buf, s_channel_buf, s_video_id_buf);
+        } else {
+            tlen = snprintf(track_msg, sizeof(track_msg), "TRACK:%s||\n", s_query_buf);
+        }
         uart_write_bytes(UART_PORT, track_msg, tlen);
+        ESP_LOGI(MUSIC_TAG, "TRACK sent: %.*s", tlen - 1, track_msg);
 
-        /* Step 8: stream maxresdefault thumbnail — HD only.
-         * thumb_stream_uart() opens the HTTP connection, sends the THUMB:
-         * header, then pipes chunks straight to UART — mutex stays held
-         * throughout so the binary body is contiguous on the wire.
-         * Returns >0 on success, 0 for placeholder (<5000 B), <0 for error. */
-        {
-            char thumb_url[128];
-            snprintf(thumb_url, sizeof(thumb_url),
-                     "https://i.ytimg.com/vi/%s/maxresdefault.jpg",
-                     s_video_id_buf);
-            int r = thumb_stream_uart(thumb_url);
-            if (r > 0) {
-                ESP_LOGI(MUSIC_TAG, "Thumbnail OK: %d bytes", r);
-            } else if (r == 0) {
-                ESP_LOGW(MUSIC_TAG, "maxresdefault not HD — no thumbnail sent");
+        bool thumb_sent = false;
+        if (found && s_url_buf[0] != '\0') {
+            int bytes = thumb_stream_uart(s_url_buf);
+            if (bytes > 0) {
+                ESP_LOGI(MUSIC_TAG, "THUMB sent: %d bytes", bytes);
+                thumb_sent = true;
             } else {
-                ESP_LOGW(MUSIC_TAG, "Thumbnail stream error — no thumbnail sent");
+                ESP_LOGW(MUSIC_TAG, "THUMB skipped (bytes=%d)", bytes);
             }
+        } else {
+            ESP_LOGW(MUSIC_TAG, "THUMB NOT sent — found=%d url=%s",
+                     (int)found, s_url_buf[0] ? s_url_buf : "(empty)");
         }
 
-        /* Step 9: release UART mutex */
         xSemaphoreGive(s_uart_mutex);
+        ESP_LOGI(MUSIC_TAG, "Done — TRACK sent, THUMB %s",
+                 thumb_sent ? "SENT" : "NOT SENT");
 
-        ESP_LOGI(MUSIC_TAG, "Transfer complete");
+        /* Step C: notify PC player (Chrome open) — AFTER STM32 is done.
+         * Only needed when youtube_search() succeeded (API path); when
+         * search_via_pc() was used, Chrome is already open from that call. */
+        if (found && s_video_id_buf[0] != '\0')
+            post_to_pc_player(s_video_id_buf, s_title_buf, s_channel_buf);
     }
 }
 

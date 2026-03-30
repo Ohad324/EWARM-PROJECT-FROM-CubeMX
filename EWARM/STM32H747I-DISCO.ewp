@@ -70,7 +70,7 @@
                 </option>
                 <option>
                     <name>OGLastSavedByProductVersion</name>
-                    <state>9.60.3.7274</state>
+                    <state>9.70.2.18199</state>
                 </option>
                 <option>
                     <name>OGChipSelectEditMenu</name>
@@ -98,7 +98,7 @@
                 </option>
                 <option>
                     <name>GBECoreSlave</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>39</state>
                 </option>
                 <option>
@@ -115,7 +115,7 @@
                 </option>
                 <option>
                     <name>CoreVariant</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>39</state>
                 </option>
                 <option>
@@ -138,7 +138,7 @@
                 </option>
                 <option>
                     <name>GFPUCoreSlave2</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>39</state>
                 </option>
                 <option>
@@ -213,7 +213,7 @@
                 </option>
                 <option>
                     <name>OG_32_64DeviceCoreSlave</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>39</state>
                 </option>
                 <option>
@@ -226,7 +226,7 @@
             <name>ICCARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>39</version>
+                <version>40</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -490,6 +490,14 @@
                 </option>
                 <option>
                     <name>CCPosSharedSlave</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>CCUseIarExtensions</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>CCUseGnuExtensions</name>
                     <state>0</state>
                 </option>
             </data>
@@ -1085,7 +1093,7 @@
             <name>IARCHIVE</name>
             <archiveVersion>0</archiveVersion>
             <data>
-                <version>0</version>
+                <version>1</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -1099,6 +1107,14 @@
                 <option>
                     <name>IarchiveOutput</name>
                     <state>###Unitialized###</state>
+                </option>
+                <option>
+                    <name>IarchiveExtraOptionsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>IarchiveExtraOptions</name>
+                    <state></state>
                 </option>
             </data>
         </settings>
@@ -1182,7 +1198,7 @@
                 </option>
                 <option>
                     <name>OGLastSavedByProductVersion</name>
-                    <state>9.60.3.7274</state>
+                    <state>9.70.2.18199</state>
                 </option>
                 <option>
                     <name>OGChipSelectEditMenu</name>
@@ -1210,7 +1226,7 @@
                 </option>
                 <option>
                     <name>GBECoreSlave</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>41</state>
                 </option>
                 <option>
@@ -1227,7 +1243,7 @@
                 </option>
                 <option>
                     <name>CoreVariant</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>41</state>
                 </option>
                 <option>
@@ -1250,7 +1266,7 @@
                 </option>
                 <option>
                     <name>GFPUCoreSlave2</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>41</state>
                 </option>
                 <option>
@@ -1325,7 +1341,7 @@
                 </option>
                 <option>
                     <name>OG_32_64DeviceCoreSlave</name>
-                    <version>34</version>
+                    <version>35</version>
                     <state>41</state>
                 </option>
                 <option>
@@ -1338,7 +1354,7 @@
             <name>ICCARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>39</version>
+                <version>40</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -1481,6 +1497,7 @@
                     <state>$PROJ_DIR$/../Drivers/STM32H7xx_HAL_Driver/Inc</state>
                     <state>$PROJ_DIR$/../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy</state>
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/FreeRTOS/Source/include</state>
+                    <state>$PROJ_DIR$/../Middlewares/Third_Party/FatFs/src</state>
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2</state>
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/FreeRTOS/Source/portable/IAR/ARM_CM4F</state>
                     <state>$PROJ_DIR$/../Drivers/CMSIS/Device/ST/STM32H7xx/Include</state>
@@ -1626,6 +1643,14 @@
                 </option>
                 <option>
                     <name>CCPosSharedSlave</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>CCUseIarExtensions</name>
+                    <state>1</state>
+                </option>
+                <option>
+                    <name>CCUseGnuExtensions</name>
                     <state>0</state>
                 </option>
             </data>
@@ -2221,7 +2246,7 @@
             <name>IARCHIVE</name>
             <archiveVersion>0</archiveVersion>
             <data>
-                <version>0</version>
+                <version>1</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -2235,6 +2260,14 @@
                 <option>
                     <name>IarchiveOutput</name>
                     <state>###Unitialized###</state>
+                </option>
+                <option>
+                    <name>IarchiveExtraOptionsCheck</name>
+                    <state>0</state>
+                </option>
+                <option>
+                    <name>IarchiveExtraOptions</name>
+                    <state></state>
                 </option>
             </data>
         </settings>
@@ -2587,6 +2620,12 @@
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_rcc_ex.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_sd.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_sd_ex.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_sdram.c</name>
                 <excluded>
                     <configuration>STM32H747I-DISCO_CM4</configuration>
@@ -2628,10 +2667,16 @@
                     <configuration>STM32H747I-DISCO_CM4</configuration>
                 </excluded>
             </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_ll_sdmmc.c</name>
+            </file>
         </group>
     </group>
     <group>
         <name>GUI</name>
+        <excluded>
+            <configuration>STM32H747I-DISCO_CM4</configuration>
+        </excluded>
         <file>
             <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\ApplicationFontProvider.cpp</name>
         </file>
@@ -2652,12 +2697,6 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_NotoSansHebrew_Regular_80_4bpp_0.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_verdana_10_4bpp_0.cpp</name>
-            <excluded>
-                <configuration>STM32H747I-DISCO_CM7</configuration>
-            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_verdana_20_4bpp_0.cpp</name>
@@ -2682,12 +2721,6 @@
         </file>
         <file>
             <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_NotoSansHebrew_Regular_80_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_verdana_10_4bpp.cpp</name>
-            <excluded>
-                <configuration>STM32H747I-DISCO_CM7</configuration>
-            </excluded>
         </file>
         <file>
             <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_verdana_20_4bpp.cpp</name>
@@ -2729,12 +2762,6 @@
             <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_NotoSansHebrew_Regular_80_4bpp.cpp</name>
         </file>
         <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_verdana_10_4bpp.cpp</name>
-            <excluded>
-                <configuration>STM32H747I-DISCO_CM7</configuration>
-            </excluded>
-        </file>
-        <file>
             <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_verdana_20_4bpp.cpp</name>
         </file>
         <file>
@@ -2752,6 +2779,9 @@
     </group>
     <group>
         <name>LIBJPEG</name>
+        <excluded>
+            <configuration>STM32H747I-DISCO_CM4</configuration>
+        </excluded>
         <file>
             <name>$PROJ_DIR$\..\CM7\LIBJPEG\App\libjpeg.c</name>
         </file>
@@ -2845,11 +2875,40 @@
     </group>
     <file>
         <name>$PROJ_DIR$\..\CM7\Core\Src\audio_rec.c</name>
+        <excluded>
+            <configuration>STM32H747I-DISCO_CM4</configuration>
+        </excluded>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\..\CM7\Core\Src\audio_sd.c</name>
+        <excluded>
+            <configuration>STM32H747I-DISCO_CM4</configuration>
+        </excluded>
     </file>
     <file>
         <name>$PROJ_DIR$\..\CM7\Core\Src\ble_uart.c</name>
+        <excluded>
+            <configuration>STM32H747I-DISCO_CM4</configuration>
+        </excluded>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\..\CM7\Core\Src\command_handler.c</name>
+        <excluded>
+            <configuration>STM32H747I-DISCO_CM4</configuration>
+        </excluded>
     </file>
     <file>
         <name>$PROJ_DIR$\..\CM7\Core\Src\fault_handler_asm.s</name>
+        <excluded>
+            <configuration>STM32H747I-DISCO_CM4</configuration>
+        </excluded>
     </file>
+    <file>
+        <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ff.c</name>
+    </file>
+    <projectSettings>
+        <general>
+            <resolveSourceForBinaries>true</resolveSourceForBinaries>
+        </general>
+    </projectSettings>
 </project>

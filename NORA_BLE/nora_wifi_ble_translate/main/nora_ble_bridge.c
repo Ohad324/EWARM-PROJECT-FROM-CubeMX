@@ -33,6 +33,12 @@
 #include "services/gatt/ble_svc_gatt.h"
 
 #include "music_task.h"
+#include "cloud_upload.h"
+#include "command_router.h"
+#include "esp_heap_caps.h"  /* heap_caps_malloc / heap_caps_free for PSRAM */
+
+/* Maximum WAV file size NORA will buffer from STM32 (4 MB = ~64 s at 31250 Hz) */
+#define AUDIO_FILE_MAX_BYTES  (4u * 1024u * 1024u)
 
 /* ── Configuration ──────────────────────────────────────────────────────── */
 #define TAG              "NORA"
@@ -636,6 +642,106 @@ static void uart_cmd_task(void *param)
                 ESP_LOGE(TAG, "Translation failed for '%s'", word);
             }
 
+        } else if (strncmp(line, "AUDIO:FILE:", 11) == 0) {
+            /* ── Receive WAV file from STM32, upload to GCS, transcribe, route ──
+             * Protocol: "AUDIO:FILE:REC_001.wav:65536\n" + <65536 raw bytes>
+             * ──────────────────────────────────────────────────────────────── */
+            const char *rest      = line + 11;          /* "REC_001.wav:65536" */
+            const char *lastColon = strrchr(rest, ':'); /* points to ":65536"  */
+
+            if (!lastColon)
+            {
+                uart_write_safe("UPLOAD:FAIL:bad_header\n", 23);
+                ESP_LOGE(TAG, "AUDIO:FILE bad header: '%s'", line);
+                continue;
+            }
+
+            /* Extract filename and byte count */
+            char     filename[32];
+            size_t   fnLen   = (size_t)(lastColon - rest);
+            uint32_t fileSize = (uint32_t)atoi(lastColon + 1);
+
+            if (fnLen == 0 || fnLen >= sizeof(filename) ||
+                fileSize == 0 || fileSize > AUDIO_FILE_MAX_BYTES)
+            {
+                uart_write_safe("UPLOAD:FAIL:bad_params\n", 23);
+                ESP_LOGE(TAG, "AUDIO:FILE bad params: fnLen=%zu size=%lu",
+                         fnLen, (unsigned long)fileSize);
+                continue;
+            }
+            memcpy(filename, rest, fnLen);
+            filename[fnLen] = '\0';
+
+            ESP_LOGI(TAG, "AUDIO:FILE '%s' %lu bytes — allocating PSRAM",
+                     filename, (unsigned long)fileSize);
+
+            /* Allocate from PSRAM (8 MB available on ESP32-S3) */
+            uint8_t *wavBuf = heap_caps_malloc(fileSize, MALLOC_CAP_SPIRAM);
+            if (!wavBuf)
+            {
+                uart_write_safe("UPLOAD:FAIL:no_mem\n", 19);
+                ESP_LOGE(TAG, "PSRAM alloc failed for %lu bytes", (unsigned long)fileSize);
+                continue;
+            }
+
+            /* Receive raw WAV bytes from STM32 in 1-KB chunks.
+             * 5-second timeout per chunk: STM32 reads from SD so allow for
+             * occasional SD read latency spikes. */
+            uint32_t received = 0;
+            bool     rxOk     = true;
+            while (received < fileSize)
+            {
+                uint32_t toRead = fileSize - received;
+                if (toRead > 1024u) toRead = 1024u;
+
+                int got = uart_read_bytes(UART_PORT,
+                                          wavBuf + received,
+                                          (size_t)toRead,
+                                          pdMS_TO_TICKS(5000));
+                if (got <= 0)
+                {
+                    ESP_LOGE(TAG, "UART rx timeout at byte %lu/%lu",
+                             (unsigned long)received, (unsigned long)fileSize);
+                    rxOk = false;
+                    break;
+                }
+                received += (uint32_t)got;
+            }
+
+            if (!rxOk || received != fileSize)
+            {
+                heap_caps_free(wavBuf);
+                uart_write_safe("UPLOAD:FAIL:rx_error\n", 21);
+                continue;
+            }
+
+            ESP_LOGI(TAG, "WAV received: %lu bytes — waiting for WiFi", (unsigned long)fileSize);
+
+            /* Wait up to 5 s for WiFi before attempting upload */
+            EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
+                                                   WIFI_CONNECTED_BIT,
+                                                   pdFALSE, pdTRUE,
+                                                   pdMS_TO_TICKS(5000));
+            if (!(bits & WIFI_CONNECTED_BIT))
+            {
+                heap_caps_free(wavBuf);
+                uart_write_safe("UPLOAD:FAIL:no_wifi\n", 20);
+                ESP_LOGW(TAG, "Upload skipped: WiFi not connected");
+                continue;
+            }
+
+            /* Upload → Transcribe → Route */
+            if (CloudUpload_UploadWav(filename, wavBuf, (size_t)fileSize))
+            {
+                char transcript[CLOUD_TRANSCRIPT_MAX];
+                if (CloudUpload_Transcribe(filename, transcript, sizeof(transcript)))
+                {
+                    CommandRouter_Route(transcript);
+                }
+            }
+
+            heap_caps_free(wavBuf);
+
         } else {
             char reply[CMD_BUF_SIZE];
             int  len = snprintf(reply, sizeof(reply), "ERROR:unknown command\n");
@@ -663,6 +769,8 @@ void app_main(void)
     assert(s_uart_mutex);
 
     music_task_init(s_uart_mutex);
+    CloudUpload_Init();
+    CommandRouter_Init();
 
     uart_init();
     wifi_init();

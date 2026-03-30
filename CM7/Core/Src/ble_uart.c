@@ -246,20 +246,30 @@ void BLE_UART_StartDMA(void)
         RTT_LOG( "[UART] DMA buffer OK: 0x%08lX\n", buf_addr);
     }
 
+    /* NORA may send data before DMA is armed, causing ORE (Overrun Error).
+     * Clear hardware error flags, software ErrorCode, and abort the DMA handle
+     * so HAL_DMA_Start_IT finds the DMA in READY state. */
+    __HAL_UART_CLEAR_FLAG(&huart8, UART_CLEAR_OREF | UART_CLEAR_FEF |
+                                    UART_CLEAR_NEF  | UART_CLEAR_IDLEF);
+    huart8.ErrorCode = HAL_UART_ERROR_NONE;
+    huart8.RxState   = HAL_UART_STATE_READY;
+    if (huart8.hdmarx != NULL)
+    {
+        HAL_DMA_Abort(huart8.hdmarx);   /* resets DMA handle State to READY */
+    }
+
     HAL_StatusTypeDef ret = HAL_UARTEx_ReceiveToIdle_DMA(&huart8,
                                                           s_dma_rx_buf,
                                                           BLE_DMA_BUF_SIZE);
     if (ret != HAL_OK)
     {
         RTT_LOG(
-            "[UART] ERROR: DMA arm failed! ret=%d ErrorCode=0x%08lX\n",
-            (int)ret, huart8.ErrorCode);
-        Error_Handler();
+            "[UART] ERROR: DMA arm failed! ret=%d gState=0x%08lX RxState=0x%08lX ErrorCode=0x%08lX\n",
+            (int)ret, (uint32_t)huart8.gState, (uint32_t)huart8.RxState, huart8.ErrorCode);
+        /* Do NOT call Error_Handler — system keeps running, LCD still works */
+        return;
     }
-    else
-    {
-        RTT_LOG( "[UART] DMA armed OK\n");
-    }
+    RTT_LOG( "[UART] DMA armed OK\n");
 
     /* Disable half-transfer interrupt — we only want TC and IDLE. */
     __HAL_DMA_DISABLE_IT(&s_hdma_uart8_rx, DMA_IT_HT);

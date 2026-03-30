@@ -20,6 +20,7 @@
  */
 
 #include "audio_rec.h"        /* own header — declares AudioRec_Init, AudioRec_TaskEntry */
+#include "audio_sd.h"         /* SD card WAV recording (Stage 1 of voice command pipeline) */
 #include "main.h"             /* Error_Handler(), peripheral handles                     */
 #include "stm32h7xx_hal.h"    /* all STM32 HAL APIs (DFSDM, DMA, GPIO, UART)            */
 #include "FreeRTOS.h"         /* FreeRTOS core types and macros                          */
@@ -27,6 +28,7 @@
 #include "semphr.h"           /* xSemaphoreCreateBinary, xSemaphoreGiveFromISR           */
 #include "queue.h"            /* xQueueCreate, xQueueSendFromISR, xQueueReceive          */
 #include <string.h>           /* strlen — used in SendAscii                              */
+#include <stdio.h>            /* printf, fflush — Terminal I/O trace                     */
 
 /* ── Configuration ────────────────────────────────────────────────────────────
  * AUDIO_BUF_SAMPLES : number of PCM samples per DMA half-buffer.
@@ -373,9 +375,14 @@ void AudioRec_TaskEntry(void *arg)
         vTaskDelay(pdMS_TO_TICKS(50));              /* wait 50 ms for debounce   */
         while (xSemaphoreTake(s_buttonSem, 0) == pdTRUE) {} /* drain bounce tokens */
 
+        printf("[AUDIO] Button pressed — starting recording\n"); fflush(stdout);
+
         /* Start recording */
         s_recording = 1;
         SendAscii("AUDIO:START:31250:16:1\n");             /* notify NORA: recording begins */
+        printf("[AUDIO] AUDIO:START sent to NORA\n"); fflush(stdout);
+        AudioSD_StartRecording(NULL, 0);                    /* open REC_NNN.wav on SD card   */
+        printf("[AUDIO] SD card recording started\n"); fflush(stdout);
         HAL_DFSDM_FilterRegularStart_DMA(&s_hdfsdm_flt0,   /* start DMA conversion          */
                                          s_audioBuf,        /* destination buffer            */
                                          AUDIO_BUF_TOTAL);  /* total elements (1024 int32)   */
@@ -395,6 +402,7 @@ void AudioRec_TaskEntry(void *arg)
                     : &s_audioBuf[AUDIO_BUF_SAMPLES]; /* second half: samples 512..1023 */
 
                 SendPCMFrame(src, AUDIO_BUF_SAMPLES); /* convert + transmit over UART8 */
+                AudioSD_WriteFrame(src, AUDIO_BUF_SAMPLES); /* also write to SD card    */
             }
 
             /* Check if button was pressed again to stop recording.
@@ -404,13 +412,25 @@ void AudioRec_TaskEntry(void *arg)
                 vTaskDelay(pdMS_TO_TICKS(50));              /* debounce */
                 while (xSemaphoreTake(s_buttonSem, 0) == pdTRUE) {} /* drain bounces */
 
+                printf("[AUDIO] Button pressed — stopping recording\n"); fflush(stdout);
                 HAL_DFSDM_FilterRegularStop_DMA(&s_hdfsdm_flt0); /* stop DMA          */
                 s_recording = 0;                                   /* exit the loop     */
                 SendAscii("AUDIO:STOP\n");                         /* notify NORA: done */
+                printf("[AUDIO] AUDIO:STOP sent to NORA\n"); fflush(stdout);
 
                 /* Drain any DMA events that arrived between stop and here */
                 uint8_t dummy;
                 while (xQueueReceive(s_halfQueue, &dummy, 0) == pdTRUE) {}
+
+                /* Finalise the WAV file: patch header, close, then send to NORA */
+                char sdFilename[16];
+                if (AudioSD_StopRecording(sdFilename, sizeof(sdFilename)))
+                {
+                    printf("[AUDIO] Sending SD file [%s] to NORA\n", sdFilename); fflush(stdout);
+                    AudioSD_SendFileToUART(sdFilename); /* streams AUDIO:FILE: + bytes */
+                    printf("[AUDIO] File send complete\n"); fflush(stdout);
+                }
+
                 break; /* exit while(s_recording) and go back to IDLE */
             }
         }
