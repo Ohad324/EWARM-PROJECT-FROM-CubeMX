@@ -31,6 +31,7 @@
 #include <stdbool.h>             /* bool, true, false in C */
 #include "ble_queue.h"
 #include "ble_uart.h"            /* DMA+IDLE driver, bleHistory, BLE_UART_Init() */
+#include "audio_rec.h"           /* button-triggered MEMS recording, AudioRec_Init() */
 #include "log_mutex.h"           /* LOG() macro — outputs to SEGGER RTT */
 #include "music_display_task.h"  /* Music_Init(), xMusicQueue, music_msg_t */
 #include "cmsis_os2.h"           /* osKernelGetTickCount() */
@@ -265,6 +266,10 @@ Error_Handler();
      The actual HAL_UARTEx_ReceiveToIdle_DMA() call happens inside
      UARTReceiveTask so the FreeRTOS ISR infrastructure is live first. */
   BLE_UART_Init();
+  /* Initialise DFSDM mic, DMA, and button EXTI for audio recording.
+     Must run after MX_GPIO_Init() (GPIOC clock already on) and before
+     osKernelStart() so RTOS objects (semaphore, queue) are created first. */
+  /* AudioRec_Init(); */ /* DISABLED: testing thumbnail pipeline without audio */
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -298,6 +303,10 @@ Error_Handler();
 
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);
+  /* AudioRecTask: waits for button press, records mic via DFSDM DMA, sends PCM over UART8.
+     Stack 4096 bytes: needs ~1 KB for pcm16[] static buffer + FreeRTOS overhead.
+     Priority normal: same as TouchGFX — audio send is bursty, not latency-critical. */
+  /* xTaskCreate(AudioRec_TaskEntry, "AudioRec", 4096u, NULL, osPriorityNormal, NULL); */ /* DISABLED */
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);

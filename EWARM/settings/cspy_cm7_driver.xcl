@@ -1,0 +1,23 @@
+--endian=little
+
+--cpu=Cortex-M7
+
+--fpu=VFPv5_D16
+
+-p
+
+C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm\config\debugger\ST\STM32H747XI_M7.ddf
+
+--drv_verify_download
+
+--device=STM32H747XI_M7
+
+--drv_interface=SWD
+
+--jlink_reset_strategy=0,0
+
+--drv_swo_clock_setup=200000000,0,2000000
+
+--drv_catch_exceptions=0x000
+
+--drv_debug_ap=0

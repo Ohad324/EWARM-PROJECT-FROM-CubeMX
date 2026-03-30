@@ -1,0 +1,23 @@
+C:\iar\ewarm-9.70.2\arm\bin\armproc.dll
+
+ C:\iar\ewarm-9.70.2\arm\bin\armstlink.dll
+
+ C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM4\Exe\STM32H747I-DISCO_CM4.out
+
+ --plugin=C:\iar\ewarm-9.70.2\arm\bin\armLibSupportUniversal.dll
+
+ --device_macro=C:\iar\ewarm-9.70.2\arm/config/debugger/ST/STM32H7xx.dmac
+
+ --device_macro=C:\iar\ewarm-9.70.2\arm/config/debugger/ST/STM32H7x5_M4.dmac
+
+ --device_macro=C:\iar\ewarm-9.70.2\arm/config/debugger/ST/STM32H7x5_DBG.dmac
+
+ --device_macro=C:\iar\ewarm-9.70.2\arm/config/debugger/ST/STM32H7xx_OB.dmac
+
+ --device_macro=C:\iar\ewarm-9.70.2\arm/config/debugger/ST/STM32H7xx_TRACE.dmac
+
+ --flash_loader=C:\iar\ewarm-9.70.2\arm/config/flashloader/ST/FlashSTM32H7x5xI.board
+
+ 
+
+

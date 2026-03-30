@@ -1,0 +1,252 @@
+T51C4 000:001.919   SEGGER J-Link V9.30 Log File
+T51C4 000:002.560   DLL Compiled: Mar 25 2026 17:36:14
+T51C4 000:002.574   Logging started @ 2026-03-30 07:18
+T51C4 000:002.586   Process: C:\Program Files\SEGGER\JLink_V930\JLink.exe
+T51C4 000:003.174 - 2.599ms 
+T51C4 000:003.780 JLINK_SetWarnOutHandler(...)
+T51C4 000:003.813 - 0.035ms 
+T51C4 000:003.838 JLINK_OpenEx(...)
+T51C4 000:017.300   Firmware: J-Link Ultra V7 compiled Mar 19 2026 15:48:03
+T51C4 000:019.660   Firmware: J-Link Ultra V7 compiled Mar 19 2026 15:48:03
+T51C4 000:032.963   Hardware: V7.00
+T51C4 000:033.018   S/N: 507000552
+T51C4 000:033.208   OEM: SEGGER
+T51C4 000:033.216   Feature(s): RDI, FlashBP, FlashDL, JFlash, GDB
+T51C4 000:039.067   Bootloader: 2025 Jan 30
+T51C4 000:040.325   USB speed mode: High speed (480 MBit/s)
+T51C4 000:040.911   TELNET listener socket opened on port 19021
+T51C4 000:041.070   WEBSRV WEBSRV_Init(): Starting webserver thread(s)
+T51C4 000:041.147   WEBSRV Failed to put socket into listener state (port 19080)
+T51C4 000:041.299   WEBSRV Webserver running on local port 19081
+T51C4 000:041.634   Looking for J-Link GUI Server exe at: C:\Program Files\SEGGER\JLink_V930\JLinkGUIServer.exe
+T51C4 000:041.686   Forking J-Link GUI Server: C:\Program Files\SEGGER\JLink_V930\JLinkGUIServer.exe
+T51C4 000:045.492   J-Link GUI Server info: "J-Link GUI server V9.30 "
+T51C4 000:045.952 - 42.088ms returns "O.K."
+T51C4 000:046.129 JLINK_GetFirmwareString(...)
+T51C4 000:046.147 - 0.028ms 
+T51C4 000:046.166 JLINK_GetHardwareVersion()
+T51C4 000:046.185 - 0.013ms returns 70000
+T51C4 000:046.224 JLINK_GetHWInfo(...)
+T51C4 000:046.656 - 0.434ms returns 0
+T51C4 000:046.724 JLINK_GetSN()
+T51C4 000:046.737 - 0.012ms returns 507000552
+T51C4 000:046.750 JLINK_GetOEMString(...)
+T51C4 000:046.782 JLINK_EMU_GetCurrConnectionInfo()
+T51C4 000:046.991 - 0.216ms returns 0
+T51C4 000:047.061 JLINK_EMU_HasCapEx(0x00000026)
+T51C4 000:047.073 - 0.012ms returns 0
+T51C4 000:047.083 JLINK_GetEmuCaps()
+T51C4 000:047.091 - 0.008ms returns 0xB9FF7BBF
+T51C4 000:047.100 JLINK_GetEmuCaps()
+T51C4 000:047.108 - 0.007ms returns 0xB9FF7BBF
+T51C4 000:047.116 JLINK_GetHWStatus(...)
+T51C4 000:047.324 - 0.206ms returns 0
+T51C4 000:047.388 JLINK_EMU_HasCapEx(0x00000044)
+T51C4 000:047.399 - 0.010ms returns 1
+T51C4 000:047.415 JLINK_ReadEmuConfigMem(..., Off = 0x9A, NumBytes = 0x01)
+T51C4 000:047.425 - 0.009ms returns 0
+T51C4 000:047.441 JLINK_TIF_GetAvailable(...)
+T51C4 000:047.683 - 0.241ms 
+T51C4 000:047.761 JLINK_DEVICE_GetIndex(sDeviceName = STM32H747XI_M7)
+T51C4 000:110.519 - 62.759ms returns 11666
+T51C4 000:111.007 JLINK_ExecCommand("device=STM32H747XI_M7", ...). 
+T51C4 000:113.830   Flash bank @ 0x08000000: SFL: Parsing sectorization info from ELF file
+T51C4 000:113.844     FlashDevice.SectorInfo[0]: .SectorSize = 0x00020000, .SectorStartAddr = 0x00000000
+T51C4 000:113.852   FlashBank @0x08000000: Sectorization info from SFL ELF file ignored because sectorization override from DLL / XML file is active.
+T51C4 000:114.095   Flash bank @ 0x08100000: SFL: Parsing sectorization info from ELF file
+T51C4 000:114.108     FlashDevice.SectorInfo[0]: .SectorSize = 0x00020000, .SectorStartAddr = 0x00000000
+T51C4 000:114.117   FlashBank @0x08100000: Sectorization info from SFL ELF file ignored because sectorization override from DLL / XML file is active.
+T51C4 000:115.071   Flash bank @ 0x90000000: SFL: Parsing sectorization info from ELF file
+T51C4 000:115.090     FlashDevice.SectorInfo[0]: .SectorSize = 0x00010000, .SectorStartAddr = 0x00000000
+T51C4 000:126.033   Device "STM32H747XI_M7" selected.
+T51C4 000:128.537 - 17.529ms returns 0x00
+T51C4 000:128.565 JLINK_EnableLog(...)
+T51C4 000:128.571 - 0.006ms 
+T51C4 000:128.580 JLINK_GetEmuCaps()
+T51C4 000:128.586 - 0.005ms returns 0xB9FF7BBF
+T51C4 000:128.592 JLINK_TIF_GetAvailable(...)
+T51C4 000:128.928 - 0.332ms 
+T51C4 000:129.405 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T51C4 000:132.161 - 3.138ms returns 0x00
+T51C4 000:132.556 JLINK_IsConnected()
+T51C4 000:132.569 - 0.013ms returns FALSE
+T51C4 000:132.616 JLINK_SetSpeed(4000)
+T51C4 000:133.961 - 1.344ms 
+T51C4 000:134.013 JLINK_Connect()
+T51C4 000:136.096   ConfigTargetSettings() start
+T51C4 000:136.513    J-Link Script File: Executing ConfigTargetSettings()
+T51C4 000:138.185   ConfigTargetSettings() end - Took 2.04ms
+T51C4 000:138.611   InitTarget() start
+T51C4 000:138.628    J-Link Script File: Executing InitTarget()
+T51C4 000:139.089   SWD selected. Executing JTAG -> SWD switching sequence.
+T51C4 000:142.139   DAP initialized successfully.
+T51C4 000:156.130   InitTarget() end - Took 17.4ms
+T51C4 000:156.921   Found SW-DP with ID 0x6BA02477
+T51C4 000:160.940   DPIDR: 0x6BA02477
+T51C4 000:160.964   CoreSight SoC-400 or earlier
+T51C4 000:160.972   AP map detection skipped. Manually configured AP map found.
+T51C4 000:161.253   AP[0]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+T51C4 000:161.267   AP[1]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+T51C4 000:161.277   AP[2]: APB-AP (IDR: Not set, ADDR: 0x00000000)
+T51C4 000:161.285   AP[3]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+T51C4 000:161.298   AP[0]: Skipped ROMBASE read. CoreBaseAddr manually set by user
+T51C4 000:161.761   AP[0]: Core found
+T51C4 000:162.330   CPUID register: 0x411FC271. Implementer code: 0x41 (ARM)
+T51C4 000:162.757   Cache: L1 I/D-cache present
+T51C4 000:163.138   Found Cortex-M7 r1p1, Little endian.
+T51C4 000:163.825   -- Max. mem block: 0x0000EC20
+T51C4 000:165.652   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T51C4 000:166.164   CPU_ReadMem(4 bytes @ 0xE0002000)
+T51C4 000:166.604   FPUnit: 8 code (BP) slots and 0 literal slots
+T51C4 000:166.627   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T51C4 000:166.992   CPU_ReadMem(4 bytes @ 0xE0001000)
+T51C4 000:167.329   CPU_WriteMem(4 bytes @ 0xE0001000)
+T51C4 000:167.704   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T51C4 000:168.132   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T51C4 000:168.535   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T51C4 000:168.946   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T51C4 000:169.247   ROM table scan skipped. CoreBaseAddr manually set by user: 0xE00FE000
+T51C4 000:169.261   CPU_WriteMem(4 bytes @ 0xE000ED84)
+T51C4 000:169.551   CPU_ReadMem(4 bytes @ 0xE000ED80)
+T51C4 000:169.827   I-Cache L1: 16 KB, 256 Sets, 32 Bytes/Line, 2-Way
+T51C4 000:169.837   CPU_WriteMem(4 bytes @ 0xE000ED84)
+T51C4 000:170.129   CPU_ReadMem(4 bytes @ 0xE000ED80)
+T51C4 000:170.403   D-Cache L1: 16 KB, 128 Sets, 32 Bytes/Line, 4-Way
+T51C4 000:170.439 - 36.425ms returns 0x00
+T51C4 000:170.475 JLINK_GetIdData(pIdData)
+T51C4 000:170.934   pIdData->ScanLen=4
+T51C4 000:170.944   pIdData->NumDevices=1
+T51C4 000:170.951   pIdData->aId[0]=0x6BA02477
+T51C4 000:170.958   pIdData->aIrRead[0]=0
+T51C4 000:170.965   pIdData->aScanLen[0]=0
+T51C4 000:170.972   pIdData->aScanRead[0]=0
+T51C4 000:170.979 - 0.504ms 
+T51C4 000:171.195 JLINK_GetMemZones(...)
+T51C4 000:171.209 - 0.013ms returns 1
+T51C4 000:171.217 JLINK_HasError()
+T51C4 000:171.228 JLINK_CORE_GetFound()
+T51C4 000:171.234 - 0.005ms returns 0xE0100FF
+T51C4 000:171.450 JLINK_SWO_Control(JLINKARM_SWO_CMD_GET_SPEED_INFO, ...)
+T51C4 000:171.845 - 0.395ms returns 0x00
+T51C4 000:172.398 JLINK_Reset()
+T51C4 000:172.590   JLINK_GetResetTypeDesc
+T51C4 000:172.598   - 0.007ms 
+T51C4 000:172.929   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T51C4 000:172.950   CPU is running
+T51C4 000:172.966   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T51C4 000:173.346   CPU is running
+T51C4 000:173.366   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T51C4 000:173.656   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T51C4 000:174.103   Reset: Reset device via AIRCR.SYSRESETREQ.
+T51C4 000:174.122   CPU is running
+T51C4 000:174.132   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T51C4 000:228.044   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T51C4 000:228.469   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T51C4 000:231.277   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T51C4 000:238.053   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T51C4 000:240.706   CPU_WriteMem(4 bytes @ 0xE0002000)
+T51C4 000:241.199   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T51C4 000:241.725   CPU_ReadMem(4 bytes @ 0xE0001000)
+T51C4 000:243.310 - 70.911ms 
+T51C4 000:243.404 JLINK_Halt()
+T51C4 000:243.417 - 0.013ms returns 0x00
+T51C4 000:243.438 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+T51C4 000:243.451 - 0.012ms returns 0x00
+T51C4 000:243.463 JLINK_DownloadFile(sFile = C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.hex)
+T51C4 000:248.175   Data:  B8 D4 03 24 01 3B 04 08 19 00 04 08 85 3E 04 08 ...
+T51C4 000:248.662   completely In flash
+T51C4 000:248.701   Data:  69 74 63 68 20 2D 3E 20 4D 75 73 69 63 53 63 72 ...
+T51C4 000:248.722   completely In flash
+T51C4 000:249.532   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T51C4 000:249.942   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T51C4 000:250.790    -- --------------------------------------
+T51C4 000:250.813    -- Start of determining flash info (Bank @ 0x08000000)
+T51C4 000:250.825    -- End of determining flash info
+T51C4 000:250.846    -- Start of determining dirty areas in flash cache
+T51C4 000:250.854    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x08000000 if necessary
+T51C4 000:250.863    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x08020000 if necessary
+T51C4 000:250.872    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x08040000 if necessary
+T51C4 000:250.974    -- End of determining dirty areas
+T51C4 000:250.984    -- Start of preparing flash programming
+T51C4 000:251.544    -- Preparing RAMCode
+T51C4 000:251.578    -- Calculating RAM usage
+T51C4 000:251.600    -- RAM usage = 19216 Bytes
+T51C4 000:251.611    -- Preserving CPU registers
+T51C4 000:252.618    -- Preparing memory
+T51C4 000:252.656    -- Preparing target
+T51C4 000:252.668    -- Preserving target RAM temporarily used for programming
+T51C4 000:310.135    -- Downloading RAMCode
+T51C4 000:324.932    -- Initializing RAMCode (InitType: 3 = Verify)
+T51C4 000:324.956    -- Executing SEGGER_FL_Prepare(3)
+T51C4 000:327.854    -- End of preparing flash programming
+T51C4 000:436.739    -- CPU speed could not be measured.
+T51C4 000:436.767    -- Start of comparing flash
+T51C4 000:436.775    -- CRC check was estimated as fastest method
+T51C4 000:478.152    -- Comparing range 0x8000000 - 0x801FFFF (1 Sector, 128 KB), using single-block CRC calculation
+T51C4 000:564.621    -- CRC does not match for sector 0
+T51C4 000:564.935    -- Comparing range 0x8020000 - 0x803FFFF (1 Sector, 128 KB), using single-block CRC calculation
+T51C4 000:646.860    -- CRC does not match for sector 1
+T51C4 000:647.284    -- Comparing range 0x8040000 - 0x805FFFF (1 Sector, 128 KB), using single-block CRC calculation
+T51C4 000:729.289    -- CRC does not match for sector 2
+T51C4 000:729.319    -- End of comparing flash
+T51C4 000:729.328    -- Start of erasing sectors
+T51C4 000:729.339    -- Erasing range 0x08000000 - 0x0801FFFF (  1 Sector, 128 KB)
+T51C4 001:503.197    -- Erasing range 0x08020000 - 0x0803FFFF (  1 Sector, 128 KB)
+T51C4 002:305.421    -- Erasing range 0x08040000 - 0x0805FFFF (  1 Sector, 128 KB)
+T51C4 003:111.203    -- End of erasing sectors
+T51C4 003:111.236    -- Start of flash programming
+T51C4 003:111.245    -- Programming range 0x08000000 - 0x0801FFFF (  1 Sector, 128 KB)
+T51C4 003:564.818    -- Programming range 0x08020000 - 0x0803FFFF (  1 Sector, 128 KB)
+T51C4 004:054.247    -- Programming range 0x08040000 - 0x0805FFFF (  1 Sector, 128 KB)
+T51C4 004:149.968    -- End of flash programming
+T51C4 004:150.060    -- 0x8000000 - 0x805FFFF (  3 Sectors, 384 KB)
+T51C4 004:150.087    -- Start of verifying flash
+T51C4 004:150.111    -- Use CRC or checksum calculation as verify method
+T51C4 004:150.135    -- Checksum is not supported by this flash bank. Switched to read back method.
+T51C4 004:426.749    -- End of verifying flash
+T51C4 004:426.788    -- Start of restoring
+T51C4 004:426.803    -- Executing SEGGER_FL_Restore()
+T51C4 004:432.231    -- Restoring target memory
+T51C4 004:490.797    -- Restoring CPU registers
+T51C4 004:490.847    -- End of restoring
+T51C4 004:490.960    -- Bank 0 @ 0x08000000: 1 range affected (393216 bytes)
+T51C4 004:490.981    -- Total: 4.239s (Prepare: 0.185s, Compare: 0.292s, Erase: 2.381s, Program: 1.073s, Verify: 0.241s, Restore: 0.064s)
+T51C4 004:491.001    -- Program & Verify speed: 292 KB/s
+T51C4 004:530.417 - 4286.953ms returns 0x00
+T51C4 004:530.499 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+T51C4 004:530.527 - 0.028ms returns 0x01
+T51C4 004:530.547 JLINK_SetResetDelay(0)
+T51C4 004:530.553 - 0.005ms 
+T51C4 004:530.560 JLINK_Reset()
+T51C4 004:530.952   JLINK_GetResetTypeDesc
+T51C4 004:530.970   - 0.017ms 
+T51C4 004:531.008   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T51C4 004:531.019   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T51C4 004:531.471   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T51C4 004:531.901   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T51C4 004:532.444   Reset: Reset device via AIRCR.SYSRESETREQ.
+T51C4 004:532.463   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T51C4 004:587.010   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T51C4 004:587.608   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T51C4 004:588.713   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T51C4 004:595.219   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T51C4 004:598.768   CPU_WriteMem(4 bytes @ 0xE0002000)
+T51C4 004:599.456   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T51C4 004:599.937   CPU_ReadMem(4 bytes @ 0xE0001000)
+T51C4 004:600.529 - 69.967ms 
+T51C4 004:600.595 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T51C4 004:603.148   CPU_ReadMem(4 bytes @ 0xE0001000)
+T51C4 004:603.945   CPU_WriteMem(4 bytes @ 0xE0001004)
+T51C4 004:606.239   Memory map 'after startup completion point' is active
+T51C4 004:606.262 - 5.666ms 
+T51C4 004:606.317 JLINK_IsOpen()
+T51C4 004:606.325 - 0.007ms returns 0x01
+T51C4 004:694.801 JLINK_Close()
+T51C4 004:702.181   OnDisconnectTarget() start
+T51C4 004:702.245    J-Link Script File: Executing OnDisconnectTarget()
+T51C4 004:702.260   Resetting used DBGMCU registers.
+T51C4 004:708.321   OnDisconnectTarget() end - Took 6.07ms
+T51C4 004:708.380   CPU_ReadMem(4 bytes @ 0xE0001000)
+T51C4 004:734.092 - 39.292ms
+T51C4 004:734.795   
+T51C4 004:734.818   Closed

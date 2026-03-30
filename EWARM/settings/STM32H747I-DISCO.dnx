@@ -21,19 +21,19 @@
         <ByteLimit>50</ByteLimit>
     </Stack>
     <PlDriver>
-        <MemConfigValue>C:\iar\ewarm-9.60.3\arm\config\debugger\ST\STM32H747XI_M7.ddf</MemConfigValue>
         <FirstRun>0</FirstRun>
+        <MemConfigValue>C:\iar\ewarm-9.60.3\arm\config\debugger\ST\STM32H747XI_M7.ddf</MemConfigValue>
     </PlDriver>
     <ArmDriver>
-        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
         <EnableCache>0</EnableCache>
+        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
     </ArmDriver>
     <JLinkDriver>
         <TraceBufferSize>0x10000</TraceBufferSize>
         <TraceStallIfFIFOFull>0x0</TraceStallIfFIFOFull>
         <TracePortSize>0x0</TracePortSize>
         <jlinkResetStyle>12</jlinkResetStyle>
-        <jlinkResetStrategy>3</jlinkResetStrategy>
+        <jlinkResetStrategy>0</jlinkResetStrategy>
         <MultiCoreRunAll>0</MultiCoreRunAll>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
         <CStepIntDis>_ 0</CStepIntDis>
@@ -46,8 +46,8 @@
         <StopOnThrow>_ 0</StopOnThrow>
     </Exceptions>
     <Disassembly>
-        <InstrCount>0</InstrCount>
         <MixedMode>1</MixedMode>
+        <InstrCount>0</InstrCount>
     </Disassembly>
     <Trace1>
         <Enabled>0</Enabled>
@@ -58,11 +58,11 @@
     </CallStack>
     <SWOTraceHWSettings>
         <OverrideDefaultClocks>0</OverrideDefaultClocks>
-        <CpuClock>480000000</CpuClock>
+        <CpuClock>400000000</CpuClock>
         <ClockAutoDetect>1</ClockAutoDetect>
         <ClockWanted>50000000</ClockWanted>
-        <JtagSpeed>49230769</JtagSpeed>
-        <Prescaler>10</Prescaler>
+        <JtagSpeed>50000000</JtagSpeed>
+        <Prescaler>8</Prescaler>
         <TimeStampPrescIndex>0</TimeStampPrescIndex>
         <TimeStampPrescData>0</TimeStampPrescData>
         <PcSampCYCTAP>1</PcSampCYCTAP>
@@ -82,6 +82,10 @@
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
         <CStepIntDis>_ 0</CStepIntDis>
     </StLinkDriver>
+    <Trace2>
+        <Enabled>0</Enabled>
+        <ShowSource>0</ShowSource>
+    </Trace2>
     <SWOTraceWindow>
         <PcSampling>1</PcSampling>
         <InterruptLogs>0</InterruptLogs>
@@ -144,10 +148,6 @@
         <Probe0>I0</Probe0>
         <ProbeSetup0>2 1 1 2 0 0</ProbeSetup0>
     </PowerProbe>
-    <Trace2>
-        <Enabled>0</Enabled>
-        <ShowSource>0</ShowSource>
-    </Trace2>
     <TermIOLog>
         <LoggingEnabled>_ 0</LoggingEnabled>
         <LogFile>_ ""</LogFile>

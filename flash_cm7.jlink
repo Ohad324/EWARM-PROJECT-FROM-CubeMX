@@ -1,0 +1,10 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+SWOSpeed 2000000
+SWOEnable
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.hex"
+r
+g
+exit

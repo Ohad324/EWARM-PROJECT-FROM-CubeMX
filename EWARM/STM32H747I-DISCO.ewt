@@ -2989,12 +2989,6 @@
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\stm32h7xx_it.c</name>
                     </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\CM7\Core\Src\thumb_pipeline.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\CM7\Core\Src\thumb_ref_jpeg.c</name>
-                    </file>
                 </group>
                 <group>
                     <name>TouchGFX</name>
@@ -3101,6 +3095,12 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_crc_ex.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dfsdm.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dfsdm.h</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dma.c</name>
@@ -3359,6 +3359,9 @@
             <name>$PROJ_DIR$\..\Utilities\JPEG\jpeg_utils.c</name>
         </file>
     </group>
+    <file>
+        <name>$PROJ_DIR$\..\CM7\Core\Src\audio_rec.c</name>
+    </file>
     <file>
         <name>$PROJ_DIR$\..\CM7\Core\Src\ble_uart.c</name>
     </file>

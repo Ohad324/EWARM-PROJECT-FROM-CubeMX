@@ -6,6 +6,31 @@ This TBS is configured for 480 x 800 pixels 24bpp screen resolution.
 
 Performance testing can be done using the GPIO pins designated with the following signals: VSYNC_FREQ - Pin PJ3 (D2), RENDER_TIME - Pin PJ8 (D1), FRAME_RATE - Pin PJ9 (D0), MCU_ACTIVE - Pin PF8 (D3).
 
+## Version Control (Git)
+
+The project is tracked with Git. Remote backup is on OneDrive.
+
+**Save your work:**
+```bash
+cd C:\TouchGFXProjects\MyApplication
+git add -A
+git commit -m "describe what you changed"
+git push
+```
+
+**View history:**
+```bash
+git log --oneline
+```
+
+**Go back to a previous version:**
+```bash
+git checkout <commit-id>   # e.g. git checkout a1b2c3d
+git checkout master        # return to latest
+```
+
+---
+
 ## Dual-Core Changes
 
 This TouchGFX Board Setup (TBS) supports the dual-core functionality of the STM32H747I-DISCO.

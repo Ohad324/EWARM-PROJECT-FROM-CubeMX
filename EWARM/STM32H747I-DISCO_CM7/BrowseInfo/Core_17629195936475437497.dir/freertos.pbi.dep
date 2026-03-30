@@ -46,6 +46,7 @@ C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\BrowseInfo\Core_176
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_mdma.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dma2d.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dsi.h \
+  C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dfsdm.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_exti.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_cortex.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_crc.h \

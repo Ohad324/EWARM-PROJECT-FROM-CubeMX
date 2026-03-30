@@ -72,6 +72,9 @@ extern UART_HandleTypeDef huart8;
 /* BLE_UART_DMA_IRQHandler() wraps HAL_DMA_IRQHandler(&s_hdma_uart8_rx).
    The DMA handle is private to ble_uart.c; this trampoline avoids exposing it. */
 extern void BLE_UART_DMA_IRQHandler(void);
+/* AudioRec_DMA_IRQHandler() wraps HAL_DMA_IRQHandler(&s_hdma_dfsdm).
+   The DMA handle is private to audio_rec.c; same pattern as BLE UART. */
+extern void AudioRec_DMA_IRQHandler(void);
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -306,6 +309,28 @@ void UART8_IRQHandler(void)
 void DMA1_Stream0_IRQHandler(void)
 {
     BLE_UART_DMA_IRQHandler();
+}
+
+/**
+ * EXTI15_10_IRQHandler — handles external interrupts on GPIO lines 10-15.
+ * PC13 (blue wakeup button) is on EXTI line 13, which falls in this range.
+ * HAL_GPIO_EXTI_IRQHandler clears the pending flag and calls
+ * HAL_GPIO_EXTI_Callback (defined in audio_rec.c) with GPIO_PIN_13.
+ */
+void EXTI15_10_IRQHandler(void)
+{
+    HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13); /* clear flag + dispatch to callback */
+}
+
+/**
+ * DMA1_Stream1_IRQHandler — handles DMA transfer events for DFSDM Filter0.
+ * Fires on half-complete (512 samples ready) and complete (1024 samples ready).
+ * Routed through AudioRec_DMA_IRQHandler() to keep the DMA handle private
+ * to audio_rec.c — same pattern used by BLE UART on DMA1_Stream0.
+ */
+void DMA1_Stream1_IRQHandler(void)
+{
+    AudioRec_DMA_IRQHandler(); /* delegate to audio_rec.c private handler */
 }
 
 /* USER CODE END 1 */

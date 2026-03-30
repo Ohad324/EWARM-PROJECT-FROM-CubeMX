@@ -15,7 +15,20 @@
       "Bash(powershell -Command \"Get-ChildItem 'C:\\\\NORA_BLE\\\\nora_wifi_ble_translate' | Select-Object Name\")",
       "Read(//cygdrive/c/NORA_BLE/nora_wifi_ble_translate/**)",
       "Bash(powershell -Command \"Select-String -Path ''C:\\\\NORA_BLE\\\\nora_wifi_ble_translate\\\\sdkconfig'' -Pattern ''coex|COEX'' -CaseSensitive:$false | Select-Object Line\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Bash(cmd.exe /c \"dir \\\\\"C:\\\\Program Files\\\\IAR Systems\\\\Embedded Workbench 9.2\\\\\" /s /b 2>nul | head -40\")",
+      "Bash(cmd.exe /c \"dir \\\\\"C:\\\\Program Files\\\\IAR Systems\\\\Embedded Workbench 9.2\\\\\" /s /b 2>nul\" | head -40)",
+      "Bash(cmd.exe /c \"where IarBuild 2>nul & where cspybat 2>nul\")",
+      "Bash(cmd.exe /c \"reg query HKLM\\\\SOFTWARE\\\\IAR Systems /s 2>nul | findstr /i \\\\\"path\\\\|install\\\\|location\\\\\"\" 2>/dev/null | head -20)",
+      "Bash(cmd.exe /c \"reg query \\\\\"HKLM\\\\SOFTWARE\\\\IAR Systems\\\\\" /s 2>nul\")",
+      "Bash(cmd.exe /c \"reg query \\\\\"HKLM\\\\SOFTWARE\\\\WOW6432Node\\\\IAR Systems\\\\\" /s 2>nul\")",
+      "Bash(cmd.exe /c \"wmic logicaldisk get name 2>nul\")",
+      "Bash(wmic logicaldisk:*)",
+      "Bash(\"/c/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" \"C:/TouchGFXProjects/MyApplication/EWARM/Backup of STM32H747I-DISCO.ewp\" -build STM32H747I-DISCO_CM7 -log all 2>&1)",
+      "Bash(\"/c/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" \"C:/TouchGFXProjects/MyApplication/EWARM/Backup of STM32H747I-DISCO.ewp\" -build STM32H747I-DISCO_CM7 -log errors 2>&1)",
+      "Bash(\"/c/Program Files/SEGGER/JLink_V930/JLink.exe\" -commandfile \"C:/TouchGFXProjects/MyApplication/flash_cm7.jlink\" 2>&1)"
     ]
   }
 }

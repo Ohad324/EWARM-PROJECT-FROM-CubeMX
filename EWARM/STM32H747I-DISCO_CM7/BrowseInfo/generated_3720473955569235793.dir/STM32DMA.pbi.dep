@@ -1,5 +1,4 @@
 C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\BrowseInfo\generated_3720473955569235793.dir\STM32DMA.pbi: \
-  C:\TouchGFXProjects\MyApplication\CM7\TouchGFX\target\generated\STM32DMA.cpp \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\CM7\Core\Inc\stm32h7xx_hal_conf.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_rcc.h \
@@ -38,6 +37,7 @@ C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\BrowseInfo\generate
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_mdma.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dma2d.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dsi.h \
+  C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dfsdm.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_exti.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_cortex.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_crc.h \
@@ -50,7 +50,6 @@ C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\BrowseInfo\generate
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_jpeg.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_ltdc.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_ltdc_ex.h \
-  C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dsi.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_pwr.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_pwr_ex.h \
   C:\TouchGFXProjects\MyApplication\EWARM\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_qspi.h \
@@ -97,4 +96,5 @@ C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\BrowseInfo\generate
   C:\TouchGFXProjects\MyApplication\EWARM\..\CM7\Middlewares\ST\touchgfx\framework\include\touchgfx\hal\VGData.hpp \
   C:\TouchGFXProjects\MyApplication\EWARM\..\CM7\Middlewares\ST\touchgfx\framework\include\touchgfx\widgets\Widget.hpp \
   C:\TouchGFXProjects\MyApplication\EWARM\..\CM7\Middlewares\ST\touchgfx\framework\include\touchgfx\lcd\DebugPrinter.hpp \
-  C:\TouchGFXProjects\MyApplication\EWARM\..\CM7\Middlewares\ST\touchgfx\framework\include\touchgfx\hal\Paint.hpp
+  C:\TouchGFXProjects\MyApplication\EWARM\..\CM7\Middlewares\ST\touchgfx\framework\include\touchgfx\hal\Paint.hpp \
+  C:\TouchGFXProjects\MyApplication\CM7\TouchGFX\target\generated\STM32DMA.cpp
