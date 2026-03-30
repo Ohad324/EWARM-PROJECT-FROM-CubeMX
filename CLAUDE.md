@@ -14,14 +14,25 @@ STM32H747I-DISCO music display system:
 ## General Rules
 
 ### Think before you act — examine the problem first
-Before writing any code or making any change, pause and do the following:
-1. **Understand the root cause** — read the relevant code, check the logs, reproduce the problem in your head
-2. **List all options** — consider every possible solution, not just the first one that comes to mind
-3. **Present options to the user** — explain the trade-offs of each before picking one
-4. **Get confirmation** — agree on the approach with the user before implementing
+Before writing any code or making any change, spend meaningful time on analysis.
+The minimum thinking depth required for every problem:
+
+1. **Read the relevant code** — never diagnose from memory alone
+2. **Identify the root cause** — trace the exact failure path, not just the symptom
+3. **Consider who owns the problem** — which layer (NORA / STM32 / Python / Chrome / network)?
+4. **List ALL options** — at least 2-3 alternatives with trade-offs for each
+5. **Present the analysis to the user** — explain what you found and why before proposing anything
+6. **Get confirmation** — agree on the approach before touching a single file
+
+The analysis presented for BUG-005 (Premium YouTube stays untouched) is the
+**minimum acceptable thinking depth**:
+- Explained exactly what the code tracks vs what it ignores
+- Identified the two Chrome worlds running in parallel
+- Connected the symptom to the root cause
+- Showed that one fix (BUG-005) resolves both problems
 
 Do NOT jump to writing code the moment a problem is described.
-If the first solution fails, do NOT immediately try another — go back to step 1 and re-examine.
+If the first solution fails, do NOT immediately try another — go back to step 1.
 A wrong solution applied quickly is worse than a correct solution applied after thinking.
 
 ### Work log
