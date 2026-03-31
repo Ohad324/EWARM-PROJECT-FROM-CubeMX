@@ -23,9 +23,9 @@
 
 if ($debugfile -eq "")
 {
-& "C:\iar\ewarm-9.60.3\common\bin\cspybat" -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.general.xcl" --backend -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.driver.xcl" 
+& "C:\iar\ewarm-9.70.2\common\bin\cspybat" -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.general.xcl" --backend -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.driver.xcl" 
 }
 else
 {
-& "C:\iar\ewarm-9.60.3\common\bin\cspybat" -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.general.xcl" --debug_file=$debugfile --backend -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.driver.xcl" 
+& "C:\iar\ewarm-9.70.2\common\bin\cspybat" -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.general.xcl" --debug_file=$debugfile --backend -f "C:\TouchGFXProjects\MyApplication\EWARM\settings\STM32H747I-DISCO.STM32H747I-DISCO_CM7.driver.xcl" 
 }

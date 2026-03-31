@@ -70,7 +70,7 @@
                 </option>
                 <option>
                     <name>OGLastSavedByProductVersion</name>
-                    <state>9.70.2.18199</state>
+                    <state>9.60.3.7274</state>
                 </option>
                 <option>
                     <name>OGChipSelectEditMenu</name>
@@ -98,7 +98,7 @@
                 </option>
                 <option>
                     <name>GBECoreSlave</name>
-                    <version>35</version>
+                    <version>34</version>
                     <state>39</state>
                 </option>
                 <option>
@@ -115,17 +115,17 @@
                 </option>
                 <option>
                     <name>CoreVariant</name>
-                    <version>35</version>
+                    <version>34</version>
                     <state>39</state>
                 </option>
                 <option>
                     <name>GFPUDeviceSlave</name>
-                    <state></state>
+                    <state>STM32H747XI_M4	ST STM32H747XI_M4</state>
                 </option>
                 <option>
                     <name>FPU2</name>
                     <version>0</version>
-                    <state>6</state>
+                    <state>4</state>
                 </option>
                 <option>
                     <name>NrRegs</name>
@@ -138,8 +138,8 @@
                 </option>
                 <option>
                     <name>GFPUCoreSlave2</name>
-                    <version>35</version>
-                    <state>61</state>
+                    <version>34</version>
+                    <state>39</state>
                 </option>
                 <option>
                     <name>OGCMSISPackSelectDevice</name>
@@ -180,7 +180,7 @@
                 </option>
                 <option>
                     <name>DSPExtension</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>TrustZone</name>
@@ -213,7 +213,7 @@
                 </option>
                 <option>
                     <name>OG_32_64DeviceCoreSlave</name>
-                    <version>35</version>
+                    <version>34</version>
                     <state>39</state>
                 </option>
                 <option>
@@ -226,7 +226,7 @@
             <name>ICCARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>40</version>
+                <version>39</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -490,14 +490,6 @@
                 </option>
                 <option>
                     <name>CCPosSharedSlave</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>CCUseIarExtensions</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>CCUseGnuExtensions</name>
                     <state>0</state>
                 </option>
             </data>
@@ -1025,7 +1017,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state></state>
+                    <state>STM32H747I-DISCO_import_lib.o</state>
                 </option>
                 <option>
                     <name>OILinkExtraOption</name>
@@ -1093,7 +1085,7 @@
             <name>IARCHIVE</name>
             <archiveVersion>0</archiveVersion>
             <data>
-                <version>1</version>
+                <version>0</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -1107,14 +1099,6 @@
                 <option>
                     <name>IarchiveOutput</name>
                     <state>###Unitialized###</state>
-                </option>
-                <option>
-                    <name>IarchiveExtraOptionsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>IarchiveExtraOptions</name>
-                    <state></state>
                 </option>
             </data>
         </settings>
@@ -1190,7 +1174,7 @@
                 </option>
                 <option>
                     <name>RTDescription</name>
-                    <state>Use the full configuration of the C/C++ runtime library. Full locale interface, C locale, file descriptor support, multibytes in printf and scanf, and hex floats in strtod.</state>
+                    <state>A complete configuration of the C/C++14 runtime library. Full locale interface, C locale, file descriptor support, multibytes in printf and scanf, and hex floats in strtod.</state>
                 </option>
                 <option>
                     <name>OGProductVersion</name>
@@ -1198,7 +1182,7 @@
                 </option>
                 <option>
                     <name>OGLastSavedByProductVersion</name>
-                    <state>9.70.2.18199</state>
+                    <state>9.60.3.7274</state>
                 </option>
                 <option>
                     <name>OGChipSelectEditMenu</name>
@@ -1226,7 +1210,7 @@
                 </option>
                 <option>
                     <name>GBECoreSlave</name>
-                    <version>35</version>
+                    <version>34</version>
                     <state>41</state>
                 </option>
                 <option>
@@ -1243,12 +1227,12 @@
                 </option>
                 <option>
                     <name>CoreVariant</name>
-                    <version>35</version>
+                    <version>34</version>
                     <state>41</state>
                 </option>
                 <option>
                     <name>GFPUDeviceSlave</name>
-                    <state></state>
+                    <state>STM32H747XI_M7	ST STM32H747XI_M7</state>
                 </option>
                 <option>
                     <name>FPU2</name>
@@ -1266,8 +1250,8 @@
                 </option>
                 <option>
                     <name>GFPUCoreSlave2</name>
-                    <version>35</version>
-                    <state>61</state>
+                    <version>34</version>
+                    <state>41</state>
                 </option>
                 <option>
                     <name>OGCMSISPackSelectDevice</name>
@@ -1308,7 +1292,7 @@
                 </option>
                 <option>
                     <name>DSPExtension</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>TrustZone</name>
@@ -1317,7 +1301,7 @@
                 <option>
                     <name>TrustZoneModes</name>
                     <version>0</version>
-                    <state>1</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>OGAarch64Abi</name>
@@ -1341,7 +1325,7 @@
                 </option>
                 <option>
                     <name>OG_32_64DeviceCoreSlave</name>
-                    <version>35</version>
+                    <version>34</version>
                     <state>41</state>
                 </option>
                 <option>
@@ -1354,7 +1338,7 @@
             <name>ICCARM</name>
             <archiveVersion>2</archiveVersion>
             <data>
-                <version>40</version>
+                <version>39</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -1428,7 +1412,7 @@
                 <option>
                     <name>CCAllowList</name>
                     <version>1</version>
-                    <state>11111110</state>
+                    <state>00000000</state>
                 </option>
                 <option>
                     <name>CCDebugInfo</name>
@@ -1513,6 +1497,11 @@
                     <state>$PROJ_DIR$/../CM7/TouchGFX/generated/fonts/include</state>
                     <state>$PROJ_DIR$/../CM7/TouchGFX/generated/images/include</state>
                     <state>$PROJ_DIR$/../Middlewares/Third_Party/LibJPEG</state>
+                    <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\App</state>
+                    <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\Target</state>
+                    <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\App</state>
+                    <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\Target</state>
+                    <state>C:\TouchGFXProjects\MyApplication\EWARM</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -1528,16 +1517,16 @@
                 </option>
                 <option>
                     <name>CCOptLevel</name>
-                    <state>3</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>CCOptStrategy</name>
                     <version>0</version>
-                    <state>1</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CCOptLevelSlave</name>
-                    <state>3</state>
+                    <state>0</state>
                 </option>
                 <option>
                     <name>CCPosIndRopi</name>
@@ -1586,7 +1575,7 @@
                 <option>
                     <name>CCOptStrategySlave</name>
                     <version>0</version>
-                    <state>1</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CCGuardCalls</name>
@@ -1638,14 +1627,6 @@
                 </option>
                 <option>
                     <name>CCPosSharedSlave</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>CCUseIarExtensions</name>
-                    <state>1</state>
-                </option>
-                <option>
-                    <name>CCUseGnuExtensions</name>
                     <state>0</state>
                 </option>
             </data>
@@ -2173,7 +2154,7 @@
                 </option>
                 <option>
                     <name>IlinkTrustzoneImportLibraryOut</name>
-                    <state></state>
+                    <state>STM32H747I-DISCO_import_lib.o</state>
                 </option>
                 <option>
                     <name>OILinkExtraOption</name>
@@ -2241,7 +2222,7 @@
             <name>IARCHIVE</name>
             <archiveVersion>0</archiveVersion>
             <data>
-                <version>1</version>
+                <version>0</version>
                 <wantNonLocal>1</wantNonLocal>
                 <debug>1</debug>
                 <option>
@@ -2255,14 +2236,6 @@
                 <option>
                     <name>IarchiveOutput</name>
                     <state>###Unitialized###</state>
-                </option>
-                <option>
-                    <name>IarchiveExtraOptionsCheck</name>
-                    <state>0</state>
-                </option>
-                <option>
-                    <name>IarchiveExtraOptions</name>
-                    <state></state>
                 </option>
             </data>
         </settings>
@@ -2522,6 +2495,9 @@
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dfsdm.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Inc\stm32h7xx_hal_dfsdm.h</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_dma.c</name>
             </file>
             <file>
@@ -2665,6 +2641,135 @@
         </group>
     </group>
     <group>
+        <name>GUI</name>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\ApplicationFontProvider.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\images\src\BitmapDatabase.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\CachedFont.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\CompressedFontCache.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\CompressedUnmappedFontCache.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_NotoSansHebrew_Regular_20_4bpp_0.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_NotoSansHebrew_Regular_80_4bpp_0.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_verdana_10_4bpp_0.cpp</name>
+            <excluded>
+                <configuration>STM32H747I-DISCO_CM7</configuration>
+            </excluded>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_verdana_20_4bpp_0.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_verdana_80_4bpp_0.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\FontCache.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\common\FrontendApplication.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\gui_generated\src\common\FrontendApplicationBase.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\GeneratedFont.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_NotoSansHebrew_Regular_20_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_NotoSansHebrew_Regular_80_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_verdana_10_4bpp.cpp</name>
+            <excluded>
+                <configuration>STM32H747I-DISCO_CM7</configuration>
+            </excluded>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_verdana_20_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_verdana_80_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\texts\src\LanguageGb.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\model\Model.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\music_screen\MusicScreenPresenter.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\music_screen\MusicScreenView.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\gui_generated\src\music_screen\MusicScreenViewBase.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\screen1_screen\Screen1Presenter.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\screen1_screen\Screen1View.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\gui_generated\src\screen1_screen\Screen1ViewBase.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\images\src\SVGDatabase.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_NotoSansHebrew_Regular_20_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_NotoSansHebrew_Regular_80_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_verdana_10_4bpp.cpp</name>
+            <excluded>
+                <configuration>STM32H747I-DISCO_CM7</configuration>
+            </excluded>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_verdana_20_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_verdana_80_4bpp.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\texts\src\Texts.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\texts\src\TypedTextDatabase.cpp</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\VectorFontRendererImpl.cpp</name>
+        </file>
+    </group>
+    <group>
+        <name>LIBJPEG</name>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\LIBJPEG\App\libjpeg.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\LIBJPEG\App\libjpeg.h</name>
+        </file>
+    </group>
+    <group>
         <name>Middlewares</name>
         <group>
             <name>FreeRTOS</name>
@@ -2748,114 +2853,6 @@
             </excluded>
         </file>
     </group>
-    <group>
-        <name>GUI</name>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\ApplicationFontProvider.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\images\src\BitmapDatabase.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\CachedFont.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\CompressedFontCache.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\CompressedUnmappedFontCache.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_NotoSansHebrew_Regular_20_4bpp_0.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_NotoSansHebrew_Regular_80_4bpp_0.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_verdana_20_4bpp_0.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Font_verdana_80_4bpp_0.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\FontCache.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\common\FrontendApplication.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\gui_generated\src\common\FrontendApplicationBase.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\GeneratedFont.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_NotoSansHebrew_Regular_20_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_NotoSansHebrew_Regular_80_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_verdana_20_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Kerning_verdana_80_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\texts\src\LanguageGb.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\model\Model.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\music_screen\MusicScreenPresenter.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\music_screen\MusicScreenView.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\gui_generated\src\music_screen\MusicScreenViewBase.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\screen1_screen\Screen1Presenter.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\screen1_screen\Screen1View.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\gui_generated\src\screen1_screen\Screen1ViewBase.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\images\src\SVGDatabase.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_NotoSansHebrew_Regular_20_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_NotoSansHebrew_Regular_80_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_verdana_20_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\fonts\src\Table_verdana_80_4bpp.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\texts\src\Texts.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\generated\texts\src\TypedTextDatabase.cpp</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\TouchGFX\gui\src\VectorFontRendererImpl.cpp</name>
-        </file>
-    </group>
-    <group>
-        <name>LIBJPEG</name>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\LIBJPEG\App\libjpeg.c</name>
-        </file>
-    </group>
     <file>
         <name>$PROJ_DIR$\..\CM7\Core\Src\audio_rec.c</name>
     </file>
@@ -2874,9 +2871,4 @@
     <file>
         <name>$PROJ_DIR$\..\CM7\Core\Src\fault_handler_asm.s</name>
     </file>
-    <projectSettings>
-        <general>
-            <resolveSourceForBinaries>true</resolveSourceForBinaries>
-        </general>
-    </projectSettings>
 </project>

@@ -1,0 +1,453 @@
+//
+// STM32H7xx TRACE Macros
+//
+
+// Version 1.1  (released with 8.20.2)
+//      ETM/ETB/SWO from Cortex-M7 are all working.
+//      It was developped/verified on STM32H743I-EVAL board.
+//      ETM works OK on 133MHz CPU (PLL1VCO=800 and PLLR=3).
+//      SWO works OK with PLLR=3 and SWODIR=2 (I-jet-Trace)
+//
+// Version 1.2  (released with 8.32.4)
+//      Added support for ETM/ETB/SWO from Cortex-M4 (for dual
+//      core devices)
+//
+
+__var clock_ok;   // Valid trace clock (recently seen)
+__var MM_SWO;     // Initialized to 0x2
+__var MM_ETB;     // Initialized to 0x4
+__var MM_ETM;     // Initialized to 0x10
+
+
+initConst()     // Macro to initialize all constant values
+{
+  if (MM_SWO != 0)
+  {
+    return;     // We already did it ...
+  }
+
+  MM_SWO = 0x2;
+  MM_ETB = 0x4;
+  MM_ETM = 0x10;
+}
+
+/*
+
+  ETM path:
+
+    CM7.ETM     =>  CSTF.In0
+    CM7.DWT/ITM =>  CSTF.In1
+    CM4.ETM     =>  CSTF.In2
+    CM4.DWT/ITM =>  CSTF.In3
+                    CSTF.Out    => TMC/ETF.In
+                                   TMC/ETF.Out => TPIU
+
+  ETB path:
+
+    CM7.ETM     =>  CSTF.In0
+    CM7.DWT/ITM =>  CSTF.In1
+    CM4.ETM     =>  CSTF.In2
+    CM4.DWT/ITM =>  CSTF.In3
+                    CSTF.Out    => TMC/ETB
+
+  SWO path (SWTF is present for STM32H74x/STM32H75x only):
+
+    CM7.DWT/ITM =>  SWTF.In0
+    CM4.DWT/ITM =>  SWTF.In1
+                    SWTF.Out    => SWO
+
+*/
+
+STM32H7_execPreConfigureTrace(modemask, core)
+{
+  // Make sure all '#define-like' variables are initialized
+  initConst();
+
+  // Configure base addresses
+  // Some of it can be done via auto-detect (ROM scan), but I do not want
+  // initially to rely on it - it can be done later once 'everything'
+  // will work (with 'manual' settings)
+
+  if (modemask & MM_SWO)
+  {
+    if (core == "CM7")
+    {
+      __probeCmd("trace -opt +swoinit(baseswo=0xE00E_3002,baseitm=0xE000_0000)");
+    }
+    else
+    {
+      __probeCmd("trace -opt +swoinit(baseswo=0xE00E_3002,baseitm=0xE000_0003)");
+    }
+  }
+
+  if (modemask & (MM_ETM | MM_ETB))
+  {
+    if (core == "CM7")
+    {
+      __probeCmd("trace -opt +baseetm=0xE0041000");
+    }
+    else
+    {
+      __probeCmd("trace -opt +baseetm=0xE0041003");
+    }
+  }
+
+  if (modemask & MM_ETB)
+  {
+    __probeCmd("trace -opt +baseetb=0xE00F4002");
+  }
+
+  if (modemask & MM_ETM)
+  {
+    __probeCmd("trace -opt +basetpiu=0xE00F5002");
+    __message "DMAC/Trace: Enabling ETF FIFO mode ...";
+    __writeMemory32(0x0,0xE00F4020,"AP2_Memory");
+    __writeMemory32(0x2,0xE00F4028,"AP2_Memory");
+    __writeMemory32(0x1,0xE00F4020,"AP2_Memory");
+  }
+
+  return modemask;
+}
+
+CheckTraceClock()
+{
+__var isETM;
+__var value;
+__var clock_src;
+
+  if (__driverType("ijet") || __driverType("cmsisdap"))
+  {
+    if (__getTraceProperty(2) & MM_ETM) isETM = 1;
+  }
+
+  // PDF (RM0433) 8.7.5 RCC Clock Configuration Register (RCC_CFGR)
+  clock_src = __readMemory32(0x58024410,"Memory");
+
+  clock_src &= 0x38;    // 3bits
+  clock_src |= 0x100;   // Marker, so initial 0 is never set ...
+
+  if (clock_ok != clock_src)
+  {
+    if (clock_src == (0x100 | 0x18))
+    {
+      __message "DMAC/Trace: PLL1 clock as CPU clock detected.";
+
+      // PDF: 8.7.11 RCC PLL1 Dividers Configuration Register (RCC_PLL1DIVR)
+      value = __readMemory32(0x58024430,"Memory");
+
+      value = ((value >> 24) & 0x7F) + 1;
+
+      if (isETM && (value < 2))
+      {
+        __message "DMAC/Trace: PLL1.DIVR=", value, " - trace clock may be too fast!";
+        __message "DMAC/Trace: Please adjust PLL1.DIVR value accordingly.";
+      }
+      else
+      {
+        __message "DMAC/Trace: PLL1.DIVR=", value, " is used as trace clock divider.";
+      }
+    }
+    else
+    {
+      __message "DMAC/Trace: Other than PLL1 clock as CPU clock detected.";
+      __message "DMAC/Trace: Trace clock should be 1/2 of CPU clock frequency.";
+    }
+
+    if (isETM)
+    {
+      // Do it twice as first measurment may not be stable ...
+      value = __probeCmd("probe etmclk");
+      value = __probeCmd("probe etmclk");
+
+      if (value <= 2)   // Less than 2KHz?
+      {
+        __message "DMAC/Trace: Trace clock not present or unstable!";
+      }
+      else
+      {
+        __message "DMAC/Trace: Trace clock measured as ~", value / 1000, "MHz.";
+      }
+    }
+
+    clock_ok = clock_src;       // Prevent doing it next time
+  }
+}
+
+STM32H7_execConfigureTraceETM(core)
+{
+__var CSTF_in;
+__var value;
+__var changed;
+
+  // Funnel inputs for ETM/ETB (B0=CM7-ETM, B1=CM7-DWT/ITM, B2=CM4-ETM)
+  if (core == "CM7")
+  {
+    CSTF_in = 0x1 << 0;
+  }
+  else
+  {
+    CSTF_in = 0x1 << 2;
+  }
+
+  if (CSTF_in != (CSTF_in & (__readMemory32(0xE00F3000,"AP2_Memory"))))
+  {
+    __message "DMAC/Trace: Configure Trace Funnel ...";
+    // Unlock CSTF
+    __writeMemory32(0xC5ACCE55,0xE00F3FB0,"AP2_Memory");
+    // Now let's configure CSTF trace funnel
+    __writeMemory32(0x300 | CSTF_in,0xE00F3000,"AP2_Memory");
+  }
+
+  if ((__driverType("ijet") || __driverType("cmsisdap")))
+  {
+    if (__getTraceProperty(2) & MM_ETB)
+    {
+      // Plain ETB mode does not require any extra settings each time
+      return;
+    }
+  }
+
+  // Enable I/O compensation cell (not sure why ...)
+  if (1)
+  {
+    // RCC_APB4ENR enable SYSCFG clock
+    value = __readMemory32(0x580244F4,"Memory");
+    if ((value & (1<<1)) == 0)
+    {
+      changed++;
+      __message "DMAC/Trace: Enabling SYSCFG clock ...";
+      __writeMemory32(value | (1<<1), 0x580244F4,"Memory");
+    }
+
+    // RCC_APB4RSTR release SYSCFG reset
+    value = __readMemory32(0x5802449C,"Memory");
+    if ((value & (1<<1)) != 0)
+    {
+      changed++;
+      __message "DMAC/Trace: Releasing SYSCFG from reset ...";
+      __writeMemory32(value & ~(1<<1), 0x5802449C,"Memory");
+    }
+
+    // SYSCFG_CCCSR
+    value = __readMemory32(0x58000420,"Memory");
+    if ((value & 0x1) == 0)
+    {
+      changed++;
+      __message "DMAC/Trace: Enabling I/O compensation cell ...";
+      __writeMemory32(value | 0x1, 0x58000420, "Memory");
+    }
+  }
+
+  //RCC_AHB4ENR enable GPIOE clock
+  value = __readMemory32(0x580244E0, "Memory");
+  if ((value & (1<<4)) == 0)
+  {
+    changed++;
+    __message "DMAC/Trace: Enabling GPIOE clock ...";
+    __writeMemory32(value | (1<<4), 0x580244E0, "Memory");
+  }
+
+  //RCC_AHB4RSTR release GPIOE reset
+  value = __readMemory32(0x58024488, "Memory");
+  if ((value & (1<<4)) != 0)
+  {
+    changed++;
+    __message "DMAC/Trace: Releasing GPIOE reset ...";
+    __writeMemory32(value & ~(1<<4), 0x58024488, "Memory");
+  }
+
+  // This part is to provide variable speed settings (for GPIO)
+  // Not always highest speed is the best ...
+  __var speed, speed5, mask5_1, mask5_2, mask5_4;
+
+  // speed = 2;    //      2-high (may be better for slower CPU clocks)
+  speed   = 3;    //      3-very high (works better for max speed 133Mhz)
+  speed5  = speed | (speed << 2) | (speed << 4) |(speed << 6) |(speed << 8);
+  mask5_1 = 0x01F;
+  mask5_2 = 0x3FF;
+  mask5_4 = 0xFFFFF;
+
+  if ( __getTracePortSize() == 1 )
+  {
+    speed5      &= 0xF;      // Extract 2-bit (speed and masks)
+    mask5_1     &= 0x3;
+    mask5_2     &= 0xF;
+    mask5_4     &= 0xFF;
+  }
+  else
+  if ( __getTracePortSize() == 2 )
+  {
+    speed5      &= 0x3F;      // Extract 3-bit (speed and mask)
+    mask5_1     &= 0x7;
+    mask5_2     &= 0x3F;
+    mask5_4     &= 0xFF;
+  }
+  else   // default 4 bits
+  {
+    // Set by default
+  }
+
+  // Shift to appropriate bit-position ...
+  speed5  <<= 4;
+  mask5_1 <<= 2;
+  mask5_2 <<= 4;
+  mask5_4 <<= 8;
+
+  // Configure GPIOE  2,3,4,5,6 as AF
+  value = __readMemory32(0x58021000,"Memory");
+  if ((value & mask5_2) != ((0x2AA << 4) & mask5_2))
+  {
+    changed++;
+    value &= ~mask5_2;
+    value |= 0x2AA << 4;
+    __writeMemory32(value,0x58021000,"Memory");
+  }
+
+  // Configure GPIOE  2,3,4,5,6 output type push-pull
+  value = __readMemory32(0x58021004,"Memory");
+  if ((value & mask5_1) != 0)
+  {
+    changed++;
+    value &= ~mask5_1;
+    __writeMemory32(value,0x58021004,"Memory");
+  }
+
+  // Configure GPIOE  2,3,4,5,6  No pull-up, pull-down
+  value = __readMemory32(0x5802100C, "Memory");
+  if ((value & mask5_2) != 0)
+  {
+    changed++;
+    value &= ~mask5_2;
+    __writeMemory32(value,0x5802100C,"Memory");
+  }
+
+  // Enable mode AF0 for GPIOE 2,3,4,5,6
+  value = __readMemory32(0x58021020,"Memory");
+  if ((value & mask5_4) != 0)
+  {
+    changed++;
+    value &= ~mask5_4;
+    __writeMemory32(value,0x58021020,"Memory");
+  }
+
+  // Configure GPIOE 2,3[,4,5,6] as defined by 'speed'
+  value = __readMemory32(0x58021008,"Memory");
+  if ((value & mask5_2) != speed5)
+  {
+    changed++;
+    value = (value & mask5_2) | speed5;
+    __writeMemory32(value, 0x58021008, "Memory");
+  }
+
+  if (changed)
+  {
+    __message "DMAC/Trace: GPIOE 2,3... configured as ETM (AF0, Very high speed).";
+  }
+
+  CheckTraceClock();
+
+  return changed;       // Return value not used now, but maybe later
+}
+
+STM32H7_execConfigureTraceSWO(core)
+{
+__var SWTF_in;
+__var changed;
+__var value;
+
+  // Check if SWTF is present (SWTF_DEVTYPE)
+  if (__readMemory32(0xE00E4FCC, "AP2_Memory") == 0x12)
+  {
+    // Funnel inputs for SWO (B0=CM7-DWT/ITM, B1=CM4-DWT/ITM)
+    if (core == "CM7")
+    {
+      SWTF_in = 0x1 << 0;
+    }
+    else
+    {
+      SWTF_in = 0x1 << 1;
+    }
+
+    if (SWTF_in != (SWTF_in & (__readMemory32(0xE00E4000,"AP2_Memory"))))
+    {
+      __message "DMAC/Trace: Configure SWO Funnel ...";
+      // Unlock SWTF
+      __writeMemory32(0xC5ACCE55,0xE00E4FB0,"AP2_Memory");
+      // Now let's configure SWO trace funnel
+      __writeMemory32(0x300 | SWTF_in,0xE00E4000,"AP2_Memory");
+    }
+  }
+
+  // RCC_AHB4ENR enable GPIOB clock
+  value = __readMemory32(0x580244E0, "Memory");
+  if ((value & (1<<1)) == 0)
+  {
+    changed++;
+    __message "DMAC/Trace: Enabling GPIOB clock ...";
+    __writeMemory32(value | (1<<1), 0x580244E0, "Memory");
+  }
+
+  // RCC_AHB4RSTR release GPIOB reset
+  value = __readMemory32(0x58024488, "Memory");
+  if ((value & (1<<1)) != 0)
+  {
+    changed++;
+    __message "DMAC/Trace: Releasing GPIOB reset ...";
+    __writeMemory32(value & ~(1<<1), 0x58024488, "Memory");
+  }
+
+  // Configure GPIOB  3 as AF
+  value = __readMemory32(0x58020400,"Memory");
+  if ((value & 0xC0) != 0x80)
+  {
+    changed++;
+    value &= ~0x000000C0;
+    value |= 0x00000080;
+    __writeMemory32(value,0x58020400,"Memory");
+  }
+
+  // Configure GPIOB 3 output type push-pull
+  value = __readMemory32(0x58020404,"Memory");
+  if ((value & 0x8) != 0)
+  {
+    changed++;
+    value &= ~0x00000008;
+    __writeMemory32(value,0x58020404,"Memory");
+  }
+
+  // Configure GPIOB 3 No pull-up, pull-down
+  value = __readMemory32(0x5802040C,"Memory");
+  if ((value & 0xC0) != 0)
+  {
+    changed++;
+    value &= ~0x000000C0;
+    __writeMemory32(value,0x5802040C,"Memory");
+   }
+
+  // Configure GPIOB 3 as Very high speed
+  value = __readMemory32(0x58020408,"Memory");
+  if ((value & 0xC0) != 0xC0)
+  {
+    changed++;
+    value |= 0x000000C0;
+    __writeMemory32(value,0x58020408,"Memory");
+  }
+
+  // Enable mode AF0 for GPIOB 3
+  value = __readMemory32(0x58020420,"Memory");
+  if (value & 0xF000)
+  {
+    changed++;
+    value &= ~0x0000F000;
+    __writeMemory32(value,0x58020420,"Memory");
+  }
+
+  if (changed)
+  {
+    __message "DMAC/Trace: GPIOB 3 port configured as SWO (AF0, Very high speed).";
+  }
+
+  CheckTraceClock();
+
+  return changed;       // Return value not used now, but maybe later
+}

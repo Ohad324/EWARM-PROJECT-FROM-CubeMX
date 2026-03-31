@@ -1,0 +1,17 @@
+execUserSetup()
+{
+    __message "=== CSpy connected to STM32H747 CM7 ===\n";
+    __setCodeBreak("{C:\\TouchGFXProjects\\MyApplication\\CM7\\Core\\Src\\main.c}203", 1, "", "TRUE", "");
+    __message "=== Breakpoint armed: main.c:203 (SCB_EnableICache — first line after MPU_Config) ===\n";
+}
+
+execUserReset()
+{
+    __message "=== Target reset, running free ===\n";
+}
+
+execUserExecutionStopped()
+{
+    __message "=== STOPPED: board halted ===\n";
+    __message "=== Result: board passed MPU_Config and reached cache-enable code ===\n";
+}

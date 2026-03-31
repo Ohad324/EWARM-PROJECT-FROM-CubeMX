@@ -28,7 +28,9 @@
       "Bash(wmic logicaldisk:*)",
       "Bash(\"/c/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" \"C:/TouchGFXProjects/MyApplication/EWARM/Backup of STM32H747I-DISCO.ewp\" -build STM32H747I-DISCO_CM7 -log all 2>&1)",
       "Bash(\"/c/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" \"C:/TouchGFXProjects/MyApplication/EWARM/Backup of STM32H747I-DISCO.ewp\" -build STM32H747I-DISCO_CM7 -log errors 2>&1)",
-      "Bash(\"/c/Program Files/SEGGER/JLink_V930/JLink.exe\" -commandfile \"C:/TouchGFXProjects/MyApplication/flash_cm7.jlink\" 2>&1)"
+      "Bash(\"/c/Program Files/SEGGER/JLink_V930/JLink.exe\" -commandfile \"C:/TouchGFXProjects/MyApplication/flash_cm7.jlink\" 2>&1)",
+      "Bash(powershell -Command \"Get-Process python,pythonw -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(netstat -ano)"
     ]
   }
 }

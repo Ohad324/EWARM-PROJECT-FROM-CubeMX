@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <settings>
     <TerminalIO>
-        <InputSource>2</InputSource>
+        <InputSource>1</InputSource>
         <InputMode2>6</InputMode2>
         <Filename>$PROJ_DIR$\TERMINAL.txt</Filename>
-        <InputEcho>2</InputEcho>
+        <InputEcho>1</InputEcho>
         <ShowReset>1</ShowReset>
         <InputEncodingICU>2</InputEncodingICU>
         <OutputEncodingICU>2</OutputEncodingICU>
@@ -21,25 +21,26 @@
         <ByteLimit>50</ByteLimit>
     </Stack>
     <PlDriver>
+        <MemConfigValue>C:\iar\ewarm-9.70.2\arm\config\debugger\ST\STM32H747XI_M7.ddf</MemConfigValue>
         <FirstRun>0</FirstRun>
-        <MemConfigValue>C:\iar\ewarm-9.60.3\arm\config\debugger\ST\STM32H747XI_M7.ddf</MemConfigValue>
     </PlDriver>
     <ArmDriver>
-        <EnableCache>0</EnableCache>
-        <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
+        <EnableCache>1</EnableCache>
+        <EnforceMemoryConfiguration>0</EnforceMemoryConfiguration>
     </ArmDriver>
     <JLinkDriver>
         <TraceBufferSize>0x10000</TraceBufferSize>
         <TraceStallIfFIFOFull>0x0</TraceStallIfFIFOFull>
         <TracePortSize>0x0</TracePortSize>
-        <jlinkResetStyle>12</jlinkResetStyle>
-        <jlinkResetStrategy>0</jlinkResetStrategy>
-        <MultiCoreRunAll>0</MultiCoreRunAll>
+        <CpuHaltOnBreakpointSet>_ 0</CpuHaltOnBreakpointSet>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
         <CStepIntDis>_ 0</CStepIntDis>
+        <jlinkResetStyle>13</jlinkResetStyle>
+        <jlinkResetStrategy>0</jlinkResetStrategy>
+        <MultiCoreRunAll>0</MultiCoreRunAll>
     </JLinkDriver>
     <DebugChecksum>
-        <Checksum>4102933947</Checksum>
+        <Checksum>1443465526</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -57,7 +58,7 @@
         <ShowArgs>0</ShowArgs>
     </CallStack>
     <SWOTraceHWSettings>
-        <OverrideDefaultClocks>0</OverrideDefaultClocks>
+        <OverrideDefaultClocks>1</OverrideDefaultClocks>
         <CpuClock>400000000</CpuClock>
         <ClockAutoDetect>1</ClockAutoDetect>
         <ClockWanted>50000000</ClockWanted>
@@ -68,7 +69,7 @@
         <PcSampCYCTAP>1</PcSampCYCTAP>
         <PcSampPOSTCNT>13</PcSampPOSTCNT>
         <PcSampIndex>2</PcSampIndex>
-        <DataLogMode>2</DataLogMode>
+        <DataLogMode>1</DataLogMode>
         <ITMportsEnable>63</ITMportsEnable>
         <ITMportsTermIO>1</ITMportsTermIO>
         <ITMportsLogFile>0</ITMportsLogFile>
@@ -79,6 +80,7 @@
         <stlinkfoundProbes />
         <stlinkResetStyle>0</stlinkResetStyle>
         <stlinkResetStrategy>0</stlinkResetStrategy>
+        <CpuHaltOnBreakpointSet>_ 0</CpuHaltOnBreakpointSet>
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
         <CStepIntDis>_ 0</CStepIntDis>
     </StLinkDriver>
@@ -114,9 +116,9 @@
     </DataLog>
     <InterruptLog>
         <GraphEnabled>0</GraphEnabled>
-        <LogEnabled>1</LogEnabled>
+        <LogEnabled>0</LogEnabled>
         <ShowTimeLog>1</ShowTimeLog>
-        <SumEnabled>1</SumEnabled>
+        <SumEnabled>0</SumEnabled>
         <ShowTimeSum>1</ShowTimeSum>
         <SumSortOrder>3</SumSortOrder>
     </InterruptLog>
@@ -156,10 +158,16 @@
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints2>
-        <Count>0</Count>
+        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.219.3" 0 0 1 "" 0 "" 0</Bp0>
+        <Bp1>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.270.3" 0 0 1 "" 0 "" 0</Bp1>
+        <Bp2>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.281.1" 0 0 1 "" 0 "" 0</Bp2>
+        <Bp3>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\TouchGFX\target\TouchGFXHAL.cpp}.417.1" 0 0 1 "" 0 "" 0</Bp3>
+        <Bp4>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\TouchGFX\target\TouchGFXHAL.cpp}.447.1" 0 0 1 "" 0 "" 0</Bp4>
+        <Count>5</Count>
     </Breakpoints2>
     <Aliases>
         <Count>0</Count>
         <SuppressDialog>0</SuppressDialog>
+        <SuppressResolveSourcesForDebugTarget>1</SuppressResolveSourcesForDebugTarget>
     </Aliases>
 </settings>
