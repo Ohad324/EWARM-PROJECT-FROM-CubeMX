@@ -1518,6 +1518,9 @@
                     <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\App</state>
                     <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\Target</state>
                     <state>C:\TouchGFXProjects\MyApplication\EWARM</state>
+                    <state>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\include</state>
+                    <state>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\config</state>
+                    <state>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\streamports\Jlink_RTT\include</state>
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -2355,6 +2358,9 @@
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\SEGGER_RTT.c</name>
+                        <excluded>
+                            <configuration>STM32H747I-DISCO_CM7</configuration>
+                        </excluded>
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\stm32h7xx_hal_msp.c</name>
@@ -2906,6 +2912,189 @@
     <file>
         <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ff.c</name>
     </file>
+    <group>
+        <name>TraceRecorder</name>
+        <group>
+            <name>Core</name>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcAssert.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcCounter.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcDependency.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcDiagnostics.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcEntryTable.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcError.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcEvent.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcEventBuffer.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcExtension.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcHardwarePort.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcHeap.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcISR.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcInternalEventBuffer.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcInterval.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcKernelPort.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcMultiCoreEventBuffer.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcObject.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcPrint.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcRunnable.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcStackMonitor.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcStateMachine.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcStaticBuffer.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcStreamingRecorder.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcString.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcTask.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcTaskMonitor.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\trcTimestamp.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+        </group>
+        <group>
+            <name>StreamPort</name>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\streamports\Jlink_RTT\trcStreamPort.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+            <file>
+                <name>C:\TouchGFXProjects\MyApplication\Percepio31-3\Tracealyzer 4\FreeRTOS\TraceRecorder\streamports\Jlink_RTT\SEGGER_RTT.c</name>
+                <excluded>
+                    <configuration>STM32H747I-DISCO_CM4</configuration>
+                </excluded>
+            </file>
+        </group>
+    </group>
     <projectSettings>
         <general>
             <resolveSourceForBinaries>true</resolveSourceForBinaries>
