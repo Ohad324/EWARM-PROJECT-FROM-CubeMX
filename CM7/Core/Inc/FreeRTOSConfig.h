@@ -78,6 +78,7 @@ extern uint32_t SystemCoreClock;
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configHEAP_CLEAR_MEMORY_ON_FREE          0
 #define configUSE_TRACE_FACILITY                 1
+#define configUSE_STATS_FORMATTING_FUNCTIONS     1
 #define configUSE_16_BIT_TICKS                   0
 #define configUSE_MUTEXES                        1
 #define configQUEUE_REGISTRY_SIZE                8
@@ -227,5 +228,9 @@ standard names. */
     rtos_trace_switched_in( pxCurrentTCB->pcTaskName ); \
 } while(0)
 /* USER CODE END Defines */
+
+/* Percepio TraceRecorder — must be included last so trcKernelPort.h can
+ * override conflicting traceXXX macros defined above via #undef + redefine. */
+#include "trcRecorder.h"
 
 #endif /* FREERTOS_CONFIG_H */
