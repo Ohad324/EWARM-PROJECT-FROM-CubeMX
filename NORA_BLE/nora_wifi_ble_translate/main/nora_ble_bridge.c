@@ -60,8 +60,8 @@
 #define BLE_DEFAULT_LANGPAIR "en|he"
 
 /* Wi-Fi credentials — change before flashing */
-#define WIFI_SSID        "Sightsys_SEC24"
-#define WIFI_PASSWORD    "0542584033"
+#define WIFI_SSID        "Ohad2.4"
+#define WIFI_PASSWORD    "paypal324"
 #define WIFI_MAX_RETRY   5
 
 /* ── Google Translate response buffer ───────────────────────────────────── */
@@ -362,6 +362,7 @@ static void wifi_init(void)
         .sta = {
             .ssid      = WIFI_SSID,
             .password  = WIFI_PASSWORD,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         },
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));

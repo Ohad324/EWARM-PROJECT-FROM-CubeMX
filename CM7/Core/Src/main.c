@@ -39,7 +39,6 @@
 #include "cmsis_os2.h"           /* osKernelGetTickCount() */
 #include "timing_log.h"          /* TLOG(), T_US() — RTT timing instrumentation */
 #include "rtos_trace.h"          /* RtosTrace_Init(), RtosTrace_DrainTask()     */
-#include "trcRecorder.h"         /* Percepio Tracealyzer streaming recorder     */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -330,7 +329,6 @@ Error_Handler();
   /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
-  xTraceEnable(TRC_START);  /* Percepio Tracealyzer — start streaming before scheduler */
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */

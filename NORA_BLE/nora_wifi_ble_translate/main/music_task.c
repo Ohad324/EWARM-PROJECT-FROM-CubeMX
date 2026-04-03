@@ -27,13 +27,13 @@
 
 /* ── Configuration ──────────────────────────────────────────────────────── */
 #define MUSIC_TAG              "MUSIC"
-#define YOUTUBE_API_KEY        "REPLACE_WITH_NEW_KEY"  /* old key blocked (HTTP 403) */
+#define YOUTUBE_API_KEY        ""  /* leave empty to skip direct API and use PC fallback */
 #define YOUTUBE_SEARCH_URL     "https://www.googleapis.com/youtube/v3/search"
 #define UART_PORT              UART_NUM_1
 #define THUMB_STREAM_CHUNK     512  /* bytes per UART write during streaming */
 #define THUMB_MIN_BYTES        5000 /* below this → YouTube placeholder image */
 #define UART_MUTEX_TIMEOUT_MS  5000
-#define PC_PLAYER_URL          "http://192.168.10.18:5000/play"
+#define PC_PLAYER_URL          "http://10.100.102.7:5000/play"
 
 /* ── Request struct ─────────────────────────────────────────────────────── */
 typedef struct {
@@ -418,21 +418,36 @@ static void music_task(void *param)
 
         ESP_LOGI(MUSIC_TAG, "BLE search mode: \"%s\"", s_query_buf);
 
-        /* YouTube API search — fills s_title_buf, s_channel_buf,
-           s_video_id_buf, s_url_buf */
-        bool found = youtube_search();
+        /* Step A: find the YouTube video for this query.
+         *
+         * Option 1 — YouTube Data API (fast, no Chrome needed):
+         *   Sends the query directly to Google's API and gets back the
+         *   videoId, title, channel, and thumbnail URL in one HTTPS call.
+         *   Requires a valid API key in YOUTUBE_API_KEY.
+         *   If the key is empty or the call fails → fall through to Option 2.
+         *
+         * Option 2 — PC fallback (no API key needed):
+         *   POSTs {"query":"..."} to the Python server running on the PC.
+         *   The PC server scrapes YouTube, opens Chrome with the video,
+         *   and returns {"status":"ok","videoId":"..."}.
+         *   We then build the thumbnail URL from the videoId directly
+         *   (YouTube CDN: img.youtube.com/vi/<id>/mqdefault.jpg).
+         *
+         * Once we have the videoId + thumbnail URL the rest of the flow
+         * is the same regardless of which option succeeded.
+         */
+        bool found = false;
 
-        /* Step A: resolve videoId + thumbnail URL.
-         *   - API working: youtube_search() fills s_url_buf directly, no PC wait.
-         *   - API broken:  search_via_pc() asks PC to scrape YouTube (must wait for
-         *                  videoId), PC also opens Chrome as part of this call.
-         * Either way, once we have s_url_buf the STM32 pipeline runs with no
-         * further PC dependency. */
+        /* Try the YouTube API only if a key has been configured */
+        if (strlen(YOUTUBE_API_KEY) > 0)
+            found = youtube_search();   /* fills s_video_id_buf, s_url_buf on success */
+
+        /* If API is not configured or returned an error — ask the PC */
         if (!found)
-            found = search_via_pc(s_query_buf);
+            found = search_via_pc(s_query_buf);  /* PC opens Chrome, returns videoId */
 
-        /* Step B: STM32 pipeline — independent of PC acknowledgment.
-         * TRACK + THUMB reach the STM32 before we notify the PC. */
+        /* Step B: send result to STM32 over UART.
+         * This is independent of the PC — happens whether or not the PC is still busy. */
         if (xSemaphoreTake(s_uart_mutex, pdMS_TO_TICKS(UART_MUTEX_TIMEOUT_MS)) != pdTRUE) {
             ESP_LOGE(MUSIC_TAG, "UART mutex timeout — TRACK not sent");
             continue;
@@ -468,9 +483,9 @@ static void music_task(void *param)
         ESP_LOGI(MUSIC_TAG, "Done — TRACK sent, THUMB %s",
                  thumb_sent ? "SENT" : "NOT SENT");
 
-        /* Step C: notify PC player (Chrome open) — AFTER STM32 is done.
-         * Only needed when youtube_search() succeeded (API path); when
-         * search_via_pc() was used, Chrome is already open from that call. */
+        /* Step C: tell the PC player to open Chrome with this video — AFTER STM32 is done.
+         * Only needed when the YouTube API path was used (Option 1 above).
+         * When the PC fallback (Option 2) was used, Chrome is already open — skip this. */
         if (found && s_video_id_buf[0] != '\0')
             post_to_pc_player(s_video_id_buf, s_title_buf, s_channel_buf);
     }

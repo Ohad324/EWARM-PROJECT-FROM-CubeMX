@@ -14,25 +14,14 @@ STM32H747I-DISCO music display system:
 ## General Rules
 
 ### Think before you act — examine the problem first
-Before writing any code or making any change, spend meaningful time on analysis.
-The minimum thinking depth required for every problem:
-
-1. **Read the relevant code** — never diagnose from memory alone
-2. **Identify the root cause** — trace the exact failure path, not just the symptom
-3. **Consider who owns the problem** — which layer (NORA / STM32 / Python / Chrome / network)?
-4. **List ALL options** — at least 2-3 alternatives with trade-offs for each
-5. **Present the analysis to the user** — explain what you found and why before proposing anything
-6. **Get confirmation** — agree on the approach before touching a single file
-
-The analysis presented for BUG-005 (Premium YouTube stays untouched) is the
-**minimum acceptable thinking depth**:
-- Explained exactly what the code tracks vs what it ignores
-- Identified the two Chrome worlds running in parallel
-- Connected the symptom to the root cause
-- Showed that one fix (BUG-005) resolves both problems
+Before writing any code or making any change, pause and do the following:
+1. **Understand the root cause** — read the relevant code, check the logs, reproduce the problem in your head
+2. **List all options** — consider every possible solution, not just the first one that comes to mind
+3. **Present options to the user** — explain the trade-offs of each before picking one
+4. **Get confirmation** — agree on the approach with the user before implementing
 
 Do NOT jump to writing code the moment a problem is described.
-If the first solution fails, do NOT immediately try another — go back to step 1.
+If the first solution fails, do NOT immediately try another — go back to step 1 and re-examine.
 A wrong solution applied quickly is worse than a correct solution applied after thinking.
 
 ### Work log
@@ -203,66 +192,3 @@ CTRL:<action>\n   — Phase 2: play/pause/next/prev (stubbed)
 
 ## Before Building STM32
 Check `EWARM/STM32H747I-DISCO.ewp` — `thumb_pipeline.c` and `thumb_ref_jpeg.c` were deleted from disk but may still be listed. Remove them if present or IAR will error.
-
-## Percepio TraceRecorder Integration (CM7 only)
-
-### SDK location
-`Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/` — v4.11.1, streaming-only API.
-
-### Files added to IAR project (CM7 build only, excluded from CM4)
-- All `trc*.c` from `Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/` root
-- `Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/streamports/Jlink_RTT/trcStreamPort.c`
-- `Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/streamports/Jlink_RTT/SEGGER_RTT.c`
-
-### Include paths added (CM7 only)
-- `Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/include`
-- `Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/config`
-- `Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/streamports/Jlink_RTT/include`
-
-### SEGGER_RTT version conflict — resolved
-Old `CM7/Core/Src/SEGGER_RTT.c` is **excluded from CM7 build** — replaced by the Percepio
-version in the StreamPort group above.
-`CM7/Core/Inc/SEGGER_RTT.h` and `CM7/Core/Inc/SEGGER_RTT_Conf.h` were **replaced** with
-the Percepio v7.96o versions so all source files get a consistent header.
-
-### v4.11.1 API differences vs older SDK versions
-The following settings requested by the user do NOT exist in v4.11.1 — do not add them:
-- `TRC_CFG_RECORDER_MODE` — streaming is the only mode; no setting needed
-- `TRC_CFG_STREAM_PORT` — port is selected by which `.c` file is compiled, not a define
-- `TRC_CFG_NTASK`, `TRC_CFG_NQUEUE`, `TRC_CFG_NSEMAPHORE`, `TRC_CFG_NMUTEX`, `TRC_CFG_NTIMER` — removed in v4.8+
-
-### Configuration target state (pending full approval + apply)
-
-**`Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/config/trcConfig.h`**
-- `TRC_CFG_HARDWARE_PORT` → `TRC_HARDWARE_PORT_ARM_Cortex_M` ✅ done
-- `TRC_CFG_MAX_ISR_NESTING` → `8` (already default) ✅ no change needed
-- Processor header → `#include "stm32h7xx.h"` replacing `#error` ✅ done
-
-**`Percepio31-3/Tracealyzer 4/FreeRTOS/TraceRecorder/streamports/Jlink_RTT/config/trcStreamPortConfig.h`**
-- `TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE` → `(1024 * 16)` (was 5120) — pending
-- `TRC_CFG_STREAM_PORT_RTT_DOWN_BUFFER_SIZE` → `(1024 * 2)` (was 32) — pending
-- `TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_INDEX` → `1` (already default) ✅ no change needed
-- `TRC_CFG_STREAM_PORT_RTT_DOWN_BUFFER_INDEX` → `1` (already default) ✅ no change needed
-
-**`CM7/Core/Inc/SEGGER_RTT_Conf.h`** (Percepio v7.96o, replaces old version)
-- `BUFFER_SIZE_UP` → `(1024 * 16)` (was 1024) — pending
-- `BUFFER_SIZE_DOWN` → `(1024 * 2)` (was 16) — pending
-
-**`CM7/Core/Inc/FreeRTOSConfig.h`**
-- `configUSE_TRACE_FACILITY` → already `1` ✅ no change needed
-- `INCLUDE_xTaskGetCurrentTaskHandle` → already `1` ✅ no change needed
-- `configUSE_STATS_FORMATTING_FUNCTIONS` → add `1` — pending
-- ⚠️ CONFLICT: file defines custom `traceXXX` macros (traceTASK_SWITCHED_IN/OUT,
-  traceQUEUE_SEND, traceTASK_CREATE, etc.) for rtos_trace.c. `trcKernelPort.h`
-  redefines the same macros — will cause redefinition errors. Must choose:
-  - Option A: Remove custom traceXXX macros (rtos_trace.c loses kernel hooks)
-  - Option B: Keep both with #undef guards (both systems coexist)
-
-**`CM7/Core/Src/main.c`**
-- Add `#include "trcRecorder.h"` with other includes — pending
-- Add `xTraceEnable(TRC_START)` before `osKernelStart()` — pending
-  (v4.11.1 uses `xTraceEnable`, NOT `vTraceEnable`)
-
-**CM4 side — no changes needed**
-- CM4 does not call `xTraceEnable()` / `vTraceEnable()` — confirm before each build
-- CM4 `FreeRTOSConfig.h` must NOT have `configUSE_TRACE_FACILITY 1` — confirm before build

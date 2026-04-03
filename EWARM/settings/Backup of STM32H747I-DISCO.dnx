@@ -21,8 +21,8 @@
         <ByteLimit>50</ByteLimit>
     </Stack>
     <PlDriver>
-        <FirstRun>0</FirstRun>
         <MemConfigValue>C:\iar\ewarm-9.70.2\arm\config\debugger\ST\STM32H747XI_M7.ddf</MemConfigValue>
+        <FirstRun>0</FirstRun>
     </PlDriver>
     <StLinkDriver>
         <CpuHaltOnBreakpointSet>_ 0</CpuHaltOnBreakpointSet>
@@ -34,7 +34,7 @@
         <EnforceMemoryConfiguration>1</EnforceMemoryConfiguration>
     </ArmDriver>
     <DebugChecksum>
-        <Checksum>357314525</Checksum>
+        <Checksum>2631530536</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -61,11 +61,11 @@
     </JLinkDriver>
     <SWOTraceHWSettings>
         <OverrideDefaultClocks>0</OverrideDefaultClocks>
-        <CpuClock>400000000</CpuClock>
+        <CpuClock>480000000</CpuClock>
         <ClockAutoDetect>0</ClockAutoDetect>
         <ClockWanted>2000000</ClockWanted>
         <JtagSpeed>2000000</JtagSpeed>
-        <Prescaler>200</Prescaler>
+        <Prescaler>240</Prescaler>
         <TimeStampPrescIndex>0</TimeStampPrescIndex>
         <TimeStampPrescData>0</TimeStampPrescData>
         <PcSampCYCTAP>1</PcSampCYCTAP>

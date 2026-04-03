@@ -20,7 +20,7 @@
 #define COMMAND_ROUTER_H
 
 /* ── PC server address ───────────────────────────────────────────────────── */
-#define PC_IP    "192.168.10.18"   /* IP address of the PC running pc_server.py */
+#define PC_IP    "10.100.102.7"    /* IP address of the PC running pc_server.py */
 #define PC_PORT  5000              /* port pc_server.py listens on               */
 
 /* ── Public API ──────────────────────────────────────────────────────────── */

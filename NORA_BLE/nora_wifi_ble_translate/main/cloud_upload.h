@@ -12,7 +12,6 @@
  *   "TRANSCRIPT:<text>\n"        — transcription result (handed to command_router)
  *   "STT:FAIL\n"                 — transcription failed or no speech detected
  */
-
 #ifndef CLOUD_UPLOAD_H
 #define CLOUD_UPLOAD_H
 
@@ -25,7 +24,7 @@
 #define SPEECH_API_KEY     "AIzaSyB-ClvuzNPEIwXGz_NSb0yApeRye-Gt13g"
 
 /* Maximum transcript length returned from Speech-to-Text. */
-#define CLOUD_TRANSCRIPT_MAX    128u
+#define CLOUD_TRANSCRIPT_MAX    512u
 
 /* ── Public API ──────────────────────────────────────────────────────────── */
 
