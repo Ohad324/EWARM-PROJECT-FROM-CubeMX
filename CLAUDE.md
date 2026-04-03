@@ -511,7 +511,8 @@ Run from `EWARM\` directory.
 | B-001 | t=0 ms | BUILD | .sdram section not found by linker | section .sdram missing in .icf file | Added region to .icf | FIXED |
 | B-002 | t=? ms | DMA | No audio chunks arriving in RTT | vTaskDelay used instead of active drain loop | Replaced with semaphore drain loop | FIXED |
 | B-003 | t=? ms | SD | REC_ERR_SD_OPEN in RTT log | SD card not mounted before task start | Moved f_mount before xTaskCreate | FIXED |
-| B-004 | | | EXTI | LED not toggling on button press | IT_FALLING used instead of IT_RISING — board pulls PC13 HIGH on press (10k pull-down to GND) | Changed to GPIO_MODE_IT_RISING in Button_GPIO_Init() | FIXED |
+| B-004 | | | ISR | LED not toggling on button press | IT_FALLING used instead of IT_RISING — board pulls PC13 HIGH on press (10k pull-down to GND) | Changed to GPIO_MODE_IT_RISING in Button_GPIO_Init() | FIXED |
+| B-005 | t=~5s | SD | f_open always fails with FR_INT_ERR (fr=2) — 100% reproducible on every first press after boot | Pre-DMA `SCB_InvalidateDCache_by_Addr` in disk_read rounds addr DOWN to 32-byte boundary, discarding dirty DCache lines for FATFS struct fields (especially `winsect`) that share the same cache line as `win[]`. winsect is the field immediately before win[] in the FATFS struct. FatFS then reads the old winsect from SRAM → internal inconsistency → FR_INT_ERR. Confirmed: s_hsd1.State=READY and ErrorCode=0 at disk_read entry — SDMMC hardware is healthy; corruption is a DCache software bug. | Remove pre-DMA `SCB_InvalidateDCache_by_Addr` call from disk_read (both bounce and direct paths). Only post-DMA invalidation is needed and safe. | OPEN |
 
 **Stage codes:** BUILD, INIT, DMA, DRAIN, SD, RTT, ISR, STATE, RTOS, PHASE2, OTHER
 **Status values:** OPEN, WIP, FIXED, WONTFIX
