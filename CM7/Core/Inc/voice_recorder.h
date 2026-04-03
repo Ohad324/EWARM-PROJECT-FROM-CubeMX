@@ -57,7 +57,11 @@ typedef struct {
 
 /* ── Public API ──────────────────────────────────────────────────────────── */
 
-/* Call once from main() after AudioSD_Init(), before osKernelStart() */
+/* Lightweight bring-up init — button GPIO + NVIC only, no DFSDM/DMA.
+ * Use this to verify button + RTT before enabling full recording. */
+void VoiceRec_ButtonInit(void);
+
+/* Full init — call once from main() after AudioSD_Init(), before osKernelStart() */
 void VoiceRec_Init(void);
 
 /* Query current FSM state — safe to call from any context */

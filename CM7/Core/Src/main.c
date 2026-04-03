@@ -33,6 +33,7 @@
 #include "ble_uart.h"            /* DMA+IDLE driver, bleHistory, BLE_UART_Init() */
 #include "audio_rec.h"           /* button-triggered MEMS recording, AudioRec_Init() */
 #include "audio_sd.h"            /* SD card WAV recording — AudioSD_Init()           */
+#include "voice_recorder.h"      /* VoiceRec_ButtonInit(), button ISR, RTT log       */
 #include "command_handler.h"     /* voice CMD: receiver — CommandHandler_Init()       */
 #include "log_mutex.h"           /* LOG() macro — outputs to SEGGER RTT */
 #include "music_display_task.h"  /* Music_Init(), xMusicQueue, music_msg_t */
@@ -268,12 +269,10 @@ Error_Handler();
      The actual HAL_UARTEx_ReceiveToIdle_DMA() call happens inside
      UARTReceiveTask so the FreeRTOS ISR infrastructure is live first. */
   BLE_UART_Init();
-  /* Initialise DFSDM mic, DMA, and button EXTI for audio recording.
-     Must run after MX_GPIO_Init() (GPIOC clock already on) and before
-     osKernelStart() so RTOS objects (semaphore, queue) are created first. */
-  /* AudioRec_Init() DISABLED — DFSDM/GPIO conflict crashes BLE_UART_StartDMA.
-     Re-enable only after root cause is identified. */
-  // AudioRec_Init();   /* ENABLED: DFSDM mic + button EXTI + DMA                   */
+  /* Button-only init: arms PC13 EXTI, logs to RTT on press, no DFSDM/DMA.
+     Full VoiceRec_Init() stays disabled until recording pipeline is ready. */
+  VoiceRec_ButtonInit();
+  // AudioRec_Init();   /* DISABLED — DFSDM/GPIO conflict, re-enable after bring-up  */
   AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
   CommandHandler_Init(); /* create CMD: message queue                              */
   /* USER CODE END 2 */
@@ -820,6 +819,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
   /* LED1 (PI12) and LED2 (PI13) — output, initially off */
+  __HAL_RCC_GPIOI_CLK_ENABLE();   /* must be before HAL_GPIO_Init */
   HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin | LED2_Pin, GPIO_PIN_RESET);
 
   GPIO_InitTypeDef LED_InitStruct = {0};
@@ -831,7 +831,7 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOI_CLK_ENABLE();
+  __HAL_RCC_GPIOI_CLK_ENABLE();   /* safe to call twice — idempotent */
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOE_CLK_ENABLE();

@@ -31,7 +31,7 @@
 #include "semphr.h"
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
-#include "SEGGER_RTT.h"  /* SEGGER_RTT_Write, SEGGER_RTT_WriteString */
+#include "SEGGER_RTT.h"         /* RTTLogTask uses SEGGER_RTT_Write */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
 #include <limits.h>      /* ULONG_MAX */
@@ -115,6 +115,17 @@ RecState_t VoiceRec_GetState(void)
     return g_State;
 }
 
+/* Lightweight init — button GPIO + NVIC only.
+ * Safe to call without touching DFSDM or DMA.
+ * Use this during bring-up to verify button + RTT before enabling recording. */
+void VoiceRec_ButtonInit(void)
+{
+    g_State   = REC_IDLE;
+    g_SysMode = SYS_MODE_RECORD;
+    __DSB();
+    Button_GPIO_Init();
+}
+
 void VoiceRec_Init(void)
 {
     /* Create FreeRTOS objects before enabling any IRQs */
@@ -149,7 +160,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     if ((now - s_lastPress) < DEBOUNCE_MS) return;
     s_lastPress = now;
 
-    if (g_SysMode == SYS_MODE_RECORD && g_State == REC_IDLE)
+    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);  /* visual confirmation */
+
+    /* Only notify task if it has been created */
+    if (g_SysMode == SYS_MODE_RECORD && g_State == REC_IDLE
+        && voiceRecTaskHandle != NULL)
     {
         BaseType_t higher = pdFALSE;
         xTaskNotifyFromISR(voiceRecTaskHandle, 1u, eSetBits, &higher);
@@ -485,8 +500,8 @@ static void Button_GPIO_Init(void)
 
     GPIO_InitTypeDef gpio = {0};
     gpio.Pin  = GPIO_PIN_13;           /* PC13 = blue wakeup button    */
-    gpio.Mode = GPIO_MODE_IT_FALLING;  /* interrupt on falling edge     */
-    gpio.Pull = GPIO_NOPULL;           /* board has external pull-up    */
+    gpio.Mode = GPIO_MODE_IT_RISING;   /* board: press pulls PC13 to VDD via 10k pull-down */
+    gpio.Pull = GPIO_NOPULL;           /* external 10k pull-down on board — no internal pull needed */
     HAL_GPIO_Init(GPIOC, &gpio);
 
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5u, 0u);  /* FreeRTOS-safe prio */

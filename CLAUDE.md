@@ -417,6 +417,66 @@ version. `CM7/Core/Inc/SEGGER_RTT.h` and `SEGGER_RTT_Conf.h` replaced with Perce
 | `NORA_BLE/nora_wifi_ble_translate/main/nora_ble_bridge.c` | WiFi credentials at lines 57–58 |
 | `NORA_BLE/nora_wifi_ble_translate/main/music_task.c` | YouTube search, UART send to STM32 |
 
+## Voice Command Pipeline — New Feature (`feature/voice-record` branch)
+
+This feature is developed on a separate branch to avoid breaking the working thumbnail pipeline.
+Do NOT merge into master until each stage is tested end-to-end.
+
+### Stage 1 — Record to SD card (STM32 side)
+File: `CM7/Core/Src/audio_sd.c` / `audio_sd.h`
+
+- Button press → open `REC_001.wav` on SD card (auto-incrementing index)
+- Write placeholder 44-byte WAV header at start
+- As each DMA chunk arrives (via semaphore drain loop), append PCM frames using FatFS
+- On stop: seek to byte 0, overwrite WAV header with correct file size and data length
+- Close file, then send `AUDIO:FILE:REC_001.wav:<size>\n` over UART8 to NORA
+- Audio format: **16666 Hz, 16-bit, mono** (actual DFSDM rate — use this in WAV header)
+- Tell Google STT **16000 Hz** in the API request (closest valid rate; STT resamples)
+- Do NOT call `Error_Handler()` — log `SD:INIT_FAIL` and return if card absent
+
+### Stage 2 — Upload to Google Cloud Storage (NORA/ESP32 side)
+File: `NORA_BLE/nora_wifi_ble_translate/main/cloud_upload.c` / `cloud_upload.h`
+
+- On receiving `AUDIO:FILE:filename.wav:<size>\n`, upload WAV to GCS bucket via HTTPS
+- Bucket name and credentials stored as `#define` constants at top of file
+- On result, send back to STM32: `UPLOAD:OK:filename.wav\n` or `UPLOAD:FAIL:filename.wav\n`
+
+### Stage 3 — Speech-to-Text transcription (NORA/ESP32 side)
+File: `cloud_upload.c` (same module)
+
+- Immediately after upload, call Google Cloud Speech-to-Text API on the uploaded file
+- Audio format passed explicitly in API request: **16000 Hz**, 16-bit, mono, LINEAR16
+  - Actual DFSDM output rate ≈ 16,666 Hz (100 MHz / (2×24) / 125), but pass 16000 to STT API
+  - Google STT resamples internally — 16000 is the closest valid rate and is accepted
+- API key stored as `#define SPEECH_API_KEY ""`
+- Result: plain-text transcript e.g. `"play Beatles"` or `"turn off the lights"`
+
+### Stage 4 — Command routing (NORA/ESP32 side)
+File: `NORA_BLE/nora_wifi_ble_translate/main/command_router.c` / `command_router.h`
+
+Parse the transcript and route using these rules:
+
+**Rule A — Media commands** (`play`, `stop`, `pause`, `next`, `previous`, `volume`):
+- POST `{"command": "play Beatles"}` to PC at `http://PC_IP:PORT/command`
+- `PC_IP` and `PORT` stored as `#define` constants
+- PC server (`tools/youtube_player.py`) handles via `_handle_voice_command()`
+
+**Rule B — Screen/display commands** (`show`, `display`, `screen`, `clear`, `update`):
+- Send `CMD:<transcript>\n` to STM32 over UART8
+- STM32 `CommandHandler` task parses and updates the display
+
+**Rule C — Unknown:**
+- Send `CMD:UNKNOWN\n` to STM32, log unrecognised transcript over debug serial
+
+### Constraints
+- Do NOT break existing UART streaming, DMA double-buffer, or button debounce logic
+- Handle errors at every stage: SD failure, WiFi drop, upload failure, API timeout, unknown command
+- Each new function commented in the same style as existing code
+- `AUDIO:FILE:` message from STM32 → NORA must include byte size so NORA knows when transfer ends
+- NORA must NOT block the STM32 pipeline waiting for upload/STT results
+
+---
+
 ## Build & Flash
 1. **ESP32**: `idf.py build flash monitor` from `NORA_BLE/nora_wifi_ble_translate/`
 2. **STM32**: IAR → Build → Download and Debug (CM7 target)
@@ -451,7 +511,7 @@ Run from `EWARM\` directory.
 | B-001 | t=0 ms | BUILD | .sdram section not found by linker | section .sdram missing in .icf file | Added region to .icf | FIXED |
 | B-002 | t=? ms | DMA | No audio chunks arriving in RTT | vTaskDelay used instead of active drain loop | Replaced with semaphore drain loop | FIXED |
 | B-003 | t=? ms | SD | REC_ERR_SD_OPEN in RTT log | SD card not mounted before task start | Moved f_mount before xTaskCreate | FIXED |
-| B-004 | | | Add new rows as bugs are found | | | OPEN |
+| B-004 | | | EXTI | LED not toggling on button press | IT_FALLING used instead of IT_RISING — board pulls PC13 HIGH on press (10k pull-down to GND) | Changed to GPIO_MODE_IT_RISING in Button_GPIO_Init() | FIXED |
 
 **Stage codes:** BUILD, INIT, DMA, DRAIN, SD, RTT, ISR, STATE, RTOS, PHASE2, OTHER
 **Status values:** OPEN, WIP, FIXED, WONTFIX

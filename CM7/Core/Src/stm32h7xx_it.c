@@ -72,9 +72,9 @@ extern UART_HandleTypeDef huart8;
 /* BLE_UART_DMA_IRQHandler() wraps HAL_DMA_IRQHandler(&s_hdma_uart8_rx).
    The DMA handle is private to ble_uart.c; this trampoline avoids exposing it. */
 extern void BLE_UART_DMA_IRQHandler(void);
-/* AudioRec_DMA_IRQHandler() wraps HAL_DMA_IRQHandler(&s_hdma_dfsdm).
-   The DMA handle is private to audio_rec.c; same pattern as BLE UART. */
-extern void AudioRec_DMA_IRQHandler(void);
+/* VoiceRec_DMA_IRQHandler() wraps HAL_DMA_IRQHandler(&s_hdma_dfsdm).
+   The DMA handle is private to voice_recorder.c; same pattern as BLE UART. */
+extern void VoiceRec_DMA_IRQHandler(void);
 /* AudioSD_SDMMC_IRQHandler() wraps HAL_SD_IRQHandler(&s_hsd1).
    The SD handle is private to audio_sd.c; same trampoline pattern. */
 extern void AudioSD_SDMMC_IRQHandler(void);
@@ -328,12 +328,12 @@ void EXTI15_10_IRQHandler(void)
 /**
  * DMA1_Stream1_IRQHandler — handles DMA transfer events for DFSDM Filter0.
  * Fires on half-complete (512 samples ready) and complete (1024 samples ready).
- * Routed through AudioRec_DMA_IRQHandler() to keep the DMA handle private
- * to audio_rec.c — same pattern used by BLE UART on DMA1_Stream0.
+ * Routed through VoiceRec_DMA_IRQHandler() to keep the DMA handle private
+ * to voice_recorder.c — same pattern used by BLE UART on DMA1_Stream0.
  */
 void DMA1_Stream1_IRQHandler(void)
 {
-    AudioRec_DMA_IRQHandler(); /* delegate to audio_rec.c private handler */
+    VoiceRec_DMA_IRQHandler(); /* delegate to voice_recorder.c private handler */
 }
 
 /**

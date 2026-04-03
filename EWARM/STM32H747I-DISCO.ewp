@@ -2345,10 +2345,17 @@
                         <name>$PROJ_DIR$\..\CM7\Core\Src\audio_rec.c</name>
                         <excluded>
                             <configuration>STM32H747I-DISCO_CM4</configuration>
+                            <configuration>STM32H747I-DISCO_CM7</configuration>
                         </excluded>
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\audio_sd.c</name>
+                        <excluded>
+                            <configuration>STM32H747I-DISCO_CM4</configuration>
+                        </excluded>
+                    </file>
+                    <file>
+                        <name>$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c</name>
                         <excluded>
                             <configuration>STM32H747I-DISCO_CM4</configuration>
                         </excluded>
