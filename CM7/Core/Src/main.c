@@ -317,7 +317,7 @@ Error_Handler();
   // xTaskCreate(AudioRec_TaskEntry, "AudioRec", 4096u, NULL, osPriorityNormal, NULL);
   /* CommandHandler: receives CMD: messages from NORA, dispatches to screen.
      Stack 1024 words.  Priority below normal: display updates are not time-critical. */
-  xTaskCreate(CommandHandler_TaskEntry, "CmdHandler", 1024u, NULL,
+  xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1024u, NULL,
               osPriorityBelowNormal, NULL);
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
