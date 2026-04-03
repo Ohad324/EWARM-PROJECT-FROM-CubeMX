@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Docking Settings</title>
+  <keywords>
+    <keyword>docking</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>The docking settings can be set to be suit the current monitor setup quickly, or set to custom behavior.</p>
+        <p>
+          To understand the difference between different variants, see the section on <a href="UserInterface.html">User Interface</a>.
+        </p>
+        <p>
+          <A HREF="img/DockingSettings.png" target="$IMAGETARGET">
+            <img src="img/DockingSettings.png" border="0" />
+          </A>
+        </p>
+        <p>
+          <h3>Layout Mode</h3>
+          <ul>
+            <li>
+              <b>Default</b> - In this mode, new views will open in up to four different tab groups to begin with. Additional views are docked (stacked) in the tab groups.
+            </li>
+            <li>
+              <b>New tab...</b> - In this mode, new views are stacked as tabs in the main tab group.
+            </li>
+          </ul>
+
+          <h3>Floating Mode</h3>
+          <ul>
+            <li>
+              <b>Default</b> - In this mode, some views are by default started as floating windows.
+            </li>
+            <li>
+              <b>Start floating views docked as new tab</b> - In this mode, all views are docked.
+            </li>
+          </ul>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

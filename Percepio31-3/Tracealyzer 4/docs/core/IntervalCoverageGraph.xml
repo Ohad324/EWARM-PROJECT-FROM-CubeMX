@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Interval Coverage Graph</title>
+  <keywords>
+    <keyword>intervals</keyword>
+    <keyword>graph</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+		<text>
+			<p>
+				The Interval Coverage Graph displays the percentage of time covered by a certain interval set, e.g. a state or a custom interval.
+				For example, when tracing a state machine, this can show the amount of time spent in a certain state.
+			</p>
+
+			<p>
+				The example below shows a state machine in two ways. Above is the Trace View view showing the state transitions over time (using horizontal mode) and below is the Interval Coverage Graph.
+				This makes it easier to see anomalies in state machine behavior and other interval durations.
+				The Interval Plot may also be used for similar purposes, but shows the absolute duration for each occurrence.
+			</p>
+
+			<p>
+				<A HREF="img/IntervalCoverage.png" target="$IMAGETARGET">
+					<img src="img/IntervalCoverage.png" width="600" border="0" />
+				</A>
+			</p>
+
+			<p>
+				<ul>
+					<li>For a state machine, this view will show the amount of time spent in each state. In this case, the total should always be 100%.</li>
+					<li>If used with the Actor Fragments/(All) interval set, this will display CPU load across all cores. In this case, the total will add up to (number of cores) * 100%.</li>
+					<li>If used with the Actor Instances/(All) interval set, this will show some form of demand for processing time.</li>
+				</ul>
+			</p>
+
+			<p>
+				By default, the displayed view port is divided into 50 time slices. The number of slices can be changed via the Resolution or Time Resolution menus.
+			</p>
+			<p>
+				Note that interval coverage may exceed 100% for interval sets containing overlapping intervals, e.g. when used for tracking queue messages.
+			</p>
+		</text>
+    </section>
+  </body>
+</page>

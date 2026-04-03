@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>User Manual</title>
+  <keywords>
+    <keyword>context</keyword>
+    <keyword>sensitive</keyword>
+  </keywords>
+  <body>
+    <section>
+      <text>
+        <p>
+          Pressing F1 will open the context sensitive help.<br />
+          If any view is active it will show the help page for that view.<br />
+          If no view is active the User Manual is shown.
+        </p>
+
+        <p>
+          <A HREF="img/Help.png" target="$IMAGETARGET">
+            <img src="img/Help.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

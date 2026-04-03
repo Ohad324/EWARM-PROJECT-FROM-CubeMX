@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>Setup with FreeRTOS</title>
+  <keywords>
+    <keyword>recorder</keyword>   
+	<keyword>recording</keyword>
+	<keyword>record</keyword>
+  	<keyword>trace</keyword>
+	<keyword>iar</keyword>
+	<keyword>keil</keyword>
+	<keyword>i-jet</keyword>
+	<keyword>ulink</keyword>
+	<keyword>itm</keyword>
+	<keyword>j-link</keyword>
+	<keyword>jlink</keyword>
+	<keyword>segger</keyword>
+	<keyword>rtt</keyword>
+	<keyword>swo</keyword>
+	<keyword>jtag</keyword>
+	<keyword>debugger</keyword>
+	<keyword>probe</keyword>
+  </keywords>
+  <body>
+    <section>
+	  <!-- For Tracealyzer -->
+	  <requirement>CoreFeatures.Streaming</requirement>
+	  <requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+	  <header>Introduction</header>
+      <text>
+        	<p>
+				To add TraceRecorder in a FreeRTOS system, follow the <a href="https://percepio.com/getstarted/latest/html/freertos.html">Getting Started guide</a> on our website.							
+			</p>
+			<p>		
+				<b>Note:</b> The above guide is intended for the official version of FreeRTOS from freertos.org.				
+				If using the Espressif ESP-IDF version of FreeRTOS, try this guide instead: <A HREF="https://percepio.com/getstarted/latest/html/esp-idf.html">https://percepio.com/getstarted/latest/html/esp-idf.html</A>.
+			</p>		
+			
+			<p>  
+				You find the TraceRecorder source code in the $PNAME installation directory, under the FreeRTOS folder. 
+			</p>
+
+    </text>
+    </section>
+
+	  <section>
+		  <!-- For View and Profile -->
+		  <requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>  
+
+		  <header>Introduction</header>
+		  <text>
+			  <p>
+				  To add TraceRecorder in a FreeRTOS system, follow the <a href="$GETTINGSTARTEDURL">Getting Started guide</a> on our website.
+			  </p>
+			  <p>
+				  <b>Note:</b> The above guide is intended for the official version of FreeRTOS from freertos.org.
+				  If using the Espressif ESP-IDF version of FreeRTOS, try this guide instead: <A HREF="https://percepio.com/getstarted/latest/html/esp-idf.html">https://percepio.com/getstarted/latest/html/esp-idf.html</A>.
+			  </p>
+
+			  <p>
+				  You find the TraceRecorder source code in the $PNAME installation directory, under the FreeRTOS folder.
+			  </p>
+
+		  </text>
+	  </section>
+
+  </body>
+</page>

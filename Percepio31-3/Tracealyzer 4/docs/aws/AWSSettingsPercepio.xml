@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>DevAlert Service Settings</title>
+  <keywords>
+    <keyword>amazon</keyword>
+    <keyword>web</keyword>
+    <keyword>services</keyword>
+    <keyword>aws</keyword>
+    <keyword>dev</keyword>
+    <keyword>alert</keyword>
+    <keyword>devalert</keyword>
+    <keyword>cloud</keyword>
+    <keyword>trace</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The settings here are for connecting from $PNAME to the DevAlert Service, using your DevAlert login.
+        </p>
+
+        <p>
+          <A HREF="img/DevAlert_Core_Settings_AWS.png" target="$IMAGETARGET">
+            <img src="img/DevAlert_Core_Settings_AWS.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+        <subsection>
+          <header>Settings</header>
+          <text>
+            <p>
+              Enter your username (the email address used for DevAlert Console).
+            </p>
+
+            <p>
+              The password handling is by default not saved, but check the Remember Password button to save it (encrypted).
+            </p>
+
+            <p>
+              The Test button will try to connect to the DevAlert Console, to verify if your settings are correct.
+            </p>
+
+            <p>
+              If your DevAlert is set up with many Products, and you do not want to see them all, you can set up a filter using the <b>Change...</b> button.
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

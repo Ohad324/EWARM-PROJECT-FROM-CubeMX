@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>Service Call Block Time</title>
+  <keywords>
+    <keyword>blocking</keyword>
+    <keyword>kernel</keyword>
+    <keyword>service</keyword>
+    <keyword>calls</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>The Service Call Block Time graph displays the kernel blocking times of service calls, i.e., the time between entry and return of blocking calls. 
+       </p>
+       <p>
+         Each data point represents a specific service call, where the x-position indicates the point in time and the y-position the blocking time. Clicking a data point (a service call) will highlight it in the trace view.
+         This can be used to identify unintentional blocking, e.g. on a Mutex, which could be a cause to unusually high response times of tasks.</p>
+
+        <p>
+          <A HREF="img/Kernel Service Call Block.png" target="$IMAGETARGET">
+            <img src="img/Kernel Service Call Block.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <note>If accessed from the View menu of the main window, this view will plot all calls on any object. You can bring up the view for a single object by right-clicking on a service call in the trace view and selecting <i>Blocking Time Graph</i> from the [Object Name] submenu.
+      </note>
+
+      </text>
+    </section>
+  </body>
+</page>

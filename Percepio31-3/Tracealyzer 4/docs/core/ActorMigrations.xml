@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Actor Migrations</title>
+  <keywords>
+    <keyword>schedule</keyword>
+    <keyword>scheduling</keyword>
+    <keyword>actors</keyword>
+    <keyword>migrate</keyword>
+    <keyword>migration</keyword>
+    <keyword>graph</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+		  The Actor Migrations view shows the amount of thread migrations between processor cores, over time. This view is only relevant for SMP multicore systems.
+          For each time interval, a bar is drawn for each actor beginning or resuming execution at least once in that interval.
+        </p>
+
+        <p>
+          <A HREF="img/Actor Migrations.png" target="$IMAGETARGET">
+            <img src="img/Actor Migrations.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          The height of each bar, or bar section, shows the number of migrations within the given interval.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

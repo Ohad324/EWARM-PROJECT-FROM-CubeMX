@@ -1,0 +1,123 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+  </KernelServiceGroups>
+  <ObjectClasses>
+    <ObjectClass name="Task" type="Actor"/>
+    <ObjectClass name="ISR" type="Actor"/>
+  </ObjectClasses>
+  <Intervals>    
+    <IntervalDef>
+      <Name>VQUEUE</Name>
+      <Channel>VQUEUE</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+	  <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>CQUEUE</Name>
+      <Channel>CQUEUE</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+	  <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNV0</Name>
+      <Channel>TNNV0</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+    <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNV1</Name>
+      <Channel>TNNV1</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+    <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNV2</Name>
+      <Channel>TNNV2</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+    <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNV3</Name>
+      <Channel>TNNV3</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+    <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNC0</Name>
+      <Channel>TNNC0</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+    <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNC1</Name>
+      <Channel>TNNC1</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+    <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNC2</Name>
+      <Channel>TNNC2</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+    <StringGroup>1</StringGroup>
+    </IntervalDef>
+    <IntervalDef>
+      <Name>TNNC3</Name>
+      <Channel>TNNC3</Channel>
+      <Start>START (frame=([0-9]+) segment=([0-9]+))</Start>
+      <End>END (frame=([0-9]+) segment=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+	  <StringGroup>1</StringGroup>
+    </IntervalDef>
+	<IntervalDef>
+      <Name>Frame</Name>
+      <Channel>Frame</Channel>
+      <Start>START (frame=([0-9]+))</Start>
+      <End>END (frame=([0-9]+))</End>
+      <MatchStart>1</MatchStart>
+      <MatchEnd>1</MatchEnd>
+      <ValueGroup>2</ValueGroup>
+	  <StringGroup>1</StringGroup>
+    </IntervalDef>
+  </Intervals>
+</TargetPlatform>

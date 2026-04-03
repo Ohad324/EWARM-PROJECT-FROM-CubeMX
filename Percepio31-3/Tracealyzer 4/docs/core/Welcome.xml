@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+	<title>Welcome to $PRODUCT</title>
+	<keywords>
+		<keyword>welcome</keyword>
+		<keyword>overview</keyword>
+	</keywords>
+	<body>
+
+		<section>
+			<!-- For Percepio View and ViewPlus -->
+			<requirement inverted="true">CoreFeatures.Streaming</requirement>
+			<header>Overview</header>
+			<text>
+				<p>
+					Percepio View is a free event tracing tool for embedded software, based on Percepio Tracealyzer, designed to help you inspect task execution and
+					debug RTOS-related issues. Percepio View offers snapshot tracing and a core set of Tracealyzer views, streamlined for simplicity.
+					For advanced features, including trace streaming and profiling support, consider upgrading to Percepio Profile or Percepio Tracealyzer.
+				</p>
+
+				<p>
+					Percepio View complements your classic debugger with graphical timeline of the software execution, including threads, RTOS API calls and other important events.
+					Moreover, the support for User Event logging offers a superior alternative to traditional printf logging, with minimal overhead and with integrated display in the trace views.
+					This means you can add a lot more logging without any significant impact on the system execution and timing.
+				</p>
+
+				<p>
+					Percepio View does not require additional tracing hardware, which means it can be used on essentially any target processor and can be used with many different development tools.
+				</p>
+		
+				<p>
+					Percepio View consists of two main components:
+					<ul class="list">
+						<li>
+							The host-side application, that provide trace visualization and analysis. Percepio View runs on Microsoft Windows and Linux hosts. Instructions for Linux users are found <A HREF="https://percepio.com/running-tracealyzer-on-linux/">here</A>.
+						</li>
+						<li>
+							The TraceRecorder library. Read more under the <A HREF="CreatingAndLoadingTraces.html">Creating and Loading Traces</A> section.
+						</li>
+					</ul>
+				</p>
+			</text>
+		</section>
+
+
+		
+		<section>
+			<!-- For Percepio Profile only -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+			<header>Overview</header>
+			<text>
+				<p>
+					Percepio Profile is a powerful tool for tracing and visualization of embedded and IoT software systems at runtime. Inspect task execution, debug RTOS-related issues, and profile your system from multiple perspectives.
+					With Percepio Profile you can record long traces by continuous trace streaming.
+					Analyze task timing metrics, task communication flow, stack usage, heap usage, and visualize data plots for a comprehensive view of your system’s performance and behavior.
+				</p>
+				<p>
+					For even more powerful features, including user-defined profiling (e.g., custom intervals), advanced RTOS
+					analytics, and additional trace streaming options, consider upgrading to Percepio Tracealyzer.
+				</p>
+
+				<p>
+					Percepio Profile complements your classic debugger with graphical timeline of the software execution, including threads, RTOS API calls and other important events.
+					Moreover, the support for User Event logging offers a superior alternative to traditional printf logging, with minimal overhead and with integrated display in the trace views.
+					This means you can add a lot more logging without any significant impact on the system execution and timing.
+				</p>
+
+				<p>
+					Percepio View is designed for use with SEGGER J-Link or J-Trace debug probes using the RTT protocol.
+					This can be used with any processor supported by SEGGER J-Link and that allows background memory access while the target is running.
+					This includes most Arm Cortex-M devices, as well as certain Arm Cortex-R, Arm Cortex-A and Renesas RX devices.
+				</p>
+
+				<p>
+					Percepio Profile consists of two main components:
+					<ul class="list">
+						<li>
+							The host-side application, that provide trace visualization and analysis. Percepio View runs on Microsoft Windows and Linux hosts. Instructions for Linux users are found <A HREF="https://percepio.com/running-tracealyzer-on-linux/">here</A>.
+						</li>
+						<li>
+							The TraceRecorder library. Read more under the <A HREF="CreatingAndLoadingTraces.html">Creating and Loading Traces</A> section.
+						</li>
+					</ul>
+				</p>
+			</text>
+		</section>
+
+
+
+		
+		<section>
+			<!-- Original version, keep this for Tracealyzer -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+			<header>Overview</header>
+			<text>
+				<p>
+					$PRODUCT is a powerful tool for tracing and visualization of embedded and IoT software systems at runtime. More than 30 views offers amazing insight into the real-time behavior, speeding up debugging, validation and performance optimization.
+					This saves you many hours of frustrating trial-and-error troubleshooting. With $PNAME you see what is really going on in your system!
+				</p>
+				<p>
+					$PNAME provide state-of-the-art visualization developed since 2004 and actually understands the meaning of many software events from supported RTOSes and middleware stacks.
+					This allows $PNAME to perform advanced analyses and provide many specialized visualizations, with intuitive links between the views and highlighting of related events.
+					The resulting visualization makes it much easier to draw conclusions from the data, understand the problem and verify the solution.
+				</p>
+				<p>
+					For RTOS-based systems, $PNAME shows task scheduling and timing, calls to RTOS services (including blocking and timeouts) and internal RTOS events such as task activations and OS ticks.
+					$PNAME can also show interrupt handlers as well as <A HREF="UserEventIntroduction.html">User Events</A> logged from your application code.
+				</p>
+				<p>
+					On top of this, $PNAME allows you to create user-defined visualizations using <A HREF="IntervalStateIntroduction.html">State Machines and Custom Intervals</A>. This way, you can visualize specific aspects of importance for your system and the problem at hand.
+				</p>
+				<p>
+					$PNAME can be used side-by-side with a traditional debugger and complements the debugger view with a higher level perspective, ideal for understanding real-time issues where a classic debugger is not sufficient.
+				</p>
+				<p>
+					$PNAME does not require additional tracing hardware, which means that it can be used in deployed systems to capture rare errors which otherwise are hard to reproduce.
+				</p>
+
+				<p>
+					<center>
+						<A HREF ="img/system_overview.png" target ="_blank">
+							<img src="img/system_overview.png" width="$IMAGEWIDTH" border="0"></img>
+						</A>
+					</center>
+				</p>
+
+				<p>
+					$PRODUCT consists of two main components:
+					<ul class="list">
+						<li>
+							The host application $PNAME, that provide trace visualization and analysis. $PNAME runs on Microsoft Windows and Linux hosts. Instructions for Linux users are found in <A HREF="$BINDIR/RunningOnLinux.txt">RunningOnLinux.txt</A> in the $PNAME application directory.
+						</li>
+						<li>
+							A trace creation component. $PNAME supports several third-party solutions provided by RTOS vendors, and Percepio also provides the Percepio Trace Recorder library that supports several RTOSes and soon also bare-metal setups. Read more under the <A HREF="CreatingAndLoadingTraces.html">Creating and Loading Traces</A> section.
+						</li>
+					</ul>
+				</p>
+			</text>
+		</section>
+
+		<section>
+			<header>Running on Linux</header>
+			<keyword>linux</keyword>
+			<keyword>mono</keyword>
+			<text>
+				<p>
+					<A NAME="runningonlinux"></A>				
+				</p>
+				<p>
+					An installation guide for Linux users is found at <A HREF="https://percepio.com/running-tracealyzer-on-linux/">https://percepio.com/running-tracealyzer-on-linux/</A>.
+					Additional information is also found in <A HREF="$BINDIR/RunningOnLinux.txt">RunningOnLinux.txt</A>, found in the application directory.
+				</p>
+				<p>
+					Note that display scaling is not yet fully supported on Linux, so it is recommended to use 100% scale factor.
+				</p>
+			</text>
+		</section>
+
+	</body>
+</page>

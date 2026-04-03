@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Performance Settings</title>
+  <keywords>
+    <keyword>performance</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Here are all settings that can affect performance in a negative way.
+        </p>
+
+        <p>
+          <A HREF="img/Performance Settings.png" target="$IMAGETARGET">
+            <img src="img/Performance Settings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          Many trace formats support raw events, but they are normally not included when loading a trace. If raw events are wanted, check <i>Include Raw Events in Trace</i> check box.
+        </p>
+
+        <note>
+          Loading raw events will normally result in double the number of events in the trace, which will both affect the time it takes to load the trace and how much memory the trace will require.
+        </note>
+      </text>
+    </section>
+  </body>
+</page>

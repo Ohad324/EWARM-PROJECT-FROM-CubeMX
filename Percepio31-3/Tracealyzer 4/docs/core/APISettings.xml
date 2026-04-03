@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>API Connection Monitor Settings</title>
+  <keywords>
+    <keyword>API</keyword>
+    <keyword>connection</keyword>
+    <keyword>monitor</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>Settings for the $PNAME API, which allows for other tools to interact with $PNAME.</p>
+        <p>
+          <A HREF="img/APISettings.png" target="$IMAGETARGET">
+            <img src="img/APISettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+        <p>
+          Check "Start API Connection on Startup" to start the API connection directly when starting $PNAME.
+        </p>
+
+        <p>
+          Use the Host and Port sections to select what host and port to use. Leave host blank to use localhost.
+        </p>
+
+        <p>
+          $PNAME support both XML and JSON formats, select the appropriate one.
+        </p>
+
+        <note>
+          Normally when the API is used $PNAME will be launched by the other application. When it is, the Host, Port, and Type settings are overridden.
+        </note>
+
+        <p>
+          Check "Reconnect if Disconnected" to have the API try to reconnect if the other end disconnects.
+        </p>
+
+        <p>
+          Check "Ask on Trace Received" to always get a message box if a new trace is sent over the API.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

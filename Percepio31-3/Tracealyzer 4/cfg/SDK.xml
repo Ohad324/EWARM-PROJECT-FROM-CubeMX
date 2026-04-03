@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+  <ObjectClasses>
+    <ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+  </ObjectClasses>
+</TargetPlatform>

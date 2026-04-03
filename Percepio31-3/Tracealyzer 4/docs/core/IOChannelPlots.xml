@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>I/O Plot</title>
+  <keywords>
+    <keyword>iochannel</keyword>
+    <keyword>channel</keyword>
+    <keyword>tcp</keyword>
+    <keyword>udp</keyword>
+    <keyword>plots</keyword>
+    <keyword>send</keyword>
+    <keyword>sent</keyword>
+    <keyword>received</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>        
+        <p>
+          The <i>I/O Plot</i> displays the amount of data sent or received in "I/O Channel" events. 
+		  An <i>I/O Channel</i> is a traced object corresponding to a system-level input or output.
+  		  Note that only some RTOS integrations provide I/O events, e.g. the Keil RTX5 integration may produce I/O events if tracing the Keil TCP stack. All the TCP sockets are then recognized as I/O channels.
+		</p>
+		
+		<p>
+          <A HREF="img/IO Channel Plot.png" target="$IMAGETARGET">
+            <img src="img/IO Channel Plot.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+		<p>			
+		  Each data point represents an I/O Channel Event, where the X axis shows the time of the event and the Y axis shows the amount of data sent or received, in bytes.
+		  Double-clicking on the data points shows the corresponding event in the trace view.
+		</p>
+				
+		<p>
+		  The display depends on two filters, the "Send/Receive/Combined" filter setting in found the window menu, and in the right-side panel you can select which I/O Channel objects to include. 		  
+		  In using the "Combined" option, both Send and Receive events are plotted. Send events are then shown as positive values on the Y-axis and Receive events as negative values on the Y-axis.
+        </p>
+ 	    
+		<p>
+          <A HREF="img/IO Plot - Combined.png" target="$IMAGETARGET">
+            <img src="img/IO Plot - Combined.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+		  
+      </text>
+    </section>
+  </body>
+</page>

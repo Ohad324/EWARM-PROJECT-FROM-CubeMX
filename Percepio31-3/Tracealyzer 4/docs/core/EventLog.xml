@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>Event Log</title>
+  <keywords>
+    <keyword>events</keyword>
+    <keyword>log</keyword>
+    <keyword>list</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The <b>Event Log</b> displays the trace as a textual event listing, with powerful filtering tools. The view also supports exporting the trace as text file.
+        </p>
+        <p>
+          Clicking on any entry will highlight the corresponding event in the <a href="TraceView.html">Trace View</a>.
+        </p>
+        <p>
+          <A HREF ="img/event_log.png" target ="_blank">
+            <img src="img/event_log.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+        <subsection>
+          <header>Filters</header>
+          <text>
+            <p>
+              The text box above the event log functions as a quick text-based filter. Type any text and click <b>Apply</b>, and only entries containing that text will be displayed. To revert to displaying all entries, delete the search string and click <b>Apply</b> again.
+            </p>
+            <p>
+              The next four buttons - User Events, Service, Info Events and Raw Events - toggles the visibility of their respective class of events.
+            </p>
+            <p>
+              Clicking the <b>Advanced</b> button opens a panel with even more filtering options:
+            </p>
+            <p>
+              <b>By Content</b><br/>In the upper part of the panel you have the line content filters. You can choose to include only entries matching one or more regex patterns and/or excluding any entry matching one or more regex patterns. Both text boxes supports multiple patterns by placing one pattern on each line.
+            </p>
+            <p>
+              <b>By Timestamp</b><br/>
+              By using the Exclude Events Before/After Timestamp filters, you can display events within a specific interval only.
+            </p>
+            <p>
+              <b>By Event Type</b>
+              <br/>In the bottom of the panel you have the Sources tree view. Here you can select which types of events you want to include as well as which individual channels you want to include for user events.
+            </p>
+          </text>
+        </subsection>
+
+		  <subsection>
+			  <header>Formatting</header>
+			  <text>
+				  <p>
+					  Under the <b>View</b> menu item, you find several options to configure the Event Log display.
+					  <UL class="list">
+						  <LI>
+							  <b>Show Actor</b>: Toggles the display of the actor name in a separate column, event timestamps. This shows the running actor that generated the event.
+						  </LI>
+						  <LI>
+							  <b>Show Actor Marker</b>: Toggles the visibility of the actor marker, a color-coded box shown in the Actor column next to the actor name. The color identifies the actor that produced the event.
+						  </LI>
+						  <LI>
+							  <b>Show Event Type Marker</b>: Toggles the visibility of the event type marker, a color-coded box shown at the beginning of the event text. The color indicates the type of event.
+						  </LI>
+						  <LI>
+							  <b>Show Timestamps</b>: Toggles the display of event timestamps.
+						  </LI>
+						  <LI>
+							  <b>Show Start and End</b>: Toggles the visibility of "=== Trace Start ===" and "=== Trace End ===" in the Event Log.
+						  </LI>
+
+					  </UL>
+				  </p>
+			  </text>
+		  </subsection>
+        <subsection>
+          <header>Export</header>
+          <text>
+            <p>
+              Using the <b>Events -&gt; Export</b> menu item, you can export the trace as a text file. This can be used to compare traces (using a plain diff/merge tool), e.g., for debugging (compare the event order in two traces with different behavior) and for regression testing (Does v1.2 behave the same as v1.1?  If not, what differs?).
+              All formatting and filtering used in the Event Log view is applied also in the Export function. This can be very powerful when comparing traces, as you can exclude irrelevant events and also the timestamps, e.g., if you wish to compare traces with small differences in timing.
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+
+  </body>
+</page>

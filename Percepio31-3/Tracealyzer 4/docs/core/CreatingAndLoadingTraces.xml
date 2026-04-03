@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<page>
+	<title>Introduction</title>
+	<keyword>create</keyword>
+	<keyword>record</keyword>
+	<keyword>export</keyword>
+	<keyword>load</keyword>
+	<keyword>trace</keyword>
+	<body>
+		<section includeHeader="false">
+			<!-- For Tracealyzer-->
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+			<header>Introduction</header>
+			<text>
+				<p>
+					$PRODUCT relies on a trace recorder library included in the target system.
+					We support several third party tracing libraries and also provide our very own
+					solution, TraceRecorder, that is used in several of the provided RTOS integrations.
+				</p>
+				<p>
+					To learn how to apply $PNAME on your particular target system,	please refer to the corresponding section in this chapter.
+				</p>
+
+			</text>
+		</section>
+
+		<section includeHeader="false">
+			<!-- For Percepio View (TraceRecorder is implied) -->
+			<requirement inverted="true">CoreFeatures.Streaming</requirement>
+			<header>Introduction</header>
+			<text>
+				<p>
+					$PRODUCT uses Percepio TraceRecorder to record traces on the target system. This is an event tracing library designed for embedded software systems and the Percepio trace visualization tools.
+					The TraceRecorder library is implemented in C (C99) and provided with full source code under the Apache 2.0 license.
+				</p>
+				<p>
+					To add TraceRecorder to your target system build, follow the <a href="$GETTINGSTARTEDURL">Getting Started guide</a> corresponding to your RTOS.
+					Make sure to follow the steps for "snapshot tracing" using the "RingBuffer" stream port module. Trace streaming is only supported with Percepio Profile or Percepio Tracealyzer.
+					No manual instrumentation is required to record kernel events.
+				</p>
+
+			</text>
+		</section>
+
+
+
+		<section includeHeader="false">
+			<!-- For Percepio Profile (TraceRecorder is implied) -->
+			<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+			<requirement>CoreFeatures.Streaming</requirement>
+			<header>Introduction</header>
+			<text>
+				<p>
+					$PRODUCT uses Percepio TraceRecorder to record traces on the target system. This is an event tracing library designed for embedded software systems and the Percepio trace visualization tools.
+					The TraceRecorder library is implemented in C (C99) and provided with full source code under the Apache 2.0 license.
+				</p>
+				<p>
+					To add TraceRecorder to your target system build, follow the <a href="$GETTINGSTARTEDURL">Getting Started guide</a> corresponding to your RTOS.
+					No manual instrumentation is required to record kernel events.
+				</p>
+			</text>
+		</section>
+
+
+		<section>
+			<!-- For Percepio View or Profile (TraceRecorder is implied) -->
+			<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+			<header>What can be traced?</header>
+			<text>
+
+				<p>
+					
+					<ul class="list">
+						<li>
+							<b>Task scheduling and RTOS API calls</b> are traced automatically, using existing kernel trace hooks.
+						</li>
+						<li>
+							<b>Interrupt service routines (ISRs)</b> can be traced by adding calls to <code>xTraceISRBegin()</code> and <code>xTraceISREnd()</code>
+							in your interrupt handlers. See the TraceRecorder ISR functions in <a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcISR.h">trcISR.h</a> for details.
+						</li>
+						<li>
+							You may log custom <b>User Events</b> using the following logging functions in the <A HREF="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcPrint.h">trcPrint API</A>.
+							<ul>
+								<li>xTracePrint() - Basic string logging</li>
+								<li>xTracePrintF() - Logging with variable number of arguments (e.g. "%d")</li>
+								<li>xTracePrintF0() .. xTracePrintF4() - Logging with fixed number of arguments (faster).</li>
+								<li>xTraceConsoleChannelPrintF - Drop-in replacement for printf, intended for redirecting existing logging.</li>								
+							</ul>
+							This is useful as debug messages, to see more information about what your code is doing, and has minimal overhead - can be 100x faster than a traditional printf call over a UART.
+						</li>
+					</ul>
+				</p>
+				
+				<p>
+					<!-- NOTE: Intentional references to Tracealyzer, do not change to $PRODUCT or $PNAME. -->					
+					The API functions in trcPrint.h and trcISR.h are accessed by including the main header file, <b>trcRecorder.h</b>.
+					Note that other tracing functions in TraceRecorder, such as interval-, state machine- and runnable tracing, and the "Compact Log" functions in trcPrint.h (e.g. xTracePrintCompactF1), are only supported using <a href="https://percepio.com/tracealyzer/">Percepio Tracealyzer</a>.					 
+				</p>
+				
+				<p>					
+					<b>Notes:</b>
+
+					<ul>
+						<li>
+							Each traced event typically adds a some microseconds of execution time, depending on processor speed and compiler optimizations.
+						</li>
+
+						<li>
+							The ISR tracing support is mainly intended for debugging purposes. It is recommended to only use ISR tracing for specific ISRs that are important for the issue at hand.
+							This is not intended for system handlers like the tick interrupt. Tracing all ISRs, or very frequent ISRs, may cause significant overhead.
+						</li>
+						<li>
+							If using TraceRecorder for profiling, note that the tracing overhead will inflate the reported metrics by some microseconds, which can be significant for very short execution times in the microsecond range.
+						</li>
+
+						<li>
+							If ISR tracing is not used, the CPU time spent in ISRs will instead be attributed to the currently running task.
+						</li>
+					</ul>
+				</p>
+
+			</text>
+
+		</section>
+	</body>
+</page>

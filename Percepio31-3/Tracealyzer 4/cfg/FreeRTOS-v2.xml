@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">      
+      <KernelService name="xQueueCreate"              operation="Initialize"/>
+      <KernelService name="vQueueDelete"              operation="Deinitialize"/>
+      <KernelService name="xQueueSend"                operation="Enqueue"/>
+      <KernelService name="xQueueSendToFront"         operation="EnqueueFirst"/>
+      <KernelService name="xQueueReceive"             operation="Dequeue"/>
+      <KernelService name="xQueueSendFromISR"         operation="Enqueue" isrOnly="true"/>
+      <KernelService name="xQueueSendToFrontFromISR"  operation="EnqueueFirst" isrOnly="true"/>
+      <KernelService name="xQueueReceiveFromISR"      operation="Dequeue" isrOnly="true"/>
+      <KernelService name="xQueuePeek"/>
+    </KernelServiceGroup>
+    
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="xSemaphoreCreate"        operation="Initialize"/>
+      <KernelService name="vSemaphoreDelete"        operation="Deinitialize"/>
+      <KernelService name="xSemaphoreGive"          operation="IncreaseSemaphore"/>
+      <KernelService name="xSemaphoreTake"          operation="DecreaseSemaphore"/>
+      <KernelService name="xSemaphoreGiveFromISR"   operation="IncreaseSemaphore" isrOnly="true"/>
+      <KernelService name="xSemaphoreTakeFromISR"   operation="DecreaseSemaphore" isrOnly="true"/>
+      <KernelService name="xQueuePeek"/>
+    </KernelServiceGroup>
+    
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="xSemaphoreCreateMutex"   operation="Initialize"/>
+      <KernelService name="vSemaphoreDelete"        operation="Deinitialize"/>
+      <KernelService name="xSemaphoreGive"          operation="ReleaseMutex"/>
+      <KernelService name="xSemaphoreTake"          operation="LockMutex" />
+      <KernelService name="xSemaphoreGiveFromISR"   operation="ReleaseMutex"  isrOnly="true"/>
+      <KernelService name="xSemaphoreTakeFromISR"   operation="LockMutex"     isrOnly="true"/>
+      <KernelService name="xQueuePeek"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Task">
+      <KernelService name="xTaskCreate"             operation="StartInstance"/>
+      <KernelService name="vTaskDelayUntil"         operation="Delay"               parameters="NumericParameterOnly"/>
+      <KernelService name="vTaskDelay"              operation="Delay"               parameters="NumericParameterOnly" />
+      <KernelService name="vTaskSuspend"            operation=""/>
+      <KernelService name="vTaskResume"             operation="StartInstance"/>
+      <KernelService name="vTaskResumeFromISR"      operation="StartInstance"  isrOnly="true"/>
+      <KernelService name="vTaskPrioritySet"        operation=""               parameters="ObjectAndNumericParameter"/>
+      <KernelService name="vTaskDelete"             operation="Deinitialize"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Timer">
+      <KernelService name="xTimerCreate"            operation="Initialize"/>
+      <KernelService name="xTimerDelete"            operation="Deinitialize"/>
+      <KernelService name="xTimerStart"             operation="StartInstance"                 parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerReset"             operation="StartInstance"                 parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerStartFromISR"      operation="StartInstance" isrOnly="true"  parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerResetFromISR"      operation="StartInstance" isrOnly="true"  parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerStop"              operation=""                              parameters="ObjectAndNumericParameter"/>
+      <KernelService name="Timer Callback"          operation=""/>
+      <KernelService name="xTimerStopFromISR"       operation=""              isrOnly="true"  parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerChangePeriod"      operation=""                              parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerPendFunctionCall"  operation=""                              parameters="None"/>
+      <KernelService name="xTimerPendFunctionCallFromISR" operation=""        isrOnly="true"  parameters="None"/>
+    </KernelServiceGroup>
+  
+    <KernelServiceGroup name="EventGroup">
+      <KernelService name="xEventGroupCreate"           operation="Initialize"/>
+      <KernelService name="xEventGroupSync"             operation="OtherRead"   parameters="ObjectAndNumericParameter"/>      
+      <KernelService name="xEventGroupWaitBits"         operation="OtherRead"   parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupClearBits"        operation=""            parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupClearBitsFromISR" operation=""            parameters="ObjectAndNumericParameter" isrOnly="true"/>
+      <KernelService name="xEventGroupSetBits"          operation="OtherWrite"  parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupDelete"           operation="Deinitialize"/>
+      <KernelService name="xEventGroupSetBitsFromISR"   operation=""            parameters="ObjectAndNumericParameter" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="TaskNotify">
+      <KernelService name="xTaskNotify"             operation="OtherWrite"/>
+      <KernelService name="ulTaskNotifyTake"        operation="OtherRead"     parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskNotifyWait"         operation="OtherRead"     parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskNotifyFromISR"      operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="vTaskNotifyGiveFromISR"  operation="OtherWrite" isrOnly="true"/>
+    </KernelServiceGroup>
+    
+    <KernelServiceGroup name="StreamBuffer">
+      <KernelService name="xStreamBufferCreate"            operation="Initialize"/>
+      <KernelService name="vStreamBufferDelete"            operation="Deinitialize"/>
+      <KernelService name="xStreamBufferSend"              operation="OtherWrite"/>
+      <KernelService name="xStreamBufferReceive"           operation="OtherRead"/>
+      <KernelService name="xStreamBufferSendFromISR"       operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="xStreamBufferReceiveFromISR"    operation="OtherRead" isrOnly="true"/>
+      <KernelService name="xStreamBufferReset"             operation="Clear"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="MessageBuffer">
+      <KernelService name="xMessageBufferCreate"            operation="Initialize"/>
+      <KernelService name="vMessageBufferDelete"            operation="Deinitialize"/>
+      <KernelService name="xMessageBufferSend"              operation="OtherWrite"/>
+      <KernelService name="xMessageBufferReceive"           operation="OtherRead"/>
+      <KernelService name="xMessageBufferSendFromISR"       operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="xMessageBufferReceiveFromISR"    operation="OtherRead" isrOnly="true"/>
+      <KernelService name="xMessageBufferReset"             operation="Clear"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Heap">
+      <KernelService name="malloc" operation="AllocateMemory" parameters="NumericParameterOnly">
+        <Parameter name="size" format="{0}"/>
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+       </KernelService>
+       <KernelService name="free" operation="FreeMemory" parameters="NumericParameterOnly">
+         <Parameter name="ptr" format="0x{0:X8}"/>
+         <ReturnValue name="size" format=" released {0} bytes"/>
+       </KernelService>
+    </KernelServiceGroup>
+    
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="Queue" type="Queue"/>
+    <ObjectClass name="Semaphore" type="Semaphore"/>
+    <ObjectClass name="Mutex" type="Mutex"/>
+    <ObjectClass name="Task" type="Actor"/>
+    <ObjectClass name="ISR" type="Actor"/>
+    <ObjectClass name="Timer" type="Other"/>
+    <ObjectClass name="EventGroup" type="Other"/>
+    <ObjectClass name="StreamBuffer" type="Other"/>
+    <ObjectClass name="MessageBuffer" type="Other"/>
+    <ObjectClass name="Heap" type="Heap" options="NoIpcGraph"/>
+  </ObjectClasses>
+</TargetPlatform>

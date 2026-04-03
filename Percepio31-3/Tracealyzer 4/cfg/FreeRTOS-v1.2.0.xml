@@ -1,0 +1,844 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PlatformExtension>
+  <EventCodes>
+    <EventGroup name="Core">
+      <Event code="0x01" type="TraceStart" />
+      <!--<Event code="0x02" type="TimestampConfig" />-->
+      <Event code="0x03" type="ObjectName" />
+      <Event code="0x07" type="IsrProperties" />
+      <!--<Event code="0x08" type="ObjectState" />-->
+
+      <Event code="0x30" type="TaskReady" />
+
+      <Event code="0x31" type="OsTimestamp">
+        <Param index="0" type="TimestampInOsTicks" useAs="Timestamp"></Param>
+      </Event>
+      <Event code="0x32" type="OsTimestamp">
+        <Param index="0" type="TimestampInOsTicks" useAs="Timestamp"></Param>
+      </Event>
+
+      <Event code="0x33" type="SwitchToInterrupt" resumeInstance="false" />
+      <Event code="0x34" type="SwitchToInterrupt" resumeInstance="true" />
+
+      <Event code="0x35" type="SwitchToTask"  resumeInstance="false"/>
+      <Event code="0x36" type="SwitchToTask"  resumeInstance="true" />
+      <Event code="0x37" type="SwitchToTask"  resumeInstance="false"/>
+
+      <Event code="0x3A" type="LowPowerBegin" />
+      <Event code="0x3B" type="LowPowerEnd" />
+
+      <Event code="0x3C" type="InstanceEnd" instanceEndMode="NextCall" />
+      <Event code="0x3D" type="InstanceEnd" instanceEndMode="Instant" />
+
+      <Event code="0xEB" type="UnusedStack">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+
+      <Event key="Forget" type="ForgetObject">
+        <Param index="0" type="Handle" />
+      </Event>
+    </EventGroup>
+    <EventGroup name="Queue">
+      <Event code="0x11" service="Queue/xQueueCreate" type="KernelServiceReturn" status="StatusOK" >
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x41" service="Queue/xQueueCreate" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x21" service="Queue/vQueueDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x50" service="Queue/xQueueSend" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x53" service="Queue/xQueueSend" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x56" service="Queue/xQueueSend" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0xC0" service="Queue/xQueueSendToFront" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0xC1" service="Queue/xQueueSendToFront" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0xC2" service="Queue/xQueueSendToFront" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x59" service="Queue/xQueueSendFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x5C" service="Queue/xQueueSendFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0xC3" service="Queue/xQueueSendToFrontFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0xC4" service="Queue/xQueueSendToFrontFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x60" service="Queue/xQueueReceive" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x63" service="Queue/xQueueReceive" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x66" type="KernelServiceEntry"  service="Queue/xQueueReceive" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x69" service="Queue/xQueueReceiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR receiving from $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x6C" service="Queue/xQueueReceiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR receiving from $0" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x70" service="Queue/xQueuePeek" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x73" service="Queue/xQueuePeek" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x76" type="KernelServiceEntry"  service="Queue/xQueuePeek" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="Semaphore">
+      <Event code="0x12" service="Semaphore/xSemaphoreCreateBinary" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x42" service="Semaphore/xSemaphoreCreateBinary" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x16" service="Semaphore/xSemaphoreCreateCounting" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x46" service="Semaphore/xSemaphoreCreateCounting" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x22" service="Semaphore/vSemaphoreDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x51" service="Semaphore/xSemaphoreGive" type="KernelServiceReturn" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x54" service="Semaphore/xSemaphoreGive" type="KernelServiceReturn" status="StatusTimeout" stateOffset="1">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <!--<Event code="0x57" service="Semaphore/xSemaphoreGive" type="KernelServiceEntry" status="StatusBlocks" stateOffset="1">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>-->
+      <Event code="0x5A" service="Semaphore/xSemaphoreGiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR giving $0" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x5D" service="Semaphore/xSemaphoreGiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR giving $0" status="StatusTimeout" stateOffset="1">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x61" service="Semaphore/xSemaphoreTake" type="KernelServiceReturn" status="StatusOK" stateOffset="2">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x64" service="Semaphore/xSemaphoreTake" type="KernelServiceReturn" status="StatusTimeout" stateOffset="2">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x67" service="Semaphore/xSemaphoreTake" type="KernelServiceEntry" status="StatusBlocks" stateOffset="2">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x6A" service="Semaphore/xSemaphoreTakeFromISR" type="KernelServiceCallFromIsr" isrName="ISR taking $0" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x6D" service="Semaphore/xSemaphoreTakeFromISR" type="KernelServiceCallFromIsr" isrName="ISR taking $0" status="StatusTimeout" stateOffset="1">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x71" service="Semaphore/xQueuePeek" type="KernelServiceReturn" status="StatusOK" stateOffset="2">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x74" service="Semaphore/xQueuePeek" type="KernelServiceReturn" status="StatusTimeout" stateOffset="2">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x77" service="Semaphore/xQueuePeek" type="KernelServiceEntry" status="StatusBlocks" stateOffset="2">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="Mutex">
+      <Event code="0x13" service="Mutex/xSemaphoreCreateMutex" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x43" service="Mutex/xSemaphoreCreateMutex" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x17" service="Mutex/xSemaphoreCreateRecursiveMutex" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x47" service="Mutex/xSemaphoreCreateRecursiveMutex" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x23" service="Mutex/vSemaphoreDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="Handle" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x52" service="Mutex/xSemaphoreGive" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x55" service="Mutex/xSemaphoreGive" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <!--<Event code="0x58" service="Mutex/xSemaphoreGive" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>-->
+      <Event code="0xC5" service="Mutex/xSemaphoreGiveRecursive" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xC6" service="Mutex/xSemaphoreGiveRecursive" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x62" service="Mutex/xSemaphoreTake" type="KernelServiceReturn" status="StatusOK" instanceSplitOnReadyMode="Split">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x65" service="Mutex/xSemaphoreTake" type="KernelServiceReturn" status="StatusTimeout" instanceSplitOnReadyMode="Split">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x68" service="Mutex/xSemaphoreTake" type="KernelServiceEntry" status="StatusBlocks" instanceSplitOnReadyMode="NoSplit">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xC7" service="Mutex/xSemaphoreTakeRecursive" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xC8" service="Mutex/xSemaphoreTakeRecursive" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xF6" service="Mutex/xSemaphoreTakeRecursive" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x72" service="Mutex/xQueuePeek" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x75" service="Mutex/xQueuePeek" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x78" service="Mutex/xQueuePeek" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="Task">
+      <Event code="0x10" type="ObjectState">
+        <Param index="0" type="Handle" class="Task"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="AddTaskCreateCall" />
+      </Event>
+      <Event key="AddTaskCreateCall" service="Task/xTaskCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x40" service="Task/xTaskCreate" type="KernelServiceReturn" status="StatusError">
+        <!--
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+        -->
+      </Event>
+      <Event code="0x20" service="Task/vTaskDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x79" service="Task/vTaskDelayUntil" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="TimestampInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x7A" service="Task/vTaskDelay" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x7B" service="Task/vTaskSuspend" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x7C" service="Task/vTaskResume" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x7D" service="Task/vTaskResumeFromISR" type="KernelServiceCallFromIsr" isrName="ISR resuming $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x04" service="Task/vTaskPrioritySet" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <FollowWith key="AddPriortyChange" />
+      </Event>
+
+      <Event key="AddPriortyChange" type="PriorityChange">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Priority"></Param>
+      </Event>
+
+      <Event code="0x05" type="PriorityChange" priorityChange="Inherit">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Priority"></Param>
+      </Event>
+      <Event code="0x06" type="PriorityChange" priorityChange="Disinherit">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Priority"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="Timer">
+      <Event code="0x14" service="Timer/xTimerCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x44" service="Timer/xTimerCreate" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x24" service="Timer/xTimerDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x48" service="Timer/xTimerDelete" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+
+      <Event code="0x80" service="Timer/xTimerPendFunctionCall" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x82" service="Timer/xTimerPendFunctionCall" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x81" service="Timer/xTimerPendFunctionCallFromISR" type="KernelServiceCallFromIsr" isrName="ISR pending function" status="StatusOK">
+        <Param index="0" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x83" service="Timer/xTimerPendFunctionCallFromISR" type="KernelServiceCallFromIsr" isrName="ISR pending function" status="StatusError">
+        <Param index="0" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA0" service="Timer/xTimerStart" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA8" service="Timer/xTimerStart" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA4" service="Timer/xTimerStartFromISR" type="KernelServiceCallFromIsr" isrName="ISR starting $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xAC" service="Timer/xTimerStartFromISR" type="KernelServiceCallFromIsr" isrName="ISR starting $0" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA2" service="Timer/xTimerStop" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xAA" service="Timer/xTimerStop" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA6" service="Timer/xTimerStopFromISR" type="KernelServiceCallFromIsr" isrName="ISR stopping $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xAE" service="Timer/xTimerStopFromISR" type="KernelServiceCallFromIsr" isrName="ISR stopping $0" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA1" service="Timer/xTimerReset" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA9" service="Timer/xTimerReset" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA5" service="Timer/xTimerResetFromISR" type="KernelServiceCallFromIsr" isrName="ISR resetting $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xAD" service="Timer/xTimerResetFromISR" type="KernelServiceCallFromIsr" isrName="ISR resetting $0" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA3" service="Timer/xTimerChangePeriod" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xAB" service="Timer/xTimerChangePeriod" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xA7" service="Timer/xTimerChangePeriodFromISR" type="KernelServiceCallFromIsr" isrName="ISR changing period of $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xAF" service="Timer/xTimerChangePeriodFromISR" type="KernelServiceCallFromIsr" isrName="ISR changing period of $0" status="StatusError">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xD2" service="Timer/Timer Callback" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="EventGroup">
+      <Event code="0x15" service="EventGroup/xEventGroupCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x45" service="EventGroup/xEventGroupCreate" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x25" service="EventGroup/xEventGroupDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0xB0" service="EventGroup/xEventGroupSync" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB6" service="EventGroup/xEventGroupSync" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB8" service="EventGroup/xEventGroupSync" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB1" service="EventGroup/xEventGroupWaitBits" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB7" service="EventGroup/xEventGroupWaitBits" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB9" service="EventGroup/xEventGroupWaitBits" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB2" service="EventGroup/xEventGroupClearBits" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB3" service="EventGroup/xEventGroupClearBitsFromISR" type="KernelServiceCallFromIsr" isrName="ISR clearing bits for $0" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB4" service="EventGroup/xEventGroupSetBits" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xB5" service="EventGroup/xEventGroupSetBitsFromISR" type="KernelServiceCallFromIsr" isrName="ISR setting bits for $0" status="StatusOK">
+        <Param index="0" type="Handle" class="EventGroup" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="TaskNotify">
+      <Event code="0xC9" service="TaskNotify/xTaskNotify" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xCA" service="TaskNotify/xTaskNotifyWait" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xCB" service="TaskNotify/xTaskNotifyWait" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xCC" service="TaskNotify/xTaskNotifyWait" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xCD" service="TaskNotify/xTaskNotifyFromISR" type="KernelServiceCallFromIsr" isrName="ISR notifying $0" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="StreamBuffer">
+      <Event code="0x18" service="StreamBuffer/xStreamBufferCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x49" service="StreamBuffer/xStreamBufferCreate" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x28" service="StreamBuffer/vStreamBufferDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0xD3" service="StreamBuffer/xStreamBufferSend" type="KernelServiceReturn" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xD4" service="StreamBuffer/xStreamBufferSend" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xD5" service="StreamBuffer/xStreamBufferSend" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xD6" service="StreamBuffer/xStreamBufferReceive" type="KernelServiceReturn" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xD7" service="StreamBuffer/xStreamBufferReceive" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xD8" service="StreamBuffer/xStreamBufferReceive" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xD9" service="StreamBuffer/xStreamBufferSendFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xDA" service="StreamBuffer/xStreamBufferSendFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusTimeout">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xDB" service="StreamBuffer/xStreamBufferReceiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR receiving from $0" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xDC" service="StreamBuffer/xStreamBufferReceiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR receiving from $0" status="StatusTimeout">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xDD" service="StreamBuffer/xStreamBufferReset" type="KernelServiceReturn" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="StreamBuffer" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="MessageBuffer">
+      <Event code="0x19" service="MessageBuffer/xMessageBufferCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x4A" service="MessageBuffer/xMessageBufferCreate" type="KernelServiceReturn" status="StatusError">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x29" service="MessageBuffer/vMessageBufferDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0xDE" service="MessageBuffer/xMessageBufferSend" type="KernelServiceReturn" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xDF" service="MessageBuffer/xMessageBufferSend" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE0" service="MessageBuffer/xMessageBufferSend" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE1" service="MessageBuffer/xMessageBufferReceive" type="KernelServiceReturn" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE2" service="MessageBuffer/xMessageBufferReceive" type="KernelServiceEntry" status="StatusBlocks">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE3" service="MessageBuffer/xMessageBufferReceive" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE4" service="MessageBuffer/xMessageBufferSendFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE5" service="MessageBuffer/xMessageBufferSendFromISR" type="KernelServiceCallFromIsr" isrName="ISR sending to $0" status="StatusTimeout">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE6" service="MessageBuffer/xMessageBufferReceiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR receiving from $0" status="StatusOK" stateOffset="1">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE7" service="MessageBuffer/xMessageBufferReceiveFromISR" type="KernelServiceCallFromIsr" isrName="ISR receiving from $0" status="StatusTimeout">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+      <Event code="0xE8" service="MessageBuffer/xMessageBufferReset" type="KernelServiceReturn" status="StatusError" stateOffset="1">
+        <Param index="0" type="Handle" class="MessageBuffer" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="UserEvent">
+      <Event code="0x90" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x91" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x92" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="2" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x93" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="3" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x94" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="4" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x95" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="5" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x96" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="6" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x97" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="7" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x98" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+      </Event>
+      <Event code="0x99" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x9A" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x9B" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x9C" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x9D" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x9E" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x9F" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup name="Memory">
+      <Event code="0x38" service="Heap/malloc" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="UInt32" useAs="Return"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+      </Event>
+      <Event code="0x39" service="Heap/free" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="UInt32" useAs="Arg"></Param>
+        <Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+        <Param index="1" type="Int32" useAs="Return"></Param>
+      </Event>
+      <Event code="0xE9" service="Heap/malloc" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="UInt32" useAs="Return"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+      </Event>
+    </EventGroup>
+    <EventGroup>
+      <Event code="0xEC" type="StateMachineStateCreate"  />
+      <Event code="0xED" type="StateMachineCreate"  />
+      <Event code="0xEE" type="StateMachineStateChange"  />
+      <Event code="0xEF" type="IntervalChannelCreate"  />
+      <Event code="0xF0" type="IntervalStart"  />
+      <Event code="0xF7" type="IntervalEnd"  />
+      <Event code="0xF8" type="IntervalChannelSetCreate"  />
+    </EventGroup>
+    <EventGroup>
+      <Event code="0xF1" type="LoadExtension"  />
+      <Event code="0xF3" type="NullEvent"  />
+      <Event code="0xF4" type="NullEvent"  />
+      <Event code="0xF5" type="NullEvent"  />
+    </EventGroup>
+    <EventGroup>
+      <Event code="0xF9" type="RegisterRunnable"  />
+      <Event code="0xFA" type="RunnableStart"  />
+      <Event code="0xFB" type="RunnableStop"  />
+    </EventGroup>
+    <EventGroup>
+      <Event code="0xFC" type="LoadDependency">
+        <Param index="0" type="StringHandle" useAs="Arg" />
+        <Param index="1" type="UInt32" useAs="Arg" />
+      </Event>
+    </EventGroup>
+    <EventGroup name="Debug">
+      <Event code="0xFFF" type="DebugExpect"  />
+      <Event code="0xFFE" type="DebugExpectEmpty"  />
+      <Event code="0xFFD" type="DebugExpectNever"  />
+    </EventGroup>
+  </EventCodes>
+
+  <TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">      
+      <KernelService name="xQueueCreate"            operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xQueueSend"              operation="Enqueue" />
+      <KernelService name="xQueueSendToFront"       operation="EnqueueFirst" />
+      <KernelService name="xQueueReceive"           operation="Dequeue" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xQueueSendFromISR"       operation="Enqueue" isrOnly="true"/>
+      <KernelService name="xQueueSendToFrontFromISR" operation="EnqueueFirst" isrOnly="true"/>
+      <KernelService name="xQueueReceiveFromISR"    operation="Dequeue" isrOnly="true"/>
+      <KernelService name="xQueuePeek"              operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="vQueueDelete"            operation="Deinitialize"/>
+    </KernelServiceGroup>
+    
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="xSemaphoreCreateBinary"  operation="Initialize"/>
+      <KernelService name="xSemaphoreCreateCounting" operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xSemaphoreGive"          operation="IncreaseSemaphore"/>
+      <KernelService name="xSemaphoreTake"          operation="DecreaseSemaphore" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xSemaphoreGiveFromISR"   operation="IncreaseSemaphore" isrOnly="true"/>
+      <KernelService name="xSemaphoreTakeFromISR"   operation="DecreaseSemaphore" isrOnly="true"/>
+      <KernelService name="xQueuePeek"              operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="vSemaphoreDelete"            operation="Deinitialize"/>      
+    </KernelServiceGroup>
+    
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="xSemaphoreCreateMutex"   operation="Initialize"/>
+      <KernelService name="xSemaphoreCreateRecursiveMutex" operation="Initialize"/>
+      <KernelService name="xSemaphoreGive" operation="ReleaseMutex"/>
+      <KernelService name="xSemaphoreTake" operation="LockMutex" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xSemaphoreGiveRecursive" operation="OtherWrite"/>
+      <KernelService name="xSemaphoreTakeRecursive" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xQueuePeek"              operation="OtherRead"/>
+      <KernelService name="vSemaphoreDelete"            operation="Deinitialize"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Task">
+      <KernelService name="xTaskCreate"             operation="StartInstance" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="vTaskDelayUntil"         operation="Delay"               parameters="NumericParameterOnly"/>
+      <KernelService name="vTaskDelay"              operation="Delay"               parameters="NumericParameterOnly" />
+      <KernelService name="vTaskSuspend"            operation=""/>
+      <KernelService name="vTaskResume"             operation="StartInstance"/>
+      <KernelService name="vTaskResumeFromISR"      operation="StartInstance"  isrOnly="true"/>
+      <KernelService name="vTaskPrioritySet"        operation="ChangePriority"      parameters="ObjectAndNumericParameter"/>
+      <KernelService name="vTaskDelete"             operation="Deinitialize"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Timer">
+      <KernelService name="xTimerCreate"            operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerDelete"            operation="Deinitialize"/>
+      <KernelService name="xTimerStart"             operation="StartInstance"/>
+      <KernelService name="xTimerReset"             operation="StartInstance"/>
+      <KernelService name="xTimerStartFromISR"      operation="StartInstance" isrOnly="true"/>
+      <KernelService name="xTimerResetFromISR"      operation="StartInstance" isrOnly="true"/>      
+      <KernelService name="xTimerStop"              operation=""/>
+      <KernelService name="xTimerStopFromISR"       operation=""              isrOnly="true"/>
+      <KernelService name="xTimerChangePeriod"      operation="" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerChangePeriodFromISR" operation="" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerPendFunctionCall"  operation="" parameters="NumericParameterOnly"/>
+      <KernelService name="xTimerPendFunctionCallFromISR" operation="" parameters="NumericParameterOnly" isrOnly="true"/>
+      <KernelService name="Timer Callback" parameters="ObjectAndNumericParameter" operation=""/>
+    </KernelServiceGroup>
+  
+    <KernelServiceGroup name="EventGroup">
+      <KernelService name="xEventGroupCreate" operation="Initialize"/>
+      <KernelService name="xEventGroupSync" operation="OtherRead" parameters="ObjectAndNumericParameter"/>      
+      <KernelService name="xEventGroupWaitBits" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupClearBits" operation="OtherWrite" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupClearBitsFromISR" operation="OtherWrite" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+      <KernelService name="xEventGroupSetBits" operation="OtherWrite" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupDelete" operation="Deinitialize"/>
+      <KernelService name="xEventGroupSetBitsFromISR" operation="OtherWrite" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="TaskNotify">
+      <KernelService name="xTaskNotify" operation="OtherWrite"/>
+      <KernelService name="xTaskNotifyWait" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskNotifyFromISR" operation="OtherWrite" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="StreamBuffer">
+      <KernelService name="xStreamBufferCreate"            operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="vStreamBufferDelete"            operation="Deinitialize"/>
+      <KernelService name="xStreamBufferSend"              operation="OtherWrite"/>
+      <KernelService name="xStreamBufferReceive"           operation="OtherRead"/>
+      <KernelService name="xStreamBufferSendFromISR"       operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="xStreamBufferReceiveFromISR"    operation="OtherRead" isrOnly="true"/>
+      <KernelService name="xStreamBufferReset"             operation="Clear"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="MessageBuffer">
+      <KernelService name="xMessageBufferCreate"            operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="vMessageBufferDelete"            operation="Deinitialize"/>
+      <KernelService name="xMessageBufferSend"              operation="OtherWrite"/>
+      <KernelService name="xMessageBufferReceive"           operation="OtherRead"/>
+      <KernelService name="xMessageBufferSendFromISR"       operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="xMessageBufferReceiveFromISR"    operation="OtherRead" isrOnly="true"/>
+      <KernelService name="xMessageBufferReset"             operation="Clear"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Heap">
+      <KernelService name="malloc" operation="AllocateMemory" parameters="NumericParameterOnly">
+        <Parameter name="size" format="{0}"/>
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+       </KernelService>
+       <KernelService name="free" operation="FreeMemory" parameters="NumericParameterOnly">
+         <Parameter name="ptr" format="0x{0:X8}"/>
+         <ReturnValue name="size" format=" released {0} bytes"/>
+       </KernelService>
+    </KernelServiceGroup>
+    
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+    <ObjectClass name="Queue" type="Queue"/>
+    <ObjectClass name="Semaphore" type="Semaphore"/>
+    <ObjectClass name="Mutex" type="Mutex"/>
+    <ObjectClass name="Task" type="Actor"/>
+    <ObjectClass name="ISR" type="Actor"/>
+    <ObjectClass name="Timer" type="Other"/>
+    <ObjectClass name="EventGroup" type="Other"/>
+    <ObjectClass name="Heap" type="Heap" options="NoIpcGraph"/>
+    <ObjectClass name="StreamBuffer" type="Other"/>
+    <ObjectClass name="MessageBuffer" type="Other"/>
+  </ObjectClasses>
+  </TargetPlatform>
+</PlatformExtension>

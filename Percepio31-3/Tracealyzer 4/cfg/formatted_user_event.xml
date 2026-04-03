@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<PlatformExtension>
+  <EventMap>
+    <Event name="user4242" type="UserEvent">
+      <Parameter name="foo" var="foo" offset="0" size="2" unsigned="true" float="false" />
+      <Parameter name="bar" var="bar" offset="2" size="2" unsigned="false" float="false" />
+    </Event>
+  </EventMap>
+</PlatformExtension>

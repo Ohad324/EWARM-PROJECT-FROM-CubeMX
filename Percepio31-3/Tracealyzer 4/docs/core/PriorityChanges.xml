@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Priority Changes</title>
+  <keywords>
+    <keyword>schedule</keyword>
+    <keyword>scheduling</keyword>
+    <keyword>intensity</keyword>
+    <keyword>plot</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view shows dynamic changes of scheduling priorities and may include both explicit priority changes and changes due to priority inheritance (e.g. on Mutex operations), depending on the kernel instrumentation.
+		  The X-axis shows the timeline and the Y-axis shows the new priority level.
+        </p>
+
+        <p>
+          <A HREF="img/PriorityChanges.png" target="$IMAGETARGET">
+            <img src="img/PriorityChanges.png" width="700" border="0" />
+          </A>
+        </p>
+
+	  </text>
+    </section>
+  </body>
+</page>

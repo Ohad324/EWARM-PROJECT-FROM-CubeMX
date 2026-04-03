@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Migrating Actors</title>
+  <keywords>
+    <keyword>schedule</keyword>
+    <keyword>scheduling</keyword>
+    <keyword>actors</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view shows actors migrating between cores. More specifically, it shows the number of times an actor starts executing on a core that is different from the core it was last seen executing on. Note that the actor must start executing on the target core in order for a migration to be registered, $PNAME does not look at any internal scheduler state or API calls to set affinity or similar.
+        </p>
+
+        <p>
+          This view is only available for multi core traces.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

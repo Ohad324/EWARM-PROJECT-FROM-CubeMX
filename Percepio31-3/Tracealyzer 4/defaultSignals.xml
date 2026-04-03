@@ -1,0 +1,18 @@
+<UserEventSignals>
+  <Signal>
+    <Name>SinWave</Name>
+    <Color>-65536</Color>
+    <Regex>\[SinWave\].*Value\:[ ]*(-?[0-9]+)</Regex>
+    <ResultIndex>1</ResultIndex>
+    <ParseAs>0</ParseAs>
+    <ExampleData>[SinWave] Value: 9</ExampleData>
+  </Signal>
+  <Signal>
+    <Name>CosWave</Name>
+    <Color>-16776961</Color>
+    <Regex>\[CosWave\].*Value\:[ ]*(-?[0-9]+)</Regex>
+    <ResultIndex>1</ResultIndex>
+    <ParseAs>0</ParseAs>
+    <ExampleData>[CosWave] Value: 99</ExampleData>
+  </Signal>
+</UserEventSignals>

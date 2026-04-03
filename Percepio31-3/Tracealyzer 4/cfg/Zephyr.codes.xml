@@ -1,0 +1,1513 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- FreeRTOS event codes for Percepio Streaming Format (PSF) -->
+
+<PsfCodes>
+	<Events>
+		<EventGroup name="Core">
+			<Event code="0x01" type="TraceStart" />
+			<Event code="0x02" type="TimestampConfig" />
+			<Event code="0x03" type="ObjectName" />
+			<Event code="0x07" type="IsrProperties" />
+			<Event code="0x08" type="ObjectState" />
+
+			<Event code="0x30" type="TaskReady" />
+
+			<Event code="0x31" type="OsTimestamp">
+				<Param index="0" type="TimestampInOsTicks" useAs="Timestamp"></Param>
+			</Event>
+			<Event code="0x32" type="OsTimestamp">
+				<Param index="0" type="TimestampInOsTicks" useAs="Timestamp"></Param>
+			</Event>
+
+			<Event code="0x33" type="SwitchToInterrupt" resumeInstance="false" />
+			<Event code="0x34" type="SwitchToInterrupt" resumeInstance="true" />
+
+			<Event code="0x35" type="SwitchToTask"  resumeInstance="false"/>
+			<Event code="0x36" type="SwitchToTask"  resumeInstance="true" />
+			<Event code="0x37" type="SwitchToTask"  resumeInstance="false"/>
+
+			<Event code="0x3A" type="LowPowerBegin" />
+			<Event code="0x3B" type="LowPowerEnd" />
+
+			<Event code="0x3C" type="InstanceEnd" instanceEndMode="NextCall" />
+			<Event code="0x3D" type="InstanceEnd" instanceEndMode="Instant" />
+
+			<Event code="0xEA" type="UnusedStack">
+				<Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+
+			<Event key="Forget" type="ForgetObject">
+				<Param index="0" type="Handle" />
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="Thread">
+			<Event code="0xB6" service="Thread/k_thread_sched_wakeup" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x20" service="Thread/k_thread_sched_abort" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<FollowWith key="Forget" />
+			</Event>
+			<Event code="0x04" service="Thread/k_thread_sched_priority_set" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<FollowWith key="AddPriortyChange" />
+			</Event>
+			<Event key="AddPriortyChange" type="PriorityChange">
+				<Param index="0" type="Handle" class="Thread" useAs="Actor"></Param>
+				<Param index="1" type="Int32" useAs="Priority"></Param>
+			</Event>
+			<Event code="0x7C" service="Thread/k_thread_sched_resume" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x7B" service="Thread/k_thread_sched_suspend" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			
+			
+			<Event code="0x09" service="Thread/k_thread_foreach" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="UInt32" useAs="Arg"/>
+				<Param index="1" type="UInt32" useAs="Arg"/>
+			</Event>
+			<Event code="0x0B" service="Thread/k_thread_foreach" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"/>
+				<Param index="1" type="UInt32" useAs="Arg"/>
+			</Event>
+			<Event code="0x0A" service="Thread/k_thread_foreach_unlocked" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="UInt32" useAs="Arg"/>
+				<Param index="1" type="UInt32" useAs="Arg"/>
+			</Event>
+			<Event code="0xF2" service="Thread/k_thread_foreach_unlocked" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"/>
+				<Param index="1" type="UInt32" useAs="Arg"/>
+			</Event>
+			<Event code="0x10" type="ObjectState">
+				<Param index="0" type="Handle" class="Thread"></Param>
+				<Param index="2" type="Int32" useAs="StateAfter"></Param>
+				<FollowWith key="AddThreadCreateCall" />
+			</Event>
+			<Event key="AddThreadCreateCall" service="Thread/k_thread_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Arg"></Param>
+				<Param index="0" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x0C" service="Thread/k_thread_user_mode_enter" type="KernelServiceCall" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"/>
+				<Param index="3" type="UInt32" useAs="Arg"/>
+				<Param index="4" type="UInt32" useAs="Arg"/>
+			</Event>
+			<Event code="0xFC" service="Thread/k_thread_heap_assign" type="KernelServiceCall" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="MemoryHeap" useAs="Arg"/>
+			</Event>
+			<Event code="0xB0" service="Thread/k_thread_join" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xB1" service="Thread/k_thread_join" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xB2" service="Thread/k_thread_join" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x2A" service="Thread/k_sleep" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x2B" service="Thread/k_sleep" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x2C" service="Thread/k_msleep" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x2D" service="Thread/k_msleep" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x2E" service="Thread/k_usleep" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x2F" service="Thread/k_usleep" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xB4" service="Thread/k_busy_wait" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xF3" service="Thread/k_busy_wait" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xB5" service="Thread/k_yield" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="0x15D" service="Thread/k_wakeup" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x15E" service="Thread/k_thread_abort" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<FollowWith key="Forget" />
+			</Event>
+			<Event code="0xB3" service="Thread/k_thread_start" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x160" service="Thread/k_thread_resume" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xB7" service="Thread/k_sched_lock" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="0xB8" service="Thread/k_sched_unlock" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="0x161" service="Thread/k_thread_suspend" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x15F" service="Thread/k_thread_priority_set" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+
+			<Event code="0x05" type="PriorityChange" priorityChange="Inherit">
+				<Param index="0" type="Handle" class="Thread" useAs="Actor"></Param>
+				<Param index="1" type="Int32" useAs="Priority"></Param>
+			</Event>
+			<Event code="0x06" type="PriorityChange" priorityChange="Disinherit">
+				<Param index="0" type="Handle" class="Thread" useAs="Actor"></Param>
+				<Param index="1" type="Int32" useAs="Priority"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Work">
+			<Event code="0x11E" service="Work/k_work_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x11F" service="Work/k_work_submit_to_queue" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x120" service="Work/k_work_submit_to_queue" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Work" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x121" service="Work/k_work_submit_to_queue" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x122" service="Work/k_work_submit" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x123" service="Work/k_work_submit" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x124" service="Work/k_work_submit" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x125" service="Work/k_work_flush" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x126" service="Work/k_work_flush" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x128" service="Work/k_work_cancel" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x129" service="Work/k_work_cancel" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x12B" service="Work/k_work_cancel_sync" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x12C" service="Work/k_work_cancel_sync" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Work" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="WorkQueue">
+			<Event code="0x12E" service="WorkQueue/k_work_queue_start" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x12F" service="WorkQueue/k_work_queue_start" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x131" service="WorkQueue/k_work_queue_drain" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x132" service="WorkQueue/k_work_queue_drain" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x134" service="WorkQueue/k_work_queue_unplug" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x135" service="WorkQueue/k_work_queue_unplug" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x136" service="WorkQueue/k_work_queue_unplug" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="WorkDelayable">
+			<Event code="0x137" service="WorkDelayable/k_work_init_delayable" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+
+			<Event code="0x138" service="WorkDelayable/k_work_schedule_for_queue" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x139" service="WorkDelayable/k_work_schedule_for_queue" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x13A" service="WorkDelayable/k_work_schedule_for_queue" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x13B" service="WorkDelayable/k_work_schedule" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x13C" service="WorkDelayable/k_work_schedule" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x13D" service="WorkDelayable/k_work_schedule" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x13E" service="WorkDelayable/k_work_reschedule_for_queue" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x13F" service="WorkDelayable/k_work_reschedule_for_queue" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x140" service="WorkDelayable/k_work_reschedule_for_queue" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x141" service="WorkDelayable/k_work_reschedule" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x142" service="WorkDelayable/k_work_reschedule" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x143" service="WorkDelayable/k_work_reschedule" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x144" service="WorkDelayable/k_work_flush_delayable" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x145" service="WorkDelayable/k_work_flush_delayable" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x146" service="WorkDelayable/k_work_flush_delayable" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x147" service="WorkDelayable/k_work_cancel_delayable" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x148" service="WorkDelayable/k_work_cancel_delayable" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x149" service="WorkDelayable/k_work_cancel_delayable" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x14A" service="WorkDelayable/k_work_cancel_delayable_sync" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x14B" service="WorkDelayable/k_work_cancel_delayable_sync" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x14C" service="WorkDelayable/k_work_cancel_delayable_sync" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkDelayable" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="WorkUser">
+			<Event code="0x14D" service="WorkUser/k_work_user_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkUser" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+
+			<Event code="0x14E" service="WorkUser/k_work_user_submit_to_queue" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkUserQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkUser" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x14F" service="WorkUser/k_work_user_submit_to_queue" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkUserQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkUser" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x150" service="WorkUser/k_work_user_submit_to_queue" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkUserQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkUser" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="WorkUserQueue">
+			<Event code="0x151" service="WorkUserQueue/k_work_user_queue_start" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkUserQueue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x152" service="WorkUserQueue/k_work_user_queue_start" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkUserQueue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="WorkPoll">
+			<Event code="0x153" service="WorkPoll/k_work_poll_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+
+			<Event code="0x154" service="WorkPoll/k_work_poll_submit_to_queue" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="5" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x155" service="WorkPoll/k_work_poll_submit_to_queue" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x156" service="WorkPoll/k_work_poll_submit_to_queue" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkQueue" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="5" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x157" service="WorkPoll/k_work_poll_submit" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x158" service="WorkPoll/k_work_poll_submit" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x159" service="WorkPoll/k_work_poll_submit" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x15A" service="WorkPoll/k_work_poll_cancel" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x15B" service="WorkPoll/k_work_poll_cancel" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x15C" service="WorkPoll/k_work_poll_cancel" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="WorkPoll" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="PollAPI">
+			<Event code="0x82" service="PollAPI/k_poll_event_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="PollEvent" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Arg"></Param>
+				<Param index="3" type="Handle" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x8F" service="PollAPI/k_poll" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x11" service="PollAPI/k_poll" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x0D" service="PollAPI/k_poll" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x83" service="PollAPI/k_poll_signal_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="PollSignal" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x8D" service="PollAPI/k_poll_signal_reset" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="PollSignal" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xF0" service="PollAPI/k_poll_signal_check" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="PollSignal" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x8E" service="PollAPI/k_poll_signal_raise" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="PollSignal" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xEF" service="PollAPI/k_poll_signal_raise" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="PollSignal" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Semaphore">
+			<Event code="0x16" service="Semaphore/k_sem_init" type="KernelServiceReturn" status="StatusOK" stateOffset="3">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="StateAfter"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x12" service="Semaphore/k_sem_init" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="StateAfter"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x61" service="Semaphore/k_sem_take" type="KernelServiceReturn" status="StatusOK" stateOffset="2">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="StateAfter"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x64" service="Semaphore/k_sem_take" type="KernelServiceReturn" status="StatusTimeout" stateOffset="2">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="StateAfter"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x67" service="Semaphore/k_sem_take" type="KernelServiceEntry" status="StatusBlocks" stateOffset="2">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="0x51" service="Semaphore/k_sem_give" type="KernelServiceReturn" status="StatusOK" stateOffset="1">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="0x6A" service="Semaphore/k_sem_reset" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Mutex">
+			<Event code="0x13" service="Mutex/k_mutex_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x52" service="Mutex/k_mutex_unlock" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x55" service="Mutex/k_mutex_unlock" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x58" service="Mutex/k_mutex_unlock" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x62" service="Mutex/k_mutex_lock" type="KernelServiceReturn" status="StatusOK" instanceSplitOnReadyMode="Split">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x65" service="Mutex/k_mutex_lock" type="KernelServiceReturn" status="StatusTimeout" instanceSplitOnReadyMode="Split">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x68" service="Mutex/k_mutex_lock" type="KernelServiceEntry" status="StatusBlocks" instanceSplitOnReadyMode="NoSplit">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Condvar">
+			<Event code="0x6F" service="Condvar/k_condvar_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x76" service="Condvar/k_condvar_signal" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x79" service="Condvar/k_condvar_signal" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x7A" service="Condvar/k_condvar_signal" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x7D" service="Condvar/k_condvar_broadcast" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x7E" service="Condvar/k_condvar_broadcast" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x7F" service="Condvar/k_condvar_wait" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x80" service="Condvar/k_condvar_wait" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x81" service="Condvar/k_condvar_wait" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Condvar" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Queue">
+			<Event code="0xC0" service="Queue/k_queue_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xC1" service="Queue/k_queue_cancel_wait" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xBC" service="Queue/queue_insert" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xBD" service="Queue/queue_insert" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xBE" service="Queue/queue_insert" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xC2" service="Queue/k_queue_append" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xC3" service="Queue/k_queue_alloc_append" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xF1" service="Queue/k_queue_alloc_append" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xC4" service="Queue/k_queue_alloc_append" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xC5" service="Queue/k_queue_prepend" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xC6" service="Queue/k_queue_alloc_prepend" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xBF" service="Queue/k_queue_alloc_prepend" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xC7" service="Queue/k_queue_alloc_prepend" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xC8" service="Queue/k_queue_insert" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xC9" service="Queue/k_queue_append_list" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x165" service="Queue/k_queue_append_list" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xCA" service="Queue/k_queue_append_list" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xCB" service="Queue/k_queue_merge_slist" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x6E" service="Queue/k_queue_merge_slist" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xCC" service="Queue/k_queue_merge_slist" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xCD" service="Queue/k_queue_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xCE" service="Queue/k_queue_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xCF" service="Queue/k_queue_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xD0" service="Queue/k_queue_remove" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xDB" service="Queue/k_queue_remove" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xD1" service="Queue/k_queue_remove" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xD2" service="Queue/k_queue_unique_append" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xEE" service="Queue/k_queue_unique_append" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xB9" service="Queue/k_queue_unique_append" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xBA" service="Queue/k_queue_peek_head" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xBB" service="Queue/k_queue_peek_tail" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="FIFO">
+			<Event code="0x100" service="FIFO/k_fifo_init" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x101" service="FIFO/k_fifo_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x102" service="FIFO/k_fifo_cancel_wait" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x103" service="FIFO/k_fifo_cancel_wait" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x104" service="FIFO/k_fifo_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x105" service="FIFO/k_fifo_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x106" service="FIFO/k_fifo_alloc_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x107" service="FIFO/k_fifo_alloc_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x108" service="FIFO/k_fifo_alloc_put" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x109" service="FIFO/k_fifo_put_list" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x10A" service="FIFO/k_fifo_put_list" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x10B" service="FIFO/k_fifo_put_slist" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x10C" service="FIFO/k_fifo_put_slist" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x10D" service="FIFO/k_fifo_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x10E" service="FIFO/k_fifo_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x10F" service="FIFO/k_fifo_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x110" service="FIFO/k_fifo_peek_head" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x111" service="FIFO/k_fifo_peek_head" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x112" service="FIFO/k_fifo_peek_tail" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x113" service="FIFO/k_fifo_peek_tail" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="FIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="LIFO">
+			<Event code="0x114" service="LIFO/k_lifo_init" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x115" service="LIFO/k_lifo_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x116" service="LIFO/k_lifo_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x117" service="LIFO/k_lifo_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x118" service="LIFO/k_lifo_alloc_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x119" service="LIFO/k_lifo_alloc_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x11A" service="LIFO/k_lifo_alloc_put" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x11B" service="LIFO/k_lifo_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x11C" service="LIFO/k_lifo_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x11D" service="LIFO/k_lifo_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="LIFO" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Stack">
+			<Event code="0x4A" service="Stack/k_stack_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+
+			<Event code="0x4B" service="Stack/k_stack_alloc_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x4C" service="Stack/k_stack_alloc_init" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x4D" service="Stack/k_stack_alloc_init" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x4E" service="Stack/k_stack_cleanup" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x4F" service="Stack/k_stack_cleanup" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x26" service="Stack/k_stack_cleanup" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x27" service="Stack/k_stack_push" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x3E" service="Stack/k_stack_push" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x3F" service="Stack/k_stack_push" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="0x5B" service="Stack/k_stack_pop" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x5E" service="Stack/k_stack_pop" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x5F" service="Stack/k_stack_pop" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Stack" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Mailbox">
+			<Event code="0x1B" service="Mailbox/k_mbox_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xF7" service="Mailbox/message_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xF8" service="Mailbox/message_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xF9" service="Mailbox/message_put" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xD3" service="Mailbox/k_mbox_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xD4" service="Mailbox/k_mbox_put" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xD5" service="Mailbox/k_mbox_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xD6" service="Mailbox/k_mbox_async_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xF6" service="Mailbox/k_mbox_async_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xD7" service="Mailbox/k_mbox_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xD8" service="Mailbox/k_mbox_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xD9" service="Mailbox/k_mbox_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x89" service="Mailbox/k_mbox_data_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mailbox" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="MessageQueue">
+			<Event code="0x1A" service="MessageQueue/k_msgq_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x1E" service="MessageQueue/k_msgq_alloc_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x6B" service="MessageQueue/k_msgq_alloc_init" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x1F" service="MessageQueue/k_msgq_alloc_init" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xDC" service="MessageQueue/k_msgq_cleanup" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x6C" service="MessageQueue/k_msgq_cleanup" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xDD" service="MessageQueue/k_msgq_cleanup" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xDE" service="MessageQueue/k_msgq_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xDF" service="MessageQueue/k_msgq_put" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xE0" service="MessageQueue/k_msgq_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xE1" service="MessageQueue/k_msgq_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xE2" service="MessageQueue/k_msgq_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xE3" service="MessageQueue/k_msgq_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xE4" service="MessageQueue/k_msgq_peek" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xE5" service="MessageQueue/k_msgq_peek" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xE6" service="MessageQueue/k_msgq_purge" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MessageQueue" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="Pipe">
+			<Event code="0xA5" service="Pipe/k_pipe_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xA6" service="Pipe/k_pipe_cleanup" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xF5" service="Pipe/k_pipe_cleanup" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xA7" service="Pipe/k_pipe_cleanup" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xA8" service="Pipe/k_pipe_alloc_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xF4" service="Pipe/k_pipe_alloc_init" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xA9" service="Pipe/k_pipe_alloc_init" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xAA" service="Pipe/k_pipe_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+				<Param index="5" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="6" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xAB" service="Pipe/k_pipe_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+				<Param index="5" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xAC" service="Pipe/k_pipe_put" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+				<Param index="5" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="6" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xAD" service="Pipe/k_pipe_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+				<Param index="5" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="6" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xAE" service="Pipe/k_pipe_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="Int32" useAs="Arg"></Param>
+				<Param index="5" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xAF" service="Pipe/k_pipe_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Arg"></Param>
+				<Param index="5" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="6" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xDA" service="Pipe/k_pipe_block_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xED" service="Pipe/k_pipe_block_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Pipe" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="MemoryHeap">
+			<Event code="0x1D" service="MemoryHeap/k_heap_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x84" service="MemoryHeap/k_heap_aligned_alloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x86" service="MemoryHeap/k_heap_aligned_alloc" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x85" service="MemoryHeap/k_heap_aligned_alloc" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x87" service="MemoryHeap/k_heap_alloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xFA" service="MemoryHeap/k_heap_alloc" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xFB" service="MemoryHeap/k_heap_alloc" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x88" service="MemoryHeap/k_heap_free" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x50" service="MemoryHeap/k_aligned_alloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x53" service="MemoryHeap/k_aligned_alloc" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x56" service="MemoryHeap/k_aligned_alloc" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x59" service="MemoryHeap/k_malloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x5C" service="MemoryHeap/k_malloc" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x60" service="MemoryHeap/k_malloc" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x63" service="MemoryHeap/k_free" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x66" service="MemoryHeap/k_free" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x69" service="MemoryHeap/k_calloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="0x73" service="MemoryHeap/k_calloc" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0x70" service="MemoryHeap/k_calloc" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MemoryHeap" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="MemorySlab">
+			<Event code="0x1C" service="MemorySlab/k_mem_slab_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemorySlab" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+				<Param index="5" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="0x29" service="MemorySlab/k_mem_slab_init" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MemorySlab" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="Int32" useAs="Return"></Param>
+				<Param index="5" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="0xE7" service="MemorySlab/k_mem_slab_alloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemorySlab" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+				<Param index="4" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="0xE8" service="MemorySlab/k_mem_slab_alloc" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="MemorySlab" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xE9" service="MemorySlab/k_mem_slab_alloc" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="MemorySlab" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xEB" service="MemorySlab/k_mem_slab_alloc" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="MemorySlab" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="Int32" useAs="Return"></Param>
+			</Event>
+			<Event code="0xEC" service="MemorySlab/k_mem_slab_free" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="MemorySlab" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Timer">
+			<Event code="0xA0" service="Timer/k_timer_init" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xA1" service="Timer/k_timer_start" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xA2" service="Timer/k_timer_stop" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xA3" service="Timer/k_timer_status_sync" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+			</Event>
+			<Event code="0xA4" service="Timer/k_timer_status_sync" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="UserEvent">
+			<Event code="0x90" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="0x91" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="0x92" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="2" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="0x93" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="3" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="0x94" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="4" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="0x95" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="5" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="0x96" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="6" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="0x97" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="7" type="String" useAs="Message"></Param>
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="System">
+			<Event code="0xFE" service="System/sys_call" type="KernelServiceEntry" status="StatusBlocks">
+			</Event>
+			<Event code="0xFF" service="System/sys_call" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+		</EventGroup>
+
+
+		<EventGroup name="Memory">
+			<Event code="0x8A" service="Heap/k_malloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+				<Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+			</Event>
+			<Event code="0x8B" service="Heap/k_free" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+				<Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+			</Event>
+			<Event code="0x8C" service="Heap/k_calloc" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+				<Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+			</Event>
+		</EventGroup>
+	</Events>
+</PsfCodes>

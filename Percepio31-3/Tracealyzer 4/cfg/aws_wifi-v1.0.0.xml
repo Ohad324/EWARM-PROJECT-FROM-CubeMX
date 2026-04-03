@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<PlatformExtension>	
+	
+	<TargetPlatform>		
+		<KernelServiceGroups>
+			<KernelServiceGroup name="WIFI">
+				<KernelService name="WIFI_On" operation="Other" parameters="Variable">
+					<!--<ReturnValue name="status" format=" returned {0}"/>--> 
+				</KernelService>
+				<KernelService name="WIFI_Off" operation="Other" parameters="None">
+					<ReturnValue name="status" format=" returned {0}"/>
+				</KernelService>
+				<KernelService name="WIFI_ConnectAP" operation="Other" parameters="Variable">					
+					<Parameter name="SSID" format="{0}"/>
+					<Parameter name="Security" format="{0}"/>
+					<ReturnValue name="status" format=" returned {0}"/>
+				</KernelService>
+
+			</KernelServiceGroup>
+		</KernelServiceGroups>
+	</TargetPlatform>
+		
+	<EventCodes>
+		<EventGroup name="WIFI">
+			<Event code="0" service="WIFI/WIFI_On" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Int32" useAs="Return"></Param>
+				<Param index="0" type="Int32" useAs="ReturnStatus">
+					<ReturnStatus value="0">StatusOK</ReturnStatus>
+					<ReturnStatus value="1">StatusError</ReturnStatus>
+					<ReturnStatus value="2">StatusTimeout</ReturnStatus>
+					<ReturnStatus value="3">StatusError</ReturnStatus>
+				</Param>
+			</Event>
+			<Event code="1" service="WIFI/WIFI_Off" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Int32" useAs="Return"></Param>
+				<Param index="0" type="Int32" useAs="ReturnStatus">
+					<ReturnStatus value="0">StatusOK</ReturnStatus>
+					<ReturnStatus value="1">StatusError</ReturnStatus>
+					<ReturnStatus value="2">StatusTimeout</ReturnStatus>
+					<ReturnStatus value="3">StatusError</ReturnStatus>
+				</Param>
+			</Event>
+			<Event code="2" service="WIFI/WIFI_ConnectAP" type="KernelServiceReturn" status="StatusOK">
+				<Param index="2" type="String" useAs="Arg"></Param>				
+				<Param index="0" type="Int32" useAs="Arg"></Param>				
+				<Param index="1" type="Int32" useAs="Return"></Param>
+				<Param index="1" type="Int32" useAs="ReturnStatus">
+					<ReturnStatus value="0">StatusOK</ReturnStatus>
+					<ReturnStatus value="1">StatusError</ReturnStatus>
+					<ReturnStatus value="2">StatusTimeout</ReturnStatus>
+					<ReturnStatus value="3">StatusError</ReturnStatus>
+				</Param>
+			</Event>			
+
+		</EventGroup>
+	</EventCodes>	
+	
+</PlatformExtension>

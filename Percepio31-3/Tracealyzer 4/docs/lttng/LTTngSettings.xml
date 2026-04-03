@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>LTTng Settings</title>
+  <keywords>
+    <keyword>LTTng</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          All settings for LTTng parsing.
+        </p>
+        <p>
+          <ul>
+            <li>
+              <b>New Instance on Wakeup event</b> makes $PNAME split the execution of an actor into instances whenever a wakeup event for an actor is found. This can be useful when working with periodic tasks such as threads with a while-loop ending with a sleep call, as each iteration of the loop would typically be represented as an instance.
+            </li>
+            <li>
+              <b>Include Raw Events In Trace</b> will make $PNAME keep all raw CTF events in memory, accessible as Raw events in many trace views. This is particularly useful when analyzing traces containing events that $PNAME has no native understanding of. They may also contain additional information in some cases.
+            </li>
+            <li>
+              <b>IRQ Handlers as Actors</b> will make $PNAME treat IRQ handlers as actors. This will make them show up in the scheduling views and actor statistics report for example. This gives a more accurate representation of what goes on in the system, but may increase noise making it more difficult to analyze high level behavior and may increase $PNAME RAM usage. <br /><br /><b>Note:</b> This setting only affects how traces are parsed, not what is traced in the first hand. If you are not interested in analyzing IRQ handler behavior, consider disabling tracing of those events on your target, as they often yield significant overhead in terms of cpu usage and trace size when enabled.
+            </li>
+            <li>
+              <b>Soft IRQ Handlers as Actors</b> will make $PNAME treat soft IRQ handlers as actors.
+            </li>
+          </ul>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

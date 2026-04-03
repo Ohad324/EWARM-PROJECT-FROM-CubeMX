@@ -1,0 +1,160 @@
+﻿<html>
+<head>
+    <title>$TITLE</title>
+    <style type="text/css">
+        body, p, td {
+            font-family: Verdana, Arial, Helvetica;
+            font-size: 12px;
+        }
+
+        h1 {
+            page-break-before: always;
+            font-family: Verdana, Arial, Helvetica;
+            font-size: 32px;
+            padding-top: 20px;
+            border-bottom: 2px solid gray;
+        }
+
+            h1:first-of-type {
+                page-break-before: avoid;
+            }
+
+        h2 {
+            page-break-after: avoid;
+            font-family: Verdana, Arial, Helvetica;
+            font-size: 22px;
+        }
+
+        div.note {
+            background-color: #A0d0f0; /*#DDFFDD;*/
+            border: 1px dashed gray;
+            padding: 5px 5px 5px 5px;
+            margin: 0 15px 0 15px;
+        }
+
+        div.code {
+            background-color: #E0E0E0; /*#DDFFDD;*/
+            border: 1px dashed gray;
+            padding: 5px 5px 5px 5px;
+            margin: 0 15px 0 15px;
+        }
+
+        div.page {
+            max-width: 800px;
+            $PAGE_ADDITIONALS;
+        }
+
+        div.chapter {
+            page-break-before: always;
+        }
+
+        div.section {
+            page-break-before: always;
+            margin-left: 8px;
+        }
+
+            div.section:first-of-type {
+                page-break-before: avoid;
+            }
+
+        div.subsection {
+            page-break-inside: avoid;
+        }
+
+        table.dictionary {
+            margin: 0 15px 0 15px;
+        }
+
+            table.dictionary td {
+                vertical-align: top;
+                padding-bottom: 18px;
+            }
+
+                table.dictionary td.word {
+                    font-weight: bold;
+                    width: 100px;
+                }
+
+                table.dictionary td.meaning {
+                    padding-left: 8px;
+                }
+
+        ul, ul ul, ul ul ul {
+            margin-left: 5px;
+            padding-left: 10px;
+            padding-top: 4px;
+            list-style-type: square;
+        }
+
+        ol.list li {
+            margin-bottom: 5px;
+        }
+
+        ul.list li {
+            padding: 4px;
+            margin-left: 10px;
+        }
+
+        ul.contents li, ul.contents ul li {
+            padding-bottom: 3px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+            a.contents {
+                color: blue;
+            }
+
+            a:visited {
+                color: blue;
+            }
+
+            a.contents:hover {
+                text-decoration: underline;
+            }
+
+        div.contentsBox {
+            top: 0;
+            left: 0;
+            background-color: #00355F; /*#4e8abe;*/
+            border-right: 2px solid gray;
+            padding: 5px 5px 5px 5px;
+            margin-right: 270px;
+            height: 100%;
+            width: 230px;
+            position: fixed;
+            overflow: auto;
+        }
+
+            div.contentsBox a.contents {
+                color: white;
+            }
+
+            div.contentsBox li {
+                color: white;
+            }
+
+        tt {
+            background-color: Silver;
+            white-space: nowrap;
+        }
+
+        $STYLE_ADDITIONALS
+    </style>
+
+    <!-- Adds syntax highlighting for code examples /Johan -->
+    <link rel="stylesheet" href="hl/default.css" />
+    <script src="hl/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+</head>
+<body>
+    $CONTENTS
+    <div class="page">
+        $BODY
+        $BODY_FOOTER
+    </div>
+</body>
+</html>

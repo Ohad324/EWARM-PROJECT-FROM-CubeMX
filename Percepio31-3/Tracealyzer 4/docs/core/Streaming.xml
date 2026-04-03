@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Live Stream</title>
+  <keywords>
+    <keyword>live</keyword>
+    <keyword>stream</keyword>
+    <keyword>streaming</keyword>
+    <keyword>connection</keyword>
+    <keyword>trace</keyword>
+  </keywords>
+  <body>
+    <section>
+	  <!-- For Tracealyzer only -->
+	  <requirement>CoreFeatures.Streaming</requirement>
+	  <requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view displays information about the data collection itself, while recording a streamed trace. The diagram in the middle shows the CPU load of the target system, i.e., the percentage of processor time spent in application tasks (i.e. not idle) in relation to the total processing time.
+        </p>
+
+        <p>
+          The Live Stream view also shows if the trace data rate is higher than the streaming connection can handle, causing events to be lost.
+          In such cases, it displays a counter showing the number of dropped events. If you encounter that, please refer to the Troubleshooting section corresponding to your RTOS.
+        </p>
+
+        <p>
+          <A HREF="img/Live Stream.png" target="$IMAGETARGET">
+            <img src="img/Live Stream.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+		<p>
+		  <ul class="list">
+			
+			<li>
+			  <b>Connect/Reconnect</b>: Opens or resets the connection to the target system. This is done automatically when launching the Live Stream window from a "Start Recording" shortcut.
+			</li>				
+			
+			<li>
+			  <b>Start/Stop Session</b>: Begins or ends the trace data capture. This button toggles between "Start Session" and "Stop Session", depending on the state. If using live visualization, not all features are available in live mode, but they are enabled after the session has been stopped.
+			</li>
+			<li>
+			  <b>Settings</b>: Opens the Streaming settings.
+			</li>
+			<li>
+			  <b>Open Trace</b>: Opens the trace, if not done automatically.
+			</li>
+			<li>
+			  <b>Statistics</b>: Shows real-time statistics about the current session. In case any events are lost, a warning will appear here in red text.
+			</li>                
+		  </ul>
+		  
+		  Note that the settings and checkboxes can't be modified while a recording session is in progress. You may open the Live Stream tool without starting a new session from the main menu (under "Trace").
+		</p>			
+		
+        <p>
+          Using the "Disable Live Visualization" checkbox, you can disable all live updating views in $PNAME, and the continuous loading of the trace.
+          This way, you can record very long traces and then use the <A HREF="Preview.html">Trace Preview</A> to analyze them and load relevant sections.
+        </p>
+
+        <p>
+          While streaming, use Sync -&gt; Unsynchronized to pause the live updates for a view, making details in the view easier to find.
+          To have the view update again, use Sync menu and pick the Details or Overview, marked with default one for the current view.
+        </p>
+      </text>
+    </section>
+
+	  <section>
+		  <!-- For Profile only -->
+		  <requirement>CoreFeatures.Streaming</requirement>
+		  <requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+		  <header>Overview</header>
+		  <text>
+			  <p>
+				  This view displays information about the data collection itself, while recording a streamed trace. The diagram in the middle shows the CPU load of the target system, i.e., the percentage of processor time spent in application tasks (i.e. not idle) in relation to the total processing time.
+			  </p>
+
+			  <p>
+				  The Live Stream view also shows if the trace data rate is higher than the streaming connection can handle, causing events to be lost.
+				  In such cases, it displays a counter showing the number of dropped events. If you encounter that, please refer to the Troubleshooting section corresponding to your RTOS.
+			  </p>
+
+			  <p>
+				  <A HREF="img/Live Stream.png" target="$IMAGETARGET">
+					  <img src="img/Live Stream.png" width="$IMAGEWIDTH" border="0" />
+				  </A>
+			  </p>
+
+			  <p>
+				  <ul class="list">
+
+					  <li>
+						  <b>Connect/Reconnect</b>: Opens or resets the connection to the target system. This is done automatically when launching the Live Stream window from a "Start Recording" shortcut.
+					  </li>
+
+					  <li>
+						  <b>Start/Stop Session</b>: Begins or ends the trace data capture. This button toggles between "Start Session" and "Stop Session", depending on the state. If using live visualization, not all features are available in live mode, but they are enabled after the session has been stopped.
+					  </li>
+					  <li>
+						  <b>Settings</b>: Opens the Streaming settings.
+					  </li>
+					  <li>
+						  <b>Open Trace</b>: Opens the trace, if not done automatically.
+					  </li>
+					  <li>
+						  <b>Statistics</b>: Shows real-time statistics about the current session. In case any events are lost, a warning will appear here in red text.
+					  </li>
+				  </ul>
+
+				  Note that the settings and checkboxes can't be modified while a recording session is in progress. You may open the Live Stream tool without starting a new session from the main menu (under "Trace").
+			  </p>
+
+			  <p>
+				  Using the "Disable Live Visualization" checkbox, you can disable all live updating views in $PNAME, and the continuous loading of the trace.
+				  This reduces the load on your computer.
+			  </p>
+			
+			  <p>
+				  While streaming, use Sync -&gt; Unsynchronized to pause the live updates for a view, making details in the view easier to find.
+				  To have the view update again, use Sync menu and pick the Details or Overview, marked with default one for the current view.
+			  </p>
+		  </text>
+	  </section>
+	  
+	  
+  </body>
+</page>

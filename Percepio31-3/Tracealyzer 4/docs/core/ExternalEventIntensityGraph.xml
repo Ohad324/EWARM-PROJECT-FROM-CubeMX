@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Asynchronous Event Intensity</title>
+  <keywords>
+    <keyword>events</keyword>
+    <keyword>intensity</keyword>
+    <keyword>external</keyword>
+    <keyword>asynchronous</keyword>
+    <keyword>graph</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view displays the number of external events per event type, during the selected interval.
+        </p>
+
+        <p>
+          By default, the interval is divided into 50 time slices. The number of slices can be changed via the Resolution or Time Resolution menus.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

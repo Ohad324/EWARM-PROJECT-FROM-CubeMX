@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>View Settings</title>
+  <keywords>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          These settings are the default values for views.
+        </p>
+
+        <p>
+          <A HREF="img/ViewSettings.png" target="$IMAGETARGET">
+            <img src="img/ViewSettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+      </text>
+    </section>
+  </body>
+</page>

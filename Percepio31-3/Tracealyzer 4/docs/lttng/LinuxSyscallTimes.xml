@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+	<title>Syscall Plot</title>
+	<keywords>
+		<keyword>LTTng</keyword>
+		<keyword>Linux</keyword>
+		<keyword>Syscall</keyword>
+		<keyword>Plot</keyword>
+	</keywords>
+	<body>
+		<section>
+			<header>Overview</header>
+			<text>
+				<p>
+					This plot shows execution time or response time for syscalls in Linux/LTTng traces. This makes it easier to find anomalies in syscall timing.
+				</p>
+				<p>
+					<A HREF="img/SyscallPlot.png" target="$IMAGETARGET">
+						<img src="img/SyscallPlot.png" width="$IMAGEWIDTH" border="0" />
+					</A>
+				</p>
+
+				<p>
+					You may select the property to visualize in the top menu:
+					<ul class="list">
+						<li>
+							<b>Execution Time</b> is the time the actor is executing during the Syscall, excluding the time when the actor is switched out.
+						</li>
+						<li>
+							<b>Response Time</b> is the actual time between the entry and the exit of the Syscall.
+						</li>
+					</ul>
+				</p>
+
+				<p>
+					Linux Syscalls are shown as "Raw Events" . Make sure these are enabled in the main filter under <b>Raw Data Event Channels</b>.
+					You may also need to enable support for Raw Events in the Settings (File -&gt; Setting -&gt; Project Settings -&gt; Performance Settings -&gt; Include Raw Events in Trace).
+				</p>
+			</text>
+		</section>
+	</body>
+</page>

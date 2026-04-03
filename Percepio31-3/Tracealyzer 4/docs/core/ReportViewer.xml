@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Actor Statistics Report</title>
+  <keywords>
+    <keyword>reports</keyword>
+    <keyword>statistics</keyword>
+    <keyword>stats</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Statistics Report provides performance statistics for tasks and traced ISRs. This includes minimum, average and maximum values for properties like task executions times and response times.
+          Moreover, most metrics are linked to the main trace view, allowing you to quickly find the corresponding trace locations. The report can be generated for a selected interval, or for the whole trace.
+        </p>
+
+        <p>
+          You generate the Statistics Report using the option in the View menu. This option is also available when right-clicking on a selected interval in other views.
+          A configuration dialog is then shown where you can select which tasks, ISRs and properties for these you wish to include.
+        </p>
+        <p>
+          <A HREF="img/Statistics_Report_Dialog.png" target="$IMAGETARGET">
+            <img src="img/Statistics_Report_Dialog.png" border="0" />
+          </A>
+        </p>
+        <p>
+          The available properties include high level statistics per task and ISR, like CPU usage, but also provides more details statistics for individual
+          <i>Actor Instances</i>.
+          As explained in <A HREF="Terminology.html">Terminology</A> section, an "Actor Instance" means one iteration of a task loop, or an ISR execution from entry to exit.
+        </p>
+        <p>
+          The interval in focus of the report is shown in the bottom ("Interval: "), either the selected interval from the main trace view, or the full trace if no selection exists.
+        </p>
+        <p>
+          Available properties are:
+          <ul class="list">
+            <li>
+              Count: The number of Instances of the Actor in the trace or selected interval.
+            </li>
+            <li>
+              CPU Usage: The relative amount of processor time used by the Actor (in percent).
+            </li>
+            <li>
+              Execution Time: The time in microseconds for executing one Actor Instance, excluding any time spent in preempting tasks and traced ISRs. If there are Actors not included in the trace (ISRs without trace calls, or excluded tasks), the reported Execution Time may include the time spent in such Actors.
+            </li>
+            <li>Response Time: The time from the start of an Actor Instance until it is finished. If "Actor Ready" events are included in the trace, those are counted as the starting point of the Instance.</li>
+            <li>
+              Periodicity: The time between two adjacent Instances of the same Actor, measured from start to start. If "Actor Ready" events are included in the trace, they are counted as the Instance start.
+            </li>
+            <li>
+              Separation: The time between two adjacent Instances of the same Actor, measured from end to start. If "Actor Ready" events are included in the trace, they are counted as the Instance start. A separation of 0 means that the Instances follow in direct sequence.
+            </li>
+            <li>
+              Fragmentation: The number of scheduling fragments within the Instance (i.e., the trace view rectangles). This value indicates the number of interruptions, e.g., ISRs, preemptions by higher priority tasks, blocking on mutexes etc.
+            </li>
+
+          </ul>
+        </p>
+		<p>
+		  The Periodicity and Separation columns can specify '(Exec)' or '(Ready)'. The first means that an actor instance is considered to start when it starts executing, while the second means that it's considered to start when the actor becomes ready.
+		</p>
+        <p>
+          Click the Show Report button to generate and view the report. The report has three sections, an introduction, a table with descriptive statistics (min, average, max values).
+          The distribution histograms are only included if the checkbox <i>Show Graphical Diagrams</i> is enabled
+        </p>
+
+        <p>
+          <A HREF="img/Statistics_Report_Viewer1.png" target="$IMAGETARGET">
+            <img src="img/Statistics_Report_Viewer1.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          All properties related to time are by default expressed in microseconds, but this is affected by the "Time Format" setting found under the View menu. The report can also be generated in text format, that is easy to import in other tools. Use the "Data Export" option to output the data in text format.
+          To save the report, select "Save As" in the File menu of the Statistics Report Viewer.
+        </p>
+
+        <p>
+          All min and max values are linked to the Finder dialog, as well as the histogram bars. When clicked, the Finder dialog is opened with the filter set to find matching Instances.
+          The first match is then shown directly in the main trace view.
+        </p>
+
+
+      </text>
+    </section>
+  </body>
+</page>

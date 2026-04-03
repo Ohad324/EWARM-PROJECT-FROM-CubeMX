@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Bookmark Organizer</title>
+  <keywords>
+    <keyword>bookmarks</keyword>
+    <keyword>organizer</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Bookmarks are saved locations in a trace that are of particular interest.
+        </p>
+
+        <p>
+          <A HREF="img/Bookmark Organizer.png" target="$IMAGETARGET">
+            <img src="img/Bookmark Organizer.png" border="0" />
+          </A>
+        </p>
+
+        <p>
+          Bookmarks are saved with the trace and restored when you reload the trace.
+          Because they are saved in an internal directory it is recommended to use the bookmark organizer to export and import the bookmarks.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

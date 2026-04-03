@@ -1,0 +1,3438 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Tracealyzer.API</name>
+    </assembly>
+    <members>
+        <member name="P:Tracealyzer.API.ActorColorsMessage.ActorNames">
+            <summary>
+            Get/set the actor names.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ActorColorsMessage.ActorReferences">
+            <summary>
+            Get/set the actor references.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ActorColorsMessage.ColorsRgb">
+            <summary>
+            Get/set the actor references.
+            </summary>
+            <remarks>
+            Use comma separated values (0-255) for Red, Green, Blue.
+            Example red:    "255, 0, 0"
+            Example yellow: "255, 255, 0"
+            Example purple: "255, 0, 255",
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.ActorColorsMessage.#ctor">
+            <summary>
+            Create new actor colors message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ActorColorsMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.ActorInstanceSelectionMessage">
+            <summary>
+            Message for actor/instance selection.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ActorInstanceSelectionMessage.ActorName">
+            <summary>
+            Get/set the actor name.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ActorInstanceSelectionMessage.ActorReference">
+            <summary>
+            Get/set the actor reference.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ActorInstanceSelectionMessage.InstanceNumber">
+            <summary>
+            Get/set the instance number.
+            </summary>
+            <remarks>
+            Get will return -1 if instance is not set.
+            </remarks>
+        </member>
+        <member name="P:Tracealyzer.API.ActorInstanceSelectionMessage.HasInstanceNumber">
+            <summary>
+            Get if message has instance number.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ActorInstanceSelectionMessage.Timestamp">
+            <summary>
+            Get/set the timestamp.
+            </summary>
+            <remarks>
+            Get will return -1 if instance is not set.
+            </remarks>
+        </member>
+        <member name="P:Tracealyzer.API.ActorInstanceSelectionMessage.HasTimestamp">
+            <summary>
+            Get if the message has timestamp.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ActorInstanceSelectionMessage.#ctor">
+            <summary>
+            Create new actor instance selection message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ActorInstanceSelectionMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.ByteHelper">
+            <summary>
+            Helper class for handling bytes.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ByteHelper.MarshalByteArray(System.Byte[])">
+            <summary>
+            Marshal a byte array to string.
+            </summary>
+            <param name="bytes">The bytes to marshal.</param>
+            <returns>The created string.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.ByteHelper.UnmarshalByteArray(System.String)">
+            <summary>
+            Unmarshal a byte array from string.
+            </summary>
+            <param name="array">The array string to marshal.</param>
+            <returns>The parsed bytes.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.ByteHelper.CompareArray(System.Byte[],System.Int32,System.Int32,System.Byte[])">
+            <summary>
+            Compare a selected part of the first array with the whole second array.
+            </summary>
+            <param name="first">The first array to compare.</param>
+            <param name="firstStart">The start index of the first array.</param>
+            <param name="firstLength">The number of bytes to compare from the first array.</param>
+            <param name="second">The second array.</param>
+            <returns>True if matching; otherwise false.</returns>
+        </member>
+        <member name="T:Tracealyzer.API.CapabilityUtils">
+            <summary>
+            Handle capabilities.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityFocus">
+            <summary>
+            Focus capability.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityMemory">
+            <summary>
+            Capability to read memory.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityExpression">
+            <summary>
+            Capability to check expressions.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTraceFile">
+            <summary>
+            Capability to create trace file from memory.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTraceLoadCompleted">
+            <summary>
+            Capability to get trace load notifications.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityDebuggingState">
+            <summary>
+            Capability to check debugging state.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityConnectCommand">
+            <summary>
+            Capability to handle connect command.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityCloseCommand">
+            <summary>
+            Capability to handle close.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTimeCommand">
+            <summary>
+            Capability to send time commands to Tracealyzer.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTimeSelectCommand">
+            <summary>
+            Capability to handle time commands from Tracealyzer.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityActorInstanceSelection">
+            <summary>
+            Capability to handle actor (instance) selection.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityActorColors">
+            <summary>
+            Capability to handle actor colors.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityStackTraceSelectionCommand">
+            <summary>
+            Capability to handle stack trace selection commands from Tracealyzer.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTargetStartCommand">
+            <summary>
+            Capability to handle target start.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTargetStopCommand">
+            <summary>
+            Capability to handle target stop.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTargetStatusCommand">
+            <summary>
+            Capability to handle target status.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityTraceAPI">
+            <summary>
+            Capability to allow trace via API.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityStreamCommand">
+            <summary>
+            Capability to allow stream start/stop commands.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityDisconnect">
+            <summary>
+            Capability for handling <see cref="T:Tracealyzer.API.DisconnectingMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilityPipeInformation">
+            <summary>
+            Capability for handling <see cref="T:Tracealyzer.API.PipeInformationMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.CapabilityUtils.CapabilitiesAll">
+            <summary>
+            All supported capabilities.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.CapabilityUtils.MergeCapabilities(System.String[])">
+            <summary>
+            Merge capabilities.
+            </summary>
+            <param name="capabilities">Capabilities to merge.</param>
+            <returns>Capabilities as a single string.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.CapabilityUtils.Intersect(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Merge capabilities.
+            </summary>
+            <param name="requested">The requested capabilities (from the client)</param>
+            <param name="supported">The supported capabilities (from the server)</param>
+            <returns>Capabilities as a single string.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.CapabilityUtils.SplitCapabilities(System.String)">
+            <summary>
+            Split capabilities.
+            </summary>
+            <param name="capabilities">Merged capability string.</param>
+            <returns>Capabilities as an array.</returns>
+        </member>
+        <member name="T:Tracealyzer.API.ClientConnectionBase">
+            <summary>
+            Base class for client connections.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.LocalPort">
+            <summary>
+            Get the local port used, when connected.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.RemotePort">
+            <summary>
+            Get the remote port for the server.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.RetryConnect">
+            <summary>
+            Get if a failed connection should retry to connect to the server.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.ServerHostname">
+            <summary>
+            Get the server hostname to use, empty string means to use <see cref="F:System.Net.IPAddress.Loopback"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.ServerPort">
+            <summary>
+            Get the server port to use.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.CurrentState">
+            <summary>
+            Get the current state.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.LastStateChange">
+            <summary>
+            Get when the state was changed last.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionBase.LastInformationResponse">
+            <summary>
+            Get the last info request.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.ClientConnectionBase.CurrentStateChanged">
+            <summary>
+            Raised when CurrentState changes.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.#ctor(Tracealyzer.API.ILogger)">
+            <summary>
+            Create a new client connection.
+            </summary>
+            <param name="logger"></param>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.Start">
+            <summary>
+            Request the connection to start.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.Stop">
+            <summary>
+            Request the connection to stop.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.OnConnected">
+            <summary>
+            Called when a TCP connection has been established.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.CheckMessages">
+            <summary>
+            Called when connection is established and messages can be sent.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.OnLastInfoResponseUpdated">
+            <summary>
+            Called when the <see cref="P:Tracealyzer.API.ClientConnectionBase.LastInformationResponse"/> property is updated.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.TryConnect">
+            <summary>
+            Try to connect to the other end.
+            </summary>
+            <returns>True if connected; otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.Disconnect">
+            <summary>
+            Call to disconnect.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.CheckConnection">
+            <summary>
+            Check connection.
+            </summary>
+            <returns>True if connected; false if not connected; null if timed out.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.RequestInformation">
+            <summary>
+            Call to request information.
+            </summary>
+            <remarks>
+            Use this method instead of adding InformationRequestMessage directly to ensure not spamming the other end.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.HandleMessage(Tracealyzer.API.MessageBase)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionBase.GetCapabilities">
+            <summary>
+            Get the capabilities of this server.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Tracealyzer.API.ClientConnectionState">
+            <summary>
+            The states of the connection.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ClientConnectionState.Initial">
+            <summary>
+            The initial state.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ClientConnectionState.Connecting">
+            <summary>
+            Connecting to server.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ClientConnectionState.Connected">
+            <summary>
+            Server connected (this should be the main state).
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ClientConnectionState.Disconnecting">
+            <summary>
+            Disconnecting (manually or from timeout).
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ClientConnectionState.Disconnected">
+            <summary>
+            Disconnected.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ClientConnectionState.Timeout">
+            <summary>
+            Connection has timed out.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.ClientConnectionStateChangedEventArgs">
+            <summary>
+            Raised when connection change its state.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionStateChangedEventArgs.OldState">
+            <summary>
+            Get the old state.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ClientConnectionStateChangedEventArgs.NewState">
+            <summary>
+            Get the new state.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ClientConnectionStateChangedEventArgs.#ctor(Tracealyzer.API.ClientConnectionState,Tracealyzer.API.ClientConnectionState)">
+            <summary>
+            Create new instance.
+            </summary>
+            <param name="oldState">The old state.</param>
+            <param name="newState">The new state.</param>
+        </member>
+        <member name="T:Tracealyzer.API.ConsoleLogger">
+            <inheritdoc />
+            <summary>
+            Logger that writes to console.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ConsoleLogger.VerboseLogging">
+            <summary>
+            Get/set if verbose logs are printed.
+            </summary>
+            <remarks>
+            Off by default.
+            </remarks>
+        </member>
+        <member name="P:Tracealyzer.API.ConsoleLogger.MessageLogging">
+            <summary>
+            Get/set if message logs are printed.
+            </summary>
+            <remarks>
+            Off by default.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.ConsoleLogger.LogVerbose(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.ConsoleLogger.LogMessage(System.Boolean,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.ConsoleLogger.LogInformation(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.ConsoleLogger.LogWarning(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.ConsoleLogger.LogError(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.DebuggingStateRequest">
+            <summary>
+            Request state of debugger.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.DebuggingStateRequest.#ctor">
+            <summary>
+            Create a new debugging state request.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.DebuggingStateResponse">
+            <summary>
+            Response from <see cref="T:Tracealyzer.API.DebuggingStateRequest"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.DebuggingStateResponse.IsDebugging">
+            <summary>
+            Get/set if currently debugging.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.DebuggingStateResponse.#ctor(Tracealyzer.API.DebuggingStateRequest,System.Boolean,System.Boolean)">
+            <summary>
+            Create a new response.
+            </summary>
+            <param name="request"></param>
+            <param name="isSuccess"></param>
+            <param name="isDebugging"></param>
+        </member>
+        <member name="T:Tracealyzer.API.DisconnectingMessage">
+            <summary>
+            Message letting one side that the other is disconnecting.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.DisconnectingMessage.#ctor">
+            <summary>
+            Create a new disconnecting message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.DisconnectingMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.JSONHelper">
+            <summary>
+            JSON helper class.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.JSONHelper.#ctor">
+            <summary>
+            Create new JSON helper.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.JSONHelper.GetMessageString(Tracealyzer.API.MessageBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.JSONHelper.UnmarshalMessage(Tracealyzer.API.MessageBase,System.Object,Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.JSONHelper.TryLoadMessage(System.Byte[],System.Int32@,System.Int32,System.String@,System.Object@,System.String@,System.Int32@,System.Int32@)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.MessagePayloadType">
+            <summary>
+            Supported payload types.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessagePayloadType.Xml">
+            <summary>
+            Xml used (default).
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessagePayloadType.JSON">
+            <summary>
+            JSON used.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.MessageHandler">
+            <summary>
+            Base class for message handling.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.MessageHandler.MessageEnqueued">
+            <summary>
+            Raised when a message is received.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.MessageHandler.ValuesUpdated">
+            <summary>
+            Raised whe values (like port, total messages and such) are updated.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageHandler.logger">
+            <summary>
+            The logger instance used, can be null.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.LastMessageReceived">
+            <summary>
+            Get when the last message was received.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.MessageTimeout">
+            <summary>
+            Get if messages has timed out.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.EnqueuedIncoming">
+            <summary>
+            Get the number of enqueued incoming messages
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.EnqueuedOutgoing">
+            <summary>
+            Get the number of enqueued outgoing messages
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.TotalReceived">
+            <summary>
+            Get the total number of messages received.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.InternalReceived">
+            <summary>
+            Get the total number of internal messages received.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.PendingRequests">
+            <summary>
+            Get the number of pending requests.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.PayloadType">
+            <summary>
+            Get/set the message payload type.
+            </summary>
+            <remarks>
+            Should only be changed when NOT connected.
+            </remarks>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.TotalSent">
+            <summary>
+            Get the total number of messages sent.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.InternalSent">
+            <summary>
+            Get the total number of internal messages sent.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.TotalReceivedBytes">
+            <summary>
+            Get the total number of received bytes.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageHandler.TotalIgnoredBytes">
+            <summary>
+            Get the total number of ignored bytes.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.IncreaseTotalReceived(System.Boolean)">
+            <summary>
+            Increase the number of received messages.
+            </summary>
+            <param name="isInternal">If true, the message is regarded as an internal type.</param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.#ctor(Tracealyzer.API.ILogger)">
+            <summary>
+            Create new message handler.
+            </summary>
+            <param name="logger">The logger to use, if null the console will be used for logging.</param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.RaiseValuesUpdated">
+            <summary>
+            Raise <see cref="E:Tracealyzer.API.MessageHandler.ValuesUpdated"/> event.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.ResetMessageTimeout">
+            <summary>
+            Reset the message timeout.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.ResetPingTimeout">
+            <summary>
+            Reset the ping timeout.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.SetStreamInternal(System.IO.Stream)">
+            <summary>
+            Internal method for stream handling; called when updating to a new stream, both when connecting (setting stream) and disconnecting (removing stream).
+            </summary>
+            <param name="stream"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.SetStream(System.IO.Stream)">
+            <summary>
+            Set the current network stream.
+            </summary>
+            <param name="networkStream"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.LogVerbose(System.String)">
+            <summary>
+            Log message, verbose.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.LogInformation(System.String)">
+            <summary>
+            Log message, information.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.LogWarning(System.String)">
+            <summary>
+            Log message, warning.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.LogError(System.String)">
+            <summary>
+            Log message, error.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.TryGetMessage(Tracealyzer.API.RequestMessageBase@,System.Boolean@)">
+            <summary>
+            Try to get the next message.
+            </summary>
+            <param name="request">The matching request if any, otherwise null.</param>
+            <param name="onResponseCalled"></param>
+            <returns>Message on success; otherwise null.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.TryGetRequest(Tracealyzer.API.ResponseMessageBase,Tracealyzer.API.RequestMessageBase@,System.Boolean@)">
+            <summary>
+            Try to get a request for a response.
+            </summary>
+            <param name="response"></param>
+            <param name="request"></param>
+            <param name="onResponseCalled"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.EnqueueMessage(Tracealyzer.API.MessageBase)">
+            <summary>
+            Enqueue a message to be sent.
+            </summary>
+            <param name="message">The message to send; must not be null.</param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.EnqueueMessage``2(Tracealyzer.API.MessageBase,System.Action{``0,``1})">
+            <summary>
+            Enqueue a message to be sent.
+            </summary>
+            <param name="message">The message to send; must not be null.</param>
+            <param name="callback">Callback when a message has been received.</param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.CheckMessageTimeouts">
+            <summary>
+            Check message timeouts.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.CheckOutgoingMessages">
+            <summary>
+            Check all outgoing messages.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.StreamDataAvailable">
+            <summary>
+            Method used to check if stream has data available.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.CheckIncomingMessages">
+            <summary>
+            Check if there are messages.
+            </summary>
+            <returns>True if reading is successful (even with no messages); false if connection is faulty.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.HandleMessage(Tracealyzer.API.MessageBase)">
+            <summary>
+            Handle messages.
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.ClearQueues">
+            <summary>
+            Clear incoming and outgoing queues.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.ClearLocalQueues">
+            <summary>
+            Clear any local queues
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.Dispose(System.Boolean)">
+            <summary>
+            Dispose.
+            </summary>
+            <param name="disposing"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.Dispose">
+            <summary>
+            Dispose.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.Finalize">
+            <summary>
+            Finalizer.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHandler.CheckPing">
+            <summary>
+            Check if ping should be sent.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.NetworkMessageHandler">
+            <summary>
+            Base class for handling network streams.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.NetworkMessageHandler.#ctor(Tracealyzer.API.ILogger)">
+            <summary>
+            Create new message handler for a <see cref="T:System.Net.Sockets.NetworkStream"/>.
+            </summary>
+            <param name="logger"></param>
+        </member>
+        <member name="M:Tracealyzer.API.NetworkMessageHandler.SetStreamInternal(System.IO.Stream)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tracealyzer.API.NetworkMessageHandler.StreamDataAvailable">
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.PipeInformationMessage">
+            <summary>
+            Information message sent over pipe.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.PipeInformationMessage.PortNumber">
+            <summary>
+            Get the port number of this message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.PipeInformationMessage.#ctor">
+            <summary>
+            Create a new pipe information message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.PipeInformationMessage.#ctor(System.Int32)">
+            <summary>
+            Create a new pipe information message.
+            </summary>
+            <param name="portNumber">The port number to use.</param>
+        </member>
+        <member name="M:Tracealyzer.API.PipeInformationMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.ServerConnection">
+            <summary>
+            Base class for Server Connection
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnection.#ctor(Tracealyzer.API.ILogger)">
+            <summary>
+            Create new Server Connection.
+            </summary>
+            <param name="logger"></param>
+        </member>
+        <member name="T:Tracealyzer.API.ServerConnectionBase">
+            <summary>
+            Connection to Tracealyzer.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.ServerConnectionBase.CurrentStateChanged">
+            <summary>
+            Raised when CurrentState changes.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.ServerConnectionBase.CapabilitiesChanged">
+            <summary>
+            Raised when the capabilities has changed.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.ServerConnectionBase.OnTracealyzerReady">
+            <summary>
+            Raised when tracealyzer connection is ready.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.LastInfoRequest">
+            <summary>
+            Get the last info request.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.CurrentState">
+            <summary>
+            Get the current state.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.LastClientCapabilities">
+            <summary>
+            Get the last received capabilities.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.LocalPort">
+            <summary>
+            Get the current local port.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.RemotePort">
+            <summary>
+            Get the port of the client.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.ServerPort">
+            <summary>
+            Get/set the server port to use.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.RetryConnect">
+            <summary>
+            Get/set if connection should retry.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionBase.ServerMessagePayloadType">
+            <summary>
+            Get/set the message payload type.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.#ctor(Tracealyzer.API.ILogger)">
+            <summary>
+            Create new server connection.
+            </summary>
+            <param name="logger">The logger to use, if null the console will be used for logging.</param>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.ContainsCapability(System.String)">
+            <summary>
+            Check if current connection contains specific capability.
+            </summary>
+            <param name="capability">The capability to check, from <see cref="T:Tracealyzer.API.CapabilityUtils"/>.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.Start">
+            <summary>
+            Start the server.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.StartWaitForReadyAsync(System.Threading.CancellationToken,System.String)">
+            <summary>
+            Start the server and wait for Tracealyzer to be ready.
+            </summary>
+            <param name="token">The token to use, must not be null.</param>
+            <param name="capability">The capability to wait for, use empty string to just wait for connection.</param>
+            <returns>True if start has been requested and Tracealyzer is ready, otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.Stop">
+            <summary>
+            Stop the server.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.HandleMessage(Tracealyzer.API.MessageBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.OnInformationRequest(Tracealyzer.API.InformationRequestMessage)">
+            <summary>
+            Called when information request is received.
+            </summary>
+            <param name="message">The received message</param>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.GetCapabilities">
+            <summary>
+            Get the capabilities of this server.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.GetInformation">
+            <summary>
+            Get the information of this server.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.GetVersion">
+            <summary>
+            Get the version of this server.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.GetDetails">
+            <summary>
+            Get the details of this server.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionBase.Dispose(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.ServerConnectionState">
+            <summary>
+            The states of the connection.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ServerConnectionState.Stopped">
+            <summary>
+            The initial state.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ServerConnectionState.Waiting">
+            <summary>
+            Port open, waiting for incoming connection.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ServerConnectionState.Connected">
+            <summary>
+            Client connected (this should be the main state).
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ServerConnectionState.Disconnecting">
+            <summary>
+            Disconnecting (manually or from timeout).
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ServerConnectionState.Disconnected">
+            <summary>
+            Disconnected.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.ServerConnectionState.Timeout">
+            <summary>
+            Connection has timed out.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.ServerConnectionStateChangedEventArgs">
+            <summary>
+            Raised when connection change its state.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionStateChangedEventArgs.OldState">
+            <summary>
+            Get the old state.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ServerConnectionStateChangedEventArgs.NewState">
+            <summary>
+            Get the new state.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ServerConnectionStateChangedEventArgs.#ctor(Tracealyzer.API.ServerConnectionState,Tracealyzer.API.ServerConnectionState)">
+            <summary>
+            Create new instance.
+            </summary>
+            <param name="oldState">The old state.</param>
+            <param name="newState">The new state.</param>
+        </member>
+        <member name="T:Tracealyzer.API.ExpressionRequestMessage">
+            <summary>
+            Expression request message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ExpressionRequestMessage.Expression">
+            <summary>
+            Get the expression.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ExpressionRequestMessage.#ctor(System.String)">
+            <summary>
+            Create new expression message.
+            </summary>
+            <param name="expression"></param>
+        </member>
+        <member name="M:Tracealyzer.API.ExpressionRequestMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.ExpressionResponseMessage">
+            <summary>
+            Expression response message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ExpressionResponseMessage.Value">
+            <summary>
+            Get the value.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ExpressionResponseMessage.#ctor(Tracealyzer.API.ExpressionRequestMessage,System.Boolean,System.String)">
+            <summary>
+            Create a new expression response.
+            </summary>
+            <param name="request"></param>
+            <param name="isSuccess"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.ExpressionResponseMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.FocusMessage">
+            <summary>
+            Request to have the other end focus.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.FocusMessage.#ctor">
+            <summary>
+            Create new focus message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.FocusMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.InformationRequestMessage">
+            <summary>
+            Information request message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.InformationRequestMessage.Capabilities">
+            <summary>
+            Get/set the capabilities.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.InformationRequestMessage.CapabilityArray">
+            <summary>
+            Get/set the capabilities.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.InformationRequestMessage.#ctor(System.String[])">
+            <summary>
+            Create new information request message.
+            </summary>
+            <param name="capabilities">The capabilities of the caller.</param>
+        </member>
+        <member name="M:Tracealyzer.API.InformationRequestMessage.GetCapabilitites">
+            <summary>
+            Get the stored capabilities as an array.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.InformationRequestMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.InformationResponseMessage">
+            <summary>
+            Create new information response message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.InformationResponseMessage.Capabilities">
+            <summary>
+            Get/set the capabilities.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.InformationResponseMessage.CapabilityArray">
+            <summary>
+            Get/set the capabilities.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.InformationResponseMessage.Information">
+            <summary>
+            Get the information.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.InformationResponseMessage.Version">
+            <summary>
+            Get the version.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.InformationResponseMessage.Details">
+            <summary>
+            Get the details.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.InformationResponseMessage.#ctor(Tracealyzer.API.InformationRequestMessage,System.Boolean,System.String[],System.String,System.String,System.String)">
+            <summary>
+            Create new information response message.
+            </summary>
+            <param name="request"></param>
+            <param name="isSuccess"></param>
+            <param name="capabilities"></param>
+            <param name="information"></param>
+            <param name="version"></param>
+            <param name="details"></param>
+        </member>
+        <member name="M:Tracealyzer.API.InformationResponseMessage.GetCapabilitites">
+            <summary>
+            Get the stored capabilities as an array.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.InformationResponseMessage.GetCapabilities">
+            <summary>
+            Get the stored capabilities as an array.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.InformationResponseMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.ILogger">
+            <summary>
+            Interface for logging.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ILogger.LogVerbose(System.String)">
+            <summary>
+            Log "verbose", more detailed than <see cref="M:Tracealyzer.API.ILogger.LogInformation(System.String)"/>.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.ILogger.LogMessage(System.Boolean,System.String)">
+            <summary>
+            Logging of each message being sent or received.
+            </summary>
+            <param name="received">True if message was received, false if message was sent.</param>
+            <param name="text">The message as it was handled.</param>
+        </member>
+        <member name="M:Tracealyzer.API.ILogger.LogInformation(System.String)">
+            <summary>
+            Log information, including success.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.ILogger.LogWarning(System.String)">
+            <summary>
+            Log warning, issues that are not critical.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.ILogger.LogError(System.String)">
+            <summary>
+            Log error, issues that are critical.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="T:Tracealyzer.API.MemoryRequestMessage">
+            <summary>
+            Memory request message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MemoryRequestMessage.Address">
+            <summary>
+            Get the address.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MemoryRequestMessage.Size">
+            <summary>
+            Get the size.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MemoryRequestMessage.#ctor(System.String,System.Int32)">
+            <summary>
+            Create new memory request message.
+            </summary>
+            <param name="address"></param>
+            <param name="size"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MemoryRequestMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.MemoryResponseMessage">
+            <summary>
+            Memory response message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MemoryResponseMessage.Data">
+            <summary>
+            Get the data.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MemoryResponseMessage.#ctor(Tracealyzer.API.MemoryRequestMessage,System.Boolean,System.Byte[])">
+            <summary>
+            Create new memory request.
+            </summary>
+            <param name="request"></param>
+            <param name="isSuccess"></param>
+            <param name="data"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MemoryResponseMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.MessageBase">
+            <summary>
+            Base class for all messages.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTestRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.TestRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTestResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.TestResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypePing">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.PingMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeInfoRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.InformationRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeInfoResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.InformationResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeFocus">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.FocusMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceFileRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.TraceFileRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceFileResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.TraceFileResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceLoadCompleted">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.TraceLoadCompletedMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeMemoryRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.MemoryRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeMemoryResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.MemoryResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeExpressionRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.ExpressionRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeExpressionResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.ExpressionResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeDebuggingStateRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.DebuggingStateRequest"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeDebuggingStateResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.DebuggingStateResponse"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeCommand">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.CommandMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeStackTrace">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.StackTraceMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeActorInstanceSelection">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.ActorInstanceSelectionMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeActorColors">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.ActorColorsMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTargetStatusRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.TargetStatusRequest"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTargetStatusResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.TargetStatusResponse"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeStreamStartRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.StreamStartRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeStreamStartResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.StreamStartResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeStreamStopRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.StreamStopRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeStreamStopResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.StreamStopResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceLoadLive">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceLoadLive"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceLoadRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceLoadRequest"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceLoadResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceLoadResponse"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceFinalize">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceFinalize"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceDataError">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceDataError"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceWarning">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceWarningMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceUserEvent">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.UserEventMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceSyncRequest">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceSyncRequest"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceSyncResponse">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceSyncResponse"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceActorReady">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.ActorReadyMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceActorSwitch">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.ActorSwitchMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceActorPriority">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.ActorPriorityMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceTimeMessage">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.TraceTimeMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceServiceCallSetupRequestMessage">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.ServiceCallSetupRequest"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceServiceCallSetupResponseMessage">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.ServiceCallSetupResponse"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceServiceCallEntryMessage">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.ServiceCallSetupRequest"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeTraceServiceCallExitMessage">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.Trace.ServiceCallSetupResponse"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypePipeInformationMessage">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.PipeInformationMessage"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageBase.MessageTypeDisconnecting">
+            <summary>
+            Type for <see cref="T:Tracealyzer.API.DisconnectingMessage"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.MessageBase.MessageType">
+            <summary>
+            Get the current message type.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.#ctor(System.String)">
+            <summary>
+            Create a new message.
+            </summary>
+            <param name="messageType">The message type, must not be null or empty string.</param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetBool(System.String)">
+            <summary>
+            Get a stored value as a bool, if possible.
+            </summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetByte(System.String)">
+            <summary>
+            Get a stored value as a byte, if possible.
+            </summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetShort(System.String)">
+            <summary>
+            Get a stored value as a short, if possible.
+            </summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetInt(System.String)">
+            <summary>
+            Get a stored value as an int, if possible.
+            </summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetLong(System.String)">
+            <summary>
+            Get a stored value as a long, if possible.
+            </summary>
+            <param name="key"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetString(System.String,System.String)">
+            <summary>
+            Get a stored value as a string, if possible.
+            </summary>
+            <param name="key"></param>
+            <param name="defaultValue"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetByteArray(System.String,System.Byte[])">
+            <summary>
+            Get a stored value as a byte array, if possible.
+            </summary>
+            <param name="key"></param>
+            <param name="defaultValue"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.GetStringArray(System.String,System.String[])">
+            <summary>
+            Get a stored value as a string array, if possible.
+            </summary>
+            <param name="key"></param>
+            <param name="defaultValue"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.TryGetString(System.String,System.String@)">
+            <summary>
+            Try to get a string value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetBool(System.String,System.Boolean)">
+            <summary>
+            Set a bool value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetByte(System.String,System.Byte)">
+            <summary>
+            Set a byte value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetShort(System.String,System.Int32)">
+            <summary>
+            Set a short value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetInt(System.String,System.Int32)">
+            <summary>
+            Set an int value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetLong(System.String,System.Int64)">
+            <summary>
+            Set a long value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetString(System.String,System.String)">
+            <summary>
+            Set a string value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetByteArray(System.String,System.Byte[])">
+            <summary>
+            Set a byte value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetStringArray(System.String,System.String[])">
+            <summary>
+            Set a string array value.
+            </summary>
+            <param name="key"></param>
+            <param name="value"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.MarshalMessage(Tracealyzer.API.MessagePayloadType,Tracealyzer.API.ILogger)">
+            <summary>
+            Marshal the current message into a byte array.
+            </summary>
+            <param name="payloadType"></param>
+            <param name="logger"></param>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.MarshalValues(Newtonsoft.Json.Linq.JObject)">
+            <summary>
+            Marshal values to JSON.
+            </summary>
+            <param name="json"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.MarshalValues(System.Xml.XmlElement)">
+            <summary>
+            Marshal values to Xml element.
+            </summary>
+            <param name="element"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.UnmarshalMessage(Tracealyzer.API.MessageHelper,Tracealyzer.API.ILogger,System.Byte[],System.Int32@,System.Int32,Tracealyzer.API.MessageBase@,System.Int32@,System.Int32@)">
+            <summary>
+            Unmarshal a single message.
+            </summary>
+            <param name="helper"></param>
+            <param name="logger"></param>
+            <param name="bytes">The bytes to read.</param>
+            <param name="startIndex">The start index in; the first unused byte index out.</param>
+            <param name="length">The number of valid bytes in the array.</param>
+            <param name="message">A message on success; otherwise null.</param>
+            <param name="usedBytes">The number of used bytes to parse this message.</param>
+            <param name="ignoredBytes">The number of bytes ignored before the first message.</param>
+            <returns>True on success; otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.UnmarshalValues(Newtonsoft.Json.Linq.JObject,Tracealyzer.API.ILogger)">
+            <summary>
+            Unmarshal values from JSON.
+            </summary>
+            <param name="json">The JSON object to unmarshal.</param>
+            <param name="logger">The logger to use, can be null.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.UnmarshalValues(System.Xml.XmlElement,Tracealyzer.API.ILogger)">
+            <summary>
+            Unmarshal values from Xml element.
+            </summary>
+            <param name="element">The Xml element to unmarshal.</param>
+            <param name="logger">The logger to use, can be null.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.SetParameters(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Set any additional parameters.
+            </summary>
+            <param name="parameters"></param>
+            <remarks>
+            Protected to only allow on certain message types.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.MessageBase.VerifyContents(Tracealyzer.API.ILogger)">
+            <summary>
+            Verify that the content is correct.
+            </summary>
+            <param name="logger">The logger to use, can be null.</param>
+            <returns></returns>
+        </member>
+        <member name="T:Tracealyzer.API.MessageHelper">
+            <summary>
+            Helper class for messages.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHelper.MarshalMessage(Tracealyzer.API.MessagePayloadType,Tracealyzer.API.ILogger,Tracealyzer.API.MessageBase)">
+            <summary>
+            Marshal a message to bytes.
+            </summary>
+            <param name="payloadType"></param>
+            <param name="logger"></param>
+            <param name="message"></param>
+            <returns>Byte array on success; otherwise null.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHelper.UnmarshalMessages(Tracealyzer.API.MessagePayloadType,Tracealyzer.API.ILogger,System.Byte[],System.Int32@,System.Int32,System.Int32@,System.Int32@)">
+            <summary>
+            Unmarshal as many messages as possible.
+            </summary>
+            <param name="payloadType">The expected payload type.</param>
+            <param name="logger"></param>
+            <param name="bytes">The bytes to read.</param>
+            <param name="startIndex">The start index in; the first unused byte index out.</param>
+            <param name="length">The number of valid bytes in the array.</param>
+            <param name="usedBytes">The number of bytes used.</param>
+            <param name="ignoredBytes">The number of ignored bytes.</param>
+            <returns>A list of messages.</returns>
+        </member>
+        <member name="T:Tracealyzer.API.MessageHelper.Result">
+            <summary>
+            Result of document loading.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageHelper.Result.Success">
+            <summary>
+            A document has been created; more can potentially be created since startIndex has been updated.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageHelper.Result.Incomplete">
+            <summary>
+            The result was incomplete; retry when more bytes has been read.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.MessageHelper.Result.Failure">
+            <summary>
+            The result was a failure; the whole byte array can be thrown away.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHelper.GetMessageString(Tracealyzer.API.MessagePayloadType,Tracealyzer.API.MessageBase)">
+            <summary>
+            Get message string from message.
+            </summary>
+            <param name="payloadType">The payload type.</param>
+            <param name="message">The message.</param>
+            <returns>The message as a string on success.</returns>
+            <remarks>
+            Throws exception on issues.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHelper.GetMessageString(Tracealyzer.API.MessageBase)">
+            <summary>
+            Get message as a string.
+            </summary>
+            <param name="message">The message to save.</param>
+            <returns>The message as a string.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHelper.SaveMessage(Tracealyzer.API.MessageBase,Tracealyzer.API.ILogger)">
+            <summary>
+            Save a message in the provided format.
+            </summary>
+            <param name="message"></param>
+            <param name="logger"></param>
+            <returns></returns>
+            <remarks>
+            Throw exception on issues.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHelper.TryLoadMessage(System.Byte[],System.Int32@,System.Int32,System.String@,System.Object@,System.String@,System.Int32@,System.Int32@)">
+            <summary>
+            Try to load a message in the provided format.
+            </summary>
+            <param name="bytes"></param>
+            <param name="startIndex"></param>
+            <param name="length"></param>
+            <param name="messageType"></param>
+            <param name="data"></param>
+            <param name="logData"></param>
+            <param name="usedBytes"></param>
+            <param name="ignoredBytes"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.MessageHelper.UnmarshalMessage(Tracealyzer.API.MessageBase,System.Object,Tracealyzer.API.ILogger)">
+            <summary>
+            Unmarshal a message after a call to <see cref="M:Tracealyzer.API.MessageHelper.TryLoadMessage(System.Byte[],System.Int32@,System.Int32,System.String@,System.Object@,System.String@,System.Int32@,System.Int32@)"/>, where the |data| parameter will be used.
+            </summary>
+            <param name="message"></param>
+            <param name="data"></param>
+            <param name="logger"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Tracealyzer.API.PingMessage">
+            <summary>
+            Ping message, used to verify the connection.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.PingMessage.IsPing">
+            <summary>
+            Get if this is a Ping (request) message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.PingMessage.IsPong">
+            <summary>
+            Get if this is a Pong (reply) message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.PingMessage.#ctor">
+            <summary>
+            Create a new ping message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.PingMessage.CreatePingMessage">
+            <summary>
+            Create a new Ping (request) message.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.PingMessage.CreatePongMessage">
+            <summary>
+            Create a new Pong (reply) message.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.PingMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.RequestMessageBase">
+            <summary>
+            Base class for request messages.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.RequestMessageBase.RequestId">
+            <summary>
+            Get the request ID.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.RequestMessageBase.#ctor(System.String)">
+            <summary>
+            Create new request message.
+            </summary>
+            <param name="messageType">The message type, must not be null or empty string.</param>
+        </member>
+        <member name="M:Tracealyzer.API.RequestMessageBase.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.ResponseMessageBase">
+            <summary>
+            Base class for response messages.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ResponseMessageBase.RequestId">
+            <summary>
+            Get the ID of the matching request message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.ResponseMessageBase.IsSuccess">
+            <summary>
+            Get if the result was a success.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.ResponseMessageBase.#ctor(Tracealyzer.API.RequestMessageBase,System.Boolean,System.String)">
+            <summary>
+            Create new response message.
+            </summary>
+            <param name="request">The request, if applicable.</param>
+            <param name="isSuccess">If this was a success or not.</param>
+            <param name="messageType">The message type, must not be null or empty string.</param>
+        </member>
+        <member name="M:Tracealyzer.API.ResponseMessageBase.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.StackTraceMessage">
+            <summary>
+            Message for stack trace information
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StackTraceMessage.Filename">
+            <summary>
+            Get/set the filename.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StackTraceMessage.Method">
+            <summary>
+            Get/set the method.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StackTraceMessage.LineNumber">
+            <summary>
+            Get/set the line number.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.StackTraceMessage.#ctor">
+            <summary>
+            Create a new stack trace message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.StackTraceMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.StreamStartRequestMessage">
+            <summary>
+            Stream start request, matched by <see cref="T:Tracealyzer.API.StreamStartResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StreamStartRequestMessage.DisableLive">
+            <summary>
+            Get/set if live should be disabled before starting the stream.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StreamStartRequestMessage.Engine">
+            <summary>
+            Get/set the engine to use for the request.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StreamStartRequestMessage.ConnectString">
+            <summary>
+            Get/set the connect string to use for the request.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.StreamStartRequestMessage.#ctor(System.String,System.String,System.Nullable{System.Boolean})">
+            <summary>
+            Create a new stream start request.
+            </summary>
+            <param name="engine">The stream engine to use, null to use current.</param>
+            <param name="connectString">The connect string to use, null to use current.</param>
+            <param name="disableLive">If set to true, live streaming will be disabled</param>
+        </member>
+        <member name="T:Tracealyzer.API.StreamStartResponseMessage">
+            <summary>
+            Stream start response, matching <see cref="T:Tracealyzer.API.StreamStartRequestMessage"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StreamStartResponseMessage.ErrorMessage">
+            <summary>
+            Get the stream start error message, only expected if <see cref="P:Tracealyzer.API.ResponseMessageBase.IsSuccess"/> is false.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.StreamStartResponseMessage.CreateSuccess(Tracealyzer.API.StreamStartRequestMessage)">
+            <summary>
+            Create a success response message.
+            </summary>
+            <param name="request">The request message.</param>
+            <returns>A new <see cref="T:Tracealyzer.API.StreamStartResponseMessage"/>.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.StreamStartResponseMessage.CreateFailure(Tracealyzer.API.StreamStartRequestMessage,System.String)">
+            <summary>
+            Create a failure response message.
+            </summary>
+            <param name="request">The request message.</param>
+            <param name="errorMessage">The error message to use, will get a default message is not set.</param>
+            <returns>A new <see cref="T:Tracealyzer.API.StreamStartResponseMessage"/>.</returns>
+        </member>
+        <member name="T:Tracealyzer.API.StreamStopRequestMessage">
+            <summary>
+            Stream stop request, matched by <see cref="T:Tracealyzer.API.StreamStopResponseMessage"/>.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.StreamStopRequestMessage.#ctor">
+            <summary>
+            Create a new stream stop request.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.StreamStopResponseMessage">
+            <summary>
+            <see cref="T:Tracealyzer.API.StreamStopRequestMessage"/>
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.StreamStopResponseMessage.ErrorMessage">
+            <summary>
+            Get the stream stop error message, only expected if <see cref="P:Tracealyzer.API.ResponseMessageBase.IsSuccess"/> is false.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.StreamStopResponseMessage.CreateSuccess(Tracealyzer.API.StreamStopRequestMessage)">
+            <summary>
+            Create a success response message.
+            </summary>
+            <param name="request">The request message.</param>
+            <returns>A new <see cref="T:Tracealyzer.API.StreamStopResponseMessage"/>.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.StreamStopResponseMessage.CreateFailure(Tracealyzer.API.StreamStopRequestMessage,System.String)">
+            <summary>
+            Create a failure response message.
+            </summary>
+            <param name="request">The request message.</param>
+            <param name="errorMessage">The error message to use, will get a default message is not set.</param>
+            <returns>A new <see cref="T:Tracealyzer.API.StreamStopResponseMessage"/>.</returns>
+        </member>
+        <member name="T:Tracealyzer.API.TargetStatusRequest">
+            <summary>
+            Target status request, matched by <see cref="T:Tracealyzer.API.TargetStatusResponse"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TargetStatusRequest.RequestDetails">
+            <summary>
+            Get/set if details are requested.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TargetStatusRequest.#ctor(System.Boolean)">
+            <summary>
+            Create a new status request.
+            </summary>
+            <param name="details"></param>
+        </member>
+        <member name="T:Tracealyzer.API.TargetStatusResponse">
+            <summary>
+            Target status response, matching <see cref="T:Tracealyzer.API.TargetStatusRequest"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TargetStatusResponse.Status">
+            <summary>
+            Get status, as an array.
+            </summary>
+            <returns>An array if stored as an array, or if details provided to know the number of items. Otherwise, an array with a single element.</returns>
+        </member>
+        <member name="P:Tracealyzer.API.TargetStatusResponse.CpuDetails">
+            <summary>
+            Get the CPU details if provided, empty array if not.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TargetStatusResponse.#ctor(Tracealyzer.API.TargetStatusRequest,System.String)">
+            <summary>
+            Create a new status response.
+            </summary>
+            <param name="request"></param>
+            <param name="status"></param>
+        </member>
+        <member name="M:Tracealyzer.API.TargetStatusResponse.#ctor(Tracealyzer.API.TargetStatusRequest,System.String[])">
+            <summary>
+            Create a new status response.
+            </summary>
+            <param name="request"></param>
+            <param name="status"></param>
+        </member>
+        <member name="M:Tracealyzer.API.TargetStatusResponse.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.TestRequestMessage">
+            <summary>
+            Test message to ensure all values are handled correctly.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.Bool">
+            <summary>
+            Get a bool value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.Byte">
+            <summary>
+            Get a byte value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.Short">
+            <summary>
+            Get a short value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.Int">
+            <summary>
+            Get a int value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.Long">
+            <summary>
+            Get a long value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.String">
+            <summary>
+            Get a string value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.Bytes">
+            <summary>
+            Get a byte value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestRequestMessage.Strings">
+            <summary>
+            Get/set string values.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TestRequestMessage.#ctor(System.Boolean,System.Byte,System.Int16,System.Int32,System.Int64,System.String,System.Byte[])">
+            <summary>
+            Create new test request.
+            </summary>
+            <param name="bo"></param>
+            <param name="b"></param>
+            <param name="s"></param>
+            <param name="i"></param>
+            <param name="l"></param>
+            <param name="str"></param>
+            <param name="bytes"></param>
+        </member>
+        <member name="M:Tracealyzer.API.TestRequestMessage.GetRandomString(System.Random)">
+            <summary>
+            Create a new random string.
+            </summary>
+            <param name="random"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.TestRequestMessage.GetRandomBytes(System.Random)">
+            <summary>
+            Create a new random byte array.
+            </summary>
+            <param name="random"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.TestRequestMessage.CreateRandom(System.Random)">
+            <summary>
+            Create a random message.
+            </summary>
+            <param name="random">The Random instance to use; null to create a new Random instance.</param>
+            <returns>A new randomly generated message.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.TestRequestMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="M:Tracealyzer.API.TestRequestMessage.Reverse">
+            <summary>
+            Reverse the contained information.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TestRequestMessage.CompareTo(Tracealyzer.API.ILogger,Tracealyzer.API.TestRequestMessage)">
+            <summary>
+            Compare a request and a response message.
+            </summary>
+            <param name="logger"></param>
+            <param name="other"></param>
+        </member>
+        <member name="T:Tracealyzer.API.TestResponseMessage">
+            <summary>
+            Test response message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TestResponseMessage.Strings">
+            <summary>
+            Get/set string values.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TestResponseMessage.#ctor(Tracealyzer.API.TestRequestMessage,System.Boolean)">
+            <summary>
+            Create a new test response message from a request.
+            </summary>
+            <param name="request"></param>
+            <param name="isSuccess"></param>
+        </member>
+        <member name="M:Tracealyzer.API.TestResponseMessage.CreateReverseResponse(Tracealyzer.API.TestRequestMessage)">
+            <summary>
+            Create a new reversed response message.
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.TestResponseMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="M:Tracealyzer.API.TestResponseMessage.Reverse">
+            <summary>
+            Reverse the contained information.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TestResponseMessage.CompareTo(Tracealyzer.API.ILogger,Tracealyzer.API.TestRequestMessage)">
+            <summary>
+            Compare a request and a response message.
+            </summary>
+            <param name="logger"></param>
+            <param name="other"></param>
+        </member>
+        <member name="T:Tracealyzer.API.TraceFileRequestMessage">
+            <summary>
+            Request creation of a trace file from memory.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TraceFileRequestMessage.Filename">
+            <summary>
+            Get/set the full path to the data.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TraceFileRequestMessage.#ctor(System.String)">
+            <summary>
+            Create new trace file request.
+            </summary>
+            <param name="filename"></param>
+        </member>
+        <member name="M:Tracealyzer.API.TraceFileRequestMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.TraceFileResponseMessage">
+            <summary>
+            Create new trace file response.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TraceFileResponseMessage.Filename">
+            <summary>
+            Get the full path to the trace data.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TraceFileResponseMessage.#ctor(Tracealyzer.API.TraceFileRequestMessage,System.Boolean,System.String)">
+            <summary>
+            Create new trace file response.
+            </summary>
+            <param name="request"></param>
+            <param name="isSuccess"></param>
+            <param name="filename"></param>
+        </member>
+        <member name="M:Tracealyzer.API.TraceFileResponseMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.CommandMessage">
+            <summary>
+            Message sent between UltraDevelop and Tracealyzer.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.CommandMessage.Command">
+            <summary>
+            Get/set the command.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.CommandMessage.Params">
+            <summary>
+            Get/set the params.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.CommandMessage.#ctor">
+            <summary>
+            Create a new command message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.CommandMessage.StartTargetMessage">
+            <summary>
+            Create new Start Target message.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.CommandMessage.StopTargetMessage">
+            <summary>
+            Create new Stop Target message.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.CommandMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.TraceLoadCompletedMessage">
+            <summary>
+            Trace load completed notification.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TraceLoadCompletedMessage.Filename">
+            <summary>
+            Get the full path to the trace data.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.TraceLoadCompletedMessage.IsSuccess">
+            <summary>
+            Get if the result was a success.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TraceLoadCompletedMessage.#ctor">
+            <summary>
+            Create a new trace load completed message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.TraceLoadCompletedMessage.CreateSuccess(System.String)">
+            <summary>
+            Create a success message.
+            </summary>
+            <param name="filename">The filename, must not be null or blank string.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.TraceLoadCompletedMessage.CreateFailure(System.String)">
+            <summary>
+            Create a failure message.
+            </summary>
+            <param name="filename">The filename if applicable.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.TraceLoadCompletedMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ActorPriorityMessage">
+            <summary>
+            Actor priority change message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorPriorityMessage.Priority">
+            <summary>
+            Get/set the priority value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorPriorityMessage.Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ActorPriorityMessage.#ctor(System.Int64,System.Int64,System.String,System.Int32,System.Boolean)">
+            <summary>
+            Create new actor priority message.
+            </summary>
+            <param name="eventNumber"></param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="actorName">The name of the actor, case sensitive, must not be null or empty string.</param>
+            <param name="priority">The new priority to use.</param>
+            <param name="isIsr">If this actor is an ISR, default is false.</param>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ActorReadyMessage">
+            <summary>
+            This message should be sent when an actor is ready.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorReadyMessage.Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ActorReadyMessage.#ctor(System.Int64,System.Int64,System.String,System.Boolean)">
+            <summary>
+            Create a new actor switch message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="actorName">The name of the actor, case sensitive, must not be null or empty string.</param>
+            <param name="isIsr">If this actor is an ISR, default is false.</param>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ActorMessageBase">
+            <summary>
+            Actor message base
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorMessageBase.ActorName">
+            <summary>
+            Get the actor name.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorMessageBase.IsIdle">
+            <summary>
+            Get/set if the actor is the IDLE task for a core, default is false.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorMessageBase.IsIsr">
+            <summary>
+            Get/set if the actor is an ISR, default is false.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ActorMessageBase.#ctor(System.Int64,System.Int64,System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Create a new actor switch message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="messageType">The message type, must be known by <see cref="T:Tracealyzer.API.MessageBase"/>.</param>
+            <param name="actorName">The name of the actor, case sensitive, must not be null or empty string (unless idle).</param>
+            <param name="isIdle">If this actor is idle, default is false.</param>
+            <param name="isIsr">If this actor is an ISR, default is false.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ActorMessageBase.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ActorSwitchMessage">
+            <summary>
+            Use this message to switch to an actor.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorSwitchMessage.NewInstance">
+            <summary>
+            Get/set if this split generates a new instance, default is true.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorSwitchMessage.Core">
+            <summary>
+            Get/set the core number, 0 is default (the first core).
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ActorSwitchMessage.Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ActorSwitchMessage.#ctor(System.Int64,System.Int64,System.String,System.Int32,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Create a new actor switch message.
+            </summary>
+            <param name="eventNumber"></param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="actorName">The name of the actor, case sensitive, must not be null or empty string.</param>
+            <param name="core">The core used for the switch, default is 0.</param>
+            <param name="isIdle">If this actor is idle, default is false.</param>
+            <param name="isIsr">If this actor is an ISR, default is false.</param>
+            <param name="newInstance">If this switch was a new instance, default is true.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ActorSwitchMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ITraceMessage">
+            <summary>
+            This interface is implemented by all trace messages.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ITraceMessage.MessageType">
+            <summary>
+            Get the message type.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ITraceMessage.Version">
+            <summary>
+            Get the version this message was introduced.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ServiceCallEntry">
+            <summary>
+            Service call entry message.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallEntry.#ctor(System.Int64,System.Int64,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Create new service call entry message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="serviceName">The service name, must not be null or empty string.</param>
+            <param name="core">The core, null for single (first) core.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallEntry.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc />
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallEntry.SetParameterValue(System.String,System.String)">
+            <summary>
+            Set a parameter value.
+            </summary>
+            <param name="name">The parameter name, must not be null or blank string.</param>
+            <param name="value">The parameter value.</param>
+            <remarks>
+            The parameter must not override any of the internal fields.
+            </remarks>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ServiceCallEventArgs">
+            <summary>
+            Event args for service call updates.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallEventArgs.GroupName">
+            <summary>
+            The group name, if set.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallEventArgs.ServiceName">
+            <summary>
+            The service name, if set.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallEventArgs.Success">
+            <summary>
+            True on success; false on error.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallEventArgs.#ctor(System.String,System.String,System.Boolean)">
+            <summary>
+            Create new service call event args.
+            </summary>
+            <param name="groupName">The group name, if known.</param>
+            <param name="serviceName">The service name, if known.</param>
+            <param name="success">Success or failure.</param>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ServiceCallExit">
+            <summary>
+            Service call exit message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallExit.ReturnValue">
+            <summary>
+            Get/set the return value.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallExit.#ctor(System.Int64,System.Int64,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Create new Service Call Exit message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="serviceName">The service name, must not be null or empty string.</param>
+            <param name="returnValue">The return value, null for no value.</param>
+            <param name="core">The core, null for single (first) core.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallExit.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ServiceCallMessageBase">
+            <summary>
+            Base class for service call messages.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallMessageBase.Version">
+            <inheritdoc/>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallMessageBase.ServiceName">
+            <summary>
+            Get/set the service name, must be set.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallMessageBase.Core">
+            <summary>
+            Get/set the core number, 0 is default (the first core).
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallMessageBase.#ctor(System.String)">
+            <summary>
+            Create new service call entry message.
+            </summary>
+            <param name="messageType"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallMessageBase.#ctor(System.Int64,System.Int64,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Create new service call entry message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="messageType">The message type, must be known by <see cref="T:Tracealyzer.API.MessageBase"/>.</param>
+            <param name="serviceName">The service name, must not be null or empty string.</param>
+            <param name="core">The core, null for single (first) core.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallMessageBase.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ServiceCallSetupRequest">
+            <summary>
+            Service call setup request.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupRequest.Tracealyzer#API#Trace#ITraceMessage#Version">
+            <inheritdoc/>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupRequest.GroupName">
+            <summary>
+            Get/set the group name.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupRequest.ServiceName">
+            <summary>
+            Get/set the service name.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupRequest.Format">
+            <summary>
+            Get/set the format.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupRequest.ReturnValueFormat">
+            <summary>
+            Get/set the return value format.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallSetupRequest.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Create a new service call setup request message.
+            </summary>
+            <param name="groupName">The group name to use, must not be null or blank string.</param>
+            <param name="serviceName">The (displayed) service name to use, must not be null or blank string.</param>
+            <param name="format">The format, null for no formatting.</param>
+            <param name="returnValueFormat">The return value format, null for no return value.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallSetupRequest.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc />
+        </member>
+        <member name="T:Tracealyzer.API.Trace.ServiceCallSetupResponse">
+            <summary>
+            Service call response message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupResponse.Tracealyzer#API#Trace#ITraceMessage#Version">
+            <inheritdoc/>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupResponse.Text">
+            <summary>
+            Get the text.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupResponse.GroupName">
+            <summary>
+            Get/set the group name.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.ServiceCallSetupResponse.ServiceName">
+            <summary>
+            Get/set the service name.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallSetupResponse.CreateSuccess(Tracealyzer.API.Trace.ServiceCallSetupRequest)">
+            <summary>
+            Create a success message.
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.ServiceCallSetupResponse.CreateFailure(Tracealyzer.API.Trace.ServiceCallSetupRequest,System.String)">
+            <summary>
+            Create a failure message.
+            </summary>
+            <param name="request"></param>
+            <param name="text">Mandatory text parameter</param>
+            <returns></returns>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.BuilderState">
+            <summary>
+            The different states of the builder.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.BuilderState.Initial">
+            <summary>
+            Initial state, builder is recently created.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.BuilderState.Verified">
+            <summary>
+            Settings has been verified and the builder can be started.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.BuilderState.Starting">
+            <summary>
+            Start has been requested.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.BuilderState.Running">
+            <summary>
+            Trace is running.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.BuilderState.Stopping">
+            <summary>
+            Stop has been requested.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.BuilderState.Finished">
+            <summary>
+            Trace is finished.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceActor">
+            <summary>
+            Describes one trace actor.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceActor.Name">
+            <summary>
+            Get the actor name.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceActor.IsIsr">
+            <summary>
+            Get if this actor is an ISR.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceActor.Tag">
+            <summary>
+            Get/set the actor tag.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceBuilder">
+            <summary>
+            Use to create a trace via the API.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceBuilder.MinimumFrequencyInHz">
+            <summary>
+            The minimum allowed frequency.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceBuilder.MinimumStopSleepMs">
+            <summary>
+            The minimum sleep time allowed when stopping.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceBuilder.DefaultStopSleepMs">
+            <summary>
+            The default sleep time when stopping.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceBuilder.SyncEventCount">
+            <summary>
+            The number of events before doing a sync.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceBuilder.DefaultEstimatedEventCount">
+            <summary>
+            The default number of estimated events.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceBuilder.NumberOfSentEvents">
+            <summary>
+            Get the total number of sent events.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.Trace.TraceBuilder.OnTraceStarted">
+            <summary>
+            Raised when trace has been started.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceBuilder.GotTraceStarted">
+            <summary>
+            Get if trace start was received.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.Trace.TraceBuilder.OnTraceStartError">
+            <summary>
+            Raised if trace start was not successfull.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceBuilder.GotTraceError">
+            <summary>
+            Get if trace error was received.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceBuilder.RegisteredServiceCalls">
+            <summary>
+            Get valid registered calls.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceBuilder.BadServiceCalls">
+            <summary>
+            Get bad registered calls.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.Trace.TraceBuilder.OnSerivceCallsUpdated">
+            <summary>
+            Raised when <see cref="P:Tracealyzer.API.Trace.TraceBuilder.RegisteredServiceCalls"/> or <see cref="P:Tracealyzer.API.Trace.TraceBuilder.BadServiceCalls"/> is updated.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.#ctor(Tracealyzer.API.Trace.TraceServerConnection,Tracealyzer.API.ILogger,Tracealyzer.API.Trace.TraceSettings)">
+            <summary>
+            Create a new trace builder.
+            </summary>
+            <param name="server"></param>
+            <param name="logger"></param>
+            <param name="settings"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.VerifySettings">
+            <summary>
+            Verify that the settings are valid.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.StartTrace(System.Int64)">
+            <summary>
+            Request recording start.
+            </summary>
+            <param name="estimatedEventCount">The estimated event count. Number is only used as input for progress bar and is not needed to be very exact.</param>
+            <returns>True if start has been requested, otherwise false.</returns>
+            <remarks>
+            Calling this method will result in <see cref="E:Tracealyzer.API.Trace.TraceBuilder.OnTraceStarted"/> or <see cref="E:Tracealyzer.API.Trace.TraceBuilder.OnTraceStartError"/> to be raised, check them for the ready state.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.StartTraceAsync(System.Threading.CancellationToken,System.Int64)">
+            <summary>
+            Request recording start and wait for result.
+            </summary>
+            <param name="token">The token to use, must not be null.</param>
+            <param name="estimatedEventCount">The estimated event count. Number is only used as input for progress bar and is not needed to be very exact.</param>
+            <returns>True if start has been requested and Tracealyzer is ready, otherwise false.</returns>
+            <remarks>
+            Calling this method will result in <see cref="E:Tracealyzer.API.Trace.TraceBuilder.OnTraceStarted"/> or <see cref="E:Tracealyzer.API.Trace.TraceBuilder.OnTraceStartError"/> to be raised, but the result doesn't have to be checked.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.StopTrace(System.Int32)">
+            <summary>
+            Stop recording the trace.
+            </summary>
+            <param name="sleepTimeMs">The time to wait for trace to catch up before fully stopping.</param>
+            <returns>True if stop has been requested, otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.TryGetActor(System.String,Tracealyzer.API.Trace.TraceActor@)">
+            <summary>
+            Try to get an actor.
+            </summary>
+            <param name="name">The name, must not be null or empty string.</param>
+            <param name="actor">The actor found on success; otherwise null.</param>
+            <returns>True on success; otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.GetOrCreateActor(System.String,System.Nullable{System.Boolean},System.Object)">
+            <summary>
+            Get or create a new actor.
+            </summary>
+            <param name="name">The name, must not be null or empty string.</param>
+            <param name="isIsr">If this actor is </param>
+            <param name="tag">The tag to use, if any.</param>
+            <returns>A new or an existing actor.</returns>
+            <remarks>
+            If the supplied name already exists, parameters |isIsr| and |idleOnCore| is verified.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.ActorReady(Tracealyzer.API.Trace.TraceActor,System.Int64)">
+            <summary>
+            Send actor ready event.
+            </summary>
+            <param name="actor">The actor that is ready, must not be null.</param>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <returns>True on success, otherwise false. See log for details.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.SetActorPriority(Tracealyzer.API.Trace.TraceActor,System.Int64,System.Int32)">
+            <summary>
+            Send actor priority change event.
+            </summary>
+            <param name="actor">The actor that is ready, must not be null.</param>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="priority">The new priority to use.</param>
+            <returns>True on success, otherwise false. See log for details.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.SwitchActor(Tracealyzer.API.Trace.TraceActor,System.Int64,System.Nullable{System.Int32},System.Boolean)">
+            <summary>
+            Switch to actor.
+            </summary>
+            <param name="actor">The actor to switch to, must not be null.</param>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="core">The core, null for single (first) core.</param>
+            <param name="newInstance">If the switch is a new instance or not.</param>
+            <returns>True on success, otherwise false. See log for details.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.SwitchIdle(System.Int64,System.Int32,System.Boolean)">
+            <summary>
+            Switch to idle on core.
+            </summary>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="core">The core.</param>
+            <param name="newInstance">If the switch is a new instance or not.</param>
+            <returns>True on success, otherwise false. See log for details.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.AddUserEvent(System.Int64,System.String,System.String,System.Nullable{System.Int32},System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Add user event.
+            </summary>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="channel">The channel, must not be null or blank string.</param>
+            <param name="text">The event text, must not be null or blank string.</param>
+            <param name="core">The core, first core used if not applicable.</param>
+            <param name="parameters">Any additional parameters. Supports bool, int, long, and string. Parameters must NOT be null.</param>
+            <returns>True on success, otherwise false. See log for details.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.RequestServiceCallSetup(System.String,System.String,System.String,System.String)">
+            <summary>
+            Request a service call setup.
+            </summary>
+            <param name="groupName">The group name to use.</param>
+            <param name="serviceName">The service name to use.</param>
+            <param name="format">The format, null for no formatting.</param>
+            <param name="returnValueFormat">The return value format, null for no return value.</param>
+            <returns>True if request could be sent; otherwise false.</returns>
+            <remarks>
+            This will only send message to server, not wait for response.
+            Result will either be in <see cref="P:Tracealyzer.API.Trace.TraceBuilder.RegisteredServiceCalls"/> or <see cref="P:Tracealyzer.API.Trace.TraceBuilder.BadServiceCalls"/> when the response is received.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.PerformServiceCallEntry(System.Int64,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Perform a service call entry.
+            </summary>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="serviceName">The service name, must not be null or empty string.</param>
+            <param name="core">The core, null for single (first) core.</param>
+            <returns>True on success; otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.PerformServiceCallExit(System.Int64,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Perform a service call exit.
+            </summary>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="serviceName">The service name, must not be null or empty string.</param>
+            <param name="returnValue">The return value, null for no value.</param>
+            <param name="core">The core, null for single (first) core.</param>
+            <returns>True on success; otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.PerformServiceCallReturnDirect(System.Int64,System.String,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Perform a service call that return immediately.
+            </summary>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="groupName">The group name, can be omitted if service name is unique.</param>
+            <param name="serviceName">The service name, must not be null or empty string.</param>
+            <param name="returnValue">The return value, null for no value.</param>
+            <param name="core">The core, null for single (first) core.</param>
+            <returns>True on success; otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.AddTraceWarning(System.Int64,System.String,System.String,System.Nullable{System.Int32})">
+            <summary>
+            Add a trace warning.
+            </summary>
+            <param name="timestamp">The timestamp, must not be before last used timestamp.</param>
+            <param name="channel">The channel, if applicable.</param>
+            <param name="text">The warning text, must not be null or blank string.</param>
+            <param name="core">The core, null for none.</param>
+            <returns>True on success, otherwise false. See log for details.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.SendTraceMessage(Tracealyzer.API.Trace.TraceDataMessageBase)">
+            <summary>
+            Send a trace message.
+            </summary>
+            <param name="message"></param>
+            <returns></returns>
+            <remarks>
+            When using trace builder, this is the preferred way of sending messages because it will send occational <see cref="T:Tracealyzer.API.Trace.TraceSyncRequest"/> messages.
+            </remarks>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.LogVerbose(System.String)">
+            <summary>
+            Log message, verbose.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.LogInformation(System.String)">
+            <summary>
+            Log message, information.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.LogWarning(System.String)">
+            <summary>
+            Log message, warning.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceBuilder.LogError(System.String)">
+            <summary>
+            Log message, error.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceDataError">
+            <summary>
+            Trace data error message.
+            </summary>
+            <remarks>
+            This is sent from Tracealyzer to the other side.
+            </remarks>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceDataError.EventNumber">
+            <summary>
+            Get the matching event number, if applicable.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceDataError.Text">
+            <summary>
+            Get/set the error text.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceDataError.Tracealyzer#API#Trace#ITraceMessage#Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceDataError.#ctor(System.String)">
+            <summary>
+            Create a new trace data error message.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceDataError.#ctor(Tracealyzer.API.Trace.TraceDataMessageBase,System.String)">
+            <summary>
+            Create a new trace data error message.
+            </summary>
+            <param name="matchingMessage"></param>
+            <param name="text"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceDataError.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceDataMessageBase">
+            <summary>
+            Base class for trace data messages.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceDataMessageBase.EventNumber">
+            <summary>
+            Get the contained event number.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceDataMessageBase.Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceDataMessageBase.#ctor(System.Int64,System.String)">
+            <summary>
+            Create a new trace data message.
+            </summary>
+            <param name="eventNumber">The event number, should be increasing with each event.</param>
+            <param name="messageType">The message type.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceDataMessageBase.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceFinalize">
+            <summary>
+            Finalize the trace.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceFinalize.IsCanceled">
+            <summary>
+            Get/set if this finalize was a cancel or not.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceFinalize.Tracealyzer#API#Trace#ITraceMessage#Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceFinalize.#ctor">
+            <summary>
+            Create a new trace finalize.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceFinalize.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceLoadLive">
+            <summary>
+            Trace load live request.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceLoadLive.#ctor">
+            <summary>
+            Create a new trace load live.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceLoadLive.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceLoadRequest">
+            <summary>
+            Request to start loading trace.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.TargetName">
+            <summary>
+            Get the target name.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.Cores">
+            <summary>
+            Get the cores.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.IdleNames">
+            <summary>
+            Get the idle names.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.TimeFrequencyHz">
+            <summary>
+            Get the time frequency (in Hz).
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.EstimatedEventCount">
+            <summary>
+            Get the estimated event count, used for progress reporting.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.DoLiveTrace">
+            <summary>
+            Get/set if live trace is allowed for this load.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.DoStoreTrace">
+            <summary>
+            Get/set if trace should be stored.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadRequest.Version">
+            <summary>
+            Get/set the load version.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceLoadRequest.#ctor(System.Int32,System.String,System.Collections.Generic.IEnumerable{System.String},System.Int64,System.Int64,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Create a new trace load request.
+            </summary>
+            <param name="version">The version, must be 1 or larger.</param>
+            <param name="targetName">The target name, must not be null or blank string.</param>
+            <param name="cores">The cores used, must have at least one.</param>
+            <param name="timeFrequencyHz">The time frequency (in Hz).</param>
+            <param name="estimatedEventCount">The estimated event count, allowing Tracealyzer to show a good guess on trace load progress.</param>
+            <param name="idleNames">The idle names, null for default. If provided, must be the same number of names as the cores.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceLoadRequest.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceLoadResponse">
+            <summary>
+            Trace load response, matching <see cref="T:Tracealyzer.API.Trace.TraceLoadRequest"/>.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadResponse.Text">
+            <summary>
+            Get the text.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceLoadResponse.Version">
+            <summary>
+            Get/set the load version.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceLoadResponse.CreateSuccess(Tracealyzer.API.Trace.TraceLoadRequest)">
+            <summary>
+            Create a success message.
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceLoadResponse.CreateFailure(Tracealyzer.API.Trace.TraceLoadRequest,System.String)">
+            <summary>
+            Create a failure message.
+            </summary>
+            <param name="request"></param>
+            <param name="text">Mandatory text parameter</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceLoadResponse.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceDataErrorEventArgs">
+            <summary>
+            Event arguments for trace error.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceDataErrorEventArgs.Text">
+            <summary>
+            Get the text, if set.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceDataErrorEventArgs.#ctor(System.String)">
+            <summary>
+            Create new trace error event arguments.
+            </summary>
+            <param name="text"></param>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceServerConnection">
+            <summary>
+            Connection to Tracealyzer for building traces, adding a little extra.
+            </summary>
+        </member>
+        <member name="E:Tracealyzer.API.Trace.TraceServerConnection.OnTraceDataError">
+            <summary>
+            Raised if trace data error is received.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceServerConnection.#ctor(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceServerConnection.CreateBuilder(Tracealyzer.API.Trace.TraceSettings)">
+            <summary>
+            Create a new trace builder using the provided settings.
+            </summary>
+            <param name="settings">The settings to use.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceServerConnection.StartWaitForTraceReadyAsync(System.Threading.CancellationToken)">
+            <summary>
+            Start the server and wait for Tracealyzer to be ready for tracing.
+            </summary>
+            <param name="token">The token to use, must not be null.</param>
+            <returns>True if start has been requested and Tracealyzer is ready, otherwise false.</returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceServerConnection.OnTraceDataErrorReceived(Tracealyzer.API.Trace.TraceDataError)">
+            <summary>
+            Called when trace data error is received.
+            </summary>
+            <param name="error"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceServerConnection.HandleMessage(Tracealyzer.API.MessageBase)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceSettings">
+            <summary>
+            Contains all settings needed to create a trace builder.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceSettings.Version">
+            <summary>
+            Get/set the version.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceSettings.TargetName">
+            <summary>
+            Get/set the target name.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceSettings.FrequencyInHz">
+            <summary>
+            Get/set the frequency, in Hz.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceSettings.CoreNames">
+            <summary>
+            Get/set the core names. Must have at least one core for settings to be valid.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceSettings.IdleNames">
+            <summary>
+            Get/set the idle names. If set, must be the same number as the <see cref="F:Tracealyzer.API.Trace.TraceSettings.CoreNames"/>.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceSettings.StoreTrace">
+            <summary>
+            Get/set if trace should be stored.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceSettings.LiveTrace">
+            <summary>
+            Get/set if trace should be loaded live.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceSettings.#ctor(System.String,System.Int64)">
+            <summary>
+            Create new settings.
+            </summary>
+            <param name="targetName">The target name. Must not be null or empty string.</param>
+            <param name="frequencyInHz">The frequency to use, in Hz. Must be <see cref="F:Tracealyzer.API.Trace.TraceBuilder.MinimumFrequencyInHz"/> or higher.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceSettings.#ctor(System.String,System.Int64,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Create new settings.
+            </summary>
+            <param name="targetName">The target name. Must not be null or empty string.</param>
+            <param name="frequencyInHz">The frequency to use, in Hz. Must be <see cref="F:Tracealyzer.API.Trace.TraceBuilder.MinimumFrequencyInHz"/> or higher.</param>
+            <param name="coreNames">The core names. Must be at least one, each must be unique, and must not contain null or empty strings.</param>
+            <param name="idleNames">The idle names. If set, must be the same number as |coreNames|, each must be unique, and must not contain null or empty strings.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceSettings.#ctor(Tracealyzer.API.Trace.TraceSettings)">
+            <summary>
+            Create a deep copy of another trace settings.
+            </summary>
+            <param name="other"></param>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceSyncRequest">
+            <summary>
+            Sync request for trace loading.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceSyncRequest.Counter">
+            <summary>
+            Get the contained counter value.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceSyncRequest.Tracealyzer#API#Trace#ITraceMessage#Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceSyncRequest.#ctor(System.Int32)">
+            <summary>
+            Create a new trace sync request.
+            </summary>
+            <param name="counter">The next counter value.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceSyncRequest.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceSyncResponse">
+            <summary>
+            Trace sync response message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceSyncResponse.Counter">
+            <summary>
+            Get the contained counter value.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceSyncResponse.CreateResponse(Tracealyzer.API.Trace.TraceSyncRequest)">
+            <summary>
+            Create an appropriate response message.
+            </summary>
+            <param name="request">If supplied, the response is a success; otherwise the response is a failure.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceSyncResponse.VerifyContents(Tracealyzer.API.ILogger)">
+            <param name="logger"></param>
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceTimeMessage">
+            <summary>
+            Trace time message, useful for long periods of idle.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceTimeMessage.Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceTimeMessage.#ctor(System.Int64,System.Int64)">
+            <summary>
+            Create new trace time message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceTimestampDataMessageBase">
+            <summary>
+            Timestamped trace message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceTimestampDataMessageBase.Timestamp">
+            <summary>
+            Get the timestamp, if set.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceTimestampDataMessageBase.#ctor(System.Int64,System.Int64,System.String)">
+            <summary>
+            Create new timestamped data message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="messageType">The message type, must be known by <see cref="T:Tracealyzer.API.MessageBase"/>.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceTimestampDataMessageBase.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceVersionHelper">
+            <summary>
+            Version helper.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceVersionHelper.LowestSupportedVersion">
+            <summary>
+            Get the lowest supported version.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceVersionHelper.HighestSupportedVersion">
+            <summary>
+            Get the highest supported version.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.Trace.TraceVersionHelper.DefaultVersion">
+            <summary>
+            Get the default version to use.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceVersionHelper.GetVersion(System.Nullable{System.Int32})">
+            <summary>
+            Match a version.
+            </summary>
+            <param name="requested"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceVersionHelper.IsValidVersion(System.Int32,Tracealyzer.API.Trace.ITraceMessage)">
+            <summary>
+            Match version to message.
+            </summary>
+            <param name="loadVersion">The load version to check, received in <see cref="T:Tracealyzer.API.Trace.TraceLoadRequest"/>.</param>
+            <param name="message">The message to verify, must not be null.</param>
+            <returns></returns>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.TraceWarningMessage">
+            <summary>
+            Trace warning message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceWarningMessage.Text">
+            <summary>
+            Get/set the warning text.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceWarningMessage.Channel">
+            <summary>
+            Get/set the warning channel.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceWarningMessage.Core">
+            <summary>
+            Get/set the core number, if set.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.TraceWarningMessage.Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.TraceWarningMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.Trace.UserEventMessage">
+            <summary>
+            User event message.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.UserEventMessage.Text">
+            <summary>
+            Get/set the event text.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.UserEventMessage.Channel">
+            <summary>
+            Get/set the event channel.
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.UserEventMessage.Core">
+            <summary>
+            Get/set the core number, 0 is default (the first core).
+            </summary>
+        </member>
+        <member name="P:Tracealyzer.API.Trace.UserEventMessage.Version">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.UserEventMessage.#ctor(System.Int64,System.Int64,System.String,System.String,System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Create new user event message.
+            </summary>
+            <param name="eventNumber">The event number.</param>
+            <param name="timestamp">The timestamp, must be the same or bigger than the previous <see cref="T:Tracealyzer.API.Trace.TraceDataMessageBase"/>.</param>
+            <param name="text">The text message.</param>
+            <param name="channel">The user event channel.</param>
+            <param name="core">The core to bind to.</param>
+            <param name="parameters">Any additional parameters.</param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.UserEventMessage.SetAdditionalParameters(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Set any additional parameters.
+            </summary>
+            <param name="parameters"></param>
+        </member>
+        <member name="M:Tracealyzer.API.Trace.UserEventMessage.VerifyContents(Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Tracealyzer.API.UnmarshalResult">
+            <summary>
+            Results of unmarshalling values.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.UnmarshalResult.Success">
+            <summary>
+            Success.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.UnmarshalResult.BadSize">
+            <summary>
+            The buffer too small.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.UnmarshalResult.BadHeader">
+            <summary>
+            Unable to verify header.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.UnmarshalResult.BadContent">
+            <summary>
+            Content not as expected.
+            </summary>
+        </member>
+        <member name="F:Tracealyzer.API.UnmarshalResult.IncompleteContent">
+            <summary>
+            Content is incompelte.
+            </summary>
+        </member>
+        <member name="T:Tracealyzer.API.XmlHelper">
+            <summary>
+            XML helper class.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.XmlHelper.#ctor">
+            <summary>
+            Create new xml helper.
+            </summary>
+        </member>
+        <member name="M:Tracealyzer.API.XmlHelper.GetMessageString(Tracealyzer.API.MessageBase)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.XmlHelper.UnmarshalMessage(Tracealyzer.API.MessageBase,System.Object,Tracealyzer.API.ILogger)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.XmlHelper.TryLoadMessage(System.Byte[],System.Int32@,System.Int32,System.String@,System.Object@,System.String@,System.Int32@,System.Int32@)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Tracealyzer.API.XmlHelper.TryLoadDocument(System.Byte[],System.Int32@,System.Int32,System.Xml.XmlDocument@,System.Int32@,System.Int32@)">
+            <summary>
+            Try to load a document from bytes.
+            </summary>
+            <param name="bytes">The bytes to parse.</param>
+            <param name="startIndex">The first index in; the updated index out.</param>
+            <param name="length">The number of bytes to use in the array.</param>
+            <param name="doc">The document on success</param>
+            <param name="usedBytes"></param>
+            <param name="ignoredBytes"></param>
+            <returns>The result.</returns>
+        </member>
+    </members>
+</doc>

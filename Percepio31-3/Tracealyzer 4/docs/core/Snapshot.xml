@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Snapshot</title>
+  <keywords>
+    <keyword>snapshot</keyword>
+    <keyword>trace</keyword>
+    <keyword>recorder</keyword>
+    <keyword>tools</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Snapshot tool is used to read snapshot traces from the target device. This support multiple types of target connections.
+        </p>
+
+        <p>
+          <A HREF="img/Snapshot.png" target="$IMAGETARGET">
+            <img src="img/Snapshot.png" border="0" />
+          </A>
+        </p>
+
+        <p>
+          Use the "Snapshot Engine" dropdown menu to select the right connection type.
+          For each type, different Settings will be available.
+        </p>
+
+        <p>
+          When ready with the setup, click on the "Read Snapshot" button to read the trace data from your target device.
+        </p>
+
+        <p>
+          For SEGGER J-Link connections, the snapshot tool also provides buttons for Halt, Resume, and Reset, that lets your control the your target device.
+        </p>
+
+      </text>
+    </section>
+  </body>
+</page>

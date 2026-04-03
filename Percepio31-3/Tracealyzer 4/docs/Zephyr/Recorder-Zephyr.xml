@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+	<title>Setup with Zephyr</title>
+	<keywords>
+		<keyword>recorder</keyword>
+		<keyword>Zephyr</keyword>
+		<keyword>recording</keyword>
+		<keyword>record</keyword>
+		<keyword>trace</keyword>
+		<keyword>iar</keyword>
+		<keyword>keil</keyword>
+		<keyword>i-jet</keyword>
+		<keyword>ulink</keyword>
+		<keyword>itm</keyword>
+		<keyword>j-link</keyword>
+		<keyword>jlink</keyword>
+		<keyword>segger</keyword>
+		<keyword>rtt</keyword>
+		<keyword>swo</keyword>
+		<keyword>jtag</keyword>
+		<keyword>debugger</keyword>
+		<keyword>probe</keyword>
+	</keywords>
+	<body>
+		<section>
+			<header>Introduction</header>
+			<text>
+		
+			<p>
+				The Zephyr integration uses the Percepio TraceRecorder library and the usage is documented in <A HREF="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later">Using TraceRecorder v4.6 or later</A>. 				
+			</p>
+		
+			<subsection>
+			<header>Integration</header>
+			<text>
+				<p>
+					To integrate the TraceRecorder in a Zephyr project, follow the TraceRecorder integration guide at <a href="https://percepio.com/getstarted/latest/html/zephyr.html">https://percepio.com/getstarted/latest/html/zephyr.html/</a>.							
+				</p>
+				
+				<p>  
+					The TraceRecorder source code is included in the Zephyr repository and included through the <A HREF="https://docs.zephyrproject.org/latest/build/kconfig/index.html">Zephyr KConfig system</A>.
+					If needed, you also find the very latest version of the TraceRecorder source code in the Percepio repository on <A HREF="https://github.com/Percepio/TraceRecorderSource">https://github.com/Percepio/TraceRecorderSource</A>.					
+				</p>
+			
+				<p>
+					See <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___TraceRecorder_API">TraceRecorder API</a> for pointers to the TraceRecorder code documentation.
+				</p>				
+				
+			</text>
+			</subsection>			
+
+		</text>
+		</section>
+	</body>
+</page>

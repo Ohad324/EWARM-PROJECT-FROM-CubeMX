@@ -174,6 +174,43 @@ Full pipeline traced and code is correct:
 4. `MusicScreenPresenter::activate()`: delivers cached TRACK + THUMB
 5. `MusicScreenView::setThumbnail()`: `PixelDataWidget::setPixelData(rgb888)`, `setAlpha(255)`, `invalidate()`
 
+---
+
+## 2026-03-31
+
+### CM4 Lockup fix — `main.c` (`CM7/Core/Src/main.c`)
+
+**Symptom:** Debug log showed `DMAC: Cortex-M4 state: Lockup`, causing intermittent
+SWO trace errors and unstable debug sessions.
+
+**Root cause:** The CM4 core is completely unused in this project, but the hardware
+still releases it from reset at boot. With no valid firmware, it fetches garbage from
+its reset vector and enters Lockup state. The debugger detects this and disrupts SWO
+timing on the CM7 side.
+
+**Fix applied:**
+Added `__HAL_RCC_HOLD_BOOT_CM4()` as the very first statement inside `main()`,
+before `HAL_Init()` and everything else:
+
+```c
+int main(void)
+{
+  /* M4 core not used - hold in reset to prevent lockup
+     and ensure stable SWO trace on M7 debug sessions */
+  __HAL_RCC_HOLD_BOOT_CM4();
+
+  /* USER CODE BEGIN 1 */
+  ...
+```
+
+**Why first:** The macro writes to `RCC->GCR` to assert the CM4 boot-hold signal.
+It must execute before any clock or power init gives the CM4 a chance to start
+fetching instructions. Placing it as the literal first statement guarantees this.
+
+**Effect:** CM4 stays in reset indefinitely → no Lockup → stable SWO on CM7.
+
+---
+
 ### Next step: RTT log to find exact break point
 RTT has full coverage — every step logs:
 - `4 THUMB_accum X%` (every 10%)

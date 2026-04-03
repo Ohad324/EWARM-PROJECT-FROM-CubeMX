@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<PlatformExtension>
+  <EventMap>
+    <EventGroup name="System Core">
+      <Event name="InitSystem" service="netInitialize" action="Call">
+        <Parameter index="0" translation="Version" />
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Memory Management">
+      <Event name="InitMemory" service="InitMemory" action="Call">
+        <Parameter index="0" translation="GetOrCreateNetworkMemoryPool" nullResult="InstantFail"  />
+        <Parameter index="1" />
+        <Parameter index="2" />
+      </Event>
+      <Event name="AllocMemory" service="AllocMemory" action="Call">
+        <Parameter translation="GetCurrentNetworkMemoryPool" nullResult="InstantFail" />
+        <!-- use default value here because we have no address -->
+        <Parameter defaultValue="0" />
+        <Parameter index="0" />
+        <Parameter index="1" />
+      </Event>
+      <Event name="AllocLimitExceeded" service="AllocLimitExceeded" action="Call" defaultResult="InstantFail">
+        <Parameter translation="GetCurrentNetworkMemoryPool" nullResult="InstantFail" />
+        <Parameter index="0" />
+        <Parameter index="1" />
+      </Event>
+      <Event name="AllocOutOfMemory" service="AllocOutOfMemory" action="Call" defaultResult="InstantFail">
+        <Parameter translation="GetCurrentNetworkMemoryPool" nullResult="InstantFail" />
+        <Parameter index="0" />
+        <Parameter index="1" />
+      </Event>
+      <Event name="ShrinkMemory" service="ShrinkMemory" action="Call">
+        <Parameter translation="GetCurrentNetworkMemoryPool" nullResult="InstantFail" />
+        <Parameter index="0" />
+        <Parameter index="1" />
+        <!-- use default value here because we have no address -->
+        <Parameter defaultValue="0" />
+        <Parameter index="1" secondaryIndex="0" translation="MathSub" />
+      </Event>
+      <Event name="FreeMemory" service="FreeMemory" action="Call">
+        <Parameter translation="GetCurrentNetworkMemoryPool" nullResult="InstantFail" />
+        <!-- use default value here because we have no address -->
+        <Parameter defaultValue="0" />
+        <Parameter index="0" />
+        <Parameter index="1" />
+      </Event>
+      <Event name="FreeInvalidBlock" service="FreeInvalidBlock" action="Call" defaultResult="InstantFail">
+        <Parameter translation="GetCurrentNetworkMemoryPool" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+      <Event name="FreeLinkCorrupted" service="FreeLinkCorrupted" action="Call" defaultResult="InstantFail">
+        <Parameter translation="GetCurrentNetworkMemoryPool" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="ETH Interface">
+      <Event name="InitInterface" service="InitInterface" action="Call">
+        <Parameter defaultValue="eth0" />
+      </Event>
+      <Event name="SetMacAddress" service="SetMacAddress" action="Call">
+        <Parameter index="0" offset="0" size="6" translation="FormatMac" />
+      </Event>
+      <Event name="ShowFrameHeader" service="ShowFrameHeader" action="Call">
+        <Parameter index="0" offset="0" size="6" translation="FormatMac" />
+        <Parameter index="0" offset="6" size="6" translation="FormatMac" />
+        <Parameter index="0" offset="12" size="2" translation="TypeDefinition|NumericUnsigned" translationParameter="ETH_Header:Proto|0x{0:x4}"/>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="TCP Socket">
+      <!--
+    <event id="70 + 0xD100" level="Detail" property="ShowFrameHeader"           
+    value="dport=%d[val1, TCP_Header:DstPort], sport=%d[val1, TCP_Header:SrcPort], seq=%x[val1, TCP_Header:SeqNr], ack=%x[val1, TCP_Header:AckNr], flags=%x[val1, TCP_Header:Flags], win=%d[val1, TCP_Header:Window], cksum=%x[val1, TCP_Header:Chksum]"
+    info="Display TCP frame header information"/>
+        -->
+      <Event name="ShowFrameHeader" service="ShowFrameHeader" action="Call">
+        <Parameter index="0" offset="2" size="2" translation="NumericUnsigned" />
+        <Parameter index="0" offset="0" size="2" translation="NumericUnsigned" />
+        <Parameter index="0" offset="4" size="4" translation="NumericUnsigned|Hex8" />
+        <Parameter index="0" offset="8" size="4" translation="NumericUnsigned|Hex8" />
+        <Parameter index="0" offset="13" size="1" translation="NumericUnsigned|Hex2" />
+        <Parameter index="0" offset="14" size="2" translation="NumericUnsigned" />
+        <Parameter index="0" offset="16" size="2" translation="NumericUnsigned|Hex4" />
+      </Event>
+      <Event name="InitSockets" service="InitSockets" action="Call">
+        <Parameter index="0" nullResult="InstantFail" />
+        <Parameter index="1" nullResult="InstantFail" />
+      </Event>
+      <Event name="SocketAllocated" service="SocketAllocated" action="Call">
+        <Parameter index="0" translation="GetOrCreateTcpSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="ReleaseSocket" service="ReleaseSocket" action="Call|PostProcess">
+        <Parameter index="0" translation="GetTcpSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="ListenSocket" service="ListenSocket" action="Call|PostProcess">
+        <Parameter index="0" translation="GetOrCreateTcpSocket" nullResult="InstantFail" />
+        <Parameter index="1" nullResult="InstantFail" />
+      </Event>
+      <Event name="CloseSocket" service="CloseSocket" action="Call|PostProcess">
+        <Parameter index="0" translation="GetTcpSocket|SetActiveSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="SetOptionSocket" service="SetOptionSocket" action="None">
+        <Parameter index="0" translation="GetOrCreateTcpSocket|SetActiveSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="SetOptionDelayedAck" service="SetOptionDelayedAck" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="Boolean" translationParameter="false|true" />
+      </Event>
+      <Event name="ParseHeaderOptions" service="ParseHeaderOptions" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+      <Event name="OptionMss" service="OptionMss" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+      <Event name="ShowSendWindow" service="ShowSendWindow" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+      <Event name="ShowRttVariables" service="ShowRttVariables" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+        <Parameter index="1" />
+        <Parameter index="2" />
+      </Event>
+      <Event name="ShowCongestionVariables" service="ShowCongestionVariables" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+        <Parameter index="1" />
+      </Event>
+      <Event name="FrameNotMapped" service="FrameNotMapped" action="Call">
+        <Parameter index="0" />
+      </Event>
+      <Event name="TimeoutInState" service="TimeoutInState" action="Call|PostProcess">
+        <Parameter index="0" translation="GetTcpSocket|SetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="1" translation="TcpState" nullResult="InstantFail" />
+      </Event>
+      <Event name="MappedToSocket" service="MappedToSocket" action="Call|PostProcess">
+        <Parameter index="0" translation="GetTcpSocket|SetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="1" translation="TcpState" nullResult="InstantFail" />
+      </Event>
+      <Event name="MapSocketWrongFlagsSet" service="MapSocketWrongFlagsSet" action="Call" defaultResult="InstantFail">
+      </Event>
+      <Event name="NextState" service="NextState" action="Call|PostProcess">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="TcpState" nullResult="InstantFail"  />
+      </Event>
+      <Event name="AckNextState" service="AckNextState" action="Call|PostProcess">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="TcpState" nullResult="InstantFail"  />
+      </Event>
+      <Event name="FinNextState" service="FinNextState" action="Call|PostProcess">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="TcpState" nullResult="InstantFail"  />
+      </Event>
+      <Event name="FinAckNextState" service="FinAckNextState" action="Call|PostProcess">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="TcpState" nullResult="InstantFail"  />
+      </Event>
+      <Event name="SimultOpenNextState" service="SimultOpenNextState" action="Call|PostProcess">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="TcpState" nullResult="InstantFail"  />
+      </Event>
+      <Event name="SimultCloseNextState" service="SimultCloseNextState" action="Call|PostProcess">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="TcpState" nullResult="InstantFail"  />
+      </Event>
+      <Event name="LastAckNextState" service="LastAckNextState" action="Call|PostProcess">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" translation="TcpState" nullResult="InstantFail"  />
+      </Event>
+      <Event name="SendControl" service="SendControl" action="Call">
+        <Parameter index="0" translation="GetTcpSocket|SetActiveSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="TwaitTimeoutClosing" service="TwaitTimeoutClosing" action="Call">
+        <Parameter index="0" translation="GetTcpSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="RepeatedFin" service="RepeatedFin" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="CallbackEventAck" service="CallbackEventAck" action="Call">
+        <Parameter index="0" translation="GetOrCreateTcpSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="DataAcked" service="DataAcked" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+      <Event name="CloseDataUnacked" service="CloseDataUnacked" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+      <Event name="SendReset" service="SendReset" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+      </Event>
+      <Event name="SendData" service="SendData" action="Call">
+        <Parameter index="0" translation="GetOrCreateTcpSocket" nullResult="InstantFail" />
+        <Parameter index="1" />
+      </Event>
+      <Event name="SendFrame" service="SendFrame" action="Call">
+        <Parameter index="0" translation="GetOrCreateTcpSocket" nullResult="InstantFail" />
+        <Parameter index="1" />
+      </Event>
+      <Event name="ReceiveFrame" service="ReceiveFrame" action="Call">
+        <Parameter translation="GetTcpSocket|GetActiveSocket" nullResult="InstantFail" />
+        <Parameter index="0" />
+      </Event>
+
+      <!--
+        <KernelService name="SendFrame" operation="OtherWrite" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="size" format="size: {0}" />
+        </KernelService>
+        <KernelService name="ReceiveFrame" operation="OtherRead" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="size" format="size: {0}" />
+        </KernelService>
+      -->
+    </EventGroup>
+  </EventMap>
+</PlatformExtension>

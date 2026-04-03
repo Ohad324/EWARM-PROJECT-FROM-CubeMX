@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>State Machine Graph</title>
+  <keywords>
+    <keyword>fsm</keyword>
+    <keyword>state</keyword>
+    <keyword>machine</keyword>
+    <keyword>graph</keyword>
+    <keyword>interval</keyword>  
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view displays a directed graph showing the state transitions in the trace as defined by a state machine. In the screenshot below, the state transitions have been logged in the user event channel "SystemState".
+		  See <A HREF="IntervalStateIntroduction.html">Intervals and State Machines introduction</A> for further information on state machines and the related concept of intervals. 
+		</p>
+
+        <p>
+          <A HREF="img/state_machine_graph.png" target="$IMAGETARGET">
+            <img src="img/state_machine_graph.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+		  
+		 <p>Any kind of state information can be displayed like this, assuming a state machine has been defined that tells $PNAME how to interpret the events into state transitions. See <A HREF="IntervalInstances.html">Intervals and State Machines view</A> for further information on how to define state machines.
+		 Defining a state machine also generated intervals between state transisions that can be displayed in timeline views.</p>
+
+		  <p>$PNAME also has pre-defined awareness of some states, such as task scheduling state. In the <A HREF="IntervalInstances.html">Intervals and State Machines view</A>, select <i>Add Predefined</i> to see the available data sets.
+		  For instance, if using TCP stack supported by $PNAME, you can add each TCP socket as a state machine and also display the socket states as intervals on the timeline.</p>
+      </text>
+    </section>
+  </body>
+</page>

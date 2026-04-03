@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Trace Warnings</title>
+  <keywords>
+    <keyword>traces</keyword>
+    <keyword>warnings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>This will show any warnings that occurred when the trace was loaded.</p>
+
+      </text>
+    </section>
+  </body>
+</page>

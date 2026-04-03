@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>BareMetal</title>
+  <keywords>
+    <keyword>recorder</keyword>   
+	<keyword>recording</keyword>
+	<keyword>record</keyword>
+  	<keyword>trace</keyword>
+	<keyword>iar</keyword>
+	<keyword>keil</keyword>
+	<keyword>i-jet</keyword>
+	<keyword>ulink</keyword>
+	<keyword>itm</keyword>
+	<keyword>j-link</keyword>
+	<keyword>jlink</keyword>
+	<keyword>segger</keyword>
+	<keyword>rtt</keyword>
+	<keyword>swo</keyword>
+	<keyword>jtag</keyword>
+	<keyword>debugger</keyword>
+	<keyword>probe</keyword>
+  </keywords>
+  <body>
+	  <section>
+		  <header>Introduction</header>
+		  <text>
+			  <p>
+				  The TraceRecorder library includes a set of "kernel modules" providing kernel tracing support for FreeRTOS, SafeRTOS, Azure RTOS ThreadX, Zephyr and µC/OS-III.
+				  Moreover, the <b>BareMetal</b> kernel port allows for integrating TraceRecorder in other systems, independent of what RTOS that is used (if any).
+				  This allows for using several $PNAME functions with essentially any C/C++ embedded software.
+			  </p>
+			  <p>
+				  The BareMetal option allows for using $PNAME features such as:
+				  <ul>
+					  <li>
+						  <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___What_can_be_traced%3F">Interrupt tracing</a>,
+					  </li>
+					  <li>
+						  <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Runnable_Tracing">Runnable tracing</a>,
+					  </li>
+					  <li>
+						  <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___User_Event_Logging">User Event</a> tracing,
+					  </li>
+					  <li>
+						  <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___State_Machine_Tracing">State Machine</a> tracing, and
+					  </li>
+					  <li>
+						  <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Interval_Tracing">Interval</a> tracing.
+					  </li>
+
+				  </ul>
+			  </p>
+			  <p>
+				  Interrupt tracing and Runnable tracing both provide ways to track execution on specific functions by adding additional instrumentation. "Runnable" is an automotive term, but runnable tracing is applicable in any kind of C/C++ software where you are interested in tracing particular functions.
+			  </p>
+
+			  <p>
+				  <b>Things to note:</b>
+				  <ul class="list">
+
+					  <li>
+						  There is always a certain overhead of instrumentation-based tracing. This typically adds some microseconds for each traced event, which is attributed to the currently running interrupt handler or runnable.
+						  This overhead can be significant if tracing short functions with execution times measured in microseconds.
+					  </li>
+
+					  <li>
+						  If using the BareMetal option on top of an unsupported RTOS, i.e., where the scheduling events are not traced, the execution time of any preempting tasks will be attributed to the current Runnable.
+						  However, preeempting interrupt handlers are accounted for separatly, assuming that interrupt tracing has been added in the interrupt handler.
+					  </li>
+
+					  <li>
+						  By default, all scheduling-related views and reports will show a single task ("main" or "unknown actor") that appears to be running all the time and thereby having 100% CPU load. This affects for example the scheduling field in the Trace view, the "Actor Statistics Report" and the "Actor Instance Graph".
+					  </li>
+
+				  </ul>
+			  </p>
+			  <p>
+				  While it is technically possible for advanced users to extend the BareMetal solution with kernel tracing for unsupported RTOSes, technical support for such porting projects is not included with regular $PNAME subscriptions or licenses.
+				  This can however be discussed on a case-by-case basis. Contact <a href="mailto:info@percepio.com">info@percepio.com</a> if you are interested.
+			  </p>
+
+
+			<subsection>
+			<header>Integration</header>
+			<text>
+
+			<p>
+				The TraceRecorder is implemented in C (C99) and provided with full source code under the Apache 2.0 license. This is found at <A HREF="https://github.com/Percepio/TraceRecorderSource">https://github.com/Percepio/TraceRecorderSource</A>.
+			</p>
+
+			<p>
+				To learn how to use TraceRecorder, see <A HREF="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later">Using TraceRecorder v4.6 or later</A>.
+			</p>
+
+			<p>
+				To integrate the TraceRecorder using the BareMetal option, follow these steps:	
+				<ol class="list">
+
+					<li>
+						Decide which <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Stream_ports">streamport</a> to use, i.e. where the TraceRecorder should store or transmit the data.
+						Predefined stream ports are found in the <b>/streamports</b> folder and the RingBuffer option is probably the easiest to start with.
+						This is a special streamport that only stores the trace to a ring-buffer intended for snapshot traces.
+					</li>
+					<li>
+					Copy the follow TraceRecorder code into your project: 
+<pre><code>/TraceRecorder/*.c
+/TraceRecorder/kernelports/BareMetal/*.c
+/TraceRecorder/streamports/&lt;SelectedStreamPort&gt;/*.c
+</code></pre>
+					</li>
+					
+					<li>
+						Add the following header files to your project. You can put all header files in the same directory if you prefer. <br/>
+						Make sure to <b>update the compiler's "include paths"</b> to ensure all header files are found.					
+<pre><code>/TraceRecorder/config/*.h
+/TraceRecorder/include/*.h
+/TraceRecorder/kernelports/BareMetal/config/*.h
+/TraceRecorder/kernelports/BareMetal/include/*.h
+/TraceRecorder/streamports/&lt;SelectedStreamPort&gt;/config/*.h
+/TraceRecorder/streamports/&lt;SelectedStreamPort&gt;/include/*.h
+</code></pre>
+				</li>
+										
+					<li>
+						In <b>/config/trcConfig.h</b>, set TRC_CFG_HARDWARE_PORT to a suitable <i>hardware port</i> for your device (see /include/trcDefines.h and /include/trcHardwarePort.h). 
+					</li>
+					
+					<li>
+						In <b>/config/trcConfig.h</b>, you also may need to include the processors header file. This is needed for the Arm Cortex-M port to allow TraceRecorder to access the CMSIS-Core definitions, but not all hardware ports need this.
+						Remove the line <code>#error "Trace Recorder: Please include your processor's header file here and remove this line."</code> and try building the project. If don't you get any errors, you don't need the include.
+						Otherwise include the main header file for your processor here, e.g. <code>#include "stm32f4xx.h"</code>.						.
+					</li>
+					
+					<li>
+						<p>
+							Call <code>xTraceEnable(TRC_START)</code> in your <code>main()</code> function to initialize and start the recorder.
+							This should be done after the initial hardware setup, but must be called before any other TraceRecorder functions.
+						</p>
+						<p>
+							Optionally, xTraceInitialize() can be used to initialize the trace system without starting the tracing. Then call xTraceEnable() at a later point to start the tracing.
+							Other start options for xTraceEnable are described in <b>trcRecorder.h</b>.
+						</p>
+					</li>
+									
+				</ol>
+			</p>
+			<p>
+				See <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___TraceRecorder_API">TraceRecorder API</a> for pointers to the TraceRecorder code documentation.
+			</p>
+
+		</text>
+		</subsection>			
+		
+    </text>
+    </section>
+
+  </body>
+</page>

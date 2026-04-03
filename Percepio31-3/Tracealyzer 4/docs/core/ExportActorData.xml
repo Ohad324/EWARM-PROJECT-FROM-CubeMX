@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Export Actor Data</title>
+  <keywords>
+    <keyword>export</keyword>
+    <keyword>actors</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Actor data exporter will Export all information from the selected actors to a text file.
+          This allows you to either view the data offline or import it to a different tool.
+        </p>
+
+        <p>
+          <A HREF="img/Export Actor Data.png" target="$IMAGETARGET">
+            <img src="img/Export Actor Data.png" border="0" />
+          </A>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

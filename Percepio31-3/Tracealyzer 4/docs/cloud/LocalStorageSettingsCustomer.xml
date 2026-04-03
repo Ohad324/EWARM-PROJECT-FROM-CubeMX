@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Local Storage Settings</title>
+  <keywords>
+    <keyword>alert</keyword>
+    <keyword>dev</keyword>
+    <keyword>devalert</keyword>
+    <keyword>cloud</keyword>
+    <keyword>trace</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          All settings for local storage.
+        </p>
+
+        <!--<p>
+          <A HREF="img/JLinkSettings.png" target="$IMAGETARGET">
+            <img src="img/JLinkSettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>-->
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Heap">
+      <KernelService name="malloc" operation="AllocateMemory" parameters="NumericParameterOnly">
+        <Parameter name="size" format="{0}"/>
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+      </KernelService>
+      <KernelService name="free" operation="FreeMemory" parameters="NumericParameterOnly">
+        <Parameter name="ptr" format="0x{0:X8}"/>
+        <ReturnValue name="size" format=" released {0} bytes"/>
+      </KernelService>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="Task" type="Actor" />
+    <ObjectClass name="Task Group" type="ActorGroup" />
+
+    <ObjectClass name="ISR" type="Actor" />
+    <ObjectClass name="ISR Group" type="ActorGroup" />
+
+    <ObjectClass name="Mutex" type="Mutex" />
+    <ObjectClass name="Semaphore" type="Semaphore" />
+    <ObjectClass name="Timer" type="Other" />
+    <ObjectClass name="Message Queue" type="Queue" />
+    <ObjectClass name="Heap" type="Heap" options="NoIpcGraph" />
+  </ObjectClasses>
+</TargetPlatform>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<component_viewer schemaVersion="0.1" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="Component_Viewer.xsd">
+
+<component name="EventRecorder" version="1.0.0"/>       <!--name and version of the component-->
+  <events>
+    <group name="STDIO">
+      <component name="C Standard I/O" brief="STDIO" no="0xFE" info="C Standard I/O Events"/>
+    </group>
+    <event id="0xFE00+0x00" level="op" property="stdout" value="%x[(uint8_t)val1],%x[(uint8_t)(val1 &gt;&gt; 8)],%x[(uint8_t)(val1 &gt;&gt; 16)],%x[(uint8_t)(val1 &gt;&gt; 24)],%x[(uint8_t)val2],%x[(uint8_t)(val2 &gt;&gt; 8)],%x[(uint8_t)(val2 &gt;&gt; 16)],%x[(uint8_t)(val2 &gt;&gt; 24)]" info="stdout as HEX."/>
+  </events>
+</component_viewer>

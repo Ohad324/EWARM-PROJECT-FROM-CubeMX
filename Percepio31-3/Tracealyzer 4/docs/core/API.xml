@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>API Connection Monitor</title>
+  <keywords>
+    <keyword>API</keyword>
+    <keyword>connection</keyword>
+    <keyword>monitor</keyword>
+    <keyword>eclipse</keyword>
+    <keyword>partner</keyword>
+    <keyword>snapshots</keyword>
+    <keyword>plugin</keyword>
+    <keyword>plug-in</keyword>
+    <keyword>live</keyword>
+    <keyword>trace</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+					The API Connection Monitor shows the current status of connections to the $PNAME API, which allow other tools to communicate with $PNAME.<br/>
+          This is for instance used by the "Percepio Trace Exporter" plugin for Eclipse (found in the Eclipse marketplace) and for Atmel Studio 7 (found in the Microchip Gallery).
+        </p>
+        <p>
+          <A HREF="img/APIMonitor.png" target="$IMAGETARGET">
+            <img src="img/APIMonitor.png" border="0" />
+          </A>
+        </p>
+        <p>
+          When the monitor is running, a status icon will be shown at the bottom right corner of the main $PNAME window.
+          The color is green if connected, yellow if trying to connect, and red if there are problems with the connection.
+        </p>
+        <p>
+          If using our Eclipse  or Atmel Studio plugin, it is possible to request a snapshot from the target directly, provided it is possible to do inside Eclipse or Atmel Studio.
+        </p>
+        <p>
+					The $PNAME API also allows for tool partners to integrate with $PNAME. Details can be provided on request.
+				</p>
+      </text>
+    </section>
+  </body>
+</page>

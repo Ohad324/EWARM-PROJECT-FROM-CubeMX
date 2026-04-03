@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>I/O Intensity</title>
+  <keywords>
+    <keyword>io</keyword>
+    <keyword>channel</keyword>
+    <keyword>socket</keyword>
+    <keyword>middleware</keyword>
+    <keyword>usb</keyword>
+    <keyword>tcp</keyword>
+    <keyword>udp</keyword>
+    <keyword>graph</keyword>
+    <keyword>send</keyword>
+    <keyword>sent</keyword>
+    <keyword>received</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+		
+		<p>
+		  The <i>I/O Intensity</i> view shows the amount of data sent or received on a particular I/O Channel object, per time interval. 
+		  An <i>I/O Channel</i> is a traced object corresponding to a system-level input or output.
+		  Note that only some RTOS integrations provide I/O events, e.g. the Keil RTX5 integration may produce I/O events if tracing the Keil TCP stack. All the TCP sockets are then recognized as I/O channels.
+		</p>
+		  
+        <p>
+          <A HREF="img/IO Channel Graph.png" target="$IMAGETARGET">
+            <img src="img/IO Channel Graph.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+		  
+		<p>  
+		  A histogram is displayed over the timeline (X axis), with a fixed number of bars each representing a fraction of the current view port.
+		  The height (Y axis) of the bars shows the total number of bytes sent or received in each time interval. Double-clicking on any of the bars in the I/O Intensity view will show the corresponding time interval in the Trace View (and also in other views associated to the "Detailed" view port).
+		</p>
+		  
+		<p>
+		  The display depends on two filters, as well as a Resolution setting. The "Send/Receive" filter in found the window menu, and in the right-side panel you can select which I/O Channel objects to include. 		  
+		</p>
+		  
+		<p>
+		  The resolution (i.e. number of bars) can be set in the menu. For instance, if selecting Resolution "High (100)", and the zoom level is 1 second, it will be divided into 100 intervals of 10 ms each.
+        </p>
+		  
+      </text>
+    </section>
+  </body>
+</page>

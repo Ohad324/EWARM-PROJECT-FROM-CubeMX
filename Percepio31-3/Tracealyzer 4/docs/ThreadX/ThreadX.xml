@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>ThreadX</title>
+  <body>
+	<section>
+	  <header>Introduction</header>
+	  <text>
+				
+			<p>			
+				The recommended $PNAME integration for ThreadX is using the Percepio TraceRecorder library, which allows for both snapshots and streaming trace.
+				The usage is documented in <A HREF="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later">Using TraceRecorder v4.6 or later</A>. 
+			</p>
+		
+			<subsection>
+			<header>Integration</header>
+			<text>
+				<p>
+					To integrate the TraceRecorder in a ThreadX project, follow the TraceRecorder integration guide at <a href="https://percepio.com/getstarted/latest/html/threadx.html">https://percepio.com/getstarted/latest/html/threadx.html/</a>.							
+				</p>
+								
+				<p>  
+					You find the TraceRecorder source code in the $PNAME installation directory under the ThreadX folder. 
+					You also find it on <A HREF="https://github.com/Percepio/TraceRecorderSource">https://github.com/Percepio/TraceRecorderSource</A>.          
+				</p>
+			
+				<p>
+					See <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___TraceRecorder_API">TraceRecorder API</a> for pointers to the TraceRecorder code documentation.
+				</p>
+
+			</text>
+			</subsection>		 
+
+	 </text>
+		  
+	 </section>
+  </body>
+</page>

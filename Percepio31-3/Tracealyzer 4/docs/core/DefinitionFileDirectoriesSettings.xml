@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Definition File Paths</title>
+  <keywords>
+    <keyword>Paths</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>Allows you to specify where $PNAME looks for definition files, such as platform definition files, extension files and elf files.</p>
+        <p>Supported macros are <br />
+          <ul>
+            <li>
+              <b>$$(TraceDir)</b> - The directory containing the current trace. If the trace is a directory type trace, this is the root level of the trace data.
+            </li>
+            <li>
+              <b>$$(CurrentProject)</b> - The directory containing the settings etc for the current project.
+            </li>
+            <li>
+              <b>$$(MyDocuments)</b> - The My Documents folder on Windows, ~ or ~/Documents on Linux (depending on distribution).
+            </li>
+            <li>
+              <b>$$(InstallDir)</b> - The directory where $PNAME is installed.
+						</li>
+            <li>
+              <b>$$(ENV:<i>&lt;environment variable&gt;</i>)</b> - Allows you to use an environment variable, such as TZ_CFG_PATH. Multiple paths can be specified by separating them with ; (Windows) or : (Linux).
+            </li>
+          </ul>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>Stack Usage</title>
+  <keywords>
+    <keyword>stack</keyword>
+    <keyword>usage</keyword>
+    <keyword>unused</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+		  <p>
+			  The Stack Usage view shows the remaining stack space of each task, which allows for optimizing the memory usage and for reducing the risk of occational stack overflows.
+		  </p>
+		  <p>
+			  Note that this feature is only available for some target platforms. Check for a "Stack Usage" section in the platform-specific documentation under <i>Creating and Loading Traces/[YourTargetPlatform]</i> to learn more.
+			  In case this is not available, the Stack Usage analysis is not yet supported for your target platform.
+		  </p>
+
+        <p>
+          <A HREF="img/Unused Stack.png" target="$IMAGETARGET">
+            <img src="img/Unused Stack.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+      </text>
+    </section>
+  </body>
+</page>

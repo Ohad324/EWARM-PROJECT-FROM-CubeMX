@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>AWS Trace Summary</title>
+  <keywords>
+    <keyword>amazon</keyword>
+    <keyword>web</keyword>
+    <keyword>services</keyword>
+    <keyword>aws</keyword>
+    <keyword>cloud</keyword>
+    <keyword>trace</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view is a summary for AWS traces
+        </p>
+
+        <!--<p>
+          <A HREF="img/JLinkSettings.png" target="$IMAGETARGET">
+            <img src="img/JLinkSettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>-->
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,238 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<CodeTables>
+  <EventCodeTable>
+    <!-- Queue -->
+    <Event code="0x18" service="Queue/xQueueCreate" class="0" status="StatusOK" />
+    <Event code="0x40" service="Queue/xQueueCreate" class="0" status="StatusError" />
+    <Event code="0x20" service="Queue/xQueueSend" class="0" status="StatusOK" />
+    <Event code="0x70" service="Queue/xQueueSend" class="0" status="StatusBlocks" />
+    <Event code="0x48" service="Queue/xQueueSend" class="0" status="StatusTimeout" />
+    <Event code="0x25" service="Queue/xQueueSendToFront" class="0" status="StatusOK" />
+    <Event code="0x75" service="Queue/xQueueSendToFront" class="0" status="StatusBlocks" />
+    <Event code="0x4D" service="Queue/xQueueSendToFront" class="0" status="StatusTimeout" />
+    <Event code="0x28" service="Queue/xQueueReceive" class="0" status="StatusOK" />
+    <Event code="0x68" service="Queue/xQueueReceive" class="0" status="StatusBlocks" />
+    <Event code="0x50" service="Queue/xQueueReceive" class="0" status="StatusTimeout" />
+    <Event code="0x30" service="Queue/xQueueSendFromISR" class="0" status="StatusOK" />
+    <Event code="0x58" service="Queue/xQueueSendFromISR" class="0" status="StatusTimeout" />
+    <Event code="0x35" service="Queue/xQueueSendToFrontFromISR" class="0" status="StatusOK" />
+    <Event code="0x5D" service="Queue/xQueueSendToFrontFromISR" class="0" status="StatusTimeout" />
+    <Event code="0x38" service="Queue/xQueueReceiveFromISR" class="0" status="StatusOK" />
+    <Event code="0x60" service="Queue/xQueueReceiveFromISR" class="0" status="StatusTimeout" />
+    <Event code="0x78" service="Queue/xQueuePeek" class="0" status="StatusOK" />
+    <Event code="0xDC" service="Queue/xQueuePeek" class="0" status="StatusBlocks" />
+    <Event code="0xDF" service="Queue/xQueuePeek" class="0" status="StatusTimeout" />
+    <Event code="0x80" service="Queue/vQueueDelete" class="0" status="StatusOK" />
+
+    <!-- Semaphore -->
+    <Event code="0x19" service="Semaphore/xSemaphoreCreate" class="1" status="StatusOK" />
+    <Event code="0x41" service="Semaphore/xSemaphoreCreate" class="1" status="StatusError" />
+    <Event code="0x21" service="Semaphore/xSemaphoreGive" class="1" status="StatusOK" />
+    <Event code="0x71" service="Semaphore/xSemaphoreGive" class="1" status="StatusBlocks" />
+    <Event code="0x49" service="Semaphore/xSemaphoreGive" class="1" status="StatusTimeout" />
+    <Event code="0x29" service="Semaphore/xSemaphoreTake" class="1" status="StatusOK" />
+    <Event code="0x69" service="Semaphore/xSemaphoreTake" class="1" status="StatusBlocks" />
+    <Event code="0x51" service="Semaphore/xSemaphoreTake" class="1" status="StatusTimeout" />
+    <Event code="0x31" service="Semaphore/xSemaphoreGiveFromISR" class="1" status="StatusOK" />
+    <Event code="0x59" service="Semaphore/xSemaphoreGiveFromISR" class="1" status="StatusTimeout" />
+    <Event code="0x39" service="Semaphore/xSemaphoreTakeFromISR" class="1" status="StatusOK" />
+    <Event code="0x61" service="Semaphore/xSemaphoreTakeFromISR" class="1" status="StatusTimeout" />
+    <Event code="0x79" service="Semaphore/xQueuePeek" class="1" status="StatusOK" />
+    <Event code="0xDD" service="Semaphore/xQueuePeek" class="1" status="StatusBlocks" />
+    <Event code="0xE0" service="Semaphore/xQueuePeek" class="1" status="StatusTimeout" />
+    <Event code="0x81" service="Semaphore/vSemaphoreDelete" class="1" status="StatusOK" />
+
+    <!-- Mutex -->
+    <Event code="0x1A" service="Mutex/xSemaphoreCreateMutex" class="2" status="StatusOK" />
+    <Event code="0x42" service="Mutex/xSemaphoreCreateMutex" class="2" status="StatusError" />
+    <Event code="0x22" service="Mutex/xSemaphoreGive" class="2" status="StatusOK" />
+    <Event code="0x72" service="Mutex/xSemaphoreGive" class="2" status="StatusBlocks" />
+    <Event code="0x4A" service="Mutex/xSemaphoreGive" class="2" status="StatusTimeout" />
+    <Event code="0x2A" service="Mutex/xSemaphoreTake" class="2" status="StatusOK" />
+    <Event code="0x6A" service="Mutex/xSemaphoreTake" class="2" status="StatusBlocks" />
+    <Event code="0x52" service="Mutex/xSemaphoreTake" class="2" status="StatusTimeout" />
+    <Event code="0x32" service="Mutex/xSemaphoreGiveFromISR" class="2" status="StatusOK" />
+    <Event code="0x5A" service="Mutex/xSemaphoreGiveFromISR" class="2" status="StatusTimeout" />
+    <Event code="0x3A" service="Mutex/xSemaphoreTakeFromISR" class="2" status="StatusOK" />
+    <Event code="0x62" service="Mutex/xSemaphoreTakeFromISR" class="2" status="StatusTimeout" />
+    <Event code="0x7A" service="Mutex/xQueuePeek" class="2" status="StatusOK" />
+    <Event code="0xDE" service="Mutex/xQueuePeek" class="2" status="StatusBlocks" />
+    <Event code="0xE1" service="Mutex/xQueuePeek" class="2" status="StatusTimeout" />
+    <Event code="0x82" service="Mutex/vSemaphoreDelete" class="2" status="StatusOK" />
+
+    <!-- Task -->
+    <Event code="0x1B" service="Task/xTaskCreate" class="3" status="StatusOK" />
+    <Event code="0x43" service="Task/xTaskCreate" class="3" status="StatusError" />
+    <Event code="0x88" service="Task/vTaskDelayUntil" status="StatusOK" TSOffs="1" TSSize="1" />
+    <Event code="0x89" service="Task/vTaskDelay" status="StatusOK" TSOffs="1" TSSize="1" />
+    <Event code="0x8A" service="Task/vTaskSuspend" class="3" status="StatusOK" />
+    <Event code="0x8B" service="Task/vTaskResume" class="3" status="StatusOK" />
+    <Event code="0x8C" service="Task/vTaskResumeFromISR" class="3" status="StatusOK" />
+    <Event code="0x83" service="Task/vTaskDelete" class="3" status="StatusOK" />
+
+    <!-- Misc -->
+    <Event code="0x00" type="NullEvent" />
+    <Event code="0x01" type="XPS" />
+    <Event code="0x02" type="TaskReady" />
+    <Event code="0x03" type="NewTime"					TSOffs="1"	TSSize="1" />
+    <Event code="0x04" type="ISRBegin" />
+    <Event code="0x05" type="ISRResume" />
+    <Event code="0x06" type="TSBegin" />
+    <Event code="0x07" type="TSResume" />
+    <Event code="0x8D" type="TaskPrioritySet"	class="3" status="StatusOK" service="Task/vTaskPrioritySet" TSOffs="3"	TSSize="1" />
+    <Event code="0x8E" type="TaskPriorityInherit"		TSOffs="3"	TSSize="1" />
+    <Event code="0x8F" type="TaskPriorityDisinherit"	TSOffs="3"	TSSize="1" />
+    <Event code="0xA8" type="XTS8" />
+    <Event code="0xA9" type="XTS16" />
+    <Event code="0xAC" type="LowPowerBegin" />
+    <Event code="0xAD" type="LowPowerEnd" />
+    <Event code="0xAE" type="XID" />
+    <Event code="0xAF" type="XTS16L" />
+
+    <Event code="0x08" type="ObjClose_Name"	class="0" />
+    <Event code="0x09" type="ObjClose_Name"	class="1" />
+    <Event code="0x0A" type="ObjClose_Name"	class="2" />
+    <Event code="0x0B" type="ObjClose_Name"	class="3" />
+    <Event code="0x0C" type="ObjClose_Name"	class="4" />
+    <Event code="0x0D" type="ObjClose_Name"	class="5" />
+    <Event code="0x0E" type="ObjClose_Name"	class="6" />
+    <Event code="0xE4" type="ObjClose_Name"	class="7" />
+    <Event code="0xE5" type="ObjClose_Name"	class="8" />
+
+    <Event code="0x10" type="ObjClose_Prop"	class="0" />
+    <Event code="0x11" type="ObjClose_Prop"	class="1" />
+    <Event code="0x12" type="ObjClose_Prop"	class="2" />
+    <Event code="0x13" type="ObjClose_Prop"	class="3" />
+    <Event code="0x14" type="ObjClose_Prop"	class="4" />
+    <Event code="0x15" type="ObjClose_Prop"	class="5" />
+    <Event code="0x16" type="ObjClose_Prop"	class="6" />
+    <Event code="0xE6" type="ObjClose_Prop"	class="7" />
+    <Event code="0xE7" type="ObjClose_Prop"	class="8" />
+
+    <Event code="0x98" type="UserEvent"		size="1"	TSOffs="1"	TSSize="1" />
+    <Event code="0x99" type="UserEvent"		size="2"	TSOffs="1"	TSSize="1" />
+    <Event code="0x9A" type="UserEvent"		size="3"	TSOffs="1"	TSSize="1" />
+    <Event code="0x9B" type="UserEvent"		size="4"	TSOffs="1"	TSSize="1" />
+    <Event code="0x9C" type="UserEvent"		size="5"	TSOffs="1"	TSSize="1" />
+    <Event code="0x9D" type="UserEvent"		size="6"	TSOffs="1"	TSSize="1" />
+    <Event code="0x9E" type="UserEvent"		size="7"	TSOffs="1"	TSSize="1" />
+    <Event code="0x9F" type="UserEvent"		size="8"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA0" type="UserEvent"		size="9"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA1" type="UserEvent"		size="10"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA2" type="UserEvent"		size="11"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA3" type="UserEvent"		size="12"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA4" type="UserEvent"		size="13"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA5" type="UserEvent"		size="14"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA6" type="UserEvent"		size="15"	TSOffs="1"	TSSize="1" />
+    <Event code="0xA7" type="UserEvent"		size="16"	TSOffs="1"	TSSize="1" />
+
+    <Event code="0xB0" service="Timer/xTimerCreate" class="5" status="StatusOK" />
+    <Event code="0xB1" service="Timer/xTimerStart" class="5" status="StatusOK"  TSOffs="3"	TSSize="1"/>
+    <Event code="0xB2" service="Timer/xTimerReset" class="5" status="StatusOK"  TSOffs="3"	TSSize="1"/>
+    <Event code="0xB3" service="Timer/xTimerStop" class="5" status="StatusOK"  TSOffs="3"	TSSize="1"/>
+    <Event code="0xB4" service="Timer/xTimerChangePeriod" class="5" status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xB5" service="Timer/xTimerDelete" class="5" status="StatusOK" />
+    <Event code="0xB6" service="Timer/xTimerStartFromISR" class="5" status="StatusOK" TSOffs="3"	TSSize="1" />
+    <Event code="0xB7" service="Timer/xTimerResetFromISR" class="5" status="StatusOK" TSOffs="3"	TSSize="1" />
+    <Event code="0xB8" service="Timer/xTimerStopFromISR" class="5" status="StatusOK"  TSOffs="3"	TSSize="1" />
+
+    <Event code="0xB9" service="Timer/xTimerCreate" class="5" status="StatusError" />
+    <Event code="0xBA" service="Timer/xTimerStart" class="5" status="StatusError" TSOffs="3"	TSSize="1" />
+    <Event code="0xBB" service="Timer/xTimerReset" class="5" status="StatusError" TSOffs="3"	TSSize="1" />
+    <Event code="0xBC" service="Timer/xTimerStop" class="5" status="StatusError" TSOffs="3"	TSSize="1" />
+    <Event code="0xBD" service="Timer/xTimerChangePeriod" class="5" status="StatusError" TSOffs="3"	TSSize="1"/>
+    <Event code="0xBE" service="Timer/xTimerDelete" class="5" status="StatusError" />
+    <Event code="0xBF" service="Timer/xTimerStartFromISR" class="5" status="StatusError" />
+    <Event code="0xC0" service="Timer/xTimerResetFromISR" class="5" status="StatusError" />
+    <Event code="0xC1" service="Timer/xTimerStopFromISR" class="5" status="StatusError" />
+
+    <Event code="0xDB" service="Timer/Timer Callback" class="5" status="StatusOK" />
+
+    <Event code="0xC2" service="EventGroup/xEventGroupCreate" class="6" status="StatusOK" TSOffs="2"	TSSize="2"/>
+    <Event code="0xC3" service="EventGroup/xEventGroupCreate" class="6" status="StatusError" TSOffs="2"	TSSize="2"/>
+    <Event code="0xC4" service="EventGroup/xEventGroupSync" class="6" status="StatusBlocks" TSOffs="3"	TSSize="1"/>
+    <Event code="0xC5" service="EventGroup/xEventGroupSync" class="6" status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xC6" service="EventGroup/xEventGroupWaitBits" class="6" status="StatusBlocks" TSOffs="3"	TSSize="1"/>
+    <Event code="0xC7" service="EventGroup/xEventGroupWaitBits" class="6" status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xC8" service="EventGroup/xEventGroupClearBits" class="6" status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xC9" service="EventGroup/xEventGroupClearBitsFromISR" class="6" status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xCA" service="EventGroup/xEventGroupSetBits" class="6" status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xCB" service="EventGroup/xEventGroupDelete" class="6" status="StatusOK" TSOffs="2"	TSSize="2"/>
+    <Event code="0xCC" service="EventGroup/xEventGroupSync" class="6" status="StatusTimeout" TSOffs="3"	TSSize="1"/>
+    <Event code="0xCD" service="EventGroup/xEventGroupWaitBits" class="6" status="StatusTimeout" TSOffs="3"	TSSize="1"/>
+    <Event code="0xCE" service="EventGroup/xEventGroupSetBitsFromISR" class="6" status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xCF" service="EventGroup/xEventGroupSetBitsFromISR" class="6" status="StatusError" TSOffs="3"	TSSize="1"/>
+
+    <Event code="0x90" service="Timer/xTimerPendFunctionCall" class="5" status="StatusOK"/>
+    <Event code="0x91" service="Timer/xTimerPendFunctionCallFromISR" class="5" status="StatusOK"/>
+    <Event code="0x92" service="Timer/xTimerPendFunctionCall" class="5" status="StatusError"/>
+    <Event code="0x93" service="Timer/xTimerPendFunctionCallFromISR" class="5" status="StatusError"/>
+
+    <Event code="0x94" type="MallocSize" service="Heap/malloc" status="StatusOK" TSOffs="1"	TSSize="1"/>
+    <Event code="0x95" type="MallocAddr" service="Heap/malloc" status="StatusOK"/>
+    <Event code="0x96" type="FreeSize" service="Heap/free" status="StatusOK" TSOffs="1"	TSSize="1"/>
+    <Event code="0x97" type="FreeAddr" service="Heap/free" status="StatusOK"/>
+
+    <Event code="0xE8" type="MallocSize" service="Heap/malloc" status="StatusTimeout" TSOffs="1"	TSSize="1"/>
+    <Event code="0xE9" type="MallocAddr" service="Heap/malloc" status="StatusTimeout"/>
+    
+    <Event code="0xEA" type="UnusedStack"	TSOffs="3"	TSSize="1" />
+
+    <Event code="0xD0" type="TaskInstanceFinishedNextKSE" class="3" TSOffs="3"	TSSize="1"/>
+    <Event code="0xD1" type="TaskInstanceFinishedDirect" class="3" TSOffs="3"	TSSize="1"/>
+
+    <Event code="0xD2"	service="TaskNotify/xTaskNotify"				class="3"	status="StatusOK" TSOffs="2"	TSSize="2"/>
+    <Event code="0xD3"	service="TaskNotify/ulTaskNotifyTake"			class="3"	status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xD4"	service="TaskNotify/ulTaskNotifyTake"			class="3"	status="StatusBlocks" TSOffs="3"	TSSize="1"/>
+    <Event code="0xD5"	service="TaskNotify/ulTaskNotifyTake"	class="3"	status="StatusTimeout" TSOffs="3"	TSSize="1"/>
+    <Event code="0xD6"	service="TaskNotify/xTaskNotifyWait"				class="3"	status="StatusOK" TSOffs="3"	TSSize="1"/>
+    <Event code="0xD7"	service="TaskNotify/xTaskNotifyWait"		class="3"	status="StatusBlocks" TSOffs="3"	TSSize="1"/>
+    <Event code="0xD8"	service="TaskNotify/xTaskNotifyWait"				class="3"	status="StatusTimeout" TSOffs="3"	TSSize="1"/>
+    <Event code="0xD9"	service="TaskNotify/xTaskNotifyFromISR"			class="3"	status="StatusOK" TSOffs="2"	TSSize="2"/>
+    <Event code="0xDA"	service="TaskNotify/vTaskNotifyGiveFromISR"				class="3"	status="StatusOK" TSOffs="2"	TSSize="2"/>
+
+    <Event code="0x1C" service="StreamBuffer/xStreamBufferCreate" class="7" status="StatusOK" />
+    <Event code="0x44" service="StreamBuffer/xStreamBufferCreate" class="7" status="StatusError" />
+    <Event code="0x84" service="StreamBuffer/vStreamBufferDelete" class="7" status="StatusOK" />
+    <Event code="0x23" service="StreamBuffer/xStreamBufferSend" class="7" status="StatusOK" />
+    <Event code="0x73" service="StreamBuffer/xStreamBufferSend" class="7" status="StatusBlocks" />
+    <Event code="0x4B" service="StreamBuffer/xStreamBufferSend" class="7" status="StatusTimeout" />
+    <Event code="0x2B" service="StreamBuffer/xStreamBufferReceive" class="7" status="StatusOK" />
+    <Event code="0x6B" service="StreamBuffer/xStreamBufferReceive" class="7" status="StatusBlocks" />
+    <Event code="0x53" service="StreamBuffer/xStreamBufferReceive" class="7" status="StatusTimeout" />
+    <Event code="0x33" service="StreamBuffer/xStreamBufferSendFromISR" class="7" status="StatusOK" />
+    <Event code="0x5B" service="StreamBuffer/xStreamBufferSendFromISR" class="7" status="StatusTimeout" />
+    <Event code="0x3B" service="StreamBuffer/xStreamBufferReceiveFromISR" class="7" status="StatusOK" />
+    <Event code="0x63" service="StreamBuffer/xStreamBufferReceiveFromISR" class="7" status="StatusTimeout" />
+    <Event code="0xE2" service="StreamBuffer/xStreamBufferReset" class="7" status="StatusOK" />
+
+    <Event code="0x1D" service="MessageBuffer/xMessageBufferCreate" class="8" status="StatusOK" />
+    <Event code="0x45" service="MessageBuffer/xMessageBufferCreate" class="8" status="StatusError" />
+    <Event code="0x85" service="MessageBuffer/vMessageBufferDelete" class="8" status="StatusOK" />
+    <Event code="0x24" service="MessageBuffer/xMessageBufferSend" class="8" status="StatusOK" />
+    <Event code="0x74" service="MessageBuffer/xMessageBufferSend" class="8" status="StatusBlocks" />
+    <Event code="0x4C" service="MessageBuffer/xMessageBufferSend" class="8" status="StatusTimeout" />
+    <Event code="0x2C" service="MessageBuffer/xMessageBufferReceive" class="8" status="StatusOK" />
+    <Event code="0x6C" service="MessageBuffer/xMessageBufferReceive" class="8" status="StatusBlocks" />
+    <Event code="0x54" service="MessageBuffer/xMessageBufferReceive" class="8" status="StatusTimeout" />
+    <Event code="0x34" service="MessageBuffer/xMessageBufferSendFromISR" class="8" status="StatusOK" />
+    <Event code="0x5C" service="MessageBuffer/xMessageBufferSendFromISR" class="8" status="StatusTimeout" />
+    <Event code="0x3C" service="MessageBuffer/xMessageBufferReceiveFromISR" class="8" status="StatusOK" />
+    <Event code="0x64" service="MessageBuffer/xMessageBufferReceiveFromISR" class="8" status="StatusTimeout" />
+    <Event code="0xE3" service="MessageBuffer/xMessageBufferReset" class="8" status="StatusOK" />
+
+  </EventCodeTable>
+
+  <ObjectClassTable>
+    <ObjectClass code="0" name="Queue" />
+    <ObjectClass code="1" name="Semaphore" />
+    <ObjectClass code="2" name="Mutex" />
+    <ObjectClass code="3" name="Task" />
+    <ObjectClass code="4" name="ISR" />
+    <ObjectClass code="5" name="Timer" />
+    <ObjectClass code="6" name="EventGroup" />
+    <ObjectClass code="7" name="StreamBuffer" />
+    <ObjectClass code="8" name="MessageBuffer" />
+  </ObjectClassTable>
+</CodeTables>

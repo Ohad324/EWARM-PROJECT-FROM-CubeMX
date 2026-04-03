@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Quick Plot</title>
+  <keywords>
+    <keyword>quick</keyword>
+    <keyword>plot</keyword>
+    <keyword>graph</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+		  <p>
+			  The Quick Plot shows a plot of selected fields from Raw Events, such as parameters or return values from Linux Syscall events.
+			  This is used by right-clicking on a Raw Event in the Trace View or in the Event Log. Then select "Add to Quickplot" and the field to include.
+		  </p>
+		  <p>
+			  Raw Events are enabled in the main filter under <b>Raw Data Event Channels</b> and there is also a separate "Raw Events" filter in the Event Log.
+			  You may also need to enable support for Raw Events in the Settings (File -&gt; Setting -&gt; Project Settings -&gt; Performance Settings -&gt; Include Raw Events in Trace).
+		  </p>
+		  
+        <p>
+          <A HREF="img/Quickplot.png" target="$IMAGETARGET">
+            <img src="img/Quickplot.png" width="800" border="0" />
+          </A>
+        </p>
+
+        <!--<p>
+          The height of each bar, or bar section, shows the number of migrations within the given interval.
+        </p>-->
+      </text>
+    </section>
+  </body>
+</page>

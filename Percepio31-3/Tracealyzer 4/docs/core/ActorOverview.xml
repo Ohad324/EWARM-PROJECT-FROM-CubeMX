@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Actor Overview</title>
+  <keywords>
+    <keyword>actors</keyword>
+    <keyword>tasks</keyword>
+    <keyword>overview</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>The Actor Overview displays a listing of the instances for the selected actor, with timing metrics for each instance. 
+		This view is opened if you double-click on an actor (e.g. a thread, task or ISR) in the Communication Flow graph.
+	    </p>
+		<p>
+			Note: When double-clicking on an actor in most other views, <A HREF="InstanceDetails.html">Instance Details</A> is opened instead. This includes the same information and a lot more.
+		</p>
+
+        <p>
+          <A HREF="img/Actor Overview.png" target="$IMAGETARGET">
+            <img src="img/Actor Overview.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Navigation Bar</title>
+  <keywords>
+    <keyword>navigate</keyword>
+    <keyword>navigation</keyword>
+    <keyword>views</keyword>
+    <keyword>tools</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Navigation Bar is by default docked to the left, and shows a list of available views.
+        </p>
+        <p>
+          The list is normally ordered based on how much time is spent with each view open, thus keeping the most used views easily accessible. Note the <A HREF="AllViews.html">All Views</A> option, that gives an overview of all views and features in $PNAME.
+        </p>
+
+        <p>
+          <A HREF="img/Navigation.png" target="$IMAGETARGET">
+            <img src="img/Navigation.png" border="0" />
+          </A>
+        </p>
+
+        <p>
+          To configure what is displayed on the Navigation Bar, see the <a href="NavigationBarSettings.html">Navigation Bar Settings</a> (found under File -> Settings -> Navigation Bar Settings).
+        </p>
+
+      </text>
+    </section>
+  </body>
+</page>

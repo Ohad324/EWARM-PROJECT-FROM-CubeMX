@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>On Time RTOS-32</title>
+  <keywords>
+    <keyword>recorder</keyword>
+    <keyword>On Time</keyword>
+	<keyword>RTOS-32</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Introduction</header>
+      <text>
+        <p>
+          The Trace Exporter library is the target system component of $PNAME. The exporter integrates with the On Time RTOS-32 Debug kernel.
+        </p>
+        <p>
+          <A HREF="img/o_system_overview.png" target ="_blank">
+            <img src="img/o_system_overview.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+		<p>
+		  An example trace can be found in the <A HREF="$BINDIR/On Time RTOS-32">On Time RTOS-32</A> folder.
+        </p>
+		
+        <p>
+          The exporter library is provided in C source code, and is found in the <A HREF="$BINDIR/On Time RTOS-32">On Time RTOS-32</A> folder in the $PNAME installation directory.
+        </p>
+      </text>
+    </section>
+	
+    <section>
+      <header>Requirements</header>
+      <text>
+        <p>
+        <UL class="list">
+		  <LI>
+			A development PC running <b>Microsoft Windows 7 SP1</b> or newer, with .NET Framework 4.6.1 or later installed, or a PC running <b>Linux</b> with <A HREF="http://www.mono-project.com">Mono</A> installed (version 5.14 or later is recommended).
+		  </LI>
+          <LI>
+            A target system running the Debug kernel of RTOS-32.
+          </LI>
+          <LI>
+            The Trace Exporter. This is delivered as a C source code with $PNAME.
+          </LI>
+        </UL>
+          For detailed instructions on how to use the Trace Exporter, please refer to the comments in the source code files and the <i>readme.txt</i> file.
+          The directory of the Trace Exporter code can be easily found through the <i>Help</i> menu option <i>On Time RTOS-32 Trace Exporter</i>.
+        </p>
+      </text>
+    </section>  
+  </body>
+</page>

@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Application Warnings</title>
+  <keywords>
+    <keyword>application</keyword>
+    <keyword>warnings</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>This view is opened automatically on warnings from the $PNAME application, including warnings from TraceRecorder. It is not available in the main menu.</p>
+      </text>
+    </section>
+  </body>
+</page>

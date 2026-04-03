@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>ARM Keil Connection Settings</title>
+  <keywords>
+    <keyword>uvision</keyword>
+    <keyword>µvision</keyword>
+    <keyword>micro</keyword>
+    <keyword>vision</keyword>
+    <keyword>settings</keyword>
+    <keyword>keil</keyword>
+    <keyword>rtx5</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>These are the settings used for communicating with ARM Keil µVision</p>
+
+        <p>
+          <A HREF="img/uvsettings.png" target="$IMAGETARGET">
+            <img src="img/uvsettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          The default setup is to connect to an existing µVision instance, but $PNAME can also be configured to start a new Keil µVision instance for the trace session.
+          Simply change the <i>Connect Mode</i> setting to <i>Start new µVision instance</i> and make sure the <i>Keil µVision Path</i> is correct (default is C:\Keil_v5\UV4\UV4.exe).
+        </p>
+
+        <p>
+          If a different port is used in Keil µVision, make sure the matching port is used in $PNAME.
+        </p>
+
+        <p>
+          If logging of the UV SOCK communication is needed, set up the <i>Log Path</i>.
+          Default is to overwrite the log file for each instance, check <i>Log Path Append</i> to append to the log instead.
+        </p>
+
+        <p>
+          Streaming from Keil µVision will enter debug mode automatically if needed. It is possible to decide if debug mode should be exited when the streaming stops.
+        </p>
+
+        <p>
+          Here is more help to set up <a href="Recorder-KeilRTX.html">Keil µVision Recording</a>.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

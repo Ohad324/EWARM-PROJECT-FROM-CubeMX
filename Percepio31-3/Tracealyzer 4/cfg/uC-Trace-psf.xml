@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">
+      <KernelService name="OSQCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSQPost" operation="Enqueue" />
+      <KernelService name="OSQPend" operation="Dequeue" />
+      <KernelService name="OSQDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="OSSemCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSSemPost" operation="IncreaseSemaphore" />
+      <KernelService name="OSSemPend" operation="DecreaseSemaphore" />
+      <KernelService name="OSSemDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="OSMutexCreate" operation="Initialize" />
+      <KernelService name="OSMutexPost" operation="ReleaseMutex" />
+      <KernelService name="OSMutexPend" operation="LockMutex" />
+      <KernelService name="OSMutexDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Flags">
+      <KernelService name="OSFlagCreate" operation="Initialize" />
+      <KernelService name="OSFlagPost" operation="IncreaseSemaphore" />
+      <KernelService name="OSFlagPend" operation="DecreaseSemaphore" />
+      <KernelService name="OSFlagDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mem">
+      <KernelService name="OSMemCreate" operation="Initialize" />
+      <KernelService name="OSMemPut" operation="IncreaseSemaphore" />
+      <KernelService name="OSMemGet" operation="DecreaseSemaphore" />
+      <KernelService name="OSMemDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="TaskSem">
+      <KernelService name="OSTaskSemCreate" operation="Initialize" />
+      <KernelService name="OSTaskSemPost" operation="IncreaseSemaphore" />
+      <KernelService name="OSTaskSemPend" operation="DecreaseSemaphore" />
+      <KernelService name="OSTaskSemDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="TaskQ">
+      <KernelService name="OSTaskQCreate" operation="Initialize" />
+      <KernelService name="OSTaskQPost" operation="Enqueue" />
+      <KernelService name="OSTaskQPend" operation="Dequeue" />
+      <KernelService name="OSTaskQDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Task">
+      <KernelService name="OSTaskCreate" operation="StartInstance" />
+      <KernelService name="OSTimeDlyHMSM" operation="" parameters="NumericParameterOnly" />
+      <KernelService name="OSTimeDly" operation="" parameters="NumericParameterOnly" />
+      <KernelService name="OSTaskSuspend" operation="" />
+      <KernelService name="OSTaskResume" operation="StartInstance" />
+      <KernelService name="OSTaskChangePrio" operation="" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSTaskDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+  </KernelServiceGroups>
+
+
+  <ObjectClasses>
+    <ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+    <ObjectClass name="Queue" type="Queue" />
+    <ObjectClass name="Semaphore" type="Semaphore" />
+    <ObjectClass name="Mutex" type="Mutex" />
+    <ObjectClass name="Flags" type="Semaphore" />
+    <ObjectClass name="Mem" type="Semaphore" />
+    <ObjectClass name="TaskSem" type="Semaphore" />
+    <ObjectClass name="TaskQ" type="Queue" />
+    <ObjectClass name="Task" type="Actor" />
+    <ObjectClass name="ISR" type="Actor" />
+    <ObjectClass name="Heap" type="Heap" options="Hidden, NoIpcGraph" />
+  </ObjectClasses>
+</TargetPlatform>

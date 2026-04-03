@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TaggedIntervalType>
+  <Label>Events Lost</Label>
+  <Brush type="sb" fg="40FF6060" />
+</TaggedIntervalType>

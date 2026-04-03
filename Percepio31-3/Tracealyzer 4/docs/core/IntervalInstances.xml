@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Intervals and State Machines</title>
+  <keywords>
+    <keyword>state</keyword>
+    <keyword>machine</keyword>
+    <keyword>interval</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view allows for defining <A HREF="IntervalStateIntroduction.html">Intervals and State Machines</A>, which allows for user-defined visualization of the recorded events in several views.
+        </p>
+
+        <p>
+          <A HREF ="img/intervals_and_state_machines.png" target ="_blank">
+            <img src="img/intervals_and_state_machines.png" border="0"/>
+          </A>
+        </p>
+
+        <p>
+          The view also lists all Intervals and States machines that have been activated. You can right-click these entries for the following options:
+          <ul>
+            <li>Statistics Report - Shows a statistics report focusing on the durations.</li>
+            <li>Show Timeline - Shows the states/intervals over time, much like a logic analyzer view.</li>
+            <li>Show Plot - Plots the durations of the states/intervals.</li>
+            <li>Create Inverted - Creates a new inverted data set. If the original data set is intervals from Event A to Event B, the inverted data set is the intervals from Event B to the next Event A.</li>
+            <li>Compute Overlap - Creates a new data set that is the intersection of two data sets</li>
+            <li>(Don't) Save Interval - If the interval should be saved between trace loading or not, default is to save them</li>
+            <li>Remove - Remove the interval immediately</li>
+          </ul>
+        </p>
+
+        <p>
+          <b>Predefined</b>
+        </p>
+        <p>
+          This opens the <i>Predefined States and Intervals</i>, where you can select from predefined definitions of known states and intervals in the trace.
+          You may activate these data sets to see additional information about objects that $PNAME is aware of.
+          For instance, if you are using a TCP stack supported by $PNAME, you can include TCP socket states this way.
+        </p>
+        <p>
+          <A HREF ="img/Predefined.png" target ="_blank">
+            <img src="img/Predefined.png" border="0"/>
+          </A>
+        </p>
+
+        <p>
+          <b>Custom State Machine</b>
+        </p>
+        <p>
+          This lets you define a custom state machine. There are two ways:
+        </p>
+        <p>
+          The simple option assumes the state transitions are logged as user events, on a user event channel specific for this purpose. All messages on this user event channel are assumed to be state transitions.
+        </p>
+        <p>
+          The advanced option lets you define a state machine based on any events that match a regular expression, including both user events and kernel events.
+        </p>
+        <p>
+          <A HREF ="img/New State Machine.png" target ="_blank">
+            <img src="img/New State Machine.png" border="0"/>
+          </A>
+        </p>
+
+
+        <p>
+          <b>Custom Intervals</b>
+        </p>
+        <p>
+          Select this option to open an editor for custom interval definitions. Begin with specifying a name for the interval, and then provide two rules for the beginning and end of the interval.
+          The first interval will begin at the first event matching <i>Interval Start</i>, and finish at the first following event matching <i>Interval End</i>.
+        </p>
+        <p>
+          If the matching event can happen on different Actors, it is also possible to only match a single one. The name is matched using <i>contains</i>, making it possible to set partial filters.
+          For the end point, either allow any Actor, match specific Actor, or match the Actor from the start point.
+        </p>
+        <p>
+          <A HREF ="img/Custom Intervals.png" target ="_blank">
+            <img src="img/Custom Intervals.png" border="0"/>
+          </A>
+        </p>
+        <p>
+          To check if the definition will actually generate any intervals, use the <i>Test</i> button. It might take a little while to do for a long trace, because it will read the whole trace until matches are found, or the trace ends.
+          When the definition is completed, use <i>Save</i> to save and apply to the loaded trace. This will show the interval in any open <a href="TraceView.html">Trace</a> view.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

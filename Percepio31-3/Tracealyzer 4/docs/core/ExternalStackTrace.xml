@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Asynchronous Stack Trace</title>
+  <keywords>
+    <keyword>external</keyword>
+    <keyword>asynchronous</keyword>
+    <keyword>stacks</keyword>
+    <keyword>traces</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view shows stack trace information from asynchronous data. It will show the current stack trace state at any given time.
+        </p>
+
+        <p>
+          <A HREF="img/External Stack Trace.png" target="$IMAGETARGET">
+            <img src="img/External Stack Trace.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          Default behavior is to reload the stack trace when selection or view area is updated. This can be changed in the View menu.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

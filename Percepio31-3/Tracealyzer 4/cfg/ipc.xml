@@ -1,0 +1,376 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 
+Tracealyzer for VxWorks Platform Extension
+Percepio AB, 2014
+
+A platform extension consists of three main parts, TargetPlatform, ObjectMap and EventMap.
+The latter defines how to parse the trace data, while TargetPlatform defines what services 
+and object types that exists in the traced software system.
+
+
+1. Defining Services
+
+1.1. KernelService - PlatformExtension/TargetPlatform/KernelServiceGroups/KernelServiceGroup/KernelService
+Defines what parameters and return values that are presented, with references to EventMap/Event.
+ 
+  Example: <KernelService name="ipc_send" operation="Enqueue"> <Parameter name="slot"/>  <ReturnValue/> </KernelService>
+ 
+  Attributes
+    - name:      The name of the service, e.g., ipc_send. Note that multiple events can point to the same Service name.
+    
+    - format:    The format string to use when displaying the parameter. For instance, format="0x{0:X8} gives hexademical formatting.     
+                 See http://msdn.microsoft.com/en-us/library/system.string.format.aspx for full reference.
+                 
+    - operation: The type of service. This can be:       
+                    - LockMutex 
+                    - ReleaseMutex
+                    - Enqueue (Writes to Queue-type objects)
+                    - Dequeue (Reads from Queue-type objects)
+                    - IncreaseSemaphore
+                    - DecreaseSemaphore 
+                    - MaximizeSemaphore 
+                    - MinimizeSemaphore 
+                    - OtherWrite
+                    - OtherRead 
+                    - Initialize
+                    - Deinitialize
+                    - StartInstance (operations that explicity trigger a task, e.g., taskResume)
+                    - Other (operations that does not match any of the above - no semantics in this case)
+  
+  
+1.1.1. Parameter - PlatformExtension/TargetPlatform/KernelServiceGroups/KernelServiceGroup/KernelService/Parameter
+Specifies what parameters to present and how to format each parameter.
+
+  Attributes  
+    - name:    The name of the parameter. Should match the name of the corresponding Event in EventMap.    
+    
+    - format:  The format string to use when displaying the parameter. See description in Service.  Not required.
+
+1.1.2. ReturnValue - PlatformExtension/TargetPlatform/KernelServiceGroups/KernelServiceGroup/KernelService/ReturnValue
+Specifies that the return value should be preseted and how to format it.
+
+  Attributes
+    - format:  The format string to use when displaying the return value. See description in Service. Not required.
+
+
+1.2. KernelServiceGroup - PlatformExtension/TargetPlatform/KernelServiceGroups/KernelServiceGroup
+Defines a Service Group, concisting of one or several Services.
+ 
+  Attributes
+    - name: The name of the service group, e.g., IPC. Typically the same name as the related Object Class, but can be anything.
+
+
+2. Defining Object Classes
+
+2.1. ObjectClasses - PlatformExtension/TargetPlatform/ObjectClasses
+The list of Object Classes (see below).
+
+2.1.1. ObjectClass - PlatformExtension/TargetPlatform/ObjectClasses/ObjectClass
+Defines a system-specific Object Class, i.e., a type of Objects. This can be e.g. "MsgQ" for VxWorks.
+
+  Attributes
+    - name:     The name of the Object Class. Should match the name of the corresponding entry in ObjectMap.  
+    
+    - type:     The general type of this Object Class. Should be one of the following:
+                    - Queue - a buffered FIFO message channel
+                    - Semaphore - binary or counting semaphore used for signaling between actors.
+                    - Mutex - a semaphore used to protect a shared resource.
+                    - Actor - a thread/task or interrupt handler.
+                    - ActorGroup - a group of actors, typically a process.
+                    - Other
+                    
+    - option:   "None" or "NoIpcGraph" (Not required). This allows for excluding objects from the Communication Flow graph. 
+
+2.2. ObjectMap - PlatformExtension/TargetPlatform/ObjectMap
+The list of Object Class mappings, i.e., between object types in the Event Map and the Object Classes defined in the target platform.
+
+2.2.1. Object - PlatformExtension/TargetPlatform/ObjectMap/Object
+A specific object mapping, i.e., between between object class in the Event Map and the Object Classes defined in the target platform.
+Typically there is a one-to-one mapping here, but multiple Object may refer to the same Object Class.
+
+Attributes
+    - class: Should match the class attribute in EventMap/Event (see below).          
+    
+    - format: The format string to use when displaying references to objects of this class. See description in Service.
+
+
+3. Mapping Events to Services
+
+EventMap - PlatformExtension/TargetPlatform/EventMap
+This provides the mapping between file-format specifics and the overall Target Platform description, i.e., how to parse the raw trace data.
+
+EventMap - PlatformExtension/TargetPlatform/EventMap/Event
+Defines a specific event, e.g., a certain event code/ID, and its parameters.
+
+  Attributes    
+    - name:     The event name. In Tracealyzer for VxWorks, you may use User Event names here, as displayed in Tracealyzer (e.g., User1234).        
+    
+    - service:  The path of the service, on the format "group/service", e.g., "IPC/ipc_send". Group is the Service Group of the specified Service.    
+    
+    - type:     Entry or Exit. Entry means that the event indicates the beginnning of the service, while Exit means that the event indicates a return from a service. 
+                This an required for potentially blocking services which have both an entry and exit event.
+    
+    - status:   The status of the service call that produces this event. Can be:
+                - Success:  The operation has completed sucessfully (with or without blocking)
+                - Detect:   The operation has begun but not finished (blocking or in progress)
+                - Timeout:  The operation returned an error code that indicated timeout
+                - Error:    The operation returned an error code that indicated an error (other than timeout).
+
+3.1.1. Parameter - PlatformExtension/TargetPlatform/EventMap/Event/Parameter
+Specifies a parameter of an Event. For potentially blocking services (Entry event + Exit event), the parameters should be stored in the Entry event, but it is recommended to 
+include all parameters also in the Exit event (at least references to Objects).
+
+  Attributes
+    - name:     The name of the parameter, used in KernelService/Parameter.
+    
+    - var:      This identifies the tracepoint parameter (variable) for LTTng (Linux). For other platforms, this should be equal to name. Is referenced by Condition/cvar.
+    
+    - class:    Specifies that the parameter is a Object reference by specifying the Object class (e.g., "IPC").         
+    
+    - offset:   The byte-offset of the data in the Event. If omitted, offset is assumed 0 byte.
+    
+    - size:     The number of bytes used by the data. If omitted, size is assumed 1 byte.
+    
+    - unsigned: Set to "true" if the data is an unsigned integer, or "false" if signed integer. If omitted, signed integer is assumed.
+    
+    - float:    Set to "true" if the data is a floating point value, or "false" if integer. If omitted, integer is assumed.
+    
+
+3.1.2. ReturnValue - PlatformExtension/TargetPlatform/EventMap/Event/ReturnValue
+Specifies that the Event contains a return value. Only applicable for events of type "Exit".
+
+    - offset:   The byte-offset of the data in the Event. If omitted, offset is assumed 0 byte.
+    - size:     The number of bytes used by the data. If omitted, size is assumed 1 byte.
+    - unsigned: Set to "true" if the data is an unsigned integer, or "false" if signed integer. If omitted, signed integer is assumed.
+    - float:    Set to "true" if the data is a floating point value, or "false" if integer. If omitted, integer is assumed.
+        
+3.1.3. Condition - PlatformExtension/TargetPlatform/EventMap/Event/Condition
+Allows for defining conditional attributes based on event data, e.g., to define the status attribute based on the return value.
+
+Example: <Condition cvar="@ReturnValue" cval="0" cop="lt;" target="status" value="Timeout"/>
+
+Attributes
+    - cvar:   The data to evaluate, a paremeter or return value. Refers to the "var" attribute. To reference a ReturnValue, use cvar="@ReturnValue".
+    - cval:   The value to compare with.
+    - cop:    The comparison operator. Can be:
+                - lt: less than (cvar < cval)
+                - le: less or equal (cvar <= cval)
+                - gt: greater than (cvar > cval)
+                - ge: greater or equal (cvar >= cval)
+                - eq: equal to (cvar == cval)
+                - ne: not equal (cvar != cval)                
+                
+    - target: The targeted attribute of the specified parameter/return value (e.g., "status").
+    - value:  The value to apply to the target attribute if the conditions is true (e.g., "Timeout")
+
+Note: Attributes are case-sensitive! -->
+
+
+<PlatformExtension>
+  <TargetPlatform>
+    <KernelServiceGroups>
+      <KernelServiceGroup name="IPC">
+
+        <KernelService name="ipc_send" operation="Enqueue">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_sendwait" operation="Enqueue">
+          <Parameter name="did" format="{0}" class="IPC" />
+          <Parameter name="sid" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_sendwait completed" operation="Dequeue">
+          <Parameter name="sid" format="{0}" class="IPC" />
+          <Parameter name="did" format="{0}" class="IPC" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_broadcast" operation="OtherWrite">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_distribute" operation="OtherWrite">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_package" operation="Enqueue">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_receive" operation="Dequeue">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_answer" operation="Enqueue">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_subscribe" operation="Enqueue">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+        <KernelService name="ipc_subcancel" operation="Enqueue">
+          <Parameter name="slot" format="{0}" class="IPC" />
+          <Parameter name="cmd" format="{0}" />
+          <ReturnValue format="{0}" />
+        </KernelService>
+
+      </KernelServiceGroup>
+    </KernelServiceGroups>
+
+    <ObjectClasses>
+      <ObjectClass name="IPC" type="Queue" />
+    </ObjectClasses>
+  </TargetPlatform>
+
+  <ObjectMap>
+    <Object class="IPC" format="Slot {0}" />
+  </ObjectMap>
+
+  <!--
+  Use this to format binary VxWorks User Events, based on EventMap/Event definition (name)
+  <UserEventMap>
+    <UserEvent name="user1000" channel="MyChannel" format="Byte0: {0}, Byte1: {1}, Byte2: {2}, Byte3: {3}"/>
+  </UserEventMap>
+  -->
+
+  <EventMap>
+    <Event name="user1101" service="IPC/ipc_send" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="2" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1121" service="IPC/ipc_send" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1102" service="IPC/ipc_sendwait" type="Entry" status="InstantSuccess">
+      <Parameter name="sid" var="sid" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="did" var="did" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="4" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1122" service="IPC/ipc_sendwait completed" type="Entry" status="InstantSuccess">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="sid" var="sid" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="did" var="did" offset="4" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1103" service="IPC/ipc_broadcast" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="2" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1123" service="IPC/ipc_broadcast" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1104" service="IPC/ipc_distribute" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="2" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1124" service="IPC/ipc_distribute" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1105" service="IPC/ipc_package" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="2" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1125" service="IPC/ipc_package" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1106" service="IPC/ipc_receive" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+    </Event>
+
+    <Event name="user1126" service="IPC/ipc_receive" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1107" service="IPC/ipc_answer" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="2" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1127" service="IPC/ipc_answer" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1108" service="IPC/ipc_subscribe" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="2" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1128" service="IPC/ipc_subscribe" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1109" service="IPC/ipc_subcancel" type="Entry" status="Detect">
+      <Parameter name="slot" var="slot" offset="0" size="2" unsigned="true" float="false" class="IPC" />
+      <Parameter name="cmd" var="cmd" offset="2" size="2" unsigned="true" float="false" />
+    </Event>
+
+    <Event name="user1129" service="IPC/ipc_subcancel" type="Exit" status="Success">
+      <ReturnValue offset="0" size="2" unsigned="false" float="false" />
+      <Parameter name="slot" var="slot" offset="2" size="2" unsigned="true" float="false" class="IPC" />
+      <Condition cvar="@ReturnValue" cval="0" cop="lt" target="status" value="Timeout" />
+    </Event>
+
+    <Event name="user1000" type="SystemTimeEvent" encoding="text"></Event>
+
+    <!--
+    Example of Formatted User Event (don't have a good example trace for this yet)
+    <Event name="user1000" type="UserEvent">
+      <Parameter name="Byte0" var="Byte0" offset="0"/>
+      <Parameter name="Byte1" var="Byte1" offset="1"/>
+      <Parameter name="Byte2" var="Byte2" offset="2"/>
+      <Parameter name="Byte3" var="Byte3" offset="3"/>
+    </Event>
+    -->
+
+  </EventMap>
+
+</PlatformExtension>
+
+
+<!--
+TOOD:
+- Add the remaining IPC events
+- Finish HandleTimeSyncEvent
+
+-->

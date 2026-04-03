@@ -1,0 +1,2297 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+	<title>Percepio TraceRecorder</title>
+	<keywords>
+		<keyword>recorder</keyword>
+		<keyword>streaming</keyword>
+		<keyword>snapshot</keyword>
+		<keyword>traces</keyword>
+		<keyword>tools</keyword>
+	</keywords>
+
+	<body>
+
+		<section>
+			<!-- Original version, keep this for Tracealyzer -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+			<header>Overview</header>
+			<text>
+				<p>
+					The Percepio TraceRecorder is an event tracing library designed for embedded software systems and the Percepio trace visualization tools.
+					The TraceRecorder library is implemented in C (C99) and provided with full source code under the Apache 2.0 license.
+				</p>
+				<p>
+					To trace RTOS kernel events, the TraceRecorder library is hooked in to the RTOS kernel and called on important events like context-switches and RTOS API calls.
+					These tracing calls are made using <i>trace hooks</i>, already available in supported RTOS kernels. When TraceRecorder is integrated, these trace hooks are automatically redefined to call TraceRecorder functions.
+				</p>
+				<p>
+					To get more informatiom, you may add additional events by calling the TraceRecorder library directly from your application code, such as logging debug messages and variable values with "User Events", state machine logging and detailed profiling using custom intervals and "runnable" tracing.
+				</p>
+
+				<p>
+					<A HREF ="img/system_overview.png" target ="_blank">
+						<img src="img/system_overview.png" width="$IMAGEWIDTH" border="0"></img>
+					</A>
+				</p>
+
+				<p>
+					The general steps for getting started with the TraceRecorder is to (1) adding the TraceRecorder code, (2) enabling the trace hooks in your RTOS kernel, and (3) calling the initialization function of the recorder library.
+					You may also need to configure the recorder library to match your processor and target connection.
+					Specific instructions for each RTOS is provided further down in this chapter.
+				</p>
+
+
+				<p>
+					<b>What can be traced?</b>
+					<br/>
+
+					<ul class="list">
+						<li>
+							<b>Task scheduling and RTOS API calls</b> are traced automatically using trace hooks in supported RTOS kernels. No additional instrumentation is needed to record such events.
+						</li>
+
+						<li>
+							<b>Interrupt service routines (ISRs)</b> can be traced by adding calls to <code>xTraceISRBegin()</code> and <code>xTraceISREnd()</code>
+							in your interrupt handlers. See the TraceRecorder ISR functions in <a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcISR.h">trcISR.h</a> for further details. These are included in the general public API, accessed by including <b>trcRecorder.h</b>.
+							Note: If ISR tracing is not used, the CPU time spent in ISRs will instead be attributed to the currently running task.
+						</li>
+						<li>
+							You may log custom <A HREF="UserEventIntroduction.html#User_Events___Introduction">User events</A> using the functions in the <A HREF="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcPrint.h">trcPrint API</A>.
+							These are included in the general public API, accessed by including <b>trcRecorder.h</b>.
+							User events can be used as debug messages to provide more information in $PNAME about what your code is doing.
+							Moreover, User Events allows for using several powerful $PNAME features, e.g. data plots, custom intervals and state machines.
+						</li>
+
+						<li>
+							$PNAME v4.7 also added support for <a href="#runnabletracing">runnable tracing</a>. Runnables is an automotive concept corresponding to top-level functions or "sub-tasks".
+							However, runnable tracing is applicable and useful in most systems, as it provides execution metrics for a specified section of code within a certain task.
+							For example, a task may have different behaviors depending on inputs or states, or have different phases or operations, like "read", "calculate", "write".
+							With runnable tracing you can see the individual execution times and also visualize the different "runnables" in the trace view, to better understand the system execution.
+						</li>
+
+						<li>
+							Custom intervals and states can also be traced using dedicated events, which is more efficient than using generic User Events. See <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___State_Machine_Tracing">State Machine Tracing</a>
+							and <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Interval_Tracing">Interval Tracing</a>. This way, the objects are created automatically and you don't need to define them in $PNAME.
+						</li>
+
+					</ul>
+				</p>
+
+				<p>
+					Note that each traced event typically adds a few microseconds to the execution time, so the execution times will be somewhat higher than without tracing enabled.
+					While this is usually a minor effect, adding trace calls to highly time-critical or very frequent ISRs can be problematic.
+					The ISR tracing support is mainly intended for debugging purposes, not for accurate profiling of ISR execution times in the microsecond range.
+				</p>
+
+
+			</text>
+		</section>
+
+
+		<section>
+
+			<!-- For Tracealyzer only -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+			
+			<header>Recording Setup and Control</header>
+			<text>
+				<p>
+					Once you have integrated TraceRecorder as described in the RTOS-specific section below, the TraceRecorder can be controlled from the $PNAME application.
+					This assuming that a two-way communication interface is used, such as a supported debug probe or a network connection.
+				</p>
+				<p>
+					To start the tracing, select "Record a Trace" on the welcome page or select "Open Live Stream Tool" in the "Trace" menu.
+				</p>
+
+				<p>
+					<table>
+						<tr>
+							<td>
+								<A HREF ="img/Record a Trace.png" target ="_blank">
+									<img src="img/Record a Trace.png" height="200" border="0"></img>
+								</A>
+							</td>
+							<td width="20px">
+							</td>
+							<td>
+								<A HREF ="img/Navigation Trace Buttons.png" target ="_blank">
+									<img src="img/Navigation Trace Buttons.png" height="200" border="0"></img>
+								</A>
+							</td>
+						</tr>
+					</table>
+				</p>
+
+
+				<p>
+					<b>Live Visualization</b>					
+				</p>
+					
+				<p>
+					When receiving a streamed trace from the TraceRecorder library, $PNAME provides live visualization by default.
+					All views supporting "live mode" are then updated continuously as the data is received.
+					However, not all views support live update, and some views provide reduced functionality in this mode. It is therefore important to stop the trace session once sufficient data is recorded.
+				</p>
+
+				<p>
+					When using live visualization, the trace data is loaded into $PNAME continuously, which may consume several GB of RAM if recording for long durations.
+					Eventually the host-side RAM will fill up, causing reduced performance due to page swapping.
+					However, you can typically do live sessions for several minutes and record millions of events without such performance issues, depending on the data rate and the amount of RAM available.
+				</p>
+
+				<p>
+					You may however disable live visualization using a checkbox in the Live Stream view, "Disable Live Visualization".
+					This way, you can record very long traces, as much as your disk space permits. To load very long traces, use the <A HREF="Preview.html">Trace Preview</A> option.
+			</p>			
+
+			</text>
+		</section>
+
+
+		<section>
+		
+			<!-- For Profile only -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>Recording Setup and Control</header>
+			<text>
+				<p>					
+					Once you have integrated TraceRecorder as described in the RTOS-specific section below, the TraceRecorder can be controlled from the $PNAME application.
+					This assuming that a two-way communication interface is used, such as a supported debug probe or a network connection.
+				</p>
+				<p>
+					To start the tracing, select "Record a Trace" on the welcome page or select "Open Live Stream Tool" in the "Trace" menu.
+				</p>
+
+				<p>
+					<A HREF ="img/Record a Trace.png" target ="_blank">
+						<img src="img/Record a Trace.png" height="200" border="0"></img>
+					</A>
+				</p>
+
+				<p>
+					<b>Live Visualization</b>
+				</p>
+
+				<p>
+					When receiving a streamed trace from the TraceRecorder library, $PNAME provides live visualization by default.
+					All views supporting "live mode" are then updated continuously as the data is received.
+					However, not all views support live update, and some views provide reduced functionality in this mode. It is therefore important to stop the trace session once sufficient data is recorded.
+				</p>
+				
+				<p>
+					You may disable live visualization using a checkbox in the Live Stream view, "Disable Live Visualization". This reduces the load on the host system.
+				</p>
+
+			</text>
+		</section>
+
+		<section>
+
+			<!-- Only for Tracealyzer -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>Integrating the Recorder</header>
+			<text>
+				<p>
+					<a name="integration" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					To integrate the TraceRecorder library in your project, follow the guide for your specific RTOS at <a href="$GETTINGSTARTEDURL">$GETTINGSTARTEDURL</a>.
+				</p>
+
+				<p>
+					You find the recorder source code in the $PNAME installation directory, under the folder corresponding to your RTOS.
+					You also find it on <A HREF="https://github.com/Percepio/TraceRecorderSource">https://github.com/Percepio/TraceRecorderSource</A>.
+				</p>
+
+				<p>
+					The recorder library is implemented in C (C99) and provided with full source code under the Apache 2.0 license.
+				</p>
+
+				<p>
+					See also <a href="#api">TraceRecorder API</a>.
+				</p>
+			</text>
+		</section>
+
+
+		<section>
+			<!-- For Percepio Profile and Tracealyzer -->
+			<requirement>CoreFeatures.Streaming</requirement>
+
+			<header>Snapshot and Streaming</header>
+			<text>
+				<p>
+					The recorder can be used in two ways:
+				</p>
+
+				<p>
+					For <a href="#streaming">Streaming Trace</a> - the trace data is transferred continuously to the host PC and thereby allows for tracing over long durations.
+					This supports streaming via debug probes such as IAR I-jet, Keil ULINKpro and SEGGER J-Link, but may also utilize other interfaces in your system, such as USB, TCP/IP, SPI, high-speed UARTs, or device file systems.
+				</p>
+
+				<p>
+					For <a href="#snapshot">Snapshot Trace</a> - the trace data is kept in a ring-buffer in target RAM, which allows you to take a "snapshot" when the system is halted, e.g. on a breakpoint.
+					All that is needed is to save the contents of the trace buffer to a host file and load that in $PNAME.
+				</p>
+			</text>
+		</section>
+
+
+		<section>
+			<!-- Tracealyzer only -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>Streaming Trace</header>
+			<text>
+				<p>
+					<a name="streaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					Trace streaming means that the data is continuously transferred to the host PC.
+					This way, you can record as long as you have enough disk space and memory on your PC.
+				</p>
+				<p>
+					By default, $PNAME loads the data on the fly and displays it in real time.
+					$PNAME does not set any limit on how long traces that can be recorded, but there will always be a practical limit on how large traces that can be loaded in full, depending on how much host-side memory that is available.
+					For this reason, it is advised to disable live visualization before starting long recording sessions, e.g. more than 5-10 minutes.					
+				</p>
+
+				<p>
+					<b>Connecting and Recording</b>
+				</p>
+
+				<p>
+					To connect to the target system in streaming mode, select "Open Live Stream Tool" in the <b>Trace</b> menu, select "Connect" if needed and then "Start Session".
+					Or simply click "Record Streaming Trace" on the welcome screen.
+				</p>
+				<p>
+					Assuming a correct configuration, $PNAME will open the <a href="Streaming.html#Creating_and_Loading_Traces___Live_Stream">Live Stream</a> tool, establish a connection with the target and start recording trace data.
+					This view displays some basic metrics in real time, such as a graph of the current CPU load.
+				</p>
+
+				<p>
+					<A HREF ="img/Live Stream.png" target ="_blank">
+						<img src="img/Live Stream.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					This assumes that the recorder has been properly <A HREF="#integration">integrated</A> in your system and that
+					$PNAME has been configured to match your <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Stream_ports">stream port</a> as described below.
+				</p>
+
+				<p>
+					<b>Typical usage:</b>
+					<ul class="list">
+						<li>Start your target system, either in a debug session or free-running.</li>
+						<li>
+							Open the <a href="Streaming.html#Creating_and_Loading_Traces___Live_Stream">Live Stream</a> tool. If the recording doesn't start automatically, select "Connect" and then "Start Session".
+						</li>
+						<li>When satisfied, select "Stop Session", close the Live Stream window and inspect the trace in the other views.</li>
+					</ul>
+				</p>
+
+				<p>
+					The details of trace streaming depends on what stream port that is used. Learn more in the <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Stream_ports">stream port</a> section below.
+				</p>
+			</text>
+		</section>
+
+		<section>
+			
+			<!-- Profile only -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>Streaming Trace</header>
+			<text>
+				<p>
+					<a name="streaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					Trace streaming means that the data is continuously transferred to the host PC.
+					This way, you can record as long as you have enough disk space and memory on your PC.
+				</p>
+				<p>
+					By default, $PNAME loads the data on the fly and displays it in real time.
+					$PNAME does not set any limit on how long traces that can be recorded, but there will always be a practical limit on how large traces that can be loaded, depending on how much host-side memory that is available.
+					Too large traces will cause application to run out of memory, and already at 80-85% memory usage you may find performance degradation due to memory page swapping to disk.
+				</p>
+				<p>
+					You can typically record and load streamed traces for 10 minutes or more, but it depends on the event rate of your system and the amount
+					of memory available in your host computer. If you need to record long traces, monitor the memory usage using your operating system's tools
+					during the tracing session and check the increase over time, for example over 60 seconds, to assess the practical limit for your case.
+					Note that memory usage is significantly larger than the raw trace data, due to the advanced internal data representation.
+				</p>
+				<p>
+					To analyze longer traces, consider upgrading to <A HREF="https://percepio.com/tracealyzer">Percepio Tracealyzer</A>. It's "Trace Preview" feature offers disk-based analysis
+					that provides a basic set of metrics and graphs with minimal memory usage. From there, you can identify hotspots and load a selected section of the trace for deeper analysis with the full set of Tracealyzer views.
+				</p>
+				
+				<p>
+					<b>Connecting and Recording</b>
+				</p>
+
+				<p>
+					To connect to the target system in streaming mode, select "Open Live Stream Tool" in the <b>Trace</b> menu, select "Connect" if needed and then "Start Session".
+					Or simply click "Record Streaming Trace" on the welcome screen.
+				</p>
+				<p>
+					Assuming a correct configuration, $PNAME will open the <a href="Streaming.html#Creating_and_Loading_Traces___Live_Stream">Live Stream</a> tool, establish a connection with the target and start recording trace data.
+					This view displays some basic metrics in real time, such as a graph of the current CPU load.
+				</p>
+
+				<p>
+					<A HREF ="img/Live Stream.png" target ="_blank">
+						<img src="img/Live Stream.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					This assumes that the recorder has been properly <A HREF="#integration">integrated</A> in your system and that
+					$PNAME has been configured to match your <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Stream_ports">stream port</a> as described below.
+				</p>
+
+				<p>
+					<b>Typical usage:</b>
+					<ul class="list">
+						<li>Start your target system, either in a debug session or free-running.</li>
+						<li>
+							Open the <a href="Streaming.html#Creating_and_Loading_Traces___Live_Stream">Live Stream</a> tool. If the recording doesn't start automatically, select "Connect" and then "Start Session".
+						</li>
+						<li>When satisfied, select "Stop Session", close the Live Stream window and inspect the trace in the other views.</li>
+					</ul>
+				</p>
+
+				<p>
+					The details of trace streaming depends on what stream port that is used. Learn more in the <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Stream_ports">stream port</a> section below.
+				</p>
+			</text>
+		</section>
+
+
+		<section>
+			<!-- Only for Tracealyzer -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>Stream ports</header>
+			<text>
+
+				<p>
+					A <i>stream port</i> is a TraceRecorder module defining the <b>output</b> and <b>input</b> functions to use, i.e. where to write the trace data and how to read input (start/stop commands) from the $PNAME application.
+				</p>
+
+				<p>
+					The recorder includes several predefined stream ports, defined by the <b>trcStreamPort.h</b> files found in the <b>streamports</b> directory.
+					For example, you find stream ports for
+					<ul class="list">
+						<li>
+							<A HREF="#itmstreaming">Arm ITM</A> - suitable with IAR Embedded Workbench and Keil µVision together with fast debug probes.
+						</li>
+						<li>
+							<A HREF="#jlinkstreaming">SEGGER J-Link</A> debug probes.
+						</li>
+						<li>
+							<A HREF="#usbstreaming">USB CDC streaming</A> (with STM32).
+						</li>
+						<li>
+							<A HREF="#tcpipstreaming">TCP/IP streaming</A> (with lwIP).
+						</li>
+						<li>
+							<A HREF="#udpstreaming">UDP streaming</A> (with lwIP).
+						</li>
+						<li>
+							Streaming to a device file system (with stdio).
+						</li>
+					</ul>
+				</p>
+				<p>
+					Most stream ports are specific for particular processor vendor, debugger or network stack, but you can easily <a href="#customstreaming">create your own stream port</a> to utilize any suitable communications interface in your system, and the existing stream ports can be used as examples.
+				</p>
+
+				<p>
+					The <i>RingBuffer</i> stream port is special as it is not writing the trace data to a physical streaming interface.
+					Instead, the trace data is streamed into a ring-buffer intended for <A HREF="#snapshot">snapshot trace</A>.
+				</p>
+
+				<p>
+					The stream port is selected by including the appropriate <b>trcStreamPort.h</b> in your compiler's include search path. Make sure only a single version of trcStreamPort.h is visible to the compiler.
+					There is usually also one or several .c files needed, so always include all .c files within the stream port folder in the build.
+				</p>
+
+				<p>
+					Most stream ports have a configuration header file in the <b>config</b> folder, with code documentation. Make sure this is included in the compiler
+					include path, review the settings and update as needed. These settings can have a big impact on performance and RAM usage.
+				</p>
+
+				<p>
+					<b>STLINK Streaming</b>
+				</p>
+				<p>
+					STLINK debug probes can be used for trace streaming in two ways, either using SWO pin (ITM) or via the Virtual Com Port (VCP).
+					Note that the STLINK v2 is not fast enough for SWO/ITM streaming, but by using the Virtual Com Port and DMA transfer it is possible to transfer up to 200 KB/s, which can be sufficient.
+					The newer STLINK v3 is significantly faster and allows for both VCP and SWO/ITM streaming with good performance.
+					Please find our guide for STLINK streaming on <A HREF="https://percepio.com/tracealyzer/gettingstarted/stm32/">the STM32 page</A>.
+				</p>
+
+				<p>
+					<b>SEGGER J-Link Streaming</b>
+				</p>
+
+				<p>
+					<a name="jlinkstreaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					<A HREF ="img/system_overview_streaming_rtt.png" target ="_blank">
+						<img src="img/system_overview_streaming_rtt.png" width="$IMAGEWIDTH" border="0"/>
+					</A>
+				</p>
+				<p>
+					The J-Link stream port works on all ARM Cortex-M and Renesas RX MCUs. It also works on many ARM Cortex-R and ARM Cortex-A processors, see this <A HREF="https://www.segger.com/downloads/application-notes/AN08005">application note</A> from SEGGER.
+					With a sufficient RAM buffer size, this allows for streaming the trace data at speeds upwards of 700 KB/s on a standard J-Link and upwards of 2 MB/s on the high-end models.
+					It works even on the J-Link On Board (OB), found integrated on many development boards, although these have lower performance (around 100 KB/s).
+				</p>
+				<p>
+					The SEGGER J-Link streaming uses a proprietary SEGGER feature called RTT, Real-Time Transfer. It relies on RAM buffers in the target system, which the J-Link reads in the background without disturbing the execution.
+					The $PNAME recorder uses two RTT buffers, one control channel for receiving commands from $PNAME and one data channel for streaming the trace.
+					All source code required for SEGGER RTT is included in the J-Link stream port directory and relevant settings are found in <b>trcStreamPort.h</b>.
+				</p>
+
+				<p>
+					Note that the UP buffer (target->host) is quite large by default (5000 bytes). If you have a stand-alone J-Link probe, you can typically reduce this buffer size to 1-2 KB, or even smaller.
+					If using an integrated J-Link On-board, 5-10 KB can be necessary to maximize throughput - the maximum seem to be about 140 KB/s in this case.
+				</p>
+				<p>
+					If the throughput is not sufficient, the Live Stream window will display a warning about missing events.
+					In that case, try the following:
+					<ul class="list">
+						<li>
+							Verify the J-Link Speed in the Settings dialog of $PNAME. Default is 4 MHz, but can be increased a lot depending on your J-Link model.
+							In many cases speeds of 10-20 MHz is possible, but according to SEGGER there is a small risk of getting poor signal quality (i.e., problems) if going above 6 MHz, depending on the development board.
+							But don't worry, nothing will break and any corrupted data will result in obvious error messages when processing the trace. And if you set the J-Link Speed higher than the maximum supported speed, the J-Link driver will instead use the highest speed supported.
+						</li>
+						<li>
+							Ensure logging is disabled in the $PNAME J-Link settings.
+						</li>
+						<li>
+							Increase the trace buffer size (<code>TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE</code> in <b>trcStreamPortConfig.h</b>).
+						</li>
+						<li>
+							Reduce the amount of data produced, e.g., by excluding frequent User Events.
+						</li>
+						<li>
+							If using an integrated J-Link OB on your development board, consider upgrading to a stand-alone J-Link probe (which is several times faster).
+						</li>
+					</ul>
+				</p>
+				<p>
+					Before making your first trace recording, please install the latest <A HREF="https://www.segger.com/jlink-debug-probes.html">J-Link drivers</A> and make sure all listed development tools are updated, including $PNAME. Also make sure the firmware of your J-Link debug probe is updated correctly, if the J-Link drivers would propose this.
+				</p>
+				<p>
+					Check <b>J-Link Settings</b>, found under <b>File -&gt; Settings...</b> in $PNAME.
+				</p>
+				<p>
+					<A HREF ="img/JlinkSettings.png" target ="_blank">
+						<img src="img/JLinkSettings.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					<ul class="list">
+						<li>
+							<b>Debugger</b>: Select the connected J-Link debug probe to use.
+						</li>
+						<li>
+							<b>J-Link Speed</b>: The debugger clock frequency for the JTAG/SWD interface (KHz).
+						</li>
+						<li>
+							<b>Debugger Interface</b>:
+							<ul class="list">
+								<li>
+									<b>JTAG</b>: Configures the debug probe for JTAG. This is the default setting of J-Link debug probes.
+								</li>
+								<li>
+									<b>SWD</b>: Configures the debug probe for SWD.
+								</li>
+								<li>
+									<b>Default (don't change)</b>: $PNAME does not change the JTAG/SWD setting of the debug probe.
+									<br/><br/><B>NOTE!</B> It is recommended to explicitly select JTAG or SWD, matching the corresponding setting in your IDE. This "passive" option is known to cause problems with certain J-Link driver versions.
+								</li>
+							</ul>
+						</li>
+						<li>
+							<b>Target Device</b>: Opens a SEGGER J-Link dialog where you can select the device (processor). This is necessary in order for SEGGER RTT to connect automatically.
+							Note that the device list comes from the SEGGER J-Link driver. If your device is not listed, try update the J-Link driver.
+						</li>
+					</ul>
+				</p>
+
+				<p>
+					Also check <b>PSF Streaming Settings</b>.
+				</p>
+
+				<p>
+					<A HREF ="img/SEGGER RTT Settings.png" target ="_blank">
+						<img src="img/SEGGER RTT Settings.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					<ul class="list">
+						<li>
+							<b>Target Connection</b>: Should be "SEGGER RTT".
+						</li>
+						<li>
+							<b>RTT Control Block Address</b>: How to find the RTT control block in the target memory. Normally this should be "auto-detect" (translates to 0).
+							In case the automatic detection fails, we recommend to add the <i>SEGGER_RTT_SECTION</i> definition in the recorder code, as described in <A HREF="#jlink-troubleshooting-rtt">Troubleshooting J-Link RTT streaming - The RTT Control Block</A>.
+							It is also possible to specify the address of the RTT control block (<i>_SEGGER_RTT</i>) explicitly in this field, but that option might not work if using $PNAME in parallel with an IDE.
+						</li>
+						<li>
+							<b>RTT Up Buffer Index</b>: The RTT buffer to use for the trace data channel (target -&gt; host). Default is 1 and must match the setting in <b>trcStreamPort.h</b>.
+						</li>
+						<li>
+							<b>RTT Down Buffer Index</b>: The RTT buffer to use for the control channel (host -&gt; target). Default is 1 and must match the setting in <b>trcStreamPort.h</b>.
+						</li>
+						<li>
+							<b>Reset Target on Connect</b>: Enable this to reset the target system when the recording is started, in order to trace the system startup. For use together with the TRC_START option for xTraceEnable().
+						</li>
+						<li>
+							<b>Target Starts Tracing</b>: Enable this if using the TRC_START option for xTraceEnable(). This way, $PNAME won't send a start command when the recording session begins, just wait for the data.
+						</li>
+
+					</ul>
+				</p>
+
+				<note>
+					All tools using the J-Link driver (i.e., $PNAME and the debugger IDE) must use the same setting for Debugger Interface (JTAG/SWD).
+					So if you sometimes start a $PNAME session without an active debug session in your IDE, it is recommended to specify this setting explicitly, using the same setting as your debugger IDE.
+					This to avoid conflicts in the J-Link drivers.
+				</note>
+
+				<p>
+					<a name="jlink-troubleshooting"></a>
+				</p>
+				<p>
+					<br/>
+					<br/>
+					<b>Troubleshooting J-Link RTT streaming</b><br/>
+					<br/>
+					If you will only see "Starting session..." in the Live Stream window, $PNAME is not getting any data. In that case, double-check the below steps.
+				</p>
+				<p>
+					In case $PNAME gets some data, but you are having performance problems (e.g. missing events or high overhead) please refer to this <A HREF="https://percepio.com/troubleshoot-j-link-rtt/">troubleshooting guide</A> on our website.
+					Also see the general <A HREF="#troubleshooting">Troubleshooting</A> section.
+				</p>
+
+				<p>
+					<ol class="list">
+
+						<li>
+							Target Device<br/>
+							<p>
+								Under Settings -&gt; J-Link Settings, make sure you have specified the "Target Device" correctly. The "Select Device..." button shows a list of all devices supported by your SEGGER J-Link driver.
+								This setting is required for the SEGGER driver to locate the RAM address range(s) and find the RTT data structure.
+							</p>
+						</li>
+
+						<li>
+							J-Link Driver Version<br/>
+							<p>
+								Make sure to install the latest J-Link drivers from <A HREF="https://www.segger.com/jlink-debug-probes.html">SEGGER</A>. They are frequently updated, especially for new devices.
+								It is important that the <i>same version</i> of the J-Link driver version is used by $PNAME and your IDE. Therefore, make sure to install the latest J-Link drivers as the last step, after $PNAME has been installed.
+								After updating the J-Link driver, it may want to update the J-Link firmware as well. We strongly recommend allowing that.
+							</p>
+						</li>
+
+						<li>
+							Debugger Interface (JTAG/SWD)<br/>
+							<p>
+								Make sure the Debugger Interface setting (JTAG/SWD) is the same in $PNAME (Settings -&gt; J-Link Settings) as in your debugger IDE.
+								If case they differ, you get a warning from the J-Link driver ("Second debugger connection to the same J-Link detected...", as shown below) and a question if to change the interface setting.
+								In that case, just abort and correct the $PNAME setting under Settings -&gt; J-Link Settings.
+							</p>
+							<p>
+								<img src="img/jlink_interface_conflict.png" border="0"/>
+							</p>
+
+							<p>
+								Note that $PNAME offers a third option in the Debugger Interface setting, <b>Default (don't change)</b>. This means that $PNAME will not attempt to change the JTAG/SWD selection and instead uses the current setting (e.g. applied by the debugger IDE).
+								This can be convenient in some cases. However, the J-Link probes use JTAG by default and will revert to JTAG if power-cycled. So if using "Default (don't change)" you may get conflicts under certain circumstances and thereby a warning from the J-Link driver (like above).
+								Moreover, some J-Link driver versions (around v6.22 - v6.30) are known to cause problems if not setting the JTAG/SWD selection explicitly in $PNAME.
+							</p>
+						</li>
+
+						<li>
+							Tool Connection Order<br/>
+							<p>
+								If using $PNAME together with a debugger IDE, make sure to first start the debug session and thereafter connect with $PNAME.
+								If modifying your code and reprogramming the device, you need to stop the $PNAME recording and then restart the $PNAME recording for the new debug session.
+							</p>
+
+							<p>
+								Note that you don't need to <i>start</i> the target system before connecting with $PNAME. It is sufficient that the debug session has been launched and that the target is halted in main.
+							</p>
+							<p>
+								When using <A HREF="#api">xTraceEnable(TRC_START)</A>, we recommend the following order:
+								<OL class="list">
+									<li>Launch the debug session and let the target halt on a breakpoint in main, before xTraceEnable is called.</li>
+									<li>Select "Start Recording" in $PNAME. The "Live Stream" window it should now say "Starting session...", as it waits for data.</li>
+									<li>Start your target system (resume/run). You will now capture every event after xTraceEnable.</li>
+								</OL>
+								<b>NOTE:</b> Make sure to CHECK the option "Target Starts Tracing" when using the TRC_START option ($PNAME settings -&gt; PSF Streaming Settings).
+							</p>
+							<p>
+								If using xTraceEnable(TRC_START_AWAIT_HOST) or xTraceEnable(TRC_INIT), the order is simply:
+								<OL class="list">
+									<li>Launch the debug session and start the target system.</li>
+									<li>Click "Start Recording" in $PNAME. </li>
+								</OL>
+								<b>NOTE:</b> Make sure to UNCHECK the option "Target Starts Tracing" when using these start options ($PNAME settings -&gt; PSF Streaming Settings).
+								<A NAME="jlink-troubleshooting-rtt"></A>
+							</p>
+						</li>
+						<li>
+							The RTT Control Block<br/>
+							<p>
+								The J-Link driver needs to locate the address of the RTT control block before the RTT interface can be used. Normally this works automatically, but in some cases it is necessary to configure this manually.
+							</p>
+							<p>
+								You can see the status of the J-Link RTT interface in the J-Link Control Panel, that can be accessed via the "J-Link" icons in the task bar (if using Windows).
+								Note that there might be two icons, as shown below. This is not a mistake. Each development tool using the J-Link drivers spawns a separate driver instance, with a separate Control Panel.
+								So if you are using a debugger IDE and $PNAME at the same time, you get two control panels. This is normal and supported by SEGGER.
+							</p>
+
+							<p>
+								<A HREF ="img/jlink_control_panel.png" target ="_blank">
+									<img src="img/jlink_control_panel.png" border="0"/>
+								</A>
+							</p>
+
+							<p>
+								The J-Link RTT interface is handled by the primary J-Link Control Panel (the first started) while the secondary J-Link Control Panel instance will report "RTT handled by other J-Link instance".
+								If the primary Control Panel reports "Looking for RTT CB", it means that the J-Link driver is still searching for the RTT control block and is not yet ready.
+								This is normal before xTraceEnable has been called, where the J-Link RTT interface is initialized. The J-Link driver should find it directly after xTraceEnable has been called, and then start receiving data.
+							</p>
+
+							<p>
+								In case $PNAME is not getting any data and the "Looking for RTT CB" message is still shown after xTraceEnable has been called, it typically means that the J-Link driver is scanning wrong address range.
+								You can verify this by checking the address of _SEGGER_RTT in your debugger and compare with the addresses shown next to the "Looking for RTT CB" message. If incorrect, you can specify the address of the RTT control block (_SEGGER_RTT) in the "RTT Address" field.
+								Make sure that you are using the primary J-Link Control Panel, where the "Looking for RTT CB" message is shown.
+							</p>
+
+							<p>
+								$PNAME allows for specifying the address of the RTT Control Block in the PSF Streaming Settings.
+								However, this requires that you know the exact address, and that it does not move between builds. Moreover, it seems the SEGGER J-Link driver only allows for specifying the RTT address in the primary driver instance, i.e. the first one started.
+								The RTT communication is handled by the primary J-Link driver instance. So, if you have started a debug session in your IDE before connecting with $PNAME, it seems as the secondary J-Link driver just ignores the RTT address specified by $PNAME.
+							</p>
+
+							<p>
+								A better way of resolving this issue is to add a definition of <i>SEGGER_RTT_SECTION</i> in your <b>SEGGER_RTT_Conf.h</b>. This instructs the linker where to place the RTT control block.
+								The J-Link driver only seems to scan the "primary" RAM bank of the device (and only the first 64 KB of this, it seems), but by specifying SEGGER_RTT_SECTION you can make sure _SEGGER_RTT is placed where the J-Link will find it.
+								The _SEGGER_RTT control block is pretty small, so moving it should not be a big deal. This does not contain the actual RTT data buffers, only pointers to them.
+							</p>
+							<p>
+								First you need to check what address range that is scanned by the J-Link driver. You see this in the J-Link Control Panel, under "RTT".
+								The scanned addresses appear next to the "Looking for RTT CB" messages.
+							</p>
+							<p>
+								Once you know where the J-Link driver expects to find the RTT control block, you need to take a look at your linker file (or linker project settings).
+								The easiest approach is to identify an existing section that is already placed in the right address range, i.e. where the J-Link scans.
+								If so, specify this section in your SEGGER_RTT_SECTION definition to place the RTT control block there.
+							</p>
+							<p>
+								In the below example, the scanned address range was 0x20000000 - 0x2000FFFF. In the linker file we noted that this address range contained the ".data" section of RAM2, so we placed it there.
+<pre>
+<code>
+/* In SEGGER_RTT_Conf.h */
+#define SEGGER_RTT_SECTION ".data.$$RAM2" /* for NXP LPC54018 */
+</code>
+</pre>
+								Another solution, that might be "cleaner" but a bit more difficult, is to create a new section dedicated for the RTT control block, that is placed in the desired address range.
+							</p>
+						</li>
+
+					</ol>
+				</p>
+
+				<p>
+					<b>TCP/IP Streaming</b>
+				</p>
+
+				<p>
+					<a name="tcpipstreaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					To stream the trace data over a network connection, i.e., TCP/IP transfer, select the <b>TCPIP</b> stream port.
+					The existing example is for lwIP, so if you are using a different TCP/IP stack you need to modify this accordingly.
+				</p>
+				<p>
+					<A HREF ="img/system_overview_streaming_tcp.png" target ="_blank">
+						<img src="img/system_overview_streaming_tcp.png" width="$IMAGEWIDTH" border="0"/>
+					</A>
+				</p>
+				<p>
+					The TCP/IP stream port should act as a server, to which $PNAME connects as a client. You need to decide on an available TCP port and specify this in the stream port as well as in the $PNAME TCP/IP settings, shown below.
+				</p>
+
+				<p>
+					This stream port uses the recorder's internal RAM buffer. This is necessary since a TCP/IP stack is quite complex and should not be called directly from the kernel instrumentation code. That may even cause infinite recursive calls, if the TCP/IP stack generates new RTOS events when sending the data.
+				</p>
+
+				<p>
+					In $PNAME, check the <b>PSF Streaming Settings</b>, found under <b>File -&gt; Settings...</b> in $PNAME.
+				</p>
+				<p>
+					<A HREF ="img/TCP Settings.png" target ="_blank">
+						<img src="img/TCP Settings.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					<ul class="list">
+						<li>
+							<b>Target Connection</b>: Should be "TCP (outgoing)".
+						</li>
+						<li>
+							<b>IP address</b>: The IP address of your target system.
+						</li>
+						<li>
+							<b>Port</b>: The port used by target-side TCP/IP socket that you have created for the recorder.
+						</li>
+					</ul>
+				</p>
+				<p>
+					<b>UDP Streaming</b>
+				</p>
+
+				<p>
+					<a name="udpstreaming" style="position: relative; top:-45;"></a>
+				</p>
+				<p>
+					To stream the trace data over a network connection using UDP, select the <b>UDP</b> stream port.
+					The existing example is for lwIP, so if you are using a different networking stack you will need to modify this accordingly.
+				</p>
+				<p>
+					<A HREF ="img/UDP_Settings.png" target ="_blank">
+						<img src="img/UDP_Settings.png" border="0"/>
+					</A>
+				</p>
+				<p>
+					<ul class="list">
+						<li>
+							<b>Target Connection</b>: Should be "UDP".
+						</li>
+						<li>
+							<b>Host Address</b>: The IP address of your host system. This can usually be left as 0.0.0.0, but can be specified to force $PNAME to communicate using a specific network interface.
+						</li>
+						<li>
+							<b>Port</b>: The host side port.
+						</li>
+						<li>
+							<b>Notify target</b>: If checked, $PNAME will send Start and Stop messages to the target. If unchecked, $PNAME will just listed for data.
+						</li>
+						<li>
+							<b>Target address</b>: When Notify target is checked, this is the target side address $PNAME will use to send start and stop messages.
+						</li>
+						<li>
+							<b>Target port</b>: When Notify target is checked, this is the target side port $PNAME will use to send start and stop messages.
+						</li>
+						<li>
+							<b>Multicast</b>: If enabled, $PNAME will attempt to join the specified UDP multicast group on trace start.
+						</li>
+						<li>
+							<b>Multicast group to join</b>: The UDP multicast group to join.
+						</li>
+					</ul>
+				</p>
+				<p>
+					<b>ITM Streaming</b>
+				</p>
+
+				<p>
+					<a name="itmstreaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					The ARM_ITM stream port is a generic solution for streaming using the ITM unit on Arm processors, typically over the SWO pin in the debug connector.
+					This is available on virtually all Arm Cortex-M3/M4/M7 MCUs or better, but not on Arm Cortex-M0/M0+ MCUs.
+				</p>
+				<p>
+					The benefit of the ITM interface is that the data can be transferred over the SWO pin, available on all Arm Cortex debug connectors. ITM provides hardware buffering, allowing for high data rates.
+					Due to this, it is not necessary to use a RAM buffer for temporary storage, so this stream port instead writes the data directly to the ITM stimulus register.
+					Assuming the ITM buffer has room for the data, a 32-bit word can be written in less than 10 clock cycles.
+				</p>
+				<p>
+					However, the hardware ITM buffer is pretty small (typically 10-16 bytes) and the trace data are often generated in bursts that can easily fill the ITM buffer.
+					It is therefore important to use a high SWO frequency (ideally over 30 MHz, in Manchester mode), so the debug probe can pull out the data fast enough.
+				</p>
+				<p>
+					Also note that ITM doesn't always work out of the box, especially on multi-core devices.
+					This may need to be enabled by device-specific setup on the target side. The ITM stream port assumes the ITM output has already been initialized.
+					So make sure you can output some example data first.
+				</p>
+
+				<p>
+					The stream port blocks in case the ITM buffer is full, but typically only for very brief durations. The worst case blocking time corresponds to the time needed to transmit the full 10 bytes ITM buffer over SWO. At 24 MHz SWO frequency, we have measured this to about 15 µs.
+					However, if you have a fast debug probe like an IAR I-jet or Keil ULINKpro, blocking does typically not occur.
+				</p>
+				<p>
+					To receive the data on host side, you need a debugger with high-speed SWO support, at least 10 Mhz, but the faster the better.
+					This is supported by e.g. Keil ULINKpro and IAR I-jet.
+					Moreover, your debugger must allow for outputting the ITM data so $PNAME can read it. Both Keil µVision and IAR Embedded Workbench offer such possibilities.
+				</p>
+				<p>
+					By default, this uses ITM port 1, but this is possible to change in <b>trcStreamPortConfig.h</b>.
+				</p>
+				<p>
+					For detailed instructions on how to use this with Keil µVision, see <A HREF="https://percepio.com/wp-content/uploads/2018/05/Percepio-Application-Note-PA-021.pdf">Percepio Application Note PA-021</A>.
+				</p>
+				<p>
+					For users of IAR Embedded Workbench, see <A HREF= "https://percepio.com/wp-content/uploads/2018/07/Percepio-Application-Note-PA-023.pdf">Percepio Application Note PA-023</A>.
+				</p>
+
+				<p>
+					<b>USB Streaming</b>
+				</p>
+
+				<p>
+					<a name="usbstreaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					The USB_CDC stream port provides an example of how to stream trace data over a USB connection, using a CDC class endpoint.
+					The example provided is for STM32, with USB drivers generated by STM32Cube. If you are using a different MCU, you need to modify the stream port accordingly.
+				</p>
+				<p>
+					<A HREF ="img/system_overview_streaming_usb.png" target ="_blank">
+						<img src="img/system_overview_streaming_usb.png" width="$IMAGEWIDTH" border="0"/>
+					</A>
+				</p>
+				<p>
+					If your system is already using the USB controller for other purposes, you may consider setting up a Composite Device that includes also a CDC endpoint. The performance of USB (even USB 2.0) is many times more than required for RTOS trace streaming.
+				</p>
+
+				<p>
+					The USB stream port uses the recorder's internal RAM buffer. This may not be necessary, depending on the internal buffers in the USB stack. If you need to reduce RAM usage, you can try writing directly in the WRITE_DATA macro, like in the J-Link stream port.
+				</p>
+
+				<p>
+					In $PNAME, check the <b>PSF Streaming Settings</b>, found under <b>File -&gt; Settings...</b> in $PNAME. Select "SerialPort" and specify the COM port (e.g. "COM5") created for this connection.
+				</p>
+				<p>
+					The other settings (Data bits, Data rate, etc.) are not used for USB CDC connections, but can be used for streaming over a classic UART-based serial connection.
+					This however requires a fast UART and an appropriate stream port, preferably with DMA acceleration to reduce the CPU load of the transfer.
+				</p>
+				<p>
+					<A HREF ="img/SerialPort Settings.png" target ="_blank">
+						<img src="img/SerialPort Settings.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					<ul class="list">
+						<li>
+							<b>Target Connection</b>: Should be "SerialPort".
+						</li>
+						<li>
+							<b>Device</b>: The COM port created for your USB CDC connection (e.g. "COM5").
+						</li>
+						<li>
+							<b>Others</b>: Not applicable for USB CDC connections.
+						</li>
+					</ul>
+				</p>
+
+				<p>
+					<b>Custom Streaming</b>
+				</p>
+
+				<p>
+					<a name="customstreaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					You may configure the streaming to use any interface you have available between target and the host PC, assuming it provides sufficient throughput.
+					The data rate resulting from RTOS tracing depends on your application and RTOS configuration (like tick rate), but typically you need something like 20-200 KB/s.
+
+				</p>
+
+				<p>
+					To create your own stream port, copy one of the stream port directories found in <b>/streamports</b>and use that as a starting point. The main file is <b>&gt;streamport&lt;/include/trcStreamPort.h</b>.
+					Also check this <A HREF="http://percepio.com/2016/10/05/rtos-tracing/">blog post</A> for a quick introduction.
+				</p>
+				<p>
+					Typically, you only need to define the following macros, together with prototypes for the functions they use:
+					<ul class="list">
+						<li>
+							<i>xTraceStreamPortReadData</i> - How to read commands (start/stop) from $PNAME via the streaming interface. Should return TRC_SUCCESS unless there is an error.
+						</li>
+						<li>
+							<i>xTraceStreamPortWriteData</i> - How the recorder should write trace data to the streaming interface. Should return TRC_SUCCESS unless there is an error.
+						</li>
+					</ul>
+					There are other definitions in <b>trcRecorder.h</b> that can be overridden by redefining them in <b>trcStreamPort.h</b>, but this is rarely required.
+				</p>
+				<p>
+					<b>Internal Buffer vs. Direct Output</b>
+				</p>
+				<p>
+					One important setting is however TRC_CFG_STREAM_PORT_USE_INTERNAL_BUFFER, which should be defined as 0 if the stream port is to write directly to the streaming interface.
+					Otherwise the event data will first be buffered in the internal RAM buffer, and which is periodically flushed to the streaming interface by the trace control task (<i>TzCtrl</i>).
+				</p>
+				<p>
+					Some stream ports, like the Arm ITM port, doesn't use the buffering but writes directly to the streaming interface without involving the trace control task, but this requires a fast output function (short latency) since the trace calls may occur in any task and in the RTOS kernel.
+					Moreover, stream ports that write directly to the streaming interface must not generate new trace events (e.g., by using RTOS functions) when transmitting the data, as this would cause unbounded recursive calls in the recorder.
+					By using the internal buffer, the tracing will be more robust against peaks in the data rate, and also allows for using RTOS operations in the output function, such as mutex or semaphore operations in a network stack.
+				</p>
+				<p>
+					Note that the internal buffer uses a multi-page structure, where each page is sent by the TzCtrl task after it becomes full.
+					You may want to tweak the settings for trace control task (periodicity and priority) and also the buffer layout (bytes per page and number of pages).
+					These settings are found in <b>trcConfig.h</b>.
+				</p>
+				<p>
+					$PNAME can receive the data in five ways, using a TCP socket, a UDP socket, a COM port, by opening a file, or via a Named Pipe. The latter is for Windows only.
+					If the streaming interface doesn't provide two-way communication between $PNAME and the target system, you can start the tracing programmatically from target using <i>xTraceEnable(TRC_START)</i>, which assumes that the trace interface is ready to receive the data.
+					If using another target connection, you may consider creating a proxy tool that forwards the data to a TCP socket, UDP socket or COM port, or writes it to a host-side file.
+					The trace data is a binary format and should be stored to a binary file exactly as received. Name the output file ".psf" to make it easier to find in $PNAME.
+				</p>
+
+			</text>
+		</section>
+
+
+
+
+		<section>
+			<!-- Only for Profile -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>Stream ports</header>
+			<text>
+
+				<p>
+					A <i>stream port</i> is a TraceRecorder module defining the <b>output</b> and <b>input</b> functions to use, i.e. where to write the trace data and how to read input (start/stop commands) from the $PNAME application.
+					Percepio Profile supports SEGGER J-Link streaming via RTT and the RingBuffer streamport for snapshot tracing. Percepio $PNAME provides additional stream ports (e.g. TCP, UDP, ITM) and allows for making your own custom stream port.
+				</p>
+
+				<p>
+					The <i>RingBuffer</i> stream port is special as it is not writing the trace data to a physical streaming interface.
+					Instead, the trace data is streamed into a ring-buffer intended for <A HREF="#snapshot">snapshot trace</A>.
+				</p>
+
+				<p>
+					The stream port is selected by including the appropriate <b>trcStreamPort.h</b> in your compiler's include search path. Make sure only a single version of trcStreamPort.h is visible to the compiler.					
+					There is usually also one or several .c files needed, so always include all .c files within the stream port folder in the build.
+				</p>
+
+				<p>
+					Most stream ports have a configuration header file in the <b>config</b> folder, with code documentation. Make sure this is included in the compiler
+					include path, review the settings and update as needed. These settings can have a big impact on performance and RAM usage.
+				</p>
+
+				<p>
+					<b>SEGGER J-Link Streaming</b>
+				</p>
+
+				<p>
+					<a name="jlinkstreaming" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					<A HREF ="img/system_overview_streaming_rtt.png" target ="_blank">
+						<img src="img/system_overview_streaming_rtt.png" width="$IMAGEWIDTH" border="0"/>
+					</A>
+				</p>
+				<p>
+					The J-Link stream port works on all ARM Cortex-M and Renesas RX MCUs. It also works on many ARM Cortex-R and ARM Cortex-A processors, see this <A HREF="https://www.segger.com/downloads/application-notes/AN08005">application note</A> from SEGGER.
+					With a sufficient RAM buffer size, this allows for streaming the trace data at speeds upwards of 700 KB/s on a standard J-Link and upwards of 2 MB/s on the high-end models.
+					It works even on the J-Link On Board (OB), found integrated on many development boards, although these have lower performance (around 100 KB/s).
+				</p>
+				<p>
+					The SEGGER J-Link streaming uses a proprietary SEGGER feature called RTT, Real-Time Transfer. It relies on RAM buffers in the target system, which the J-Link reads in the background without disturbing the execution.
+					The $PNAME recorder uses two RTT buffers, one control channel for receiving commands from $PNAME and one data channel for streaming the trace.
+					All source code required for SEGGER RTT is included in the J-Link stream port directory and relevant settings are found in <b>trcStreamPort.h</b>.
+				</p>
+
+				<p>
+					Note that the UP buffer (target->host) is quite large by default (5000 bytes). If you have a stand-alone J-Link probe, you can typically reduce this buffer size to 1-2 KB, or even smaller.
+					If using an integrated J-Link On-board, 5-10 KB can be necessary to maximize throughput - the maximum seem to be about 140 KB/s in this case.
+				</p>
+				<p>
+					If the throughput is not sufficient, the Live Stream window will display a warning about missing events.
+					In that case, try the following:
+					<ul class="list">
+						<li>
+							Verify the J-Link Speed in the Settings dialog of $PNAME. Default is 4 MHz, but can be increased a lot depending on your J-Link model.
+							In many cases speeds of 10-20 MHz is possible, but according to SEGGER there is a small risk of getting poor signal quality (i.e., problems) if going above 6 MHz, depending on the development board.
+							But don't worry, nothing will break and any corrupted data will result in obvious error messages when processing the trace. And if you set the J-Link Speed higher than the maximum supported speed, the J-Link driver will instead use the highest speed supported.
+						</li>
+						<li>
+							Ensure logging is disabled in the $PNAME J-Link settings.
+						</li>
+						<li>
+							Increase the trace buffer size (<code>TRC_CFG_STREAM_PORT_RTT_UP_BUFFER_SIZE</code> in <b>trcStreamPortConfig.h</b>).
+						</li>
+						<li>
+							Reduce the amount of data produced, e.g., by excluding frequent User Events.
+						</li>
+						<li>
+							If using an integrated J-Link OB on your development board, consider upgrading to a stand-alone J-Link probe (which is several times faster).
+						</li>
+					</ul>
+				</p>
+				<p>
+					Before making your first trace recording, please install the latest <A HREF="https://www.segger.com/jlink-debug-probes.html">J-Link drivers</A> and make sure all listed development tools are updated, including $PNAME. Also make sure the firmware of your J-Link debug probe is updated correctly, if the J-Link drivers would propose this.
+				</p>
+				<p>
+					Check <b>J-Link Settings</b>, found under <b>File -&gt; Settings...</b> in $PNAME.
+				</p>
+				<p>
+					<A HREF ="img/JlinkSettings.png" target ="_blank">
+						<img src="img/JLinkSettings.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					<ul class="list">
+						<li>
+							<b>Debugger</b>: Select the connected J-Link debug probe to use.
+						</li>
+						<li>
+							<b>J-Link Speed</b>: The debugger clock frequency for the JTAG/SWD interface (KHz).
+						</li>
+						<li>
+							<b>Debugger Interface</b>:
+							<ul class="list">
+								<li>
+									<b>JTAG</b>: Configures the debug probe for JTAG. This is the default setting of J-Link debug probes.
+								</li>
+								<li>
+									<b>SWD</b>: Configures the debug probe for SWD.
+								</li>
+								<li>
+									<b>Default (don't change)</b>: $PNAME does not change the JTAG/SWD setting of the debug probe.
+									<br/><br/><B>NOTE!</B> It is recommended to explicitly select JTAG or SWD, matching the corresponding setting in your IDE. This "passive" option is known to cause problems with certain J-Link driver versions.
+								</li>
+							</ul>
+						</li>
+						<li>
+							<b>Target Device</b>: Opens a SEGGER J-Link dialog where you can select the device (processor). This is necessary in order for SEGGER RTT to connect automatically.
+							Note that the device list comes from the SEGGER J-Link driver. If your device is not listed, try update the J-Link driver.
+						</li>
+					</ul>
+				</p>
+
+				<p>
+					Also check <b>PSF Streaming Settings</b>.
+				</p>
+
+				<p>
+					<A HREF ="img/SEGGER RTT Settings.png" target ="_blank">
+						<img src="img/SEGGER RTT Settings.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					<ul class="list">
+						<li>
+							<b>Target Connection</b>: Should be "SEGGER RTT".
+						</li>
+						<li>
+							<b>RTT Control Block Address</b>: How to find the RTT control block in the target memory. Normally this should be "auto-detect" (translates to 0).
+							In case the automatic detection fails, we recommend to add the <i>SEGGER_RTT_SECTION</i> definition in the recorder code, as described in <A HREF="#jlink-troubleshooting-rtt">Troubleshooting J-Link RTT streaming - The RTT Control Block</A>.
+							It is also possible to specify the address of the RTT control block (<i>_SEGGER_RTT</i>) explicitly in this field, but that option might not work if using $PNAME in parallel with an IDE.
+						</li>
+						<li>
+							<b>RTT Up Buffer Index</b>: The RTT buffer to use for the trace data channel (target -&gt; host). Default is 1 and must match the setting in <b>trcStreamPort.h</b>.
+						</li>
+						<li>
+							<b>RTT Down Buffer Index</b>: The RTT buffer to use for the control channel (host -&gt; target). Default is 1 and must match the setting in <b>trcStreamPort.h</b>.
+						</li>
+						<li>
+							<b>Reset Target on Connect</b>: Enable this to reset the target system when the recording is started, in order to trace the system startup. For use together with the TRC_START option for xTraceEnable().
+						</li>
+						<li>
+							<b>Target Starts Tracing</b>: Enable this if using the TRC_START option for xTraceEnable(). This way, $PNAME won't send a start command when the recording session begins, just wait for the data.
+						</li>
+
+					</ul>
+				</p>
+
+				<note>
+					All tools using the J-Link driver (i.e., $PNAME and the debugger IDE) must use the same setting for Debugger Interface (JTAG/SWD).
+					So if you sometimes start a $PNAME session without an active debug session in your IDE, it is recommended to specify this setting explicitly, using the same setting as your debugger IDE.
+					This to avoid conflicts in the J-Link drivers.
+				</note>
+
+				<p>
+					<a name="jlink-troubleshooting"></a>
+				</p>
+				<p>
+					<br/>
+					<br/>
+					<b>Troubleshooting J-Link RTT streaming</b><br/>
+					<br/>
+					If you will only see "Starting session..." in the Live Stream window, $PNAME is not getting any data. In that case, double-check the below steps.
+				</p>
+				<p>
+					In case $PNAME gets some data, but you are having performance problems (e.g. missing events or high overhead) please refer to this <A HREF="https://percepio.com/troubleshoot-j-link-rtt/">troubleshooting guide</A> on our website.
+					Also see the general <A HREF="#troubleshooting">Troubleshooting</A> section.
+				</p>
+
+				<p>
+					<ol class="list">
+
+						<li>
+							Target Device<br/>
+							<p>
+								Under Settings -&gt; J-Link Settings, make sure you have specified the "Target Device" correctly. The "Select Device..." button shows a list of all devices supported by your SEGGER J-Link driver.
+								This setting is required for the SEGGER driver to locate the RAM address range(s) and find the RTT data structure.
+							</p>
+						</li>
+
+						<li>
+							J-Link Driver Version<br/>
+							<p>
+								Make sure to install the latest J-Link drivers from <A HREF="https://www.segger.com/jlink-debug-probes.html">SEGGER</A>. They are frequently updated, especially for new devices.
+								It is important that the <i>same version</i> of the J-Link driver version is used by $PNAME and your IDE. Therefore, make sure to install the latest J-Link drivers as the last step, after $PNAME has been installed.
+								After updating the J-Link driver, it may want to update the J-Link firmware as well. We strongly recommend allowing that.
+							</p>
+						</li>
+
+						<li>
+							Debugger Interface (JTAG/SWD)<br/>
+							<p>
+								Make sure the Debugger Interface setting (JTAG/SWD) is the same in $PNAME (Settings -&gt; J-Link Settings) as in your debugger IDE.
+								If case they differ, you get a warning from the J-Link driver ("Second debugger connection to the same J-Link detected...", as shown below) and a question if to change the interface setting.
+								In that case, just abort and correct the $PNAME setting under Settings -&gt; J-Link Settings.
+							</p>
+							<p>
+								<img src="img/jlink_interface_conflict.png" border="0"/>
+							</p>
+
+							<p>
+								Note that $PNAME offers a third option in the Debugger Interface setting, <b>Default (don't change)</b>. This means that $PNAME will not attempt to change the JTAG/SWD selection and instead uses the current setting (e.g. applied by the debugger IDE).
+								This can be convenient in some cases. However, the J-Link probes use JTAG by default and will revert to JTAG if power-cycled. So if using "Default (don't change)" you may get conflicts under certain circumstances and thereby a warning from the J-Link driver (like above).
+								Moreover, some J-Link driver versions (around v6.22 - v6.30) are known to cause problems if not setting the JTAG/SWD selection explicitly in $PNAME.
+							</p>
+						</li>
+
+						<li>
+							Tool Connection Order<br/>
+							<p>
+								If using $PNAME together with a debugger IDE, make sure to first start the debug session and thereafter connect with $PNAME.
+								If modifying your code and reprogramming the device, you need to stop the $PNAME recording and then restart the $PNAME recording for the new debug session.
+							</p>
+
+							<p>
+								Note that you don't need to <i>start</i> the target system before connecting with $PNAME. It is sufficient that the debug session has been launched and that the target is halted in main.
+							</p>
+							<p>
+								When using <A HREF="#api">xTraceEnable(TRC_START)</A>, we recommend the following order:
+								<OL class="list">
+									<li>Launch the debug session and let the target halt on a breakpoint in main, before xTraceEnable is called.</li>
+									<li>Select "Start Recording" in $PNAME. The "Live Stream" window it should now say "Starting session...", as it waits for data.</li>
+									<li>Start your target system (resume/run). You will now capture every event after xTraceEnable.</li>
+								</OL>
+								<b>NOTE:</b> Make sure to CHECK the option "Target Starts Tracing" when using the TRC_START option ($PNAME settings -&gt; PSF Streaming Settings).
+							</p>
+							<p>
+								If using xTraceEnable(TRC_START_AWAIT_HOST) or xTraceEnable(TRC_INIT), the order is simply:
+								<OL class="list">
+									<li>Launch the debug session and start the target system.</li>
+									<li>Click "Start Recording" in $PNAME. </li>
+								</OL>
+								<b>NOTE:</b> Make sure to UNCHECK the option "Target Starts Tracing" when using these start options ($PNAME settings -&gt; PSF Streaming Settings).
+								<A NAME="jlink-troubleshooting-rtt"></A>
+							</p>
+						</li>
+						<li>
+							The RTT Control Block<br/>
+							<p>
+								The J-Link driver needs to locate the address of the RTT control block before the RTT interface can be used. Normally this works automatically, but in some cases it is necessary to configure this manually.
+							</p>
+							<p>
+								You can see the status of the J-Link RTT interface in the J-Link Control Panel, that can be accessed via the "J-Link" icons in the task bar (if using Windows).
+								Note that there might be two icons, as shown below. This is not a mistake. Each development tool using the J-Link drivers spawns a separate driver instance, with a separate Control Panel.
+								So if you are using a debugger IDE and $PNAME at the same time, you get two control panels. This is normal and supported by SEGGER.
+							</p>
+
+							<p>
+								<A HREF ="img/jlink_control_panel.png" target ="_blank">
+									<img src="img/jlink_control_panel.png" border="0"/>
+								</A>
+							</p>
+
+							<p>
+								The J-Link RTT interface is handled by the primary J-Link Control Panel (the first started) while the secondary J-Link Control Panel instance will report "RTT handled by other J-Link instance".
+								If the primary Control Panel reports "Looking for RTT CB", it means that the J-Link driver is still searching for the RTT control block and is not yet ready.
+								This is normal before xTraceEnable has been called, where the J-Link RTT interface is initialized. The J-Link driver should find it directly after xTraceEnable has been called, and then start receiving data.
+							</p>
+
+							<p>
+								In case $PNAME is not getting any data and the "Looking for RTT CB" message is still shown after xTraceEnable has been called, it typically means that the J-Link driver is scanning wrong address range.
+								You can verify this by checking the address of _SEGGER_RTT in your debugger and compare with the addresses shown next to the "Looking for RTT CB" message. If incorrect, you can specify the address of the RTT control block (_SEGGER_RTT) in the "RTT Address" field.
+								Make sure that you are using the primary J-Link Control Panel, where the "Looking for RTT CB" message is shown.
+							</p>
+
+							<p>
+								$PNAME allows for specifying the address of the RTT Control Block in the PSF Streaming Settings.
+								However, this requires that you know the exact address, and that it does not move between builds. Moreover, it seems the SEGGER J-Link driver only allows for specifying the RTT address in the primary driver instance, i.e. the first one started.
+								The RTT communication is handled by the primary J-Link driver instance. So, if you have started a debug session in your IDE before connecting with $PNAME, it seems as the secondary J-Link driver just ignores the RTT address specified by $PNAME.
+							</p>
+
+							<p>
+								A better way of resolving this issue is to add a definition of <i>SEGGER_RTT_SECTION</i> in your <b>SEGGER_RTT_Conf.h</b>. This instructs the linker where to place the RTT control block.
+								The J-Link driver only seems to scan the "primary" RAM bank of the device (and only the first 64 KB of this, it seems), but by specifying SEGGER_RTT_SECTION you can make sure _SEGGER_RTT is placed where the J-Link will find it.
+								The _SEGGER_RTT control block is pretty small, so moving it should not be a big deal. This does not contain the actual RTT data buffers, only pointers to them.
+							</p>
+							<p>
+								First you need to check what address range that is scanned by the J-Link driver. You see this in the J-Link Control Panel, under "RTT".
+								The scanned addresses appear next to the "Looking for RTT CB" messages.
+							</p>
+							<p>
+								Once you know where the J-Link driver expects to find the RTT control block, you need to take a look at your linker file (or linker project settings).
+								The easiest approach is to identify an existing section that is already placed in the right address range, i.e. where the J-Link scans.
+								If so, specify this section in your SEGGER_RTT_SECTION definition to place the RTT control block there.
+							</p>
+							<p>
+								In the below example, the scanned address range was 0x20000000 - 0x2000FFFF. In the linker file we noted that this address range contained the ".data" section of RAM2, so we placed it there.
+<pre>
+<code>
+/* In SEGGER_RTT_Conf.h */
+#define SEGGER_RTT_SECTION ".data.$$RAM2" /* for NXP LPC54018 */
+</code>
+</pre>
+								Another solution, that might be "cleaner" but a bit more difficult, is to create a new section dedicated for the RTT control block, that is placed in the desired address range.
+							</p>
+						</li>
+
+					</ol>
+				</p>
+
+			</text>
+		</section>
+
+
+
+
+
+		<section>
+			<header>Snapshot Trace</header>
+
+			<text>
+				<p>
+					<a name="snapshot" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					With snapshot tracing, TraceRecorder keeps the latest events in a ring-buffer in target RAM, where older events typically are overwritten once the buffer becomes full.
+					This way, the latest trace data can be saved to files and opened in $PNAME to see the most recent activity, for example what happened just before an error.
+				</p>
+				<p>
+					Since $PNAME can read raw binary dumps of the trace buffer, snapshots can be performed in many ways, e.g. using the debugger connection or a serial port.
+					All you need is a way to transfer the trace buffer contents to a host-side file.
+				</p>
+				<p>
+					This approach has minimal hardware dependencies and can therefore be used on essentially any device.
+				</p>
+				<p>
+					For snapshot tracing, make sure to include the <i>RingBuffer</i> module found in <b>/streamports/RingBuffer</b>.
+				</p>
+
+				<p>
+					<A HREF="img/system_overview_snapshot.png" target ="_blank">
+						<img src="img/system_overview_snapshot.png" width="$IMAGEWIDTH" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					<b>Typical usage:</b>
+					<ul class="list">
+						<li>
+							Follow the <a href="$GETTINGSTARTEDURL">Getting Started guide</a> to integrate TraceRecorder. Make sure to use the RingBuffer stream port.
+						</li>
+						<li>
+							Start your target system, typically in a debug session.
+						</li>
+						<li>
+							Halt the system, e.g. on a breakpoint.
+						</li>
+						<li>
+							Capture a snapshot trace and load it in $PNAME, as described below.
+						</li>
+					</ul>
+					$PNAME now displays the most recent trace up to this point.
+				</p>
+				
+				<p>
+					Note that the length of snapshot traces is limited by the trace buffer size and other settings in the TraceRecorder.
+				</p>
+
+				<p>
+					Snapshot traces can be captured and uploaded to your host PC in several ways:
+					<ul class="list">
+						<li>
+							Using your existing debugger. Many IDEs have debug consoles where you can enter a command to dump memory to file.
+							If your debugger is based on GDB, you may use the command "dump binary value /path/to/trace.bin *RecorderDataPtr".
+						</li>
+						<li>
+							Using a Percepio plugin, like the one we offer for <A HREF="#eclipse">Eclipse-based IDEs</A> or <A NAME="#mplab">MPLAB X IDE</A>.
+						</li>
+						<li>
+							Using the integrated $PNAME debug probe support, for e.g. <a href="#jlink">SEGGER J-Link</a>.
+						</li>
+						<li>
+							Using a general debugger feature, for example the GDB "dump" command or debugger scripts for <a href="#iar">IAR</a> or <a href="#keil">Arm Keil µVision</a>.
+						</li>
+						<li>
+							Manually saving a RAM dump in your debugger IDE (there is often a "Save Memory" function).
+						</li>
+						<li>
+							Programmatically in your target system, allowing for custom transfer to host.
+						</li>
+
+					</ul>
+
+					$PNAME can open RAM dump files created in any way, as long the encoding is either binary (.bin) or Intel Hex (.hex).
+					The RAM dump does not need to match the exact location of the trace data, since $PNAME locates the trace data automatically. The dump may contain other data before or after the trace buffer.
+					However, it is important that the trace data structure is fully included in the memory dump. Note that the pointer <i>RecorderDataPtr</i> holds the start address of the trace data structure, and the recorder library also provides API functions for accessing the address and size of the data.
+
+				</p>
+
+				<p>
+					Note that it is important that the recorder is not modifying the trace data while saving the snapshot.
+					So before saving the snapshot, you need to either stop the recorder or halt the system, e.g., using a breakpoint.
+					The Percepio plugins mentioned above will stop device automatically before reading out a snapshot trace.
+				</p>
+			</text>
+		</section>
+
+		<section>
+			<header>Making snapshots</header>
+			<text>
+				<p>
+					This section describes how to upload snapshot traces from the target system to $PNAME.
+				</p>
+
+
+				<p>
+					<a name="jlink" style="position: relative; top:-45;"></a>
+				</p>
+				<p>
+					<b>Integrated support for SEGGER J-Link</b>
+					<br/>
+				</p>
+				<p>
+					To upload a <a href="#snapshot">snapshot</a> using a SEGGER J-Link, open the <b>Snapshot tool</b> from the <b>Trace</b> menu.
+					As "Snapshot Engine", select "Segger J-Link". Make sure the J-Link Settings are updated with the right target device.
+					Then select "Read Snapshot".
+				</p>
+				<p>
+					<A HREF="img/select_memory_region.png" target ="_blank">
+						<img src="img/select_memory_region.png" border="0"/>
+					</A>
+				</p>
+
+				<p>
+					The first time, you get a dialog "Select Memory Region" where you need to enter the address range of the recorder's trace buffer.
+					This can be found by inspecting the trace buffer (<i>RecorderDataPtr</i>) with your debugger (e.g., "watch").
+					However, you don't need to use the exact memory range, as long as the trace buffer is fully included in the specified memory range.
+					We therefore recommend specifying a larger memory block, to get some tolerance for minor changes in between builds. This setting is saved and reused in between $PNAME sessions.
+				</p>
+				<p>
+					Typical values are 0x0, 0x10000000 or 0x20000000 as start address and 0x10000 or 0x20000 as size (64 KB or 128 KB).
+				</p>
+				<p>
+					<b>Note:</b> Even if you don't have a stand-alone J-Link probe, the USB debug connection on your development boards may actually be a J-Link interface.
+					Those on-board debuggers are supported in the same way as stand-alone debug probes, although their performance may be lower. Look for a SEGGER J-Link label next to a USB connection on your board.
+				</p>
+				<p>
+					<p>
+						<a name="eclipse" style="position: relative; top:-45;"></a>
+					</p>
+					<b>Snapshot trace using Eclipse-based IDEs</b><br/>
+					The <i>Percepio Trace Exporter</i> plugin makes it easy to upload trace snapshots from Eclipse-based IDEs. The plugin supports any debug probe that is supported by your Eclipse IDE.
+				</p>
+				<p>
+					<A HREF="img/PercepioEclipsePlugin.png" target ="_blank">
+						<img src="img/PercepioEclipsePlugin.png" width="500px" border="0"/>
+					</A>
+				</p>
+				<p>
+					As shown in the above screenshot, the plugin gives you a new "Percepio" menu from which you can save snapshot traces via the currently active debug session, and then open these in $PNAME.
+					The plugin finds the trace data automatically, so no need to enter the address of the trace buffer.
+				</p>
+
+				<p>
+					To install the plugin, see <A HREF="https://percepio.com/exporter/">https://percepio.com/exporter/</A> for instructions. Note that the plugin does not include $PNAME itself, it is a separate download and runs as a standalone application.
+				</p>
+
+				<p>
+					The plugin works with most Eclipse-based IDE's using the CDT framework, but some IDEs (e.g. Vitis) may require a different solution.
+				</p>
+
+
+				<p>
+					<a name="iar" style="position: relative; top:-45;"></a>
+					<b>Snapshot trace using IAR Embedded Workbench for ARM</b><br/>
+					The IAR debugger can be configured to save the trace buffer to a host-side file, either manually or automatically, using a debugger macro. Follow these steps:
+
+					<ol class="list">
+						<li>
+							Create a macro file in the project directory (e.g. "save_trace_buffer.mac") with the following contents:
+<pre>
+<code>
+__var start;
+__var end;
+
+save_trace_buffer()
+{
+start = __smessage "Memory:0x",RecorderDataPtr:%x;
+end  =  __smessage "Memory:0x",(RecorderDataPtr + 1):%x;
+__memorySave(start,end,"intel-extended", "$$PROJ_DIR$$\\trace.hex", 0);
+
+return 0;
+}
+</code>
+</pre>
+						</li>
+
+						<li>
+							Add the macro file under <i>Options -> Debugger -> Use Macro File(s)</i>.
+						</li>
+						<li>
+							When in a debug session, open <i>View -> Macros -> Debugger Macros</i> and check that "save_trace_buffer" is included.
+						</li>
+						<li>
+							Now, to call the macro and thereby save the trace, you have three options:
+							<ul class="list">
+								<li>
+									<i>Manually</i>: In the Debugger Macros view, right-click on you macro and select "Add to Quicklaunch window". Now you can save the trace by double-clicking on the blue "refresh" icon in the Quicklaunch window.
+								</li>
+								<li>
+									<i>On a breakpoint</i>: Place a breakpoint on a suitable location in the code. Open it in the breakpoint editor and enter your macro name (e.g., "save_trace_buffer()") in the <i>Action -> Expression</i> field. The trace is now saved every time that breakpoint is hit.
+								</li>
+								<li>
+									<i>On every halt</i>: To update the trace on every halt, rename the "save_trace_buffer" function to <i>execUserExecutionStopped()</i>. That is a special hook that is called every time the execution is halted. Note that this can slow down single-stepping if the buffer is large.
+								</li>
+							</ul>
+						</li>
+					</ol>
+				</p>
+				<p>
+					To enable quick access to $PNAME and the current trace, you may include $PNAME in the Tools menu, with "trace.hex" specified as parameter.
+					<ol class="list">
+						<li>Select "Configure Tools..." in the Tools menu</li>
+						<li>Add a new entry "$PNAME"</li>
+						<li>
+							Set the path to the $PNAME executable (the ".exe" file).
+						</li>
+						<li>Set the argument to "$$PROJ_DIR$$\trace.hex"</li>
+					</ol>
+					This will open $PNAME and load the provided trace file.
+				</p>
+
+				<p>
+					<a name="keil"></a>
+					<b>Snapshot trace using Keil MDK/µVision</b>
+					<ul class="list">
+						<li>Open the "Command" window in µVision</li>
+						<li>
+							Enter the command <code>exec("SAVE \"out.hex\"  RecorderDataPtr , (RecorderDataPtr + 1)");</code>
+						</li>
+						<li>Open the resulting file in $PNAME, located in the project directory.</li>
+					</ul>
+				</p>
+				<p>
+					<A HREF ="img/keil.png" target ="_blank">
+						<img src="img/keil.png" border="0"/>
+					</A>
+				</p>
+				<p>
+					You can automate this procedure and get a tool bar button for this command, as illustrated above. To do this, open the "Function Editor" (in "Debug" menu, enabled when debugging...) and add the below code:
+<pre>
+<code>
+FUNC void SavePercepioRecorderData(void)
+{
+printf("Saving Recorder Data in out.hex!\n");
+exec("SAVE \"out.hex\"  RecorderDataPtr , (RecorderDataPtr + 1)");
+}
+DEFINE BUTTON "Save Recorder Data", "SavePercepioRecorderData()"
+</code>
+</pre>
+				</p>
+				<p>
+					<b>
+						Snapshot trace using GDB-based debuggers
+					</b>
+					<br/>
+					Many development tools use GDB as backend for the debug sessions. If your IDE offers a console where you see debugging commands, you can often run GBD commands there.
+					In that case, run the command:<br/>
+<pre>
+<code>
+dump binary value trace.bin *RecorderDataPtr
+</code>
+</pre>
+					<br/>
+					Open the resulting file (trace.bin) in $PNAME.
+				</p>
+
+				<p>
+					<b>
+						Snapshot trace with GDB using the Snapshot Tool
+					</b>
+					<br/>
+					You can configure $PRODUCT to connect to a GDB server and the dump command.
+					<ul class="list">
+						<li>
+							Open the <b>Snapshot Tool</b> from the <b>Trace</b> menu.
+						</li>
+
+						<li>Under "Snapshot Engine", select "GDB".</li>
+
+						<li>
+							Click on the "Settings" button to open the GDB settings.<br/>
+							<ul>
+								<li>Path to GDB: Enter the path to your gdb client executable (e.g. arm-none-eabi-gdb). This is usually found in your GCC toolchain folder or under your IDE application folder.</li>
+								<li>Path to image: Specify the path to the .elf file generated by your build. Make sure to update this if you switch project. </li>
+								<li>
+									Command to initialize: should be "target remote localhost:PORT", where PORT is the TCP port number of your GDB server.
+									If the GDB server is started by your IDE, you can often find the port number in the debug settings or by starting a debug session and checking the console log (e.g. "Listening port: 12345").
+								</li>
+							</ul>
+							Any other GDB settings can remain unchanged. Save the settings.
+						</li>
+						<li>You can now use the Snapshot tool, assuming a debug session is active in the GDB server.</li>
+					</ul>
+					Note that snapshots can only be read when the system is halted. If the system is running, it will be halted when reading the snapshot.
+				</p>
+
+				<p>
+					<b>Snapshot trace using AMD/Xilinx Vitis</b><br/>
+					You may use the XSCT Console to save snapshot traces (or otherwise use TCP/IP streaming).
+					<ul class="list">
+						<li>Ensure that you are in an active debug session, the target system is halted (e.g. on a breakpoint) and that xTraceEnable(TRC_START) has been executed.</li>
+						<li>Open the XSCT Console, found via menu Window → Show View (or in the Xilinx menu in older versions).</li>
+						<li>Set the working directory where the trace file should be saved by entering "cd [desired output directory]" or simply "cd" to move to your home directory.</li>
+						<li>Enter "print RecorderDataPtr" to see the address of the trace data structure.</li>
+						<li>Enter "print sizeof(*RecorderDataPtr)/4" to see the size of the trace data structure (in words).</li>
+						<li>
+							Enter "mrd -bin -file trace.bin [address] [size]" to save the trace data to the host file "trace.bin".
+							<ul>
+								<li>
+									Note that the mrd command by default expects the size in <i>words</i>, not <i>bytes</i>.
+								</li>
+								<li>You can use Ctrl-C to copy the results from the "print" commands and then use Ctrl-V to paste them into the "mrd" expression.</li>
+							</ul>
+						</li>
+						<li>Open the resulting file (trace.bin) in $PNAME.</li>
+					</ul>
+					Within a debug session, you can save multiple traces by repeating the same "mrd" command.
+					Note that you can repeat the XSCT commands in the XSCT console using the arrow keys.
+				</p>
+				<p>
+					<a name="mplab" style="position: relative; top:-45;"></a>
+					<b>Snapshot trace using Microchip MPLAB X IDE</b>
+					<br/>
+					We provide a plugin for MPLAB X IDE supporting <a href="#snapshot">snapshot</a> data upload for $PNAME. The plugin can be downloaded <A HREF="http://percepio.com/downloads/mplab-plugin.zip">here</A> and supports any debug probe that is supported by MPLAB. To learn more about this plugin, read this <A HREF="https://percepio.com/tracealyzer/microchip/">guide</A>.
+				</p>
+
+
+				<p>
+					<b>
+						Snapshot trace using other IDEs or debug probes
+					</b>
+					<br/>
+					Most debuggers are able to save the RAM contents to a file. $PNAME
+					supports the following common file formats:
+					<UL>
+						<LI>Binary (.bin or .dump)</LI>
+						<LI>Intel Hex (.hex)</LI>
+					</UL>
+
+					When you store the RAM dump, you must also make sure to select the right region,
+					i.e., start address and size. The recorder data is stored in a single data
+					block, identified by the pointer <i>RecorderDataPtr</i>. This can be found by inspecting <i>RecorderDataPtr</i> with your debugger (e.g., "watch").
+					However, you don't need to use the exact memory range, as long as the trace buffer is fully included in the specified memory range.
+					We therefore recommend specifying a larger memory block, to get some tolerance for minor changes in between builds. This setting is saved and reused in between $PNAME settings.
+				</p>
+
+			</text>
+		</section>
+
+		<section>
+			<header>Configuration</header>
+			<text>
+
+				<p>
+					<A NAME="config" style="position: relative; top:-45;"></A>
+				</p>
+
+				<p>
+					The trace recorder library have several settings that allow for customizing the recorder setup. Some of these settings must be modified for each system, while others are more intended for optional tuning.
+					The ones you need to update typically have a default setting that is intentionally invalid, so a compiler error is produced as a reminder if not addressed.
+				</p>
+				<p>
+					All settings are found in header files under the <b>/config</b> folders.
+					These are found in several places in the TraceRecorder file structure.
+				</p>
+
+				<p>
+					The main settings are found in <b>trcConfig.h</b>, <b>trcKernelPortConfig.h</b> and <b>trcStreamPortConfig.h</b>. The latter two exists in multiple versions, one for each kernel port and stream port.
+				</p>
+
+				<p>
+					<b>trcConfig.h</b> is the main configuration file and is found in <a href="https://github.com/percepio/TraceRecorderSource/tree/main/config">TraceRecorder/config</a>, containing generic settings that are independent of RTOS and stream port used.
+				</p>
+				<p>
+					The other config files of the TraceRecorder library are found in <b>/config</b> folders under each <a href="https://github.com/percepio/TraceRecorderSource/tree/main/kernelports">supported RTOS (kernel port)</a> and <a href="https://github.com/percepio/TraceRecorderSource/tree/main/streamports">stream port</a>.
+					Make sure to review the ones matching your setup. For example, to adjust the size of the ring-buffer for snapshot traces, have a look at <a href="https://github.com/percepio/TraceRecorderSource/blob/main/streamports/RingBuffer/config/trcStreamPortConfig.h">/streamports/RingBuffer/config/trcStreamPortConfig.h</a>.
+				</p>
+
+			</text>
+
+		</section>
+
+		<section>
+			<!-- Original version, keep this for Profile and Tracealyzer -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			
+			<header>Troubleshooting</header>
+			<text>
+
+				<p>
+					<A name="troubleshooting" style="position: relative; top:-45;"></A>
+				</p>
+
+				<p>
+					Double-check the settings in configuration header files for the recorder library, found in the <b>/config</b> folder.
+					The main one is <b>trcConfig.h</b> and there are also important settings in <b>trcKernelPortConfig.h</b> and <b>trcStreamPortConfig.h</b>.
+				</p>
+
+				<p>
+					Runtime errors in the recorder can often be captured by the included ASSERT macros used in most recorder functions.
+					Enable these by setting TRC_CFG_USE_TRACE_ASSERT to 1 in <b>trcConfig.h</b>. You can then see the details by placing a breakpoint in the error handler, found in <b>trcAssert.c</b>.
+					Note that this does cause quite a bit of computational overhead since all parameters and states will be verified in each function.
+					Use this mainly for tracking down tracing issues.
+				</p>
+
+				<p>
+					You may also call <i>xTraceErrorGetLast()</i> in order to obtain saved error messages. See <b>trcError.h</b> for more details.
+				</p>
+
+				<p>
+					In case you get "hard faults" (i.e. crashes...) when adding the recorder, this is often due to a stack overflow.
+					The added instrumentation will most likely increase the highest stack usage a bit, since  additional function calls are added to the call stacks.
+					This can affect all task stacks and also the main stack usage. If your application was close to a stack overflow before, this might push it over the edge.
+					In that case, increase the stack size where necessary. It is recommended to enable stack overflow detection, which is offered by many RTOSes and tools.
+				</p>
+
+				<p>
+					In case you have problems connecting to the recorder in streaming mode, or it reports lost events, make sure to check the following.
+					<ul class="list">
+						<li>
+							Double-check the streaming settings in $PNAME (File -> Settings), and check that the stream port settings are matching.
+						</li>
+
+						<li>
+							Using a SEGGER J-Link and RTT streaming? See the <A HREF="#jlink-troubleshooting">Troubleshooting J-Link RTT streaming</A> section above.
+						</li>
+
+						<li>
+							Check that tracing is properly started. Put a breakpoint in <i>prvSetRecorderEnabled()</i> in <b>trcStreamingRecorder.c</b> and check if it's reached.
+							If the breakpoint is not hit, you have either missed to call xTraceEnable(TRC_START), or the Start command from the $PNAME host application is not received properly.
+						</li>
+
+						<li>
+							Is the trace control task (<i>TzCtrl</i>) executing?
+							Put a breakpoint in the start of this task to verify this. Note that TzCtrl normally is started automatically from <a href="#api">xTraceEnable</a>.
+						</li>
+
+						<li>
+							Is your streaming interface sufficiently fast to handle the data produced? If not, there may be lost events or blocking in the recorder, depending on your recorder settings. If blocking mode is used, this may affect the timing of your system, but ensures that data is not lost.
+							In case of data loss, $PNAME will show a counter for "dropped events" in the "Connect to target system" window.
+
+							<ul class="list">
+								<li>
+									Make sure the trace buffer is sufficiently large.
+									This setting is typically found in the <b>trcStreamPortConfig.h</b> of your selected stream port.
+								</li>
+								<li>
+									In some stream ports (e.g. TCPIP), the writing to the streaming interface is done periodically by the trace control task.
+									This is the case if your <b>trcStreamPort.h</b> defines <i>TRC_USE_INTERNAL_BUFFER</i> as 1.
+									In that case, you may try reducing <i>TRC_CFG_CTRL_TASK_DELAY</i> to make it execute more frequently.
+									You also may want to increase the scheduling priority of the trace control task to make sure it runs periodically, by adjusting <i>TRC_CFG_CTRL_TASK_PRIORITY</i>.
+								</li>
+							</ul>
+						</li>
+
+					</ul>
+				</p>
+
+				<p>
+					What if the trace can be recorded, loaded into $PNAME but doesn't contain any task-switches or kernel calls?
+					This typically means that the trace macro definitions are not included into the kernel, so the recorder is not notified of the events.
+					Make sure you have included <b>trcRecorder.h</b> in your RTOS kernel as described in the <a href="$GETTINGSTARTEDURL">TraceRecorder integration guide</a>.
+				</p>
+
+				<p>
+					If you experience hardfaults or missing objects in the trace, it can be caused by calls to the recorder before it has been initialized.
+					This may occur if the code creates kernel objects very early during the startup, even before main(), for example in C++ constructors or during the startup code.
+
+					If you suspect this is the case and you have C++ code in your project, please have a look at the <b>TraceRecoderInit</b> example found under <b>/extras</b>.
+					Otherwise, add a call that <i>xTraceInitialize()</i> as early as possible in the startup code to ensure the recorder has been initialized before use.
+					Note that you still need to call <i>xTraceEnable(...)</i> to start the tracing.
+				</p>
+				
+			</text>
+		</section>
+
+		<section>
+			<!-- Percepio View only -->
+			<requirement inverted="true">CoreFeatures.Streaming</requirement>
+			
+			<header>Troubleshooting</header>
+			<text>
+
+				<p>
+					<A name="troubleshooting" style="position: relative; top:-45;"></A>
+				</p>
+
+				<p>
+					Double-check the settings in configuration header files for the recorder library, found in the <b>/config</b> folder.
+					The main one is <b>trcConfig.h</b> and there are also important settings in <b>trcKernelPortConfig.h</b> and <b>trcStreamPortConfig.h</b>.
+				</p>
+
+				<p>
+					Runtime errors in the recorder can often be captured by the included ASSERT macros used in most recorder functions.
+					Enable these by setting TRC_CFG_USE_TRACE_ASSERT to 1 in <b>trcConfig.h</b>. You can then see the details by placing a breakpoint in the error handler, found in <b>trcAssert.c</b>.
+					Note that this does cause quite a bit of computational overhead since all parameters and states will be verified in each function.
+					Use this mainly for tracking down tracing issues.
+				</p>
+
+				<p>
+					You may also call <i>xTraceErrorGetLast()</i> in order to obtain saved error messages. See <b>trcError.h</b> for more details.
+				</p>
+
+				<p>
+					In case you get "hard faults" (i.e. crashes...) when adding the recorder, this is often due to a stack overflow.
+					The added instrumentation will most likely increase the highest stack usage a bit, since  additional function calls are added to the call stacks.
+					This can affect all task stacks and also the main stack usage. If your application was close to a stack overflow before, this might push it over the edge.
+					In that case, increase the stack size where necessary. It is recommended to enable stack overflow detection, which is offered by many RTOSes and tools.
+				</p>
+
+				<p>
+					What if the trace can be recorded, loaded into $PNAME but doesn't contain any task-switches or kernel calls?
+					This typically means that the trace macro definitions are not included into the kernel, so the recorder is not notified of the events.
+					Make sure you have included <b>trcRecorder.h</b> in your RTOS kernel as described in the <a href="https://percepio.com/getstarted/latest/html/">TraceRecorder integration guide</a>.
+				</p>
+
+				<p>
+					If you experience hardfaults or missing objects in the trace, it can be caused by calls to the recorder before it has been initialized.
+					This may occur if the code creates kernel objects very early during the startup, even before main(), for example in C++ constructors or during the startup code.
+
+					If you suspect this is the case and you have C++ code in your project, please have a look at the <b>TraceRecoderInit</b> example found under <b>/extras</b>.
+					Otherwise, add a call that <i>xTraceInitialize()</i> as early as possible in the startup code to ensure the recorder has been initialized before use.
+					Note that you still need to call <i>xTraceEnable(...)</i> to start the tracing.
+				</p>
+
+			</text>
+		</section>
+
+
+
+		<section>
+			<!-- Tracealyzer only -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>TraceRecorder API</header>
+			<text>
+
+				<p>
+					<a name="api" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					To call the TraceRecorder functions, you need to add <code>#include "trcRecorder.h"</code> at the top of your .c file.
+					This is the main header file and includes all other header files.
+				</p>
+
+				<p>
+					The TraceRecoder API is documented in the header files found under <a href="https://github.com/percepio/TraceRecorderSource/tree/main/include">/include</a> folder.
+					Relevant API documentation is found in the following files:
+					<ul class="list">
+
+						<li>
+							<a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcRecorder.h">trcRecorder.h</a> Mainly <code>xTraceEnable()</code> and <code>xTraceDisable()</code> for starting and stopping the tracing.
+						</li>
+
+						<li>
+							<a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcPrint.h">trcPrint.h</a> - Functions for creating <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___User_Event_Logging">User Events</a>.
+						</li>
+
+						<li>
+							<a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcString.h">trcString.h</a> - Mainly <code>xTraceStringRegister()</code> for storing e.g. User Event Channel names.
+						</li>
+
+						<li>
+							<a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcStateMachine.h">trcStateMachine.h</a> - Functions for <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___State_Machine_Tracing">State Machine Tracing</a>
+							, a more efficient alternative to User Event logging.
+						</li>
+						<li>
+							<a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcInterval.h">trcInterval.h</a> - Functions for <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___Interval_Tracing">Interval Tracing</a>
+							, a more efficient alternative to User Event logging.
+						</li>
+						<li>
+							<a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcISR.h">trcISR.h</a> - Functions for <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___What_can_be_traced%3F">Interrupt Tracing</a>.
+						</li>
+						<li>
+							<a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcError.h">trcError.h</a> - Functions for reading TraceRecoder error messages.
+						</li>
+					</ul>
+				</p>
+
+			</text>
+		</section>
+
+
+		<section>
+			<header>Hardware Ports</header>
+			<text>
+				<p>
+					<a name="hardwareports" style="position: relative; top:-45;"></a>
+				</p>
+
+				<p>
+					The recorder library needs a hardware timer in order to give accurate timestamps on recorded events. Many processors are already supported in the recorder library, such as ARM Cortex M devices, and other ports are added over time.
+					In case your chip is not yet directly supported, you can make your own custom hardware port. This is fairly easy.
+				</p>
+				<p>
+					The timestamping relies on a set of macros (<i>TRC_HWTC...</i>) that you define according to your specific hardware in <b>trcHardwarePort.h</b>.
+					The central macro is <i>TRC_HWTC_COUNT</i>, that is expected to provide the current value of a suitable hardware timer/counter. For example, on Arm Cortex-M devices this is mapped to either the SysTick counter (that drives the kernel tick) or the DWT clock cycle counter.
+					Please refer to the comments in <b>trcHardwarePort.h</b> for additional instructions.
+				</p>
+				<p>
+					To make a custom hardware port, you may also need to provide a suitable implementation for the critical sections in the recorder.
+					Note that the standard critical sections offered by the RTOS kernel might only be intended for use in task context, and some recorder functions may be called from either task or interrupt contexts.
+					See <b>trcHardwarePort.h</b> for examples. See also <A HREF="https://percepio.com/multicore-tracing-on-freertos-11-and-ti-am62x/">this article on percepio.com</A> for a multicore (SMP) example.
+				</p>
+				<p>
+					Moreover, if ISR nesting is allowed by your system, make sure to disable <b>all</b> interrupts in the recorder's critical sections. This is the default behavior in provided ports.
+					Disabling all interrupts is not always necessary, but all ISRs using traced kernel functions or other recorder functions must be disabled during the critical sections, as the recorder can only handle one operation at a time, otherwise you might get weird errors.
+					Note that disabling interrupts during the recorder operations may add some microseconds to the interrupt latency.
+				</p>
+				<p>
+					In most cases, the critical section macros are defined in <b>trcHardwarePort.h</b>, depending on which hardware port that is used.
+					However, some hardware ports are not defining the critical section macros. In that case, the recorder instead uses default definitions in <b>trcKernelPort.h</b> called TRC_KERNEL_PORT_ALLOC_CRITICAL_SECTION, TRC_KERNEL_PORT_ENTER_CRITICAL_SECTION and TRC_KERNEL_PORT_EXIT_CRITICAL_SECTION.
+				</p>
+				<p>
+					To provide your own critical section definition without modifying the recorder code, select the hardware port <i>TRC_HARDWARE_PORT_APPLICATION_DEFINED</i> and
+					add your definitions in another header file, such as your RTOS configuration header file or in <b>trcConfig.h</b>.
+					This requires defining all hardware port definitions, but plenty of examples are available in <b>trcHardwarePort.h</b>.
+					Note that there are default definitions for critical sections in <b>trcKernelPort.h</b>. If these are valid for your target system and use-case, you can omit adding custom definitions for the critical section macros.
+				</p>
+			</text>
+		</section>
+
+		<section>
+			<!-- Tracealyzer only, redundant for View and Profile -->
+			<requirement>CoreFeatures.Streaming</requirement>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>User Event Logging</header>
+			<text>
+				<p>
+					To log custom <A HREF="UserEventIntroduction.html">User events</A> from your application code, use the functions in the <A HREF="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcPrint.h#L58">trcPrint API</A>. These are included in the general public API, accessed by including <b>trcRecorder.h</b>.
+				</p>
+				<p>
+					<a name="compactuserevent"></a>
+				</p>
+				<p>
+					A new feature in $PNAME v4.7 is <b>Compact User Events</b>, which allows for more compact logging of string constants by storing only the string address in the event, instead of storing the whole string.
+					The $PNAME application leverages the ELF file to resolve such strings constants.
+					This is both faster and reduces the data rate.
+				</p>
+				<p>
+					Obviously, this requires that the strings are indeed constants, i.e. literals like "my string". This is suitable for e.g. object names, names of states, debug messages, or user event channel names, format strings etc.,
+					but you can't use compact user events for logging strings received from an I/O interface or dynamically created strings, as they are not present in the ELF file.
+				</p>
+				<p>
+					If the logged string constants are stored in a dedicated memory area (linker section), they can be stripped out from the binary image (but remain in the original ELF file) to reduce flash memory usage.
+				</p>
+				<p>
+					<b>Usage:</b>
+				</p>
+				<p>
+					Right after initializing the TraceRecorder, add the following function call to register the ELF file name in the trace:
+<pre>
+<code>
+xTraceDependencyRegister("MyProject.elf", TRC_DEPENDENCY_TYPE_ELF);
+</code>
+</pre>
+				</p>
+				<p>
+					$PNAME will look for the provided ELF file in the following locations:
+					<ul class="list">
+						<li> The same directory as the trace. </li>
+						<li> My Documents/Tracealyzer/cfg (if using Windows)</li>
+						<li> /Tracealyzer/cfg (if using Linux)</li>
+						<li> Any path provided in the TZ_CFG_PATH environment variable. Multiple paths should be separated by semicolons.</li>
+					</ul>
+				</p>
+				<p>
+					Then use the <b>xTracePrintCompactF</b> functions to store compact user events. This way, the <i>user event channel name</i> and the <i>format string</i> is only included as <i>addresses</i> to the strings.
+				</p>
+				<p>
+					These functions have two main variants. Most assume a fixed number of parameters (xTracePrintCompactF&lt;n&gt;). These are very fast and efficient.
+					And there is a more flexible variant that allows for a variable number of arguments, but this is a bit slower since it needs to count the number of arguments in the format string.
+				</p>
+				<p>
+					<b>Examples:</b>
+<pre>
+<code>
+xTraceDependencyRegister("MyProject.elf", TRC_DEPENDENCY_TYPE_ELF);
+
+xTracePrintCompactF("MyUserEventChannel", "Variable number of arguments: %d, %d", arg1, arg2);
+xTracePrintCompactF0("MyUserEventChannel", "My message");
+xTracePrintCompactF1("MyUserEventChannel", "One value: %d", arg1);
+xTracePrintCompactF2("MyUserEventChannel", "Two values: %d, %d", arg1, arg2);
+xTracePrintCompactF3("MyUserEventChannel", "Three values: %d, %d, %d", arg1, arg2, arg3);
+xTracePrintCompactF4("MyUserEventChannel", "Four values: %d, %d, %d, %d", arg1, arg2, arg3, arg4);
+</code>
+</pre>
+				</p>
+			</text>
+		</section>
+
+		<section>
+
+			<!-- For Tracealyzer only -->
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			<header>State Machine Tracing</header>
+			<text>
+				<p>
+					While state variables can be logged with <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___User_Event_Logging">User Events</a> and configured as "State Machines" in the $PNAME application, a more efficient alternative
+					is to use the <a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcStateMachine.h">trcStateMachine.h</a> functions.
+					This way, the state machine is created automatically in $PNAME and you avoid storing strings on each state transition.
+				</p>
+				<p>
+					<b>Examples:</b>
+				</p>
+				<p>
+
+<code>
+<pre>
+/* Simple example*/
+
+TraceStateMachineHandle_t myfsm;
+TraceStateMachineStateHandle_t myfsm_stateA;
+TraceStateMachineStateHandle_t myfsm_stateB;
+
+...
+
+/* Initialization */
+xTraceStateMachineCreate("MyStateMachine", &amp;myfsm);
+xTraceStateMachineStateCreate(myfsm, "State A", &amp;myfsm_stateA);
+xTraceStateMachineStateCreate(myfsm, "State B", &amp;myfsm_stateB);
+
+...
+
+/* When entering state A*/
+xTraceStateMachineSetState(myfsm, myfsm_stateA);
+
+/* When entering state B*/
+xTraceStateMachineSetState(myfsm, myfsm_stateB);
+
+</pre>
+</code>
+				</p>
+
+				<p>
+					For more complex cases, it can be practical to store the state names and state handles as arrays, indexed using the state variable. See the example below.
+				</p>
+
+				<p>
+					<code>
+<pre>
+/* Example using arrays */
+
+#define MYFSM_NUMBER_OF_STATES (6)
+
+const char * statenames[MYFSM_NUMBER_OF_STATES] = {
+    "State A",
+    "State B",
+    "State C",
+    "State D",
+    "State E",
+    "State F",
+};
+
+TraceStateMachineHandle_t myfsm;
+TraceStateMachineStateHandle_t myfsm_state_handles[NUMBER_OF_STATES];
+
+...
+
+/* Initialization */
+xTraceStateMachineCreate("MyStateMachine", &amp;myfsm);
+
+for (int i=0; i&lt;NUMBER_OF_STATES; i++){
+	xTraceStateMachineStateCreate(myfsm, statenames[i], &amp;myfsm_state_handles[i]);
+}
+
+...
+
+/* At each state transition */
+xTraceStateMachineSetState(myfsm, myfsm_state_handles[newstate]);
+
+</pre>
+</code>
+				</p>
+
+			</text>
+		</section>
+
+		<section>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+			<header>Interval Tracing</header>
+			<text>
+				<p>
+					To measure the time between two points in the code, you can either use <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___User_Event_Logging">User Events</a> and then configure "Custom Intervals" in the $PNAME application,
+					or use the dedicated <a href="https://github.com/percepio/TraceRecorderSource/blob/main/include/trcInterval.h">trcInterval.h</a> functions.
+					This way, the interval is created automatically in $PNAME and you avoid storing strings on each event.
+				</p>
+				<p>
+					Interval tracing involves three concepts that are reflected in the API.
+					You call <code>xTraceIntervalStart()</code> and <code>xTraceIntervalStop()</code> to mark the beginning and end of the interval. This results in an <b>IntervalInstance</b>, displayed as a rectangle in the $PNAME Trace View.
+					Each such IntervalInstance belongs to a certain <b>IntervalChannel</b>, corresponding to a "swimlane".
+					Finally, the <b>IntervalChannelSet</b> is the top-level object. This may hold one or several IntervalChannels and groups them in the $PNAME views.
+				</p>
+
+				<p>
+					When calling <code>xTraceIntervalStart()</code> you may also include additional information using the <code>uxValue</code> parameter.
+					IntervalInstances with different values are separated in $PNAME using different colors.
+					For example, if intervals are used to track message in a FIFO queue, the value could respresent a message counter. This way, the message intervals will be displayed in alternating colors.
+					Note that only a limited number of colors are used, so each unique value might not get a unique color, but adjacent values will get different colors and you can see the exact value by clicking on the interval.
+				</p>
+				<p>
+					If you don't have a need for the uxValue parameter, i.e., to separate the instances using colors, just use a fixed value.
+					This can be used to select the interval color in $PNAME. For example, 0 = red, 1 = green, 2 = blue, 3 = purple, etc.
+				</p>
+				<p>
+					The basic example below uses a single IntervalChannel to track the time between two points in the code.
+				</p>
+
+				<p>
+					<b>Example:</b>
+<code>
+<pre>/* Declarations needed for interval tracing: */
+TraceIntervalChannelSetHandle_t myIntervalChannelSet;
+TraceIntervalChannelHandle_t myIntervalChannel;
+TraceIntervalInstanceHandle_t myIntervalInstance_A_to_B;
+
+/* Initialization */
+xTraceIntervalChannelSetCreate("My IntervalChannelSet", &amp;myIntervalChannelSet);
+xTraceIntervalChannelCreate("IntervalChannel_A_to_B", myIntervalChannelSet, &amp;myIntervalChannel);
+
+/* At the start of the interval. This sets myIntervalInstance_A_to_B. */
+xTraceIntervalStart(myIntervalChannel, 0, &amp;myIntervalInstance_A_to_B); // The 0 is uxValue. Sets the color.
+
+/* At the end of the interval. Can be in a different task. */
+xTraceIntervalStop(myIntervalChannel, myIntervalInstance_A_to_B);
+
+
+</pre>
+</code>
+
+				</p>
+			</text>
+		</section>
+
+
+		<section>
+			<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+			<header>Runnable Tracing</header>
+			<text>
+
+				<p>
+					<a name="runnabletracing" style="position: relative; top:-45;"></a>
+				</p>
+				<p>
+					$PNAME v4.7 added support for tracing of runnables, an automotive concept corresponding to top-level functions or "sub-tasks".
+					However, runnable tracing is applicable and useful in most systems, as it provides execution metrics for a specified section of code within a certain task.
+					For example, a task may have different behaviors depending on inputs or states, or have different phases or operations, like "read", "calculate", "write".
+					With runnable tracing you can see the individual execution times and also visualize the different "runnables" in the trace view, to better understand the system execution.
+				</p>
+
+				<p>
+					A related $PNAME feature is <a href="IntervalStateIntroduction.html#Intervals_and_State_Machines">custom intervals</a>, which allows for measuring the time between two generic User Events.
+					Such custom intervals are however independent of the task execution and therefore doesn't provide the specific execution time of a task, only the total time passed between the events.
+				</p>
+				<p>
+					The support for runnable tracing uses dedicated TraceRecorder events optimized for this purpose and considerably faster than generic user events.
+				</p>
+				<p>
+					Runnable tracing can be done in two ways, using dynamic or static runnables.
+					With dynamic runnables, the runnable names are registered in the trace.
+					With static runnables, the names are instead specified in a host-side XML file. This can be more efficient, but is somewhat more complicated to set up.
+				</p>
+				<p>
+					<b>Dynamic runnables</b> are registered using <code>xTraceRunnableRegister()</code>. This returns a handle, which is later passed as argument to <code>xTraceRunnableStart()</code> to mark the start of the runnable.
+					Then call <code>xTraceRunnableStop()</code> at the end of the runnable.
+				</p>
+
+				<p>
+					When calling xTraceRunnableRegister, use one of the following options as argument:
+					<ul class="list">
+						<li>
+							TRC_RUNNABLE_REGISTER_METHOD_USE_ENTRY_TABLE: Stores the runnable name in the TraceRecorder entry table.
+							This will consume a slot in the TraceRecorder entry table, but is the easiest method and recommended for tracing a small number of runnables.
+						</li>
+						<li>
+							TRC_RUNNABLE_REGISTER_METHOD_USE_STRING_ADDRESS: This method uses the address of the provided name string as handle for the runnable.
+							This will NOT consume a slot in the entry table but the registration event MUST be present in the available trace data, or the runnable will appear as an unknown object.
+							When using this option the runnable can be registered periodically to ensure it is present in trace.
+						</li>
+
+						<li>
+							TRC_RUNNABLE_REGISTER_METHOD_USE_HANDLE_ADDRESS: This method uses address of the provided handle variable as identifer for the Runnable.
+							This must be unique, i.e. a physical address to a dedicated global variable or array slot for each Runnable.
+							This will NOT consume a slot in the entry table but the registration event MUST be present in the available trace data, or the runnable will appear as an unknown object.
+							When using this option the runnable can be registered periodically to ensure it is present in trace.
+						</li>
+					</ul>
+				</p>
+
+				<p>
+					<b>Example:</b>
+<code>
+<pre>
+TraceRunnableHandle_t xRunnableHandle;
+xTraceRunnableRegister("MyRunnable_1", TRC_RUNNABLE_REGISTER_METHOD_USE_ENTRY_TABLE, &amp;xRunnableHandle);
+
+xTraceRunnableStart(xRunnableHandle);
+/* code to trace */
+xTraceRunnableStop();
+</pre>
+</code>
+				</p>
+				<p>
+					<b>Static runnables</b> are predefined in an XML file instead of registered in runtime.
+					Static runnables are more efficient than the dynamic runnables, but they are best suited for mature systems where changes to the runnables are infrequent, as any changes to the runnables will require matching changes in the XML files.
+				</p>
+
+				<p>
+					You may edit the XML file manually or develop a custom script to generate the XML file, based on header file definitions or other project files where runnables are listed.
+				</p>
+				<p>
+					When using static runnables, if you modify the set of runnables, it is highly recommended to create a new version of the XML file and update the version number in both the TraceRecorder registration call and in the XML file name.
+					Otherwise your old traces will be interpreted using modified definitions and might then be displayed incorrectly.
+				</p>
+
+				<p>
+					With static runnables, instead of registering each runnable directly in TraceRecorder, you instead register a <i>set of runnables</i> using <code>xTraceRunnableRegisterStaticSet(...)</code> and provide a host-side XML file with the details.
+					The registration call includes the name of the XML file (FOO and BAR in the below example), the version number of the XML file (v1.0.0 below) and the number of runnables in the set (3 and 2 below).
+				</p>
+
+				<p>
+					<b>Example:</b>
+<code>
+<pre>
+#define FOO_RUNNABLE_0 0
+#define FOO_RUNNABLE_1 1
+#define FOO_RUNNABLE_2 2
+
+#define BAR_RUNNABLE_0 0
+#define BAR_RUNNABLE_1 1
+
+TraceRunnableStaticSetHandle_t xRunnableSetFoo;
+TraceRunnableStaticSetHandle_t xRunnableSetBar;
+
+xTraceRunnableRegisterStaticSet("FOO", 1, 0, 0, 3, &amp;xRunnableSetFoo);
+xTraceRunnableRegisterStaticSet("BAR", 1, 0, 0, 2, &amp;xRunnableSetBar);
+
+xTraceRunnableStartStatic(xRunnableSetFoo, FOO_RUNNABLE_0);
+xTraceRunnableStopStatic();
+
+xTraceRunnableStartStatic(xRunnableSetFoo, FOO_RUNNABLE_1);
+xTraceRunnableStopStatic();
+
+xTraceRunnableStartStatic(xRunnableSetFoo, FOO_RUNNABLE_2);
+xTraceRunnableStopStatic();
+
+xTraceRunnableStartStatic(xRunnableSetBar, BAR_RUNNABLE_0);
+xTraceRunnableStopStatic();
+
+xTraceRunnableStartStatic(xRunnableSetBar, BAR_RUNNABLE_1);
+xTraceRunnableStopStatic();
+</pre>
+</code>
+				</p>
+
+				<p>
+					<b>Example XML files:</b>
+					See <a href="https://percepio.com/examples/FOO-v1.0.0.xml">FOO-v1.0.0.xml</a> and <a href="https://percepio.com/examples/BAR-v1.0.0.xml">BAR-v1.0.0.xml</a>.
+					Note that the XML file names must follow the pattern NAME-vMajor.Minor.Patch.xml, matching the arguments provided to <code>xTraceRunnableRegisterStaticSet()</code>.
+				</p>
+				<p>
+					The XML files should be  stored in one of the following locations:
+					<ul class="list">
+						<li> The same directory as the trace. </li>
+						<li> My Documents/Tracealyzer/cfg (if using Windows)</li>
+						<li> /Tracealyzer/cfg (if using Linux)</li>
+						<li> Any path provided in the TZ_CFG_PATH environment variable. Multiple paths should be separated by semicolons.</li>
+					</ul>
+				</p>
+			</text>
+		</section>
+
+		<section>
+			<requirement>CoreFeatures.StackUsage</requirement>
+			<header>Stack Usage</header>
+			<text>
+				<p>
+					You can configure the <a href="#api">Trace Recorder</a> to report the <i>unused</i> stack space for each task in your application.
+					This is done by setting <i>TRC_CFG_ENABLE_STACK_MONITOR</i> to 1 in <b>trcConfig.h</b>. You also need to ensure that the setting <i>TRC_CFG_STACK_MONITOR_MAX_TASKS</i> allows for including all tasks.
+					If this is too small, some tasks will not be included in the stack monitoring.
+				</p>
+				<p>
+					By enabling the Stack Analysis, the $PNAME Control task (<i>TzCtrl</i>) will periodically generate "Unused stack" events, which are shown in the <A HREF="StackUsage.html">Stack Usage</A> graph and also in the <a href="TraceView.html">Trace View</a> as Notices.
+					<BR/><BR/>
+					<B>Notes:</B><BR/>
+					<UL class="list">
+						<LI>Short-lived tasks might be missed by the stack analysis, i.e. if deleted shortly after creation.</LI>
+						<LI>
+							The unused stack space is reported in <i>words</i>, i.e. just like the stack size parameter for xTaskCreate().
+						</LI>
+						<LI>The "Unused stack" events does not show exactly where an increase in stack usage occurred, but only where the sample was made.</LI>
+					</UL>
+				</p>
+				<p>
+					You can configure how many task stacks that should be analyzed by each execution of the TzCtrl using <i>TRC_CFG_STACK_MONITOR_MAX_REPORTS</i> in <b>trcConfig.h</b>.
+					In this file you also find settings for the TzCtrl task, which is of relevance for the stack analysis.
+					For instance, if you want more frequent samples you can reduce the delay time in <i>TRC_CFG_CTRL_TASK_DELAY</i>.
+					Moreover, you can set the scheduling priority of the TzCtrl task using the <i>TRC_CFG_CTRL_TASK_PRIORITY</i> setting. Due to the potentially long runtimes, you should ensure that TzCtrl runs on lower priority than any time-critical tasks in your system.
+				</p>
+			</text>
+		</section>
+
+	</body>
+</page>
+

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="IPC">
+      <KernelService name="ipc_send" operation="OtherWrite" />
+      <KernelService name="ipc_sendwait" operation="OtherWrite" />
+      <KernelService name="ipc_sendwait returns" operation="OtherRead" />
+      <KernelService name="ipc_broadcast" operation="OtherWrite" />
+      <KernelService name="ipc_distribute" operation="OtherWrite" />
+      <KernelService name="ipc_package" operation="OtherWrite" />
+      <KernelService name="ipc_receive" operation="OtherRead" />
+      <KernelService name="ipc_answer" operation="OtherWrite" />
+      <KernelService name="ipc_unknown" operation="OtherWrite" />
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+  <ObjectClasses>
+    <ObjectClass name="Task" type="Actor" />
+    <ObjectClass name="IPC" type="Other" />
+  </ObjectClasses>
+</TargetPlatform>

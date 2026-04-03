@@ -1,0 +1,265 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+	<title>User Interface</title>
+	<keywords>
+		<keyword>user interface</keyword>
+		<keyword>users</keyword>
+		<keyword>interfaces</keyword>
+	</keywords>
+	<body>
+		<section>
+			<header>Overview</header>
+			<text>
+				<subsection>
+					<!-- For Tracealyzer -->
+					<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+					<header>Overview</header>
+					<text>
+						<p>
+							$PNAME offers over 30 views, providing different perspectives of the trace data. There are several ways of accessing and arranging these views.
+						</p>
+						<p>
+							The most frequently used views are found in the Navigation Bar (the left-side icons). You can adjust the contents of the Navigation Bar in the <i>Navigation Bar Settings</i> (File menu -&gt; Settings).
+						</p>
+
+						<p>
+							<A HREF ="img/user_interface.png" target ="_blank">
+								<img src="img/user_interface.png" width="$IMAGEWIDTH" border="0"/>
+							</A>
+						</p>
+						<p>
+							You may also access the views from the Views menu, just like in older versions of $PNAME.
+						</p>
+					</text>
+				</subsection>
+				<subsection>
+					<!-- For View -->
+					<requirement inverted="true">CoreFeatures.Streaming</requirement>
+					<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+					<header>Overview</header>
+					<text>
+						<p>
+							$PNAME offers multiple views, providing different perspectives of the trace data, including the <A HREF="TraceView.html">Trace View</A> and the <A HREF="EventLog.html">Event Log</A>.
+						</p>
+						<p>
+							The CPU Load Graph is also available after registering the software, as well as display of custom "User Events" logged in your application code.
+						</p>
+
+						<p>
+							<A HREF ="img/user_interface_view.png" target ="_blank">
+								<img src="img/user_interface_view.png" width="$IMAGEWIDTH" border="0"/>
+							</A>
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<!-- For Profile -->
+					<requirement>CoreFeatures.Streaming</requirement>
+					<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+					<header>Overview</header>
+					<text>
+						<p>
+							$PNAME offers multiple views, providing different perspectives of the trace data. The available views can be accessed from the Views menu.
+						</p>
+
+						<p>
+							<A HREF ="img/user_interface_profile.png" target ="_blank">
+								<img src="img/user_interface_profile.png" width="$IMAGEWIDTH" border="0"/>
+							</A>
+						</p>
+					</text>
+				</subsection>
+
+
+
+				<subsection>
+					<header>Docking on Windows</header>
+					<text>
+						<p>
+							You can rearrange the views by docking them next to other views, or change the view to a free-floating window.
+							To move a view, place the mouse cursor over the name list in the top (where the "X" close button is), hold down the left mouse button and drag the view.
+							When dragging the view, possible docking targets are displayed. Move the mouse cursor to the desired docking target and release the mouse button.
+							If you release the mouse button when not on a docking target, the view will become a free-floating window.
+							This way, you can combine multiple views and arrange them any way you like.
+						</p>
+						<p>
+							If you have multiple screens, you can create additional main windows.
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<header>Docking on Linux</header>
+					<text>
+						<p>
+							On Linux, the window docking works in a different way.
+						</p>
+						<p>
+							The main area is divided into four areas (top left, top right, bottom left, bottom right) which each can hold any number of views (stacked).
+						</p>
+						<p>
+							Moving a view between the areas is done using the <i>Docking</i> menu of the view, which is at the right side of the menu bar.
+							Besides moving the view to a specific area, it is also possible to move it to dock with another existing view.
+						</p>
+						<p>
+							Views can also be put in a separate floating window using <i>Docking</i> &gt; <i>Float</i>. This will create a new free floating
+							window, which can also be used as a separate area to dock other views in.
+						</p>
+						<p>
+							Besides the main area, there are two dedicated areas on the right for the <i>tool</i> views, like Object Selection and Filter.
+							Any view can be docked in the main areas, or in floating windows, but only the tool views can be docked in the tool areas.
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<header>Mouse Actions</header>
+					<text>
+						<p>
+							Generally, the mouse buttons behave like this:
+							<ul class="list">
+								<li>
+									<b>Left Click</b>: Set (or clear) selection, highlighting in all views.									
+								</li>
+								<li>
+									<b>Left Double-Click</b>: Drill-down (when available), i.e. show more information about the selection. Sets or clears selection and focus.									
+								</li>
+								<li>
+									<b>Right Click</b>: Open context menu to get more options.									
+								</li>
+							</ul>
+						</p>
+						<p>
+							There are three types of views that react to mouse wheel actions:
+							<ul class="list">
+								<li>
+									<b>Vertical Timeline</b>: Mouse wheel scrolls the timeline (up/down), for example in the <a href="TraceView.html">Trace View</a>.
+								</li>
+								<li>
+									<b>Horizontal Timeline</b>: Mouse Wheel will scroll the timeline (left/right), for example in the CPU Load Graph.
+								</li>
+								<li>
+									<b>Lists</b>: Mouse wheel will scroll the position (up/down) in all lists showing a scroll bar.
+								</li>
+							</ul>
+						</p>
+						<p>
+							In timeline views like the <a href="TraceView.html">Trace View</a>, holding <i>SHIFT</i> changes the mouse wheel behavior to horizontal scrolling.
+						</p>
+						<p>
+							For views with a timeline, holding <i>CTRL</i> will change from scrolling to zooming; wheel up to zoom in, wheel down to zoom out.
+						</p>
+						<p>
+							If your mouse has additional buttons the first two ones (which normally handles Browse Forward and Browse Back in your normal web browser) will also zoom in/zoom out.<br/>
+							It is up to the operating system to tell $PNAME which buttons they are, and because of this it is not possible to change these mappings within the application.
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<requirement>CoreFeatures.ViewPortOverview</requirement>
+					<header>View Ports and Sync</header>
+					<text>
+						<p>
+							A <i>View Port</i> is the part of the trace that is currently in view. By default, $PNAME has two view ports, "Details" showing 100 ms and "Overview" showing 10 s, and each timeline view is connected to either Details or Overview.
+							All views connected to same view port are synchronized, so if zooming and scrolling one, all are updated.
+						</p>
+						<p>
+							You may change the view port of view using the <i>Sync</i> option in the view menu. Selecting "Unsynchronized" means that the view is independent from other view ports.
+							The "Unsynchronized" option can be used the pause views when recording in streaming mode with live visualization.
+						</p>
+						<p>
+							By Selecting Sync -&gt; Custom...,  you may create a new view port for this view. You may then connect other views to your new view port in order to synchronized them.
+						</p>
+						<p>
+							The <A HREF="ViewPortOverview.html">View Port Overview</A> view lists all view ports and shown their current position on the trace timeline.
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<header>Filtering</header>
+					<text>
+						<p>
+							By default, filtering is synchronized for all views using the same View Port. This is possible to turn off by using Sync -&gt; Unsynchronized Filter.
+							<b>Note!</b> When the View Port is changed the filter will always be set to that View Port.
+						</p>
+						<p>
+							When changing the filter using either a built in legend (used in most horizontal views) or the <A HREF="Filter.html">Filter</A> tool, all changes are made directly for each view.
+						</p>
+						<p>
+							When either filter or view is Unsynchronized this will be indicated by the icon in the menu and by showing "No Sync" in the title bar.
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<requirement>CoreFeatures.Layouts</requirement>
+					<header>Layouts</header>
+					<text>
+						<p>
+							A layout is the arrangement of the views in $PNAME. You may store and restore the layout using the options in the <i>Layout</i> menu:
+							<ul>
+								<li>Reset to Default Layout - Applies the default layout.</li>
+								<li>Remember Layout - Enable this option to let $PNAME remember the previously used layout and restoring it when starting $PNAME.</li>
+								<li>Layout Locked - If this option is enabled, the views can't be rearranged. Can be useful to prevent accidental changes once you are happy with your layout.</li>
+								<li>Save New Layout - Sets a name for the current layout, so it can be restored later. This allows for having multiple layouts for different kinds of analysis.</li>
+								<li>Manage Layout - Allows for renaming or removing a saved layout.</li>
+								<li>Layouts - Allows for restoring a previously saved layout.</li>
+							</ul>
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<header>Tool Windows</header>
+					<text>
+						<p>
+							Apart from all visualizations, $PNAME provides Tool Windows that are important to know.
+							These are normally shown by default, but if you close them, you can open them again from the View menu.
+						</p>
+						<p>
+							<A HREF="SelectionDetails.html">Selection Details</A> show additional information about the selected entity.
+						</p>
+						<p>
+							<A HREF="Filter.html">Filter</A> allows for selecting what information that are displayed in the views.
+						</p>
+					</text>
+				</subsection>
+
+				<subsection>
+					<requirement>CoreFeatures.Streaming</requirement>
+					<header>Time Formats</header>
+					<text>
+						<p>
+							$PNAME supports different time formats and modes that can be selected through the <i>View</i> -&gt; <i>Time Format</i> menu.
+							<ul>
+								<li>Trace Time - A human readable time mode. The format is typically hh:mm:ss.ms.µs, where the more significant parts are omitted if zero.</li>
+								<li>Native Ticks - The timestamp from the trace format in its native frequency. </li>
+								<li>Event Index - This uses the order of events in $PNAME event list instead of time.</li>
+								<li>Wall Time - The full date and time, formatted using .NETs DateTime and TimeSpan objects. This mode is only available when there is some form of time reference.</li>
+							</ul>
+						</p>
+					</text>
+				</subsection>
+				<subsection>
+					<requirement>CoreFeatures.Streaming</requirement>
+					<header>Time Offset Mode</header>
+					<text>
+						<p>
+							In addition to different formatting modes, $PNAME also supports different offset modes configurable from the <i>View</i> -&gt; <i>Time Offset Mode</i> menu.
+							<ul>
+								<li>Relative Trace Start - The first event in the trace is time 0.</li>
+								<li>Relative Trace End - The last event in the trace is time 0. This means everything except the last event will have a negative timestamp.</li>
+								<li>Absolute - The absolute time according to this trace format and/or trace recording solution. This is usually relative to system startup or the point where tracing was enabled.</li>
+								<li>Relative to user defined point - If you right-click a point in any view that has a timeline, you can specify that time as relative time 0.</li>
+							</ul>
+						</p>
+					</text>
+				</subsection>
+			</text>
+		</section>
+	</body>
+</page>

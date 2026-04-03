@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+  <HasProcesses>True</HasProcesses>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="semCreate" />
+      <KernelService name="semGive" operation="IncreaseSemaphore" />
+      <KernelService name="semFlush" operation="IncreaseSemaphore" />
+      <KernelService name="semTake" operation="DecreaseSemaphore" />
+    </KernelServiceGroup>
+    <KernelServiceGroup name="MsgQ">
+      <KernelService name="msgQSend" operation="Enqueue" />
+      <KernelService name="msgQReceive" operation="Dequeue" />
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Event">
+      <KernelService name="eventSend" parameters="None" />
+      <KernelService name="eventReceive" parameters="None" />
+    </KernelServiceGroup>
+    <KernelServiceGroup name="TaskLowLevel">
+      <KernelService name="taskSafe" />
+      <KernelService name="taskUnsafe" />
+      <KernelService name="taskLock" parameters="None" />
+      <KernelService name="taskUnlock" parameters="None" />
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Task">
+      <KernelService name="taskSpawn" />
+      <KernelService name="taskSuspend" />
+      <KernelService name="taskDestroy" />
+      <KernelService name="taskStop" />
+      <KernelService name="taskResume" />
+      <KernelService name="taskCpuAffinitySet" parameters="ObjectAndNumericParameter" />
+      <KernelService name="taskPrioritySet" parameters="ObjectAndNumericParameter" />
+      <KernelService name="taskDelay" parameters="NumericParameterOnly" />
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Memory">
+      <KernelService name="malloc" operation="AllocateMemory" parameters="NumericParameterOnly">
+        <Parameter name="size" format="{0}" />
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}" />
+      </KernelService>
+      <KernelService name="free" operation="FreeMemory" parameters="NumericParameterOnly">
+        <Parameter name="ptr" format="0x{0:X8}" />
+        <ReturnValue name="size" format=" released {0} bytes" />
+      </KernelService>
+
+      <KernelService name="realloc_alloc" operation="AllocateMemory" parameters="NumericParameterOnly">
+        <Parameter name="size" format="{0}" />
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}" />
+      </KernelService>
+      <KernelService name="realloc_free" operation="FreeMemory" parameters="NumericParameterOnly">
+        <Parameter name="ptr" format="0x{0:X8}" />
+        <ReturnValue name="size" format=" released {0} bytes" />
+      </KernelService>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+  <ObjectClasses>
+    <ObjectClass name="MsgQ" type="Queue" />
+    <ObjectClass name="Semaphore" type="Semaphore" />
+    <ObjectClass name="Mutex" type="Mutex" />
+    <ObjectClass name="Memory" type="Other" options="NoIpcGraph" />
+    <ObjectClass name="Task" type="Actor" />
+    <ObjectClass name="ISR" type="Actor" />
+    <ObjectClass name="RTP" type="ActorGroup" />
+    <ObjectClass name="Heap" type="Heap" options="Hidden, NoIpcGraph" />
+  </ObjectClasses>
+</TargetPlatform>

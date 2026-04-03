@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Synchronization Listener</title>
+  <keywords>
+    <keyword>synchronization</keyword>
+    <keyword>listener</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+		  <!--
+        <p>
+          This is intended for internal use only.
+        </p>
+
+        <p>
+          <A HREF="img/img.png" target="$IMAGETARGET">
+            <img src="img/img.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          Addtional section
+        </p>-->
+      </text>
+    </section>
+  </body>
+</page>

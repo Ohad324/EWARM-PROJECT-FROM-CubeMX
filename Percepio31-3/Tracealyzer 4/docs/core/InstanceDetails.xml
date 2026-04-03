@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Instance Details</title>
+  <keywords>
+    <keyword>instance</keyword>
+    <keyword>details</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Whenever an instance is double-clicked, its details will be shown.
+        </p>
+
+        <p>
+          <A HREF="img/Instance Details.png" target="$IMAGETARGET">
+            <img src="img/Instance Details.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          The details includes the currently selected instance. Besides the details, these views are also available:
+          <ul>
+            <li>
+              Actor Instances shows all available instances of the selected task. The current selection is highlighted with light blue background, and if different the selection of the main window as well with a teal background.
+            </li>
+            <li>
+              Local Trace shows the current trace view with the selected instance focused, see <a href="TraceView.html">Trace View</a> for more information.
+            </li>
+            <li>
+              Communication Flow shows a filtered version of the <A HREF="IpcGraph.html">Communication Flow</A> graph for this particular object.
+		  </li>
+          </ul>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

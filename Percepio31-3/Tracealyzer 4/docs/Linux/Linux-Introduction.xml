@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>Linux</title>
+  <keywords>
+    <keyword>linux</keyword>
+    <keyword>lttng</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Introduction</header>
+      <text>
+        <p>
+          This page describes the Linux target support in $PNAME.
+        </p>
+        <subsection>
+          <header>Setting up your target</header>
+          <text>
+            <p>
+              The first thing you need to do is to configure your target for LTTng support. Exact instructions are outside the scope of this document, but a good starting point is the <a href="https://lttng.org/docs/v2.12/">LTTng project documentation</a>.
+            </p>
+            <p>
+              Some key points to consider are
+              <ul class="list">
+                <li>Most of the features in $PNAME require kernel tracer support. This means you must ensure that lttng-sessiond runs as root on your target before any other tracing commands are started, and you must ensure that you are either running your tracing commands as root or that your user is a member of the "tracing" group.</li>
+
+                <li>To control tracing from the $PNAME GUI, SSH login must be enabled on your target.</li>
+
+                <li>Make a test trace to ensure that everything is working. A minimal trace setup could be created using something like the following: <br />
+                  <pre>
+                    <code>
+lttng create
+lttng enable-event -k sched_switch
+lttng start
+lttng stop
+lttng destroy
+                    </code>
+                  </pre>
+                </li>
+                <li>If you get a message about the kernel tracer being unavailable, make sure you have installed lttng-modules for the current kernel and that the build and installation were successful (error messages have been known to be subtle!). The installation of lttng-modules have been known to fail without errors when the kernel version has special characters such as a '+' in them (common on Raspberry PI), by placing the built kernel modules in the wrong output directory. Contact support if you need more information.</li>
+
+              </ul>
+            </p>
+            <p>To be able to stream traces to your host, you must install lttng-relayd (part of the lttng-tools package) on your host machine. If you are running $PNAME on Windows, you need to install lttng-tools in a Windows Services for Linux (WSL) instance. And make sure that the lttng-relayd is the same version as LTTng on the target.</p>
+
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>What $PNAME supports and expects</header>
+          <text>
+            <p>The current version of $PNAME is largely focused on kernel tracing. While any events can be displayed as text and used for various generic features, $PNAME has extended support for the following event types. </p>
+            <p>
+              <ul class="list">
+                <li>Scheduling events (sched_* in the Kernel domain)</li>
+                <li>Signal events (signal_* in the Kernel domain)</li>
+                <li>IRQ and SoftIRQ events (irq_* in the Kernel domain)</li>
+                <li>Syscalls (--syscall -a in the kernel domain)</li>
+              </ul>
+            </p>
+
+            <p>
+              In addition, some contexts are needed for the full experience.
+              <ul class="list">
+                <li>
+                  <b>pid</b> should be enabled for scheduling events.
+                </li>
+                <li>
+                  <b>ppid</b> should be enabled for scheduling events.
+                </li>
+                <li>
+                  <b>vtid</b> is recommended for user application (UST) channels.
+                </li>
+              </ul>
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Limitations and known issues</header>
+          <text>
+            <p>
+              <ul class="list">
+                <li>The LTTng Machine Interface (--mi) has very limited support for snapshots. In particular, it does not include the output path. For this reason, snapshot support is very limited. We are looking at workarounds.</li>
+
+                <li>Traces with uneven buffer coverage may confuse $PNAME. This is frequently the case with snapshot traces, and for this reason snapshot traces are not recommended. By uneven buffer coverage, we are referring to scenarios where different channels or event streams cover different time periods. If you have 10 minutes of scheduling data for one core, but only 10 seconds of scheduling data for another core, not necessarily aligned at the start or end of the trace, the combined scheduling will simply not make sense. The coverage can be analyzed through the interval set “External Data / Intervals / Buffer Coverage / (all)”.</li>
+
+                <li>$PNAME can only analyze and display information that is present within a trace. If no process information is included in the trace, $PNAME will treat each thread as its own process. If a process or thread is not seen running in a trace, $PNAME will not know about it. If a file is opened before tracing is started, $PNAME will be unable to track accesses by file name.</li>
+
+                <li>$PNAME uses a traditional process and thread model internally, which is also the most common programming model for Linux development. The Linux kernel is a bit more flexible internally, and advanced users may use a different model. Such use cases are untested at this time and $PNAME may not be able to interpret the resulting trace.</li>
+
+                <li>We recommend using the latest version of LTTng on both target and host. In particular, we have seen problems where using an older version (2.10) of lttng-relayd on the host side causes traces to be created without metadata, rending them unusable.</li>
+              </ul>
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Linux specific views and features</header>
+          <text>
+            <p>The Linux support in $PNAME comes with a number of unique features.</p>
+            <p>
+              <ul class="list">
+                <li>
+                  The <b>Signals and Syscalls Explorer</b> is a tool that can help you track signals and syscalls in your processes. 
+                </li>
+                <li>The <b>Communication Flow</b> view has three additional Linux specific modes.
+                  <ul class="list">
+                    <li>
+                      <b>Files, Sockets and Pipes</b> will let you review how processes are using files and communicating with each other using pipes and sockets. This requires syscalls to be included in the trace.
+                    </li>
+                    <li>
+                      <b>Process Tree</b> will let you review how processes relate to each other. 
+                    </li>
+                    <li>
+                      <b>Signals</b> will let you review how processes are signaling other processes. This requires signals to be included in the trace.
+                    </li>
+                  </ul>
+              </li>
+              </ul>
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,26 @@
+<SignalTemplates>
+  <Template>
+    <Name>First value after channel ID</Name>
+    <Description>Matches the first number following the initial "[channel]" part.</Description>
+    <Regex>^\[.*?\].*?(-?[0-9]+)</Regex>
+    <ResultIndex>1</ResultIndex>
+    <ParseAs>DecimalInteger</ParseAs>
+    <ExampleData>[V1] 234 volts</ExampleData>
+  </Template>
+  <Template>
+    <Name>Last value</Name>
+    <Description>Matches a decimal integer in the end of the string.</Description>
+    <Regex>(-?[0-9]+)$</Regex>
+    <ResultIndex>1</ResultIndex>
+    <ParseAs>DecimalInteger</ParseAs>
+    <ExampleData>[0001] MyVal: -42</ExampleData>
+  </Template>
+  <Template>
+    <Name>Labeled value</Name>
+    <Description>Matches the first decimal integer following the label "MyVal:" and any spaces in between.</Description>
+    <Regex>MyVal\:[ ]*(-?[0-9]+)</Regex>
+    <ResultIndex>1</ResultIndex>
+    <ParseAs>DecimalInteger</ParseAs>
+    <ExampleData>[0001] MyVal: 39 MyVal2: 82</ExampleData>
+  </Template>
+</SignalTemplates>

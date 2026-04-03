@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>User Event Log</title>
+  <keywords>
+    <keyword>user</keyword>
+    <keyword>events</keyword>
+    <keyword>list</keyword>
+    <keyword>log</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view is specific to show user events.
+        </p>
+
+        <p>
+          <A HREF="img/img.png" target="$IMAGETARGET">
+            <img src="img/img.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          For more information about user events, see <a href="UserEventIntroduction.html">User Events</a> section.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

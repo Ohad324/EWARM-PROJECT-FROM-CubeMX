@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Memory Heap Utilization</title>
+  <keywords>
+    <keyword>memory</keyword>
+    <keyword>heap</keyword>
+    <keyword>utilization</keyword>
+    <keyword>plot</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+			This view shows the dynamic memory allocation over time, i.e. the <code>malloc()</code> and <code>free()</code> calls and the sum of the allocations made.
+			If you click on a marker in the graph you can see information about that event in the information panel.
+			Double-clicking on a marker will focus the Trace View on that event.
+		</p>
+
+        <p>
+          <A HREF="img/Memory Heap Utilization.png" target="$IMAGETARGET">
+            <img src="img/Memory Heap Utilization.png" width="$IMAGEWIDTH" border="0"></img>
+          </A>
+        </p>
+
+		  <p>
+			Note that memory allocation events also can be viewed in the Object History view, by double-clicking on the event in the Trace View. This includes a filtering feature that makes it easier to spot memory leaks.
+		  </p>
+		  
+        <p>
+          This may include multiple memory heaps in the system, if present, for example if the RTOS provides "byte pool" and/or "block pool" objects where allocations can be made.
+		  You can show or hide such heap objects by clicking on their entries in the legend field to the right.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

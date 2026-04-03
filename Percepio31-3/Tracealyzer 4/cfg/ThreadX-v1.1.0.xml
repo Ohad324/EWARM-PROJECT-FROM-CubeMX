@@ -1,0 +1,1955 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- ThreadX event codes for Percepio Streaming Format (PSF) -->
+
+<PlatformExtension>
+	<EventCodes>
+		<EventGroup name="Core">
+			<!-- Internal PSF events -->
+			<Event code="1" type="TraceStart" />
+			<Event code="2" type="TimestampConfig" />
+			<Event code="3" type="ObjectName" />
+			<Event code="7" type="IsrProperties" />
+			<Event code="8" type="ObjectState" />
+			<Event code="9" type="SwitchToTask" resumeInstance="true" /> <!-- extra event added -->
+
+			<Event code="4010" type="SwitchToInterrupt" resumeInstance="false" />
+			<Event code="4011" type="SwitchToInterrupt" resumeInstance="true" />
+			<Event code="4012" type="SwitchToTask"  resumeInstance="false"/>
+			<Event code="4013" type="SwitchToTask"  resumeInstance="true" />
+			<Event code="4015" type="SwitchToTask"  resumeInstance="false"/>
+			
+			<Event code="4016" type="PotentialSwitch" key="PotentialSwitch"/>
+			<Event code="4017" type="PotentialSwitchResult">
+				<Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+			</Event>
+			
+			<!-- ThreadX events (+1000) -->
+			<Event code="1000" type="NullEvent"/>
+			<!-- ThreadX code 1 "ThreadResume" -->
+			<Event code="1001" type="TaskReady">
+				<FollowWith key="PotentialSwitch"/>
+			</Event>
+			<!-- ThreadX code 2 "ThreadSuspend" -->
+			<Event code="1002" type="SwitchToTask" resumeInstance="true"/>
+			<!-- ThreadX code 6 "Start tracing", ignored here -->
+            <Event code="1006" type="NullEvent"/>
+			
+			<Event code="4020" type="UnusedStack">
+				<Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+				<Param index="1" type="Int32" useAs="Arg"></Param>
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="Thread">
+			<Event code="100" type="ObjectState">
+				<Param index="0" type="Handle" class="Thread"></Param>
+				<Param index="1" type="UInt32" useAs="StateAfter"></Param>
+				<FollowWith key="AddThreadCreateCall" />
+			</Event>
+			<Event key="AddThreadCreateCall" service="Thread/tx_thread_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			    <Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event key="1100" service="Thread/tx_thread_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="101" service="Thread/tx_thread_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1101" service="Thread/tx_thread_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="102" service="Thread/tx_thread_entry_exit_notify" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1102" service="Thread/tx_thread_entry_exit_notify" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="103" service="Thread/tx_thread_identify" type="KernelServiceReturn" status="StatusOK"/>
+			<Event code="104" service="Thread/tx_thread_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1104" service="Thread/tx_thread_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="105" service="Thread/tx_thread_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1105" service="Thread/tx_thread_performance_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="106" service="Thread/tx_thread_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1106" service="Thread/tx_thread_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+			
+			<Event code="107" service="Thread/tx_thread_preemption_change" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1107" service="Thread/tx_thread_preemption_change" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>			
+			<Event code="108" service="Thread/tx_thread_priority_change" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<FollowWith key="AddPriorityChange" />
+			</Event>
+			<Event key="AddPriorityChange" type="PriorityChange">
+				<Param index="0" type="Handle" class="Thread" useAs="Actor"></Param>
+				<Param index="1" type="Int32" useAs="Priority"></Param>
+			</Event>
+			<Event code="1108" service="Thread/tx_thread_priority_change" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="109" service="Thread/tx_thread_relinquish" type="KernelServiceReturn" status="StatusOK"/>
+            <Event code="110" service="Thread/tx_thread_reset" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1110" service="Thread/tx_thread_reset" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="111" service="Thread/tx_thread_resume" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1111" service="Thread/tx_thread_resume" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="112" service="Thread/tx_thread_sleep" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="1112" service="Thread/tx_thread_sleep" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="2112" service="Thread/tx_thread_sleep" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="113" service="Thread/tx_thread_stack_error_notify" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="114" service="Thread/tx_thread_suspend" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1114" service="Thread/tx_thread_suspend" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="115" service="Thread/tx_thread_terminate" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1115" service="Thread/tx_thread_terminate" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="5" service="Thread/tx_thread_time_slice" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+			</Event>
+			<Event code="116" service="Thread/tx_thread_time_slice_change" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1116" service="Thread/tx_thread_time_slice_change" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="117" service="Thread/tx_thread_wait_abort" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+			</Event>
+			<Event code="1117" service="Thread/tx_thread_wait_abort" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Thread" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="BlockPool">
+			<Event code="2010" service="BlockPool/tx_block_allocate" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BlockPool"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+				<Param index="3" type="UInt32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="3010" service="BlockPool/tx_block_allocate" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BlockPool"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="10" service="BlockPool/tx_block_allocate" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="BlockPool"></Param>
+                <Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="1010" service="BlockPool/tx_block_allocate" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="BlockPool"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+				<Param index="3" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="11" service="BlockPool/tx_block_pool_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="1011" service="BlockPool/tx_block_pool_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="12" service="BlockPool/tx_block_pool_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1012" service="BlockPool/tx_block_pool_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="13" service="BlockPool/tx_block_pool_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1013" service="BlockPool/tx_block_pool_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="14" service="BlockPool/tx_block_pool_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1014" service="BlockPool/tx_block_pool_performance_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="15" service="BlockPool/tx_block_pool_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1015" service="BlockPool/tx_block_pool_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+			
+			<Event code="16" service="BlockPool/tx_block_pool_prioritize" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1016" service="BlockPool/tx_block_pool_prioritize" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="17" service="BlockPool/tx_block_release" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1017" service="BlockPool/tx_block_release" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BlockPool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+		
+		<EventGroup name="BytePool">
+			<Event code="2020" service="BytePool/tx_byte_allocate" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BytePool"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="3020" service="BytePool/tx_byte_allocate" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="BytePool"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="20" service="BytePool/tx_byte_allocate" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="BytePool"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="1020" service="BytePool/tx_byte_allocate" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="BytePool"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="21" service="BytePool/tx_byte_pool_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+                <Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1021" service="BytePool/tx_byte_pool_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="22" service="BytePool/tx_byte_pool_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1022" service="BytePool/tx_byte_pool_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="23" service="BytePool/tx_byte_pool_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1023" service="BytePool/tx_byte_pool_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="24" service="BytePool/tx_byte_pool_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1024" service="BytePool/tx_byte_pool_performance_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+			</Event>
+			<Event code="25" service="BytePool/tx_byte_pool_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1025" service="BytePool/tx_byte_pool_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+			
+			<Event code="26" service="BytePool/tx_byte_pool_prioritize" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+			</Event>
+			<Event code="1026" service="BytePool/tx_byte_pool_prioritize" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="27" service="BytePool/tx_byte_release" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1027" service="BytePool/tx_byte_release" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="BytePool" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+		
+		<EventGroup name="EventFlags">
+			<Event code="30" service="EventFlags/tx_event_flags_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+			</Event>
+			<Event code="1030" service="EventFlags/tx_event_flags_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="31" service="EventFlags/tx_event_flags_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+			</Event>
+			<Event code="1031" service="EventFlags/tx_event_flags_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="2032" service="EventFlags/tx_event_flags_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="3032" service="EventFlags/tx_event_flags_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="32" service="EventFlags/tx_event_flags_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1032" service="EventFlags/tx_event_flags_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="33" service="EventFlags/tx_event_flags_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+			</Event>
+			<Event code="1033" service="EventFlags/tx_event_flags_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="34" service="EventFlags/tx_event_flags_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+			</Event>
+			<Event code="1034" service="EventFlags/tx_event_flags_performance_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="35" service="EventFlags/tx_event_flags_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1035" service="EventFlags/tx_event_flags_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+
+			<Event code="36" service="EventFlags/tx_event_flags_set" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1036" service="EventFlags/tx_event_flags_set" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="37" service="EventFlags/tx_event_flags_set_notify" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+			</Event>
+			<Event code="1037" service="EventFlags/tx_event_flags_set_notify" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="EventFlags" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+		
+		<EventGroup name="Mutex">
+			<Event code="50" service="Mutex/tx_mutex_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1050" service="Mutex/tx_mutex_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			
+			<Event code="51" service="Mutex/tx_mutex_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+			</Event>
+			<Event code="1051" service="Mutex/tx_mutex_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+			</Event>
+			
+			<Event code="2052" service="Mutex/tx_mutex_get" type="KernelServiceReturn" status="StatusOK" instanceSplitOnReadyMode="Split">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="3052" service="Mutex/tx_mutex_get" type="KernelServiceReturn" status="StatusError" instanceSplitOnReadyMode="Split">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="52" service="Mutex/tx_mutex_get" type="KernelServiceEntry" status="StatusBlocks" instanceSplitOnReadyMode="NoSplit">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="1052" service="Mutex/tx_mutex_get" type="KernelServiceReturn" status="StatusTimeout" instanceSplitOnReadyMode="Split">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="53" service="Mutex/tx_mutex_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+			</Event>
+			<Event code="1053" service="Mutex/tx_mutex_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="54" service="Mutex/tx_mutex_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+			</Event>
+			<Event code="1054" service="Mutex/tx_mutex_performance_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="55" service="Mutex/tx_mutex_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1055" service="Mutex/tx_mutex_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+			
+			<Event code="56" service="Mutex/tx_mutex_prioritize" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+			</Event>
+			<Event code="1056" service="Mutex/tx_mutex_prioritize" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="57" service="Mutex/tx_mutex_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="Int32" useAs="StateAfter"></Param>
+			</Event>
+			<Event code="1057" service="Mutex/tx_mutex_put" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+        
+		<EventGroup name="Queue">
+			<Event code="60" service="Queue/tx_queue_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+                <Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1060" service="Queue/tx_queue_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="61" service="Queue/tx_queue_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="1061" service="Queue/tx_queue_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="62" service="Queue/tx_queue_flush" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="1062" service="Queue/tx_queue_flush" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="2063" service="Queue/tx_queue_front_send" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="3063" service="Queue/tx_queue_front_send" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="63" service="Queue/tx_queue_front_send" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1063" service="Queue/tx_queue_front_send" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="64" service="Queue/tx_queue_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="1064" service="Queue/tx_queue_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="65" service="Queue/tx_queue_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="1065" service="Queue/tx_queue_performance_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="66" service="Queue/tx_queue_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1066" service="Queue/tx_queue_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+			
+			<Event code="67" service="Queue/tx_queue_prioritize" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="1067" service="Queue/tx_queue_prioritize" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>			
+			<Event code="2068" service="Queue/tx_queue_receive" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="3068" service="Queue/tx_queue_receive" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="68" service="Queue/tx_queue_receive" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1068" service="Queue/tx_queue_receive" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="2069" service="Queue/tx_queue_send" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="3069" service="Queue/tx_queue_send" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="69" service="Queue/tx_queue_send" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+			</Event>
+			<Event code="1069" service="Queue/tx_queue_send" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="TimeoutInOsTicks" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="70" service="Queue/tx_queue_send_notify" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+			</Event>
+			<Event code="1070" service="Queue/tx_queue_send_notify" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+		
+		<EventGroup name="Semaphore">
+            <Event code="1080" service="Semaphore/tx_semaphore_ceiling_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="2080" service="Semaphore/tx_semaphore_ceiling_put" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="80" service="Semaphore/tx_semaphore_ceiling_put" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="81" service="Semaphore/tx_semaphore_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1081" service="Semaphore/tx_semaphore_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="82" service="Semaphore/tx_semaphore_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="1082" service="Semaphore/tx_semaphore_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="2083" service="Semaphore/tx_semaphore_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="3083" service="Semaphore/tx_semaphore_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="83" service="Semaphore/tx_semaphore_get" type="KernelServiceEntry" status="StatusBlocks">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+                <Param index="1" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1083" service="Semaphore/tx_semaphore_get" type="KernelServiceReturn" status="StatusTimeout">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="84" service="Semaphore/tx_semaphore_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="1084" service="Semaphore/tx_semaphore_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="85" service="Semaphore/tx_semaphore_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="1085" service="Semaphore/tx_semaphore_performance_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="86" service="Semaphore/tx_semaphore_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1086" service="Semaphore/tx_semaphore_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+				
+			<Event code="87" service="Semaphore/tx_semaphore_prioritize" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="1087" service="Semaphore/tx_semaphore_prioritize" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="88" service="Semaphore/tx_semaphore_put" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="1088" service="Semaphore/tx_semaphore_put" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="89" service="Semaphore/tx_semaphore_put_notify" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+			</Event>
+			<Event code="1089" service="Semaphore/tx_semaphore_put_notify" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+		</EventGroup>
+		
+		<EventGroup name="Timer">
+
+			<Event code="120" service="Timer/tx_time_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Return"></Param>
+			</Event>
+			<Event code="121" service="Timer/tx_time_set"  type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			
+			<Event code="122" service="Timer/tx_timer_activate" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param> 
+			</Event>
+			<Event code="1122" service="Timer/tx_timer_activate" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			
+			<Event code="123" service="Timer/tx_timer_change" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			</Event>
+			<Event code="1123" service="Timer/tx_timer_change" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Return"></Param>
+			</Event>
+			
+			<Event code="124" service="Timer/tx_timer_create" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+			    <Param index="3" type="UInt32" useAs="Arg"></Param>	
+			</Event>
+			<Event code="1124" service="Timer/tx_timer_create" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Arg"></Param>
+				<Param index="2" type="UInt32" useAs="Arg"></Param>
+				<Param index="3" type="UInt32" useAs="Arg"></Param>
+				<Param index="4" type="UInt32" useAs="Return"></Param>
+			</Event>
+			
+			<Event code="125" service="Timer/tx_timer_deactivate" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+			</Event>
+			<Event code="1125" service="Timer/tx_timer_deactivate" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			
+			<Event code="126" service="Timer/tx_timer_delete" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+			</Event>
+			<Event code="1126" service="Timer/tx_timer_delete" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+			
+			<Event code="127" service="Timer/tx_timer_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+			</Event>
+			<Event code="1127" service="Timer/tx_timer_info_get" type="KernelServiceReturn" status="StatusError">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+				<Param index="1" type="UInt32" useAs="Return"></Param>
+			</Event>
+
+			<Event code="128" service="Timer/tx_timer_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+			</Event>
+			<Event code="1128" service="Timer/tx_timer_performance_info_get" type="KernelServiceReturn" status="StatusOK">
+				<Param index="0" type="Handle" class="Timer" useAs="Arg"></Param>
+			</Event>
+
+			<Event code="129" service="Timer/tx_timer_performance_system_info_get" type="KernelServiceReturn" status="StatusOK">
+			</Event>
+			<Event code="1129" service="Timer/tx_timer_performance_system_info_get" type="KernelServiceReturn" status="StatusError">
+			</Event>
+		</EventGroup>
+		<EventGroup name="UserEvent">
+			<Event code="4030" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4031" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4032" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="2" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4033" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="3" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4034" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="4" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4035" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="5" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4036" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="6" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4037" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" useAs="PrintfArgStart"></Param>
+				<Param index="7" type="String" useAs="Message"></Param>
+			</Event>
+			<Event code="4038" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+			</Event>
+			<Event code="4039" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+				<Param index="2" useAs="PrintfArgStart"></Param>
+			</Event>
+			<Event code="4040" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+				<Param index="2" useAs="PrintfArgStart"></Param>
+			</Event>
+			<Event code="4041" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+				<Param index="2" useAs="PrintfArgStart"></Param>
+			</Event>
+			<Event code="4042" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+				<Param index="2" useAs="PrintfArgStart"></Param>
+			</Event>
+			<Event code="4043" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+				<Param index="2" useAs="PrintfArgStart"></Param>
+			</Event>
+			<Event code="4044" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+				<Param index="2" useAs="PrintfArgStart"></Param>
+			</Event>
+			<Event code="4045" type="UserEvent">
+				<Param index="0" type="StringHandle" useAs="Channel"></Param>
+				<Param index="1" type="StringHandle" useAs="Message"></Param>
+				<Param index="2" useAs="PrintfArgStart"></Param>
+			</Event>
+		</EventGroup>
+
+		<EventGroup name="Debug">
+			<Event code="0xFFF" type="DebugExpect"/>
+			<Event code="0xFFE" type="DebugExpectEmpty"/>
+			<Event code="0xFFD" type="DebugExpectNever"/>
+		</EventGroup>
+	</EventCodes>
+
+	<TargetPlatform>
+		<TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+    <SpecialValueGroups>
+      <SpecialValueGroup id="return_codes">
+        <SpecialValue value="0x00" format=" returned TX_SUCCESS" />
+        <SpecialValue value="0x01" format=" returned TX_DELETED" />
+        <SpecialValue value="0x02" format=" returned TX_POOL_ERROR" />
+        <SpecialValue value="0x03" format=" returned TX_PTR_ERROR" />
+        <SpecialValue value="0x04" format=" returned TX_WAIT_ERROR" />
+        <SpecialValue value="0x05" format=" returned TX_SIZE_ERROR" />
+        <SpecialValue value="0x06" format=" returned TX_GROUP_ERROR" />
+        <SpecialValue value="0x07" format=" returned TX_NO_EVENTS" />
+        <SpecialValue value="0x08" format=" returned TX_OPTION_ERROR" />
+        <SpecialValue value="0x09" format=" returned TX_QUEUE_ERROR" />
+        <SpecialValue value="0x0A" format=" returned TX_QUEUE_EMPTY" />
+        <SpecialValue value="0x0B" format=" returned TX_QUEUE_FULL" />
+        <SpecialValue value="0x0C" format=" returned TX_SEMAPHORE_ERROR " />
+        <SpecialValue value="0x0D" format=" returned TX_NO_INSTANCE" />
+        <SpecialValue value="0x0E" format=" returned TX_THREAD_ERROR" />
+        <SpecialValue value="0x0F" format=" returned TX_PRIORITY_ERROR" />
+        <SpecialValue value="0x10" format=" returned TX_NO_MEMORY" />
+        <SpecialValue value="0x11" format=" returned TX_DELETE_ERROR" />
+        <SpecialValue value="0x12" format=" returned TX_RESUME_ERROR" />
+        <SpecialValue value="0x13" format=" returned TX_CALLER_ERROR" />
+        <SpecialValue value="0x14" format=" returned TX_SUSPEND_ERROR" />
+        <SpecialValue value="0x15" format=" returned TX_TIMER_ERROR" />
+        <SpecialValue value="0x16" format=" returned TX_TICK_ERROR" />
+        <SpecialValue value="0x17" format=" returned TX_ACTIVATE_ERROR" />
+        <SpecialValue value="0x18" format=" returned TX_THRESH_ERROR" />
+        <SpecialValue value="0x19" format=" returned TX_SUSPEND_LIFTED" />
+        <SpecialValue value="0x1A" format=" returned TX_WAIT_ABORTED" />
+        <SpecialValue value="0x1B" format=" returned TX_WAIT_ABORT_ERROR" />
+        <SpecialValue value="0x1C" format=" returned TX_MUTEX_ERROR" />
+        <SpecialValue value="0x1D" format=" returned TX_NOT_AVAILABLE" />
+        <SpecialValue value="0x1E" format=" returned TX_NOT_OWNED" />
+        <SpecialValue value="0x1F" format=" returned TX_INHERIT_ERROR" />
+        <SpecialValue value="0x20" format=" returned TX_NOT_DONE" />
+        <SpecialValue value="0xFF" format=" returned TX_FEATURE_NOT_ENABLED" />
+      </SpecialValueGroup>
+    </SpecialValueGroups>
+		<KernelServiceGroups>
+			<KernelServiceGroup name="Queue">
+				<KernelService name="tx_queue_create"                                           parameters="Variable" operation="Initialize">
+					<Parameter name="queue" format="{0}"/>
+					<Parameter name="message_size" format="{0}"/>
+					<Parameter name="queue_start" format="0x{0:X8}"/>
+					<Parameter name="queue_size" format="{0}"/>
+          <ReturnValue name="ret" format=" returned {0}" type="UInt32">
+						<ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_send"                                             parameters="Variable" operation="Enqueue">
+					<Parameter name="queue" format="{0}"/>
+					<Parameter name="source_ptr" format="0x{0:X8}"/>
+					<Parameter name="wait_option" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_receive"                                          parameters="Variable" operation="Dequeue">
+					<Parameter name="queue" format="{0}"/>
+					<Parameter name="destination_ptr" format="0x{0:X8}"/>
+					<Parameter name="wait_option" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_flush"                                            parameters="Variable" operation="Clear">
+					<Parameter name="queue" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_delete"                                           parameters="Variable" operation="Deinitialize">
+					<Parameter name="queue" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_front_send"                                       parameters="Variable" operation="EnqueueFirst">
+					<Parameter name="queue" format="{0}"/>
+					<Parameter name="source_ptr" format="0x{0:X8}"/>
+					<Parameter name="wait_option" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_send_notify"                                      parameters="Variable" operation="">
+					<Parameter name="queue" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_info_get"                                         parameters="Variable" operation="">
+					<Parameter name="queue" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_performance_info_get"                             parameters="Variable" operation="">
+					<Parameter name="queue" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_queue_performance_system_info_get"                        parameters="Variable" operation=""/>
+				<KernelService name="tx_queue_prioritize"                                       parameters="Variable" operation="ChangePriority">
+					<Parameter name="queue" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="Semaphore">
+				<KernelService name="tx_semaphore_create"                                       parameters="Variable" operation="Initialize">
+					<Parameter name="semaphore" format="{0}"/>
+					<Parameter name="initial_count" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_ceiling_put"                                  parameters="Variable" operation="MaximizeSemaphore">
+					<Parameter name="semaphore" format="{0}"/>
+					<Parameter name="ceiling" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_put"                                          parameters="Variable" operation="IncreaseSemaphore">
+					<Parameter name="semaphore" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_put_notify"                                  parameters="Variable" operation="">
+					<Parameter name="semaphore" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_get"                                          parameters="Variable" operation="DecreaseSemaphore">
+					<Parameter name="semaphore" format="{0}"/>
+					<Parameter name="wait_option" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_delete"                                       parameters="Variable" operation="Deinitialize">
+					<Parameter name="semaphore" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_info_get"                                     parameters="Variable" operation="">
+					<Parameter name="semaphore" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_performance_info_get"                         parameters="Variable" operation="">
+					<Parameter name="semaphore" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_semaphore_performance_system_info_get"                    parameters="Variable" operation=""/>
+				<KernelService name="tx_semaphore_prioritize"                                   parameters="Variable" operation="ChangePriority">
+					<Parameter name="semaphore" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="Mutex">
+				<KernelService name="tx_mutex_create"                                           parameters="Variable" operation="Initialize">
+					<Parameter name="mutex" format="{0}"/>
+					<Parameter name="prio_inherit" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_mutex_put"                                              parameters="Variable" operation="ReleaseMutex">
+					<Parameter name="mutex" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_mutex_get"                                              parameters="Variable" operation="LockMutex">
+					<Parameter name="mutex" format="{0}"/>
+					<Parameter name="wait_option" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_mutex_delete"                                           parameters="Variable" operation="Deinitialize">
+					<Parameter name="mutex" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_mutex_info_get"                                         parameters="Variable" operation="">
+					<Parameter name="mutex" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}"/>
+				</KernelService>
+				<KernelService name="tx_mutex_performance_info_get"                             parameters="Variable" operation="">
+					<Parameter name="mutex" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}"/>
+				</KernelService>
+
+				<KernelService name="tx_mutex_performance_system_info_get"                      parameters="Variable" operation=""/>
+
+				<KernelService name="tx_mutex_prioritize"                                       parameters="Variable" operation="ChangePriority">
+					<Parameter name="mutex" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="Thread">
+				<KernelService name="tx_thread_create"                                          parameters="Variable" operation="StartInstance">
+					<Parameter name="thread" format="{0}"/>
+					<Parameter name="priority" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_sleep"                                           parameters="Variable" operation="Delay">
+					<Parameter name="time_ticks" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_suspend"                                         parameters="Variable" operation="Delay">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_resume"                                          parameters="Variable" operation="StartInstance">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_delete"                                          parameters="Variable" operation="Deinitialize">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_relinquish"                                      parameters="Variable" operation=""/>
+				<KernelService name="tx_thread_entry_exit_notify"                               parameters="Variable" operation="">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_identify"                                        parameters="Variable" operation=""/>
+				<KernelService name="tx_thread_info_get"                                        parameters="Variable" operation="">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_performance_info_get"                            parameters="Variable" operation="">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_performance_system_info_get"                       parameters="Variable" operation=""/>
+				<KernelService name="tx_thread_preemption_change"                               parameters="Variable" operation="">
+					<Parameter name="thread" format="{0}"/>
+					<Parameter name="new_threshold" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_priority_change"                                 parameters="Variable" operation="ChangePriority">
+					<Parameter name="thread" format="{0}"/>
+					<Parameter name="new_priority" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_reset"                                           parameters="Variable" operation="FreeMemory">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_stack_error_notify"                              parameters="Variable" operation="">
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_terminate"                                       parameters="Variable" operation="Deinitialize">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_time_slice"                                      parameters="Variable" operation="">
+					<Parameter name="thread" format="{0}"/>
+				</KernelService>
+				<KernelService name="tx_thread_time_slice_change"                               parameters="Variable" operation="">
+					<Parameter name="thread" format="{0}"/>
+					<Parameter name="new_time_slice" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_thread_wait_abort"                                      parameters="Variable" operation="">
+					<Parameter name="thread" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="nx_system_initialize"                                        parameters="Variable" operation=""/>
+				<KernelService name="ux_error"                                                    parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="Timer">
+				<KernelService name="tx_timer_create"                                           parameters="Variable" operation="Initialize">
+					<Parameter name="timer" format="{0}"/>
+					<Parameter name="initial_ticks" format="{0}"/>
+					<Parameter name="reschedule_ticks" format="{0}"/>
+					<Parameter name="auto_activate" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_timer_delete"                                           parameters="Variable" operation="Deinitialize">
+					<Parameter name="timer" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_timer_activate"                                         parameters="Variable" operation="StartInstance">
+					<Parameter name="timer" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_timer_deactivate"                                       parameters="Variable" operation="StartInstance">
+					<Parameter name="timer" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_time_get"                                               parameters="Variable" operation="">
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_time_set"                                               parameters="Variable" operation="">
+					<Parameter name="new_time" format="{0}"/>
+				</KernelService>
+				<KernelService name="tx_timer_change"                                           parameters="Variable" operation="">
+					<Parameter name="timer" format="{0}"/>
+					<Parameter name="initial_ticks" format="{0}"/>
+					<Parameter name="reschedule_ticks" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_timer_info_get"                                         parameters="Variable" operation="">
+					<Parameter name="timer" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_timer_performance_info_get"                               parameters="Variable" operation=""/>
+				<KernelService name="tx_timer_performance_system_info_get"                        parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="Interrupts">
+				<KernelService name="tx_interrupt_control"                                        parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="EventFlags">
+				<KernelService name="tx_event_flags_create"                                     parameters="Variable" operation="Initialize">
+					<Parameter name="flag_grp" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_event_flags_delete"                                     parameters="Variable" operation="Deinitialize">
+					<Parameter name="flag_grp" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_event_flags_get"                                        parameters="Variable" operation="OtherRead">
+					<Parameter name="flag_grp" format="{0}"/>
+					<Parameter name="req_flag" format="{0}"/>
+					<Parameter name="get_option" format="{0}"/>
+				</KernelService>
+				<KernelService name="tx_event_flags_info_get"                                   parameters="Variable" operation="">
+					<Parameter name="flag_grp" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_event_flags_performance_info_get"                       parameters="Variable" operation="">
+					<Parameter name="flag_grp" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+
+				<KernelService name="tx_event_flags_performance_system_info_get"                parameters="Variable" operation=""/>
+
+				<KernelService name="tx_event_flags_set"                                        parameters="Variable" operation="OtherWrite">
+					<Parameter name="flag_grp" format="{0}"/>
+					<Parameter name="flags_to_set" format="{0}"/>
+					<Parameter name="set_option" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_event_flags_set_notify"                                 parameters="Variable" operation="OtherWrite">
+					<Parameter name="flag_grp" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="BlockPool">
+				<KernelService name="tx_block_allocate"                                         parameters="Variable" operation="DecreaseSemaphore">
+					<Parameter name="pool" format="{0}"/>
+					<Parameter name="timeout" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_block_pool_create"                                      parameters="ObjectAndNumericParameter" operation="Initialize">
+					<Parameter name="pool" format="{0}"/>
+					<Parameter name="block_size" format="{0}"/>
+					<Parameter name="pool_start" format="0x{0:X8}"/>
+					<Parameter name="block_count" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_block_pool_delete"                                      parameters="Variable" operation="DeInitialize">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_block_pool_info_get"                                    parameters="Variable" operation="">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_block_pool_performance_info_get"                        parameters="Variable" operation="">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_block_pool_performance_system_info_get"                 parameters="Variable" operation="">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_block_pool_prioritize"                                  parameters="Variable" operation="">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_block_release"                                          parameters="ObjectAndNumericParameter" operation="IncreaseSemaphore">
+					<Parameter name="pool" format="{0}"/>
+					<Parameter name="ret" format="{0}"/>
+				</KernelService>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="BytePool">
+				<KernelService name="tx_byte_allocate"                                          parameters="Variable" operation="AllocateMemory">
+					<Parameter name="pool" format="{0}"/>
+					<Parameter name="memory_ptr" format="0x{0:X8}"/>
+					<Parameter name="size" format="{0}" heapSize="true"/>
+					<Parameter name="timeout" format="{0}"/>
+					<ReturnValue name="ret" format=" returned 0x{0:X8}" heapAddress="true">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_byte_pool_performance_system_info_get"                  parameters="Variable" operation=""/>
+				<KernelService name="tx_byte_pool_create"                                       parameters="Variable" operation="Initialize">
+					<Parameter name="pool" format="{0}"/>
+					<Parameter name="pool_start" format="0x{0:X8}"/>
+					<Parameter name="pool_size" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_byte_pool_delete"                                       parameters="Variable" operation="DeInitialize">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_byte_pool_info_get"                                     parameters="Variable" operation="">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_byte_pool_performance_info_get"                         parameters="Variable" operation=""/>
+				<KernelService name="tx_byte_pool_prioritize"                                   parameters="Variable" operation="">
+					<Parameter name="pool" format="{0}"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+				<KernelService name="tx_byte_release"                                           parameters="Variable" operation="FreeMemory">
+					<Parameter name="pool" format="{0}"/>
+					<Parameter name="memory_ptr" format="0x{0:X8}" heapAddress="true"/>
+					<Parameter name="size" format="{0}" heapSize="true"/>
+					<ReturnValue name="ret" format=" returned {0}" type="UInt32">
+            <ImportSpecialValueGroup id="return_codes" />
+          </ReturnValue>
+				</KernelService>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="Media">
+				<KernelService name="fx_directory_attributes_read"                                parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_attributes_set"                                 parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_create"                                         parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_default_get"                                    parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_default_set"                                    parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_delete"                                         parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_first_entry_find"                               parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_first_full_entry_find"                          parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_information_get"                                parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_local_path_clear"                               parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_local_path_get"                                 parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_local_path_restore"                             parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_local_path_set"                                 parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_long_name_get"                                  parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_name_test"                                      parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_next_entry_find"                                parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_next_full_entry_find"                           parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_rename"                                         parameters="Variable" operation=""/>
+				<KernelService name="fx_directory_short_name_get"                                 parameters="Variable" operation=""/>
+				<KernelService name="fx_media_abort"                                              parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_media_cache_invalidate"                                   parameters="Variable" operation=""/>
+				<KernelService name="fx_media_check"                                              parameters="Variable" operation=""/>
+				<KernelService name="fx_media_close"                                              parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_media_flush"                                              parameters="Variable" operation=""/>
+				<KernelService name="fx_media_format"                                             parameters="Variable" operation=""/>
+				<KernelService name="fx_media_open"                                               parameters="Variable" operation="Initialize"/>
+				<KernelService name="fx_media_read"                                               parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_media_space_available"                                    parameters="Variable" operation=""/>
+				<KernelService name="fx_media_abort"                                              parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_media_volume_get"                                         parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_media_volume_set"                                         parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_media_write"                                              parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_unicode_directory_create"                                 parameters="Variable" operation=""/>
+				<KernelService name="fx_unicode_directory_rename"                                 parameters="Variable" operation=""/>
+				<KernelService name="fx_unicode_file_create"                                      parameters="Variable" operation=""/>
+				<KernelService name="fx_unicode_file_rename"                                      parameters="Variable" operation=""/>
+				<KernelService name="fx_unicode_length_get"                                       parameters="Variable" operation=""/>
+				<KernelService name="fx_unicode_name_get"                                         parameters="Variable" operation=""/>
+				<KernelService name="fx_unicode_short_name_get"                                   parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="Internal">
+				<KernelService name="fx_internal_log_sector_cache_miss"                           parameters="Variable" operation=""/>
+				<KernelService name="fx_internal_dir_cache_miss"                                  parameters="Variable" operation=""/>
+				<KernelService name="fx_internal_media_flush"                                     parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_internal_dir_entry_read"                                  parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_internal_dir_entry_write"                                 parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_internal_io_driver_read"                                  parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_internal_io_driver_write"                                 parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_internal_io_driver_flush"                                 parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_internal_io_driver_abort"                                 parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_internal_io_driver_init"                                  parameters="Variable" operation="Initialize"/>
+				<KernelService name="fx_internal_io_driver_boot_read"                             parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_internal_io_driver_release_sectors"                       parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_internal_io_driver_boot_write"                            parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_internal_io_driver_uninit"                                parameters="Variable" operation="Deinitialize"/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="File">
+				<KernelService name="fx_file_allocate"                                            parameters="Variable" operation=""/>
+				<KernelService name="fx_file_attributes_read"                                     parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_file_attributes_set"                                      parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_file_best_effort_allocate"                                parameters="Variable" operation=""/>
+				<KernelService name="fx_file_close"                                               parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="fx_file_create"                                              parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_file_date_time_set"                                       parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_file_delete"                                              parameters="Variable" operation=""/>
+				<KernelService name="fx_file_open"                                                parameters="Variable" operation="Initialize"/>
+				<KernelService name="fx_file_read"                                                parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_file_relative_seek"                                       parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_file_rename"                                              parameters="Variable" operation="OtherWrite"/>
+				<KernelService name="fx_file_seek"                                                parameters="Variable" operation="OtherRead"/>
+				<KernelService name="fx_file_truncate"                                            parameters="Variable" operation=""/>
+				<KernelService name="fx_file_truncate_release"                                    parameters="Variable" operation=""/>
+				<KernelService name="fx_file_write"                                               parameters="Variable" operation="OtherWrite"/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name ="IP">
+				<KernelService name="nx_internal_arp_request_receive"                             parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_arp_request_send"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_arp_response_receive"                            parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_arp_response_send"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_icmp_receive"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_icmp_send"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_igmp_receive"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_ip_receive"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_ip_send"                                         parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_data_receive"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_data_send"                                   parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_fin_receive"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_fin_send"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_reset_receive"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_reset_send"                                  parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_syn_receive"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_syn_send"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_udp_receive"                                     parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_udp_send"                                        parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_rarp_receive"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_rarp_send"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_retry"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_tcp_state_change"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_packet_send"                           parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_initialize"                            parameters="Variable" operation="Initialize"/>
+				<KernelService name="nx_internal_io_driver_link_enable"                           parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_link_disable"                          parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_packet_broadcast"                      parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_arp_send"                              parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_arp_response_send"                     parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_rarp_send"                             parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_multicast_join"                        parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_multicast_leave"                       parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_get_status"                            parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_get_speed"                             parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_get_duplex_type"                       parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_get_error_count"                       parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_get_rx_count"                          parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_get_tx_count"                          parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_get_alloc_errors"                      parameters="Variable" operation=""/>
+				<KernelService name="nx_internal_io_driver_uninitialize"                          parameters="Variable" operation="Deinitialize"/>
+				<KernelService name="nx_internal_io_driver_deferred_processing"                   parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_dynamic_entries_invalidate"                           parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_dynamic_entry_set"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_enable"                                               parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_gratuitous_send"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_hardware_address_find"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_info_get"                                             parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_ip_address_find"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_static_entries_delete"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_static_entry_create"                                  parameters="Variable" operation=""/>
+				<KernelService name="nx_arp_static_entry_delete"                                  parameters="Variable" operation=""/>
+				<KernelService name="nx_icmp_enable"                                              parameters="Variable" operation=""/>
+				<KernelService name="nx_icmp_info_get"                                            parameters="Variable" operation=""/>
+				<KernelService name="nx_icmp_ping"                                                parameters="Variable" operation=""/>
+				<KernelService name="nx_igmp_enable"                                              parameters="Variable" operation=""/>
+				<KernelService name="nx_igmp_info_get"                                            parameters="Variable" operation=""/>
+				<KernelService name="nx_igmp_loopback_disable"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_igmp_loopback_enable"                                     parameters="Variable" operation=""/>
+				<KernelService name="nx_igmp_multicast_join"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_igmp_multicast_leave"                                     parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_address_change_notify"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_address_get"                                           parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_address_set"                                           parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_create"                                                parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_delete"                                                parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_driver_direct_command"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_forwarding_disable"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_forwarding_enable"                                     parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_fragment_disable"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_fragment_enable"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_gateway_address_set"                                   parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_info_get"                                              parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_raw_packet_disable"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_raw_packet_enable"                                     parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_raw_packet_receive"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_raw_packet_send"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_status_check"                                          parameters="Variable" operation=""/>
+				<KernelService name="nx_rarp_disable"                                             parameters="Variable" operation=""/>
+				<KernelService name="nx_rarp_enable"                                              parameters="Variable" operation=""/>
+				<KernelService name="nx_rarp_info_get"                                            parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_interface_attach"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_static_route_add"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_static_route_delete"                                   parameters="Variable" operation=""/>
+				<KernelService name="nx_ip_interface_info_get"                                    parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="PacketPool">
+				<KernelService name="nx_packet_allocate"                                          parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_copy"                                              parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_data_append"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_data_retrieve"                                     parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_length_get"                                        parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_pool_create"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_pool_delete"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_pool_info_get"                                     parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_release"                                           parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_transmit_release"                                  parameters="Variable" operation=""/>
+				<KernelService name="nx_packet_data_extract_offset"                               parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="TcpSocket">
+				<KernelService name="nx_tcp_client_socket_bind"                                   parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_client_socket_connect"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_client_socket_port_get"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_client_socket_unbind"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_enable"                                               parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_free_port_find"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_info_get"                                             parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_server_socket_accept"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_server_socket_listen"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_server_socket_relisten"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_server_socket_unaccept"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_server_socket_unlisten"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_create"                                        parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_delete"                                        parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_disconnect"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_info_get"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_mss_get"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_mss_peer_get"                                  parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_mss_set"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_receive"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_receive_notify"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_send"                                          parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_state_wait"                                    parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_transmit_configure"                            parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_peer_info_get"                                 parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_window_update_notify_set"                      parameters="Variable" operation=""/>
+				<KernelService name="nx_tcp_socket_bytes_available"                               parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UdpSocket">
+				<KernelService name="nx_udp_enable"                                               parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_free_port_find"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_info_get"                                             parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_bind"                                          parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_checksum_disable"                              parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_checksum_enable"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_create"                                        parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_delete"                                        parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_info_get"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_port_get"                                      parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_receive"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_receive_notify"                                parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_send"                                          parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_unbind"                                        parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_source_extract"                                       parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_bytes_available"                               parameters="Variable" operation=""/>
+				<KernelService name="nx_udp_socket_interface_set"                                 parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbHostStackDevice">
+				<KernelService name="ux_host_stack_events_base"                                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_device_address_set"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_device_configuration_get"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_device_configuration_select"                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_device_descriptor_read"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_device_get"                                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_device_remove"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_device_resource_free"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_new_configuration_create"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_new_device_create"                             parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbHostStackInterface">
+				<KernelService name="ux_host_stack_configuration_delete"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_configuration_enumerate"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_configuration_instance_create"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_configuration_instance_delete"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_configuration_set"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_hcd_register"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_initialize"                                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_interface_endpoint_get"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_interface_instance_create"                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_interface_instance_delete"                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_interface_set"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_interface_setting_select"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_rh_change_process"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_rh_device_extraction"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_rh_device_insertion"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_transfer_request"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_transfer_request_abort"                        parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbHostEndPoint">
+				<KernelService name="ux_host_stack_endpoint_instance_create"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_endpoint_instance_delete"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_endpoint_reset"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_endpoint_transfer_abort"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_new_endpoint_create"                           parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbHostClass">
+				<KernelService name="ux_host_stack_class_instance_create"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_host_stack_class_instance_destroy"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_events_base"                                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_asix_activate"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_asix_deactivate"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_asix_interrupt_notification"                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_asix_read"                                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_asix_write"                                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_activate"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_control_value_get"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_control_value_set"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_deactivate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_read"                                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_streaming_sampling_get"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_streaming_sampling_set"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_audio_write"                                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_activate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_deactivate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_set_line_coding"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_get_line_coding"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_set_line_state"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_send_break"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_abort_in_pipe"                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_abort_out_pipe"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_notification_callback"           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_ioctl_get_device_status"               parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_read"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_reception_start"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_reception_stop"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_cdc_acm_write"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_activate"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_client_register"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_deactivate"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_idle_get"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_idle_set"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_keyboard_activate"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_keyboard_deactivate"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_mouse_activate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_mouse_deactivate"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_remote_control_activate"                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_remote_control_deactivate"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_report_get"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hid_report_set"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_activate"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_change_detect"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_port_change_connection_process"            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_port_change_enable_process"                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_port_change_over_current_process"          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_port_change_reset_process"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_port_change_suspend_process"               parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_hub_deactivate"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_activate"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_deactivate"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_device_info_get"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_device_reset"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_notification"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_num_objects_get"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_close"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_copy"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_delete"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_get"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_info_get"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_info_send"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_move"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_send"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_object_transfer_abort"                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_read"                                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_request_cancel"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_session_close"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_session_open"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_storage_ids_get"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_storage_info_get"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_thumb_get"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_pima_write"                                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_printer_activate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_printer_deactivate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_printer_name_get"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_printer_read"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_printer_write"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_printer_soft_reset"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_printer_status_get"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_activate"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_deactivate"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_set_line_coding"                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_get_line_coding"                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_set_line_state"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_purge"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_send_break"                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_abort_in_pipe"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_abort_out_pipe"                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_report_device_status_change"    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_ioctl_get_device_status"              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_read"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_reception_start"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_reception_stop"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_prolific_write"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_activate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_deactivate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_media_capacity_get"                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_media_format_capacity_get"             parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_media_mount"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_media_open"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_media_read"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_media_write"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_request_sense"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_start_stop"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_storage_unit_ready_test"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_dpump_activate"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_dpump_deactivate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_dpump_read"                                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_dpump_write"                                   parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_activate"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_deactivate"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_ioctl_abort_in_pipe"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_ioctl_abort_out_pipe"                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_read"                                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_reception_start"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_reception_stop"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_swar_write"                                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_activate"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_deactivate"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_set_line_coding"                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_get_line_coding"                    parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_set_line_state"                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_purge"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_send_break"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_abort_in_pipe"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_abort_out_pipe"                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_report_device_status_change"        parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_get_device_status"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_ioctl_notification_callback"              parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_read"                                     parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_reception_start"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_reception_stop"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_host_class_gser_write"                                    parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbDevice">
+				<KernelService name="ux_device_stack_events_base"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_clear_feature"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_configuration_get"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_configuration_set"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_connect"                                     parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_descriptor_send"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_disconnect"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_endpoint_stall"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_get_status"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_host_wakeup"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_initialize"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_set_feature"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_transfer_abort"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_transfer_all_request_abort"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_transfer_request"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_microsoft_extension_register"                parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbDeviceInterface">
+				<KernelService name="ux_device_stack_alternate_setting_get"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_alternate_setting_set"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_interface_delete"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_interface_get"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_stack_interface_set"                               parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbDeviceEndpoint">
+			</KernelServiceGroup>
+
+			<KernelServiceGroup name="UsbDeviceClass">
+				<KernelService name="ux_device_stack_class_register"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_events_base"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_dpump_activate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_dpump_deactivate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_dpump_read"                                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_dpump_change"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_dpump_write"                                 parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_acm_activate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_acm_deactivate"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_acm_read"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_acm_write"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_hid_activate"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_hid_deactivate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_hid_event_get"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_hid_event_set"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_hid_report_get"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_hid_report_set"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_hid_descriptor_send"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_activate"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_deactivate"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_device_info_send"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_event_get"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_event_set"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_object_add"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_object_data_get"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_object_data_send"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_object_delete"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_object_handles_send"                    parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_object_info_get"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_object_info_send"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_objects_number_send"                    parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_partial_object_data_get"                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_response_send"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_storage_id_send"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_storage_info_send"                      parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_get_device_prop_desc_get"               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_get_device_prop_value"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_get_device_prop_value_set"              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_get_object_prop_desc"                   parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_get_object_prop_value"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_objects_props_supported_get"            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_get_object_references"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_objects_props_supported_set"            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_set_object_references"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_storage_format"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_device_reset"                           parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_pima_set_object_prop_value"                  parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_activate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_deactivate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_packet_receive"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_packet_transmit"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_msg_query"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_msg_keep_alive"                        parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_msg_reset"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_rndis_msg_set"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_activate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_deactivate"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_format"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_inquiry"                             parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_mode_select"                         parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_mode_sense"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_prevent_allow_media_removal"         parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_read"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_read_capacity"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_read_format_capacity"                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_read_toc"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_request_sense"                       parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_test_ready"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_start_stop"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_verify"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_storage_write"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_dfu_activate"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_dfu_deactivate"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_ecm_activate"                            parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_ecm_deactivate"                          parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_ecm_change"                              parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_ecm_read"                                parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_ecm_write"                               parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_ecm_packet_transmit"                     parameters="Variable" operation=""/>
+				<KernelService name="ux_device_class_cdc_ecm_packet_receive"                      parameters="Variable" operation=""/>
+			</KernelServiceGroup>
+
+		</KernelServiceGroups>
+
+		<ObjectClasses>
+			<ObjectClass name="SystemGroup" type="ActorGroup" />
+			<ObjectClass name="NotValid" />
+			<ObjectClass name="Thread" type="Actor" />
+			<ObjectClass name="ISR" type="Actor" />
+			<ObjectClass name="Timer" />
+			<ObjectClass name="Queue" type="Queue" />
+			<ObjectClass name="Semaphore" type="Semaphore" />
+			<ObjectClass name="Mutex" type="Mutex" />
+			<ObjectClass name="EventFlags" />
+			<ObjectClass name="BlockPool" type="Semaphore" options="NoIpcGraph" />
+			<ObjectClass name="BytePool" type="Heap" options="NoIpcGraph" />
+			<ObjectClass name="Media" />
+			<ObjectClass name="File" type="IOChannel"/>
+			<ObjectClass name="IP" />
+			<ObjectClass name="PacketPool" />
+			<ObjectClass name="TcpSocket" type="IOChannel"/>
+			<ObjectClass name="UdpSocket" type="IOChannel" />
+			<!-- 15-20 Reserved -->
+			<ObjectClass name="UsbHostStackDevice" />
+			<ObjectClass name="UsbHostStackInterface" />
+			<ObjectClass name="UsbHostEndPoint" />
+			<ObjectClass name="UsbHostClass" />
+			<ObjectClass name="UsbDevice" />
+			<ObjectClass name="UsbDeviceInterface" />
+			<ObjectClass name="UsbDeviceEndPoint" />
+			<ObjectClass name="UsbDeviceClass" />
+		</ObjectClasses>
+	</TargetPlatform>
+</PlatformExtension>

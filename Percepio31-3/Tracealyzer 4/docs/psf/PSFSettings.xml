@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>PSF Settings</title>
+  <keywords>
+    <keyword>psf</keyword>
+    <keyword>streaming</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          These settings are for configuring streaming when using the Percepio trace recorder. PSF stands for Percepio Streaming Format.
+          This can be streamed over multiple target connections (corresponding to stream ports on the target side). There are several settings for each target connection.
+          See the <a href="Streaming.html">Streaming Mode</a> section for details.
+        </p>
+
+        <p>
+          <A HREF="img/PSFSettings.png" target="$IMAGETARGET">
+            <img src="img/PSFSettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

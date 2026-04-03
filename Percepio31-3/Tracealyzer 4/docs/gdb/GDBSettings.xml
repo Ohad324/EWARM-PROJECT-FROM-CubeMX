@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>GDB Settings</title>
+  <keywords>
+    <keyword>gdb</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+	  <requirement>CoreFeatures.Streaming</requirement>
+      <header>Overview</header>
+      <text>
+        <p>
+          Settings for controlling tracing using the GNU Debugger (GDB).
+        </p>
+        <p>
+          <b>Path to GDB</b> - The path to the GDB executable to use. This could for example be <tt>arm-none-eabi-gdb</tt> for ARM targets.
+        </p>
+        <p>
+          <b>Path to image</b> - Optional path to the target image. This may be needed to use symbol names in GDB commands.
+        </p>
+        <p>
+          <b>Commands to initialize</b> - Commands to send to GDB when the process starts. These are executed for both streaming and snapshot operations. This will typically include a command to connect to a GDB server, like <tt>target remote localhost:3333</tt> to connect to a previously started OpenOCD server, or <tt>target remote localhost:2331</tt> to connect to a default configured JLink GDB server.
+        </p>
+        <p>
+          <b>Commands to start stream</b> - Commands sent to GDB to start streaming. This can vary greatly with your setup and will typically include vendor specific "monitor" commands.
+        </p>
+        <p>
+          <b>Commands to end stream</b> - Commands sent to GDB to end streaming. This can vary greatly with your setup and will typically include vendor specific "monitor" commands.
+        </p>
+        <p>
+          <b>Trace data is received by</b> - Specifies how to access the trace data.
+          <ul>
+            <li>
+              <u>GDB writes to output specified by $$(TZ_OUT)</u> - GDB will write the trace data to a file passed as argument to one of the commands in <i>Commands to start stream</i>. The command should include the <tt>$$(TZ_OUT)</tt> macro which will be translated to a unique filename before sent to GDB.
+            </li>
+            <li>
+              <u>GDB writes to fixed path</u> - Use this when GDB will always write to a fixed path. Configure the path and optional decoding in the PSF settings FileSystem tab.
+            </li>
+            <li>
+              <u>GDB opens TCP port</u> - Use this when GDB (or more commonly the GDB server) will open a TCP port where the data can be received. Configure the address, port and optional decoding in the PSF settings TCP tab.
+            </li>
+          </ul>
+        </p>
+        <p>
+          <b>Commands to take snapshot</b> - Commands sent to GDB to capture a snapshot. At this time, the command list must include <tt>$$(TZ_OUT)</tt> and the command should write the contents to that file. The <tt>$$(TZ_OUT)</tt> will be expanded by the application before sent to GDB. When the target image is specified, you can typically use <tt>dump binary value $$(TZ_OUT) *RecorderDataPtr</tt>, possibly preceded by <tt>monitor halt</tt> and if desired followed by <tt>monitor resume</tt>.
+        </p>
+
+        <subsection>
+          <header>GDB Commands</header>
+          <text>
+            <p>
+              GDB commands are specified one per line and each command will run to completion before the next command can be executed. Lines starting with <tt>#</tt> will be ignored (never sent to GDB) and can be used for comments. For snapshot and start stream commands, the macro <tt>$$(TZ_OUT)</tt> will be translated to a unique file name before being sent to GDB.
+            </p>
+            <p>
+							In addition to GDB commands, there are certain $PNAME commands that will not be sent to GDB but will instead be interpreted and handled by the $PNAME application. These will start with <tt>!tz</tt>.
+              <ul>
+                <li>
+                  <tt>!tz wait &lt;timeInMilliseconds&gt;</tt> - Will wait <i>timeInMilliseconds</i> before moving on to the next command. 
+                </li>
+              </ul>
+            </p>
+
+          </text>
+        </subsection>
+      </text>
+    </section>
+
+
+	  <section>
+		  <requirement inverted="true">CoreFeatures.Streaming</requirement>
+		  <header>Overview</header>
+		  <text>
+			  <p>
+				  Settings for controlling tracing using the GNU Debugger (GDB).
+			  </p>
+			  <p>
+				  <b>Path to GDB</b> - The path to the GDB executable to use. This could for example be <tt>arm-none-eabi-gdb</tt> for ARM targets.
+			  </p>
+			  <p>
+				  <b>Path to image</b> - Path to the target image file (usually the .elf file).
+			  </p>
+			  <p>
+				  <b>Commands to initialize</b> - Commands to send to GDB when the process starts. This will typically include a command to connect to a GDB server, like <tt>target remote localhost:3333</tt> to connect to a previously started OpenOCD server, or <tt>target remote localhost:2331</tt> to connect to a default configured JLink GDB server.
+			  </p>			 
+			  <p>
+				  <b>Commands to take snapshot</b> - Commands sent to GDB to capture a snapshot. At this time, the command list must include <tt>$$(TZ_OUT)</tt> and the command should write the contents to that file. The <tt>$$(TZ_OUT)</tt> will be expanded by the application before sent to GDB. When the target image is specified, you can typically use <tt>dump binary value $$(TZ_OUT) *RecorderDataPtr</tt>, possibly preceded by <tt>monitor halt</tt> and if desired followed by <tt>monitor resume</tt>.
+			  </p>
+
+			  <subsection>
+				  <header>GDB Commands</header>
+				  <text>
+					  <p>
+						  GDB commands are specified one per line and each command will run to completion before the next command can be executed.
+						  Lines starting with <tt>#</tt> will be ignored (never sent to GDB) and can be used for comments. The macro <tt>$$(TZ_OUT)</tt> will be translated to a unique file name before being sent to GDB.
+					  </p>
+					  <p>
+						  In addition to GDB commands, there are certain $PNAME commands that will not be sent to GDB but will instead be interpreted and handled by the $PNAME application. These will start with <tt>!tz</tt>.
+						  <ul>
+							  <li>
+								  <tt>!tz wait &lt;timeInMilliseconds&gt;</tt> - Will wait <i>timeInMilliseconds</i> before moving on to the next command.
+							  </li>
+						  </ul>
+					  </p>
+
+				  </text>
+			  </subsection>
+		  </text>
+	  </section>
+
+  </body>
+</page>

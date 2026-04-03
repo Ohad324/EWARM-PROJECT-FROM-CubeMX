@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Overview</title>
+  <keywords>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          All settings for connections and user interface can be found under Settings.
+        </p>
+        <p>
+          To make it easier to find settings, a Find text box is in on top of the settings tree.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

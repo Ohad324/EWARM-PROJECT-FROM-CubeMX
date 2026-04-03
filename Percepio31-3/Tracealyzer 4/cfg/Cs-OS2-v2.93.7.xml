@@ -1,0 +1,740 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<PlatformExtension>
+  <EventCodes>
+    <EventGroup name="Core">
+      <Event code="0x01" type="TraceStart" />
+      <Event code="0x02" type="TimestampConfig" />
+      <Event code="0x03" type="ObjectName" />
+      <Event code="0x05" type="IsrProperties" />
+
+      <Event code="0x06" type="UnusedStack">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+
+      <Event code="0x08" type="InstanceEnd" instanceEndMode="NextCall" />
+      <Event code="0x09" type="InstanceEnd" instanceEndMode="Instant" />
+
+      <Event code="0x12" type="NullEvent"  />
+      <Event code="0x13" type="NullEvent"  />
+      <Event code="0x14" type="NullEvent"  />
+      <Event code="0x15" type="NullEvent"  />
+
+      <Event code="0x20" type="TaskReady" />
+
+      <Event code="0x21" type="SwitchToInterrupt" resumeInstance="false" />
+      <Event code="0x22" type="SwitchToInterrupt" resumeInstance="true" />
+
+      <Event code="0x23" type="SwitchToTask"  resumeInstance="false"/>
+      <Event code="0x24" type="SwitchToTask"  resumeInstance="true" />
+      <Event code="0x25" type="SwitchToTask"  resumeInstance="false"/>
+
+      <Event code="0x38" type="LowPowerBegin" />
+      <Event code="0x39" type="LowPowerEnd" />
+
+      <Event key="Forget" type="ForgetObject">
+        <Param index="0" type="Handle" />
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Memory">
+      <Event code="0x30" type="NullEvent"  />
+      <Event code="0x31" type="NullEvent"  />
+      <Event code="0x32" type="NullEvent"  />
+      <Event code="0x33" type="NullEvent"  />
+    </EventGroup>
+
+    <EventGroup name="UserEvent">
+      <Event code="0x50" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x51" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x52" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="2" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x53" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="3" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x54" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="4" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x55" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="5" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x56" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="6" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x57" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" useAs="PrintfArgStart"></Param>
+        <Param index="7" type="String" useAs="Message"></Param>
+      </Event>
+      <Event code="0x58" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+      </Event>
+      <Event code="0x59" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x5A" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x5B" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x5C" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x5D" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x5E" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+      <Event code="0x5F" type="UserEvent">
+        <Param index="0" type="StringHandle" useAs="Channel"></Param>
+        <Param index="1" type="StringHandle" useAs="Message"></Param>
+        <Param index="2" useAs="PrintfArgStart"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Time">
+      <Event code="0x100" type="OsTimestamp">
+        <Param index="0" type="TimestampInOsTicks" useAs="Timestamp"></Param>
+      </Event>
+      <Event code="0x101" type="OsTimestamp">
+        <Param index="0" type="TimestampInOsTicks" useAs="Timestamp"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Flags">
+      <Event code="0x102" service="Flags/OSFlagCreate" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x103" service="Flags/OSFlagDel" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x104" service="Flags/OSFlagPost" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x105" service="Flags/OSFlagPost" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x106" service="Flags/OSFlagPend" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x107" service="Flags/OSFlagPend" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x108" service="Flags/OSFlagPend" status="StatusBlocks" type="KernelServiceEntry">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x109" type="Notice" channel="Flags" message="Entered OSFlagDel(({0}, {1})">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x10A" type="Notice" channel="Flags" message="Entered OSFlagPost({0}, {1}, {2})">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x10B" type="Notice" channel="Flags" message="Entered OSFlagPend({0}, {1}, {2}, {3})">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="Arg"></Param>
+        <Param index="3" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x10C" type="Notice" channel="Flags" message="Exited OSFlagDel(({0}, {1})">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x10D" type="Notice" channel="Flags" message="Exited OSFlagPost(({0}, {1})">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x10E" type="Notice" channel="Flags" message="Exited OSFlagPend(({0}, {1})">
+        <Param index="0" type="Handle" class="Flags" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Mbox">
+      <Event code="0x10F" service="Mbox/OSMboxCreate" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x110" service="Mbox/OSMboxDel" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x111" service="Mbox/OSMboxPost" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x112" service="Mbox/OSMboxPost" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x113" service="Mbox/OSMboxPend" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x114" service="Mbox/OSMboxPend" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x115" service="Mbox/OSMboxPend" status="StatusBlocks" type="KernelServiceEntry">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x116" type="Notice" channel="Mbox" message="Entered OSMboxDel({0}, {1})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x117" type="Notice" channel="Mbox" message="Entered OSMboxPost({0})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x118" type="Notice" channel="Mbox" message="Entered OSMboxPostOpt({0}, {1})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x119" type="Notice" channel="Mbox" message="Entered OSMboxPend({0}, {1})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x11A" type="Notice" channel="Mbox" message="Exited OSMboxDel({0}, {1})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x11B" type="Notice" channel="Mbox" message="Exited OSMboxPost({0}, {1})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x11C" type="Notice" channel="Mbox" message="Exited OSMboxPostOpt({0}, {1})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x11D" type="Notice" channel="Mbox" message="Exited OSMboxPend({0}, {1})">
+        <Param index="0" type="Handle" class="Mbox" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Mem">
+      <Event code="0x11E" service="Mem/OSMemCreate" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x11F" service="Mem/OSMemPut" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x120" service="Mem/OSMemPut" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x121" service="Mem/OSMemGet" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x122" service="Mem/OSMemGet" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x123" type="Notice" channel="Mem" message="Entered OSMemPut({0}, {1})">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x124" type="Notice" channel="Mem" message="Entered OSMemGet({0})">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x125" type="Notice" channel="Mem" message="Exited OSMemPut({0}, {1})">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x126" type="Notice" channel="Mem" message="Exited OSMemGet({0}, {1})">
+        <Param index="0" type="Handle" class="Mem" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Mutex">
+      <Event code="0x127" service="Mutex/OSMutexCreate" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x128" service="Mutex/OSMutexDel" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x129" service="Mutex/OSMutexPost" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x12A" service="Mutex/OSMutexPost" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x12B" service="Mutex/OSMutexPend" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x12C" service="Mutex/OSMutexPend" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x12D" service="Mutex/OSMutexPend" status="StatusBlocks" type="KernelServiceEntry">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x12E" type="Notice" channel="Mutex" message="Entered OSMutexDel({0}, {1})">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x12F" type="Notice" channel="Mutex" message="Entered OSMutexPost({0})">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x130" type="Notice" channel="Mutex" message="Entered OSMutexPend({0}, {1})">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x131" type="Notice" channel="Mutex" message="Exited OSMutexDel({0}, {1})">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x132" type="Notice" channel="Mutex" message="Exited OSMutexPost({0}, {1})">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x133" type="Notice" channel="Mutex" message="Exited OSMutexPend({0}, {1})">
+        <Param index="0" type="Handle" class="Mutex" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Queue">
+      <Event code="0x134" service="Queue/OSQCreate" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x135" service="Queue/OSQDel" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x136" service="Queue/OSQPost" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x137" service="Queue/OSQPost" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x138" service="Queue/OSQPostFront" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x139" service="Queue/OSQPostFront" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x13A" service="Queue/OSQPend" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x13B" service="Queue/OSQPend" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x13C" service="Queue/OSQPend" status="StatusBlocks" type="KernelServiceEntry">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x13D" service="Queue/OSQFlush" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x13E" type="Notice" channel="Queue" message="Entered OSQDel({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x13F" type="Notice" channel="Queue" message="Entered OSQPost({0})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x140" type="Notice" channel="Queue" message="Entered OSQPostFront({0})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x141" type="Notice" channel="Queue" message="Entered OSQPostOpt({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x142" type="Notice" channel="Queue" message="Entered OSQPend({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x143" type="Notice" channel="Queue" message="Exited OSQDel({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x144" type="Notice" channel="Queue" message="Exited OSQPost({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x145" type="Notice" channel="Queue" message="Exited OSQPostFront({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x146" type="Notice" channel="Queue" message="Exited OSQPostOpt({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x147" type="Notice" channel="Queue" message="Exited OSQPend({0}, {1})">
+        <Param index="0" type="Handle" class="Queue" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Semaphore">
+      <Event code="0x148" service="Semaphore/OSSemCreate" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x149" service="Semaphore/OSSemDel" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x14A" service="Semaphore/OSSemPost" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x14B" service="Semaphore/OSSemPost" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x14C" service="Semaphore/OSSemPend" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x14D" service="Semaphore/OSSemPend" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x14E" service="Semaphore/OSSemPend" status="StatusBlocks" type="KernelServiceEntry">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x14F" service="Semaphore/OSSemAccept" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x150" service="Semaphore/OSSemSet" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x151" service="Semaphore/OSSemSet" status="StatusTimeout" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+      </Event>
+      <Event code="0x152" type="Notice" channel="Semaphore" message="Entered OSSemDel({0}, {1})">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x153" type="Notice" channel="Semaphore" message="Entered OSSemPost({0})">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x154" type="Notice" channel="Semaphore" message="Entered OSSemPend({0}, {1})">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x155" type="Notice" channel="Semaphore" message="Exited OSSemDel({0}, {1})">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x156" type="Notice" channel="Semaphore" message="Exited OSSemPost({0}, {1})">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x157" type="Notice" channel="Semaphore" message="Exited OSSemPend({0}, {1})">
+        <Param index="0" type="Handle" class="Semaphore" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Task">
+      <Event code="0x10" type="ObjectState">
+        <Param index="0" type="Handle" class="Task"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="AddTaskCreateCall" />
+      </Event>
+      <Event key="AddTaskCreateCall" service="Task/OSTaskCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x04" service="Task/OSTaskChangePrio" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <FollowWith key="AddPriorityChange" />
+      </Event>
+      <Event key="AddPriorityChange" type="PriorityChange">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Priority"></Param>
+      </Event>
+      <Event code="0x158" type="PriorityChange" priorityChange="Inherit">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Priority"></Param>
+      </Event>
+      <Event code="0x159" type="PriorityChange" priorityChange="Disinherit">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Priority"></Param>
+      </Event>
+      <Event code="0x15A" service="Task/OSTaskCreate" status="StatusError" type="KernelServiceReturn"/>
+      <Event code="0x11" service="Task/OSTaskDel" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="TaskQ" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x15B" service="Task/OSTimeDly" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="TimestampInOsTicks" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x15C" service="Task/OSTaskResume" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x15D" service="Task/OSTaskSuspend" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+
+    <EventGroup name="Tmr">
+      <Event code="0x15E" service="Tmr/OSTmrCreate" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Tmr" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <Param index="2" type="Int32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x15F" service="Tmr/OSTmrDel" status="StatusOK" type="KernelServiceReturn">
+        <Param index="0" type="Handle" class="Tmr" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x160" service="Tmr/Expired" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Tmr" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x161" type="Notice" channel="Tmr" message="Entered OSTmrDel({0})">
+        <Param index="0" type="Handle" class="Tmr" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x162" type="Notice" channel="Tmr" message="Exited OSTmrDel({0}, {1})">
+        <Param index="0" type="Handle" class="Tmr" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+      </Event>
+    </EventGroup>
+  </EventCodes>
+
+  <TargetPlatform>
+  <TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Flags">
+      <KernelService name="OSFlagCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSFlagPost" operation="IncreaseSemaphore" />
+      <KernelService name="OSFlagPend" operation="DecreaseSemaphore" />
+      <KernelService name="OSFlagDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mbox">
+      <KernelService name="OSMboxCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSMboxPost" operation="Enqueue" />
+      <KernelService name="OSMboxPend" operation="Dequeue" />
+      <KernelService name="OSMboxDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mem">
+      <KernelService name="OSMemCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSMemPut" operation="IncreaseSemaphore" />
+      <KernelService name="OSMemGet" operation="DecreaseSemaphore" />
+      <KernelService name="OSMemDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="OSMutexCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSMutexPost" operation="ReleaseMutex" />
+      <KernelService name="OSMutexPend" operation="LockMutex" />
+      <KernelService name="OSMutexDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Queue">
+      <KernelService name="OSQCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSQPost" operation="Enqueue" />
+      <KernelService name="OSQPostFront" operation="EnqueueFirst" />
+      <KernelService name="OSQPend" operation="Dequeue" />
+      <KernelService name="OSQFlush" operation="Clear" />
+      <KernelService name="OSQDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="OSSemCreate" operation="Initialize" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSSemPost" operation="IncreaseSemaphore" />
+      <KernelService name="OSSemPend" operation="DecreaseSemaphore" />
+      <KernelService name="OSSemAccept" operation="DecreaseSemaphore" />
+      <KernelService name="OSSemSet" operation="SetSemaphore" />
+      <KernelService name="OSSemDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Task">
+      <KernelService name="OSTaskCreate" operation="StartInstance" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSTimeDlyHMSM" operation="" parameters="NumericParameterOnly" />
+      <KernelService name="OSTimeDly" operation="" parameters="NumericParameterOnly" />
+      <KernelService name="OSTaskSuspend" operation="" />
+      <KernelService name="OSTaskResume" operation="StartInstance" />
+      <KernelService name="OSTaskChangePrio" operation="" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSTaskDel" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Tmr">
+      <KernelService name="OSTmrCreate" operation="StartInstance" parameters="ObjectAndNumericParameter" />
+      <KernelService name="OSTmrDel" operation="Deinitialize" />
+      <KernelService name="Expired" parameters="Object" operation=""/>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+    <ObjectClass name="ISR" type="Actor" />
+    <ObjectClass name="Heap" type="Heap" options="Hidden, NoIpcGraph" />
+    <ObjectClass name="Flags" type="Semaphore" />
+    <ObjectClass name="Mbox" type="Queue" />
+    <ObjectClass name="Mem" type="Semaphore" />
+    <ObjectClass name="Mutex" type="Mutex" />
+    <ObjectClass name="Queue" type="Queue" />
+    <ObjectClass name="Semaphore" type="Semaphore" />
+    <ObjectClass name="Task" type="Actor" />
+    <ObjectClass name="Tmr" type="Actor" />
+  </ObjectClasses>
+
+  <SpecialValueGroups>
+    <SpecialValueGroup id="OS_ERR">
+      <SpecialValue value="0"   format=" returned OS_ERR_NONE" />
+
+      <SpecialValue value="1"   format=" returned OS_ERR_EVENT_TYPE" />
+      <SpecialValue value="2"   format=" returned OS_ERR_PEND_ISR" />
+      <SpecialValue value="3"   format=" returned OS_ERR_POST_NULL_PTR" />
+      <SpecialValue value="4"   format=" returned OS_ERR_PEVENT_NULL" />
+      <SpecialValue value="5"   format=" returned OS_ERR_POST_ISR" />
+      <SpecialValue value="6"   format=" returned OS_ERR_QUERY_ISR" />
+      <SpecialValue value="7"   format=" returned OS_ERR_INVALID_OPT" />
+      <SpecialValue value="8"   format=" returned OS_ERR_ID_INVALID" />
+      <SpecialValue value="9"   format=" returned OS_ERR_PDATA_NULL" />
+
+      <SpecialValue value="10"  format=" returned OS_ERR_TIMEOUT" />
+      <SpecialValue value="11"  format=" returned OS_ERR_EVENT_NAME_TOO_LONG" />
+      <SpecialValue value="12"  format=" returned OS_ERR_PNAME_NULL" />
+      <SpecialValue value="13"  format=" returned OS_ERR_PEND_LOCKED" />
+      <SpecialValue value="14"  format=" returned OS_ERR_PEND_ABORT" />
+      <SpecialValue value="15"  format=" returned OS_ERR_DEL_ISR" />
+      <SpecialValue value="16"  format=" returned OS_ERR_CREATE_ISR" />
+      <SpecialValue value="17"  format=" returned OS_ERR_NAME_GET_ISR" />
+      <SpecialValue value="18"  format=" returned OS_ERR_NAME_SET_ISR" />
+      <SpecialValue value="19"  format=" returned OS_ERR_ILLEGAL_CREATE_RUN_TIME" />
+
+      <SpecialValue value="20"  format=" returned OS_ERR_MBOX_FULL" />
+      <SpecialValue value="21"  format=" returned OS_ERR_ILLEGAL_DEL_RUN_TIME" />
+
+      <SpecialValue value="30"  format=" returned OS_ERR_Q_FULL" />
+      <SpecialValue value="31"  format=" returned OS_ERR_Q_EMPTY" />
+
+      <SpecialValue value="40"  format=" returned OS_ERR_PRIO_EXIST" />
+      <SpecialValue value="41"  format=" returned OS_ERR_PRIO" />
+      <SpecialValue value="42"  format=" returned OS_ERR_PRIO_INVALID" />
+
+      <SpecialValue value="50"  format=" returned OS_ERR_SCHED_LOCKED" />
+      <SpecialValue value="51"  format=" returned OS_ERR_SEM_OVF" />
+
+      <SpecialValue value="60"  format=" returned OS_ERR_TASK_CREATE_ISR" />
+      <SpecialValue value="61"  format=" returned OS_ERR_TASK_DEL" />
+      <SpecialValue value="62"  format=" returned OS_ERR_TASK_DEL_IDLE" />
+      <SpecialValue value="63"  format=" returned OS_ERR_TASK_DEL_REQ" />
+      <SpecialValue value="64"  format=" returned OS_ERR_TASK_DEL_ISR" />
+      <SpecialValue value="65"  format=" returned OS_ERR_TASK_NAME_TOO_LONG" />
+      <SpecialValue value="66"  format=" returned OS_ERR_TASK_NO_MORE_TCB" />
+      <SpecialValue value="67"  format=" returned OS_ERR_TASK_NOT_EXIST" />
+      <SpecialValue value="68"  format=" returned OS_ERR_TASK_NOT_SUSPENDED" />
+      <SpecialValue value="69"  format=" returned OS_ERR_TASK_OPT" />
+      <SpecialValue value="70"  format=" returned OS_ERR_TASK_RESUME_PRIO" />
+      <SpecialValue value="71"  format=" returned OS_ERR_TASK_SUSPEND_IDLE" />
+      <SpecialValue value="72"  format=" returned OS_ERR_TASK_SUSPEND_PRIO" />
+      <SpecialValue value="73"  format=" returned OS_ERR_TASK_WAITING" />
+
+      <SpecialValue value="80"  format=" returned OS_ERR_TIME_NOT_DLY" />
+      <SpecialValue value="81"  format=" returned OS_ERR_TIME_INVALID_MINUTES" />
+      <SpecialValue value="82"  format=" returned OS_ERR_TIME_INVALID_SECONDS" />
+      <SpecialValue value="83"  format=" returned OS_ERR_TIME_INVALID_MS" />
+      <SpecialValue value="84"  format=" returned OS_ERR_TIME_ZERO_DLY" />
+      <SpecialValue value="85"  format=" returned OS_ERR_TIME_DLY_ISR" />
+
+      <SpecialValue value="90"  format=" returned OS_ERR_MEM_INVALID_PART" />
+      <SpecialValue value="91"  format=" returned OS_ERR_MEM_INVALID_BLKS" />
+      <SpecialValue value="92"  format=" returned OS_ERR_MEM_INVALID_SIZE" />
+      <SpecialValue value="93"  format=" returned OS_ERR_MEM_NO_FREE_BLKS" />
+      <SpecialValue value="94"  format=" returned OS_ERR_MEM_FULL" />
+      <SpecialValue value="95"  format=" returned OS_ERR_MEM_INVALID_PBLK" />
+      <SpecialValue value="96"  format=" returned OS_ERR_MEM_INVALID_PMEM" />
+      <SpecialValue value="97"  format=" returned OS_ERR_MEM_INVALID_PDATA" />
+      <SpecialValue value="98"  format=" returned OS_ERR_MEM_INVALID_ADDR" />
+      <SpecialValue value="99"  format=" returned OS_ERR_MEM_NAME_TOO_LONG" />
+
+      <SpecialValue value="100" format=" returned OS_ERR_NOT_MUTEX_OWNER" />
+
+      <SpecialValue value="110" format=" returned OS_ERR_FLAG_INVALID_PGRP" />
+      <SpecialValue value="111" format=" returned OS_ERR_FLAG_WAIT_TYPE" />
+      <SpecialValue value="112" format=" returned OS_ERR_FLAG_NOT_RDY" />
+      <SpecialValue value="113" format=" returned OS_ERR_FLAG_INVALID_OPT" />
+      <SpecialValue value="114" format=" returned OS_ERR_FLAG_GRP_DEPLETED" />
+      <SpecialValue value="115" format=" returned OS_ERR_FLAG_NAME_TOO_LONG" />
+
+      <SpecialValue value="120" format=" returned OS_ERR_PCP_LOWER" />
+
+      <SpecialValue value="130" format=" returned OS_ERR_TMR_INVALID_DLY" />
+      <SpecialValue value="131" format=" returned OS_ERR_TMR_INVALID_PERIOD" />
+      <SpecialValue value="132" format=" returned OS_ERR_TMR_INVALID_OPT" />
+      <SpecialValue value="133" format=" returned OS_ERR_TMR_INVALID_NAME" />
+      <SpecialValue value="134" format=" returned OS_ERR_TMR_NON_AVAIL" />
+      <SpecialValue value="135" format=" returned OS_ERR_TMR_INACTIVE" />
+      <SpecialValue value="136" format=" returned OS_ERR_TMR_INVALID_DEST" />
+      <SpecialValue value="137" format=" returned OS_ERR_TMR_INVALID_TYPE" />
+      <SpecialValue value="138" format=" returned OS_ERR_TMR_INVALID" />
+      <SpecialValue value="139" format=" returned OS_ERR_TMR_ISR" />
+      <SpecialValue value="140" format=" returned OS_ERR_TMR_NAME_TOO_LONG" />
+      <SpecialValue value="141" format=" returned OS_ERR_TMR_INVALID_STATE" />
+      <SpecialValue value="142" format=" returned OS_ERR_TMR_STOPPED" />
+      <SpecialValue value="143" format=" returned OS_ERR_TMR_NO_CALLBACK" />
+
+      <SpecialValue value="150" format=" returned OS_ERR_NO_MORE_ID_AVAIL" />
+
+      <SpecialValue value="160" format=" returned OS_ERR_TLS_NO_MORE_AVAIL" />
+      <SpecialValue value="161" format=" returned OS_ERR_TLS_ID_INVALID" />
+      <SpecialValue value="162" format=" returned OS_ERR_TLS_NOT_EN" />
+      <SpecialValue value="163" format=" returned OS_ERR_TLS_DESTRUCT_ASSIGNED" />
+      <SpecialValue value="164" format=" returned OS_ERR_OS_NOT_RUNNING" />
+    </SpecialValueGroup>
+  </SpecialValueGroups>
+  </TargetPlatform>
+</PlatformExtension>

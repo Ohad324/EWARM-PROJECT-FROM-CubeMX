@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Object Utilization</title>
+  <keywords>
+    <keyword>kernel</keyword>
+    <keyword>object</keyword>
+    <keyword>utilization</keyword>
+    <keyword>plot</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>This view visualizes the state of objects over time, such as the number of messages in a message queue. It can be used to identify situations where the system has trouble processing all input within a reasonable time.</p>
+
+        <p>
+          <A HREF="img/Kernel_Object_Utilization.png" target="$IMAGETARGET">
+            <img src="img/Kernel_Object_Utilization.png" width="$IMAGEWIDTH" border="0"></img>
+          </A>
+        </p>
+
+        <p>You can filter what actors to visualize by clicking on them in the legend field. If you click on a marker in the graph you can see information about that event in the information panel. Double-clicking will focus the main view on that event.</p>
+      </text>
+    </section>
+  </body>
+</page>

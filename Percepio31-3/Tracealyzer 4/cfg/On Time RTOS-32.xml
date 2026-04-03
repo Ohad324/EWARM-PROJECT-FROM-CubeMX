@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="RTKSignal" operation="IncreaseSemaphore" />
+      <KernelService name="RTKWait" operation="DecreaseSemaphore" />
+      <KernelService name="RTKDeleteSemaphore" operation="Unknown" />
+      <KernelService name="RTKLockSpinlock" operation="LockMutex" />
+      <KernelService name="RTKReleaseSpinlock" operation="ReleaseMutex" />
+      <KernelService name="RTKDeleteSpinlock" operation="Unknown" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Semaphore(ST_EVENT)">
+      <KernelService name="RTKSignal" operation="MaximizeSemaphore" />
+      <KernelService name="RTKWait" operation="OtherRead" />
+      <KernelService name="RTKDeleteSemaphore" operation="Unknown" />
+      <KernelService name="RTKPulse" operation="OtherWrite" />
+      <KernelService name="RTKResetEvent" operation="MinimizeSemaphore" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="MBox">
+      <KernelService name="RTKPut" operation="Enqueue" />
+      <KernelService name="RTKGet" operation="Dequeue" />
+      <KernelService name="RTKDeleteMailbox" operation="Unknown" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Task">
+      <KernelService name="RTKDelay" operation="Unknown" parameters="NumericParameterOnly" />
+      <KernelService name="RTKDelayUntil" operation="Unknown" parameters="NumericParameterOnly" />
+      <KernelService name="RTKSend" operation="OtherWrite" />
+      <KernelService name="RTKReceive" operation="OtherRead" />
+      <KernelService name="RTKSetPriority" operation="Unknown" />
+      <KernelService name="RTKUnknown" operation="Unknown" parameters="None" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="ISR">
+      <KernelService name="RTKSetIRQ" operation="Unknown" />
+      <KernelService name="RTKDisableIRQ" operation="Unknown" />
+      <KernelService name="RTKSendIPI" operation="Unknown" />
+      <KernelService name="RTKReceiveIPI" operation="Unknown" />
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="Lock" type="Mutex" />
+    <ObjectClass name="Semaphore" type="Semaphore" />
+    <ObjectClass name="Semaphore(ST_EVENT)" type="Semaphore" />
+    <ObjectClass name="MBox" type="Queue" />
+    <ObjectClass name="Task" type="Actor" />
+    <ObjectClass name="ISR" type="Actor" />
+  </ObjectClasses>
+</TargetPlatform>

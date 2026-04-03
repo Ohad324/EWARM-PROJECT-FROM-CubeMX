@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Horizontal Trace View</title>
+  <keywords>
+    <keyword>horizontal</keyword>
+    <keyword>live</keyword>
+    <keyword>traces</keyword>
+    <keyword>viewer</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Horizontal Trace View</header>
+      <text>
+        <p>
+          This view shows a Gantt chart of task and ISR execution, like the vertical trace view, but with horizontal orientation.
+        </p>
+        
+        <p>
+          This view does not show event labels like service calls or User Events, but it allows for correlating the detailed execution trace with
+          other horizontal views, such as the <A HREF="CpuLoadGraph.html">CPU Load Graph</A>.
+        </p>
+
+        <p>
+          <A HREF="img/Trace View - Horizontal.png" target="$IMAGETARGET">
+            <img src="img/Trace View - Horizontal.png" width="$IMAGEWIDTH" border="0"></img>
+          </A>
+        </p>
+
+        <p>
+          To see a vertical scheduling view, which includes individual events along with the scheduling, use <i>View</i> -> <i>Vertical View</i>. See the <a href="TraceView_Vertical.html">Vertical Trace View</a> for more information about this view.
+        </p>
+
+        <p>
+          If you click on a task or ISR instance, you can see additional information in the tool panel in the very right.
+          Double-clicking on a task or ISR instance will show details about it.
+        </p>
+        <p>
+          You can select which actors to display in the trace by using the legend field on the right.
+          Right-clicking in the legend gives options to "Show All" or "Show None", and if a legend entry is selected the option to "Show Only ..." is available.
+        </p>
+
+      </text>
+    </section>
+  </body>
+</page>

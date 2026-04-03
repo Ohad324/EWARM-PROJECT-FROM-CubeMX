@@ -1,0 +1,714 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<CodeTables>
+  <EventCodeTable>
+    <Event code="0" type="NullEvent" />
+    <Event code="1" type="ThreadResume" />
+    <Event code="2" type="ThreadSuspend" />
+    <Event code="3" type="ISRBegin" />
+    <Event code="4" type="ISREnd" />
+    <Event code="5" type="TimeSlice" />
+    <Event code="6" type="NullEvent" />
+
+    <!--Pools 10 - 27-->
+    <Event code="10" service="BlockPool/tx_block_allocate" class="7" params="1:7,2:rp:nito,x:d:1,3:d" />
+    <Event code="15" service="BlockPool/tx_block_pool_performance_system_info_get" class="7" />
+    <Event code="11" service="BlockPool/tx_block_pool_create" class="7" params="1:7,2:p,3:u,4:u" />
+    <Event code="12" service="BlockPool/tx_block_pool_delete" class="7" />
+    <Event code="13" service="BlockPool/tx_block_pool_info_get" class="7" />
+    <Event code="14" service="BlockPool/tx_block_pool_performance_info_get" class="7" />
+    <Event code="16" service="BlockPool/tx_block_pool_prioritize" class="5" params="1:7" />
+    <Event code="17" service="BlockPool/tx_block_release" class="5" params="1:7,2:d" />
+    <Event code="20" service="BytePool/tx_byte_allocate" class="5" params="1:8,2:rp:nito,3:d,4:d" />
+    <Event code="25" service="BytePool/tx_byte_pool_performance_system_info_get" />
+    <Event code="21" service="BytePool/tx_byte_pool_create" class="8" params="1:8,2:p,3:u" />
+    <Event code="22" service="BytePool/tx_byte_pool_delete" class="8" />
+    <Event code="23" service="BytePool/tx_byte_pool_info_get" class="8" />
+    <Event code="24" service="BytePool/tx_byte_pool_performance_info_get" class="8" />
+    <Event code="26" service="BytePool/tx_byte_pool_prioritize" class="8" params="1:8" />
+    <Event code="27" service="BytePool/tx_byte_release" class="8" params="1:8,2:d" />
+
+    <!--Event Flags 30 - 37-->
+    <Event code="30" service="EventFlags/tx_event_flags_create" class="6" />
+    <Event code="31" service="EventFlags/tx_event_flags_delete" class="6" />
+    <Event code="32" service="EventFlags/tx_event_flags_get" class="6" params="1:6,2:u,3:u,4:u" />
+    <Event code="33" service="EventFlags/tx_event_flags_info_get" class="6" />
+    <Event code="34" service="EventFlags/tx_event_flags_performance_info_get" class="6" />
+    <Event code="35" service="EventFlags/tx_event_flags_performance_system_info_get" />
+    <Event code="36" service="EventFlags/tx_event_flags_set" class="6" params="1:6,2:u,3:u" />
+    <Event code="37" service="EventFlags/tx_event_flags_set_notify" class="6" />
+
+    <!--Interrupt 40-->
+    <Event code="40" service="Interrupts/tx_interrupt_control" params="1:u" />
+
+    <!--Mutex 50 - 57-->
+    <Event code="50" service="Mutex/tx_mutex_create" class="5" params="1:5,2:u" />
+    <Event code="51" service="Mutex/tx_mutex_delete" class="5" />
+    <Event code="52" service="Mutex/tx_mutex_get" class="5" params="1:5,2:u:to" />
+    <Event code="53" service="Mutex/tx_mutex_info_get" class="5" />
+    <event code="54" service="mutex/tx_mutex_performance_info_get" class="5" />
+    <event code="55" service="mutex/tx_mutex_performance_system_info_get" />
+    <event code="56" service="mutex/tx_mutex_prioritize" class="5" params="1:5" />
+    <Event code="57" service="Mutex/tx_mutex_put" class="5" params="1:5" />
+
+    <!--Queue 60 - 70-->
+    <Event code="60" service="Queue/tx_queue_create" class="3" params="1:3,2:u,3:p,4:u" />
+    <Event code="61" service="Queue/tx_queue_delete" class="3" />
+    <Event code="62" service="Queue/tx_queue_flush" class="3" />
+    <Event code="63" service="Queue/tx_queue_front_send" class="3" params="1:3,2:p,3:u,4:_:sa" />
+    <Event code="64" service="Queue/tx_queue_info_get" class="3" />
+    <Event code="65" service="Queue/tx_queue_performance_info_get" class="3" />
+    <Event code="66" service="Queue/tx_queue_performance_system_info_get" />
+    <Event code="67" service="Queue/tx_queue_prioritize" class="3" params="1:3,2:u" />
+    <Event code="68" service="Queue/tx_queue_receive" class="3" params="1:3,2:p,3:u:to,4:_:sb-" />
+    <Event code="69" service="Queue/tx_queue_send" class="3" params="1:3,2:p,3:u:to,4:_:sb+" />
+    <Event code="70" service="Queue/tx_queue_send_notify" class="3" />
+
+    <!--Semaphores 80 - 89-->
+    <Event code="80" service="Semaphore/tx_semaphore_ceiling_put" class="4" params="1:4,4:u" />
+    <Event code="81" service="Semaphore/tx_semaphore_create" class="4" params="1:4,2:d:sa" />
+    <Event code="82" service="Semaphore/tx_semaphore_delete" class="4" />
+    <Event code="83" service="Semaphore/tx_semaphore_get" class="4" params="1:4,2:u:to,3:_:sb-" />
+    <Event code="84" service="Semaphore/tx_semaphore_info_get" class="4" />
+    <Event code="85" service="Semaphore/tx_semaphore_performance_info_get" class="4" />
+    <Event code="86" service="Semaphore/tx_semaphore_performance_system_info_get" />
+    <Event code="87" service="Semaphore/tx_semaphore_prioritize" class="4" params="1:4" />
+    <Event code="88" service="Semaphore/tx_semaphore_put" class="4" params="1:4,2:_:sb+" />
+    <Event code="89" service="Semaphore/tx_semaphore_put_notify" class="4" />
+
+    <!--Thread 100 - 117-->
+    <Event code="100" service="Thread/tx_thread_create" class="1" params="1:1,2:u,3:p,4:u" />
+    <Event code="101" service="Thread/tx_thread_delete" class="1" />
+    <Event code="102" service="Thread/tx_thread_entry_exit_notify" class="1" params="1:1,2:u" />
+    <Event code="103" service="Thread/tx_thread_identify" />
+    <Event code="104" service="Thread/tx_thread_info_get" class="1" />
+    <Event code="105" service="Thread/tx_thread_performance_info_get" class="1" />
+    <Event code="106" service="Thread/tx_thread_performance_system_info_get" />
+    <Event code="107" service="Thread/tx_thread_preemption_change" class="1" params="1:1,2:u" />
+    <Event code="108" service="Thread/tx_thread_priority_change" class="1" params="1:1,2:u,3:u" />
+    <Event code="109" type="ThreadRelinquish" />
+    <Event code="110" service="Thread/tx_thread_reset" class="1" />
+    <Event code="111" service="Thread/tx_thread_resume" class="1" params="1:1" />
+    <Event code="112" service="Thread/tx_thread_sleep" params="1:u" />
+    <Event code="113" service="Thread/tx_thread_stack_error_notify" />
+    <Event code="114" service="Thread/tx_thread_suspend" class="1" params="1:1" />
+    <Event code="115" service="Thread/tx_thread_terminate" class="1" params="1:1" />
+    <Event code="116" service="Thread/tx_thread_time_slice_change" class="1" params="1:1,2:u" />
+    <Event code="117" service="Thread/tx_thread_wait_abort" class="1" params="1:1" />
+
+    <!--Timer 120 -121-->
+    <Event code="120" service="Timer/tx_time_get" params="1:u" />
+    <Event code="121" service="Timer/tx_time_set" params="1:u" />
+    <Event code="122" service="Timer/tx_timer_activate" class="2" />
+    <Event code="123" service="Timer/tx_timer_change" class="2" params="1:2,2:u,3:u" />
+    <Event code="124" service="Timer/tx_timer_create" class="2" params="1:2,2:u,3:u,4:u" />
+    <Event code="125" service="Timer/tx_timer_deactivate" class="2" />
+    <Event code="126" service="Timer/tx_timer_delete" class="2" />
+    <Event code="127" service="Timer/tx_timer_info_get" class="2" />
+    <Event code="128" service="Timer/tx_timer_performance_info_get" class="2" />
+    <Event code="129" service="Timer/tx_timer_performance_system_info_get" />
+
+    <!--Internal 201 - 214-->
+    <Event code="201" service="Internal/fx_internal_log_sector_cache_miss" class="9" params="1:9,2:u,3:u,4:u" />
+    <Event code="202" service="Internal/fx_internal_dir_cache_miss" class="9" params="1:9,2:u" />
+    <Event code="203" service="Internal/fx_internal_media_flush" class="9" params="1:9,2:u" />
+    <Event code="204" service="Internal/fx_internal_dir_entry_read" class="9" />
+    <Event code="205" service="Internal/fx_internal_dir_entry_write" class="9" />
+    <Event code="206" service="Internal/fx_internal_io_driver_read" class="9" params="1:9,2:u,3:u,4:p" />
+    <Event code="207" service="Internal/fx_internal_io_driver_write" class="9" params="1:9,2:u,3:u,4:p" />
+    <Event code="208" service="Internal/fx_internal_io_driver_flush" class="9" />
+    <Event code="209" service="Internal/fx_internal_io_driver_abort" class="9" />
+    <Event code="210" service="Internal/fx_internal_io_driver_init" class="9" />
+    <Event code="211" service="Internal/fx_internal_io_driver_boot_read" class="9" params="1:9,2:p" />
+    <Event code="212" service="Internal/fx_internal_io_driver_release_sectors" class="9" params="1:9,2:u,3:u" />
+    <Event code="213" service="Internal/fx_internal_io_driver_boot_write" class="9" params="1:9,2:p" />
+    <Event code="214" service="Internal/fx_internal_io_driver_uninit" class="9" />
+
+    <!--Media 220 - 238-->
+    <Event code="220" service="Media/fx_directory_attributes_read" class="9" />
+    <Event code="221" service="Media/fx_directory_attributes_set" class="9" />
+    <Event code="222" service="Media/fx_directory_create" class="9" />
+    <Event code="223" service="Media/fx_directory_default_get" class="9" />
+    <Event code="224" service="Media/fx_directory_default_set" class="9" params="1:9,2:p" />
+    <Event code="225" service="Media/fx_directory_delete" class="9" />
+    <Event code="226" service="Media/fx_directory_first_entry_find" class="9" params="1:9,2:p" />
+    <Event code="227" service="Media/fx_directory_first_full_entry_find" class="9" params="1:9,2:p" />
+    <Event code="228" service="Media/fx_directory_information_get" class="9" params="1:9,2:p" />
+    <Event code="229" service="Media/fx_directory_local_path_clear" class="9" />
+    <Event code="230" service="Media/fx_directory_local_path_get" class="9" params="1:9,2:p" />
+    <Event code="231" service="Media/fx_directory_local_path_restore" class="9" params="1:9,2:p" />
+    <Event code="232" service="Media/fx_directory_local_path_set" class="9" params="1:9,2:p,3:p" />
+    <Event code="233" service="Media/fx_directory_long_name_get" class="9" params="1:9,2:p,3:p" />
+    <Event code="234" service="Media/fx_directory_name_test" class="9" params="1:9,2:p" />
+    <Event code="235" service="Media/fx_directory_next_entry_find" class="9" params="1:9,2:p" />
+    <Event code="236" service="Media/fx_directory_next_full_entry_find" class="9" params="1:9,2:p" />
+    <Event code="237" service="Media/fx_directory_rename" class="9" params="1:9,2:p,3:p" />
+    <Event code="238" service="Media/fx_directory_short_name_get" class="9" params="1:9,2:p,3:p" />
+
+    <!--File 239 - 254-->
+    <Event code="239" service="File/fx_file_allocate" class="10" params="1:10,2:u,3:u,4:u" />
+    <Event code="240" service="File/fx_file_attributes_read" class="10" params="1:9,2:u" />
+    <Event code="241" service="File/fx_file_attributes_set" class="10" params="1:9,2:p,3:u" />
+    <Event code="242" service="File/fx_file_best_effort_allocate" class="10" params="1:10,2:u,3:u" />
+    <Event code="243" service="File/fx_file_close" class="10" params="1:10,2:u" />
+    <Event code="244" service="File/fx_file_create" class="10" params="1:9,2:p" />
+    <Event code="245" service="File/fx_file_date_time_set" class="10" params="1:9,2:p,3:u,4:u" />
+    <Event code="246" service="File/fx_file_delete" class="10" params="1:9,2:p" />
+    <Event code="247" service="File/fx_file_open" class="10" params="1:9,2:p,3:p,4:u" />
+    <Event code="248" service="File/fx_file_read" class="10" params="1:10,2:p,3:u,4:u" />
+    <Event code="249" service="File/fx_file_relative_seek" class="10" params="1:10,2:u,3:u,4:u" />
+    <Event code="250" service="File/fx_file_rename" class="10" params="1:9,2:p,3:p" />
+    <Event code="251" service="File/fx_file_seek" class="10" params="1:10,2:u,3:u" />
+    <Event code="252" service="File/fx_file_truncate" class="10" params="1:10,2:u,3:u,4:u" />
+    <Event code="253" service="File/fx_file_truncate_release" class="10" params="1:10,2:u,3:u,4:u" />
+    <Event code="254" service="File/fx_file_write" class="10" params="1:10,2:p,3:u,4:u" />
+
+    <!--Media 255 - 266-->
+    <Event code="255" service="Media/fx_media_abort" class="9" />
+    <Event code="256" service="Media/fx_media_cache_invalidate" class="9" />
+    <Event code="257" service="Media/fx_media_check" class="9" params="1:9,2:p,3:u,4:u" />
+    <Event code="258" service="Media/fx_media_close" class="9" />
+    <Event code="259" service="Media/fx_media_flush" class="9" />
+    <Event code="260" service="Media/fx_media_format" class="9" params="1:9,2:u,3:u,4:u" />
+    <Event code="261" service="Media/fx_media_open" class="9" params="1:9,2:u,3:p,4:u" />
+    <Event code="262" service="Media/fx_media_read" class="9" params="1:9,2:u,3:p,4:u" />
+    <Event code="263" service="Media/fx_media_space_available" class="9" params="1:9,2:p,3:u" />
+    <Event code="264" service="Media/fx_media_volume_get" class="9" params="1:9,2:p,3:u" />
+    <Event code="265" service="Media/fx_media_volume_set" class="9" params="1:9,2:p" />
+    <Event code="266" service="Media/fx_media_write" class="9" params="1:9,2:u,3:p,4:u" />
+
+    <!--System 267 - 271-->
+    <Event code="267" service="System/fx_system_date_get" class="0" params="1:u,2:u,3:u" />
+    <Event code="268" service="System/fx_system_date_set" class="0" params="1:u,2:u,3:u" />
+    <Event code="269" service="System/fx_system_initialize" class="0" />
+    <Event code="270" service="System/fx_system_time_get" class="0" params="1:u,2:u,3:u" />
+    <Event code="271" service="System/fx_system_time_set" class="0" params="1:u,2:u,3:u" />
+
+    <!--Media 272 - 278-->
+    <Event code="272" service="Media/fx_unicode_directory_create" class="9" params="1:9,2:p,3:u,4:p" />
+    <Event code="273" service="Media/fx_unicode_directory_rename" class="9" params="1:9,2:p,3:u,4:p" />
+    <Event code="274" service="Media/fx_unicode_file_create" class="9" params="1:9,2:p,3:u,4:p" />
+    <Event code="275" service="Media/fx_unicode_file_rename" class="9" params="1:9,2:p,3:u,4:p" />
+    <Event code="276" service="Media/fx_unicode_length_get" class="0" params="1:p,2:u" />
+    <Event code="277" service="Media/fx_unicode_name_get" class="9" params="1:9,2:p,3:p,4:u" />
+    <Event code="278" service="Media/fx_unicode_short_name_get" class="9" params="1:9,2:p,3:u,4:p" />
+
+    <!--Ip 300 - 385-->
+    <Event code="300" service="IP/nx_internal_arp_request_receive" class="11" params="1:11,2:u,3:p" />
+    <Event code="301" service="IP/nx_internal_arp_request_send" class="11" params="1:11,2:u,3:p" />
+    <Event code="302" service="IP/nx_internal_arp_response_receive" class="11" params="1:11,2:u,3:p" />
+    <Event code="303" service="IP/nx_internal_arp_response_send" class="11" params="1:11,2:u,3:p" />
+    <Event code="304" service="IP/nx_internal_icmp_receive" class="11" params="1:11,2:u,3:p,4:u" />
+    <Event code="305" service="IP/nx_internal_icmp_send" class="11" params="1:11,2:u,3:p,4:u" />
+    <Event code="306" service="IP/nx_internal_igmp_receive" class="11" params="1:11,2:u,3:p,4:u" />
+    <Event code="308" service="IP/nx_internal_ip_receive" class="11" params="1:11,2:u,3:p,4:d" />
+    <Event code="309" service="IP/nx_internal_ip_send" class="11" params="1:11,2:u,3:p,4:d" />
+    <Event code="310" service="IP/nx_internal_tcp_data_receive" class="11" params="1:11,2:u,3:p,4:u" />
+    <Event code="311" service="IP/nx_internal_tcp_data_send" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="312" service="IP/nx_internal_tcp_fin_receive" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="313" service="IP/nx_internal_tcp_fin_send" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="314" service="IP/nx_internal_tcp_reset_receive" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="315" service="IP/nx_internal_tcp_reset_send" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="316" service="IP/nx_internal_tcp_syn_receive" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="317" service="IP/nx_internal_tcp_syn_send" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="318" service="IP/nx_internal_udp_receive" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="319" service="IP/nx_internal_udp_send" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="320" service="IP/nx_internal_rarp_receive" class="11" params="1:11,2:u,3:p,4:u" />
+    <Event code="321" service="IP/nx_internal_rarp_send" class="11" params="1:11,2:u,3:p,4:u" />
+    <Event code="322" service="IP/nx_internal_tcp_retry" class="11" params="1:11,2:p,3:p,4:u" />
+    <Event code="323" service="IP/nx_internal_tcp_state_change" class="11" params="1:11,2:p,3:u,4:u" />
+    <Event code="324" service="IP/nx_internal_io_driver_packet_send" class="11" params="1:11,2:p,3:u" />
+    <Event code="325" service="IP/nx_internal_io_driver_initialize" class="11" />
+    <Event code="326" service="IP/nx_internal_io_driver_link_enable" class="11" />
+    <Event code="327" service="IP/nx_internal_io_driver_link_disable" class="11" />
+    <Event code="328" service="IP/nx_internal_io_driver_packet_broadcast" class="11" params="1:11,2:p,3:u" />
+    <Event code="329" service="IP/nx_internal_io_driver_arp_send" class="11" params="1:11,2:p,3:u" />
+    <Event code="330" service="IP/nx_internal_io_driver_arp_response_send" class="11" params="1:11,2:p,3:u" />
+    <Event code="331" service="IP/nx_internal_io_driver_rarp_send" class="11" params="1:11,2:p,3:u" />
+    <Event code="332" service="IP/nx_internal_io_driver_multicast_join" class="11" />
+    <Event code="333" service="IP/nx_internal_io_driver_multicast_leave" class="11" />
+    <Event code="334" service="IP/nx_internal_io_driver_get_status" class="11" />
+    <Event code="335" service="IP/nx_internal_io_driver_get_speed" class="11" />
+    <Event code="336" service="IP/nx_internal_io_driver_get_duplex_type" class="11" />
+    <Event code="337" service="IP/nx_internal_io_driver_get_error_count" class="11" />
+    <Event code="338" service="IP/nx_internal_io_driver_get_rx_count" class="11" />
+    <Event code="339" service="IP/nx_internal_io_driver_get_tx_count" class="11" />
+    <Event code="340" service="IP/nx_internal_io_driver_get_alloc_errors" class="11" />
+    <Event code="341" service="IP/nx_internal_io_driver_uninitialize" class="11" />
+    <Event code="342" service="IP/nx_internal_io_driver_deferred_processing" class="11" params="1:11,2:p,3:u" />
+    <Event code="350" service="IP/nx_arp_dynamic_entries_invalidate" class="11" params="1:11,2:u" />
+    <Event code="351" service="IP/nx_arp_dynamic_entry_set" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="352" service="IP/nx_arp_enable" class="11" params="1:11,2:p,3:u" />
+    <Event code="353" service="IP/nx_arp_gratuitous_send" class="11" />
+    <Event code="354" service="IP/nx_arp_hardware_address_find" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="355" service="IP/nx_arp_info_get" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="356" service="IP/nx_arp_ip_address_find" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="357" service="IP/nx_arp_static_entries_delete" class="11" params="1:11,2:u" />
+    <Event code="358" service="IP/nx_arp_static_entry_create" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="359" service="IP/nx_arp_static_entry_delete" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="360" service="IP/nx_icmp_enable" class="11" />
+    <Event code="361" service="IP/nx_icmp_info_get" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="362" service="IP/nx_icmp_ping" class="11" params="1:11,2:u,3:p,4:u" />
+    <Event code="363" service="IP/nx_igmp_enable" class="11" />
+    <Event code="364" service="IP/nx_igmp_info_get" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="365" service="IP/nx_igmp_loopback_disable" class="11" />
+    <Event code="366" service="IP/nx_igmp_loopback_enable" class="11" />
+    <Event code="367" service="IP/nx_igmp_multicast_join" class="11" params="1:11,2:u" />
+    <Event code="368" service="IP/nx_igmp_multicast_leave" class="11" params="1:11,2:u" />
+    <Event code="369" service="IP/nx_ip_address_change_notify" class="11" params="1:11,2:p,3:p" />
+    <Event code="370" service="IP/nx_ip_address_get" class="11" params="1:11,2:u,3:u" />
+    <Event code="371" service="IP/nx_ip_address_set" class="11" params="1:11,2:u,3:u" />
+    <Event code="372" service="IP/nx_ip_create" class="11" params="1:11,2:u,3:u,4:p" />
+    <Event code="373" service="IP/nx_ip_delete" class="11" />
+    <Event code="374" service="IP/nx_ip_driver_direct_command" class="11" params="1:11,2:u,3:u" />
+    <Event code="375" service="IP/nx_ip_forwarding_disable" class="11" />
+    <Event code="376" service="IP/nx_ip_forwarding_enable" class="11" />
+    <Event code="377" service="IP/nx_ip_fragment_disable" class="11" />
+    <Event code="378" service="IP/nx_ip_fragment_enable" class="11" />
+    <Event code="379" service="IP/nx_ip_gateway_address_set" class="11" params="1:11,2:u" />
+    <Event code="380" service="IP/nx_ip_info_get" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="381" service="IP/nx_ip_raw_packet_disable" class="11" />
+    <Event code="382" service="IP/nx_ip_raw_packet_enable" class="11" />
+    <Event code="383" service="IP/nx_ip_raw_packet_receive" class="11" params="1:11,2:p,3:u" />
+    <Event code="384" service="IP/nx_ip_raw_packet_send" class="11" params="1:11,2:p,3:u,4:u" />
+    <Event code="385" service="IP/nx_ip_status_check" class="11" params="1:11,2:u,3:u,4:u" />
+
+    <!--PacketPool 386 - 395-->
+    <Event code="386" service="PacketPool/nx_packet_allocate" class="12" params="1:12,2:p,3:u,4:u" />
+    <Event code="387" service="PacketPool/nx_packet_copy" class="12" params="1:p,2:p,3:12,4:u" />
+    <Event code="388" service="PacketPool/nx_packet_data_append" class="12" params="1:p,2:p,3:u,4:12" />
+    <Event code="389" service="PacketPool/nx_packet_data_retrieve" class="12" params="1:p,2:p,3:u" />
+    <Event code="390" service="PacketPool/nx_packet_length_get" class="12" params="1:p,2:u" />
+    <Event code="391" service="PacketPool/nx_packet_pool_create" class="12" params="1:12,2:u,3:p,4:u" />
+    <Event code="392" service="PacketPool/nx_packet_pool_delete" class="12" />
+    <Event code="393" service="PacketPool/nx_packet_pool_info_get" class="12" params="1:12,2:u,3:u,4:u" />
+    <Event code="394" service="PacketPool/nx_packet_release" class="12" params="1:p,2:u,3:u" />
+    <Event code="395" service="PacketPool/nx_packet_transmit_release" class="12" params="1:p,2:u,3:u" />
+
+    <!--Ip 396 - 398-->
+    <Event code="396" service="Ip/nx_rarp_disable" class="11" />
+    <Event code="397" service="Ip/nx_rarp_enable" class="11" />
+    <Event code="398" service="Ip/nx_rarp_info_get" class="11" params="1:11,2:u,3:u,4:u" />
+
+    <!--Thread 399-->
+    <Event code="399" service="Thread/nx_system_initialize" class="0" />
+
+    <!--TcpSocket 400 - 423-->
+    <Event code="400" service="TcpSocket/nx_tcp_client_socket_bind" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="401" service="TcpSocket/nx_tcp_client_socket_connect" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="402" service="TcpSocket/nx_tcp_client_socket_port_get" class="13" params="1:11,2:13,3:u" />
+    <Event code="403" service="TcpSocket/nx_tcp_client_socket_unbind" class="13" params="1:11,2:13" />
+    <Event code="404" service="TcpSocket/nx_tcp_enable" class="13" />
+    <Event code="405" service="TcpSocket/nx_tcp_free_port_find" class="13" params="1:11,2:u,3:u" />
+    <Event code="406" service="TcpSocket/nx_tcp_info_get" class="13" />
+    <Event code="407" service="TcpSocket/nx_tcp_server_socket_accept" class="13" />
+    <Event code="408" service="TcpSocket/nx_tcp_server_socket_listen" class="13" />
+    <Event code="409" service="TcpSocket/nx_tcp_server_socket_relisten" class="13" />
+    <Event code="410" service="TcpSocket/nx_tcp_server_socket_unaccept" class="13" />
+    <Event code="411" service="TcpSocket/nx_tcp_server_socket_unlisten" class="13" />
+    <Event code="412" service="TcpSocket/nx_tcp_socket_create" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="413" service="TcpSocket/nx_tcp_socket_delete" class="13" params="1:11,2:13,3:u" />
+    <Event code="414" service="TcpSocket/nx_tcp_socket_disconnect" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="415" service="TcpSocket/nx_tcp_socket_info_get" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="416" service="TcpSocket/nx_tcp_socket_mss_get" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="417" service="TcpSocket/nx_tcp_socket_mss_peer_get" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="418" service="TcpSocket/nx_tcp_socket_mss_set" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="419" service="TcpSocket/nx_tcp_socket_receive" class="13" params="1:13,2:p,3:d,4:u" />
+    <Event code="420" service="TcpSocket/nx_tcp_socket_receive_notify" class="13" params="1:11,2:13,3:p" />
+    <Event code="421" service="TcpSocket/nx_tcp_socket_send" class="13" params="1:13,2:p,3:d,4:u" />
+    <Event code="422" service="TcpSocket/nx_tcp_socket_state_wait" class="13" params="1:11,2:13,3:u,4:u" />
+    <Event code="423" service="TcpSocket/nx_tcp_socket_transmit_configure" class="13" params="1:11,2:13,3:u,4:u" />
+
+    <!--UdpSocket 424 - 438-->
+    <Event code="424" service="UdpSocket/nx_udp_enable" class="11" />
+    <Event code="425" service="UdpSocket/nx_udp_free_port_find" class="14" params="1:11,2:u,3:u" />
+    <Event code="426" service="UdpSocket/nx_udp_info_get" class="14" params="1:11,2:u,3:u" />
+    <Event code="427" service="UdpSocket/nx_udp_socket_bind" class="14" params="1:11,2:14,3:u,4:u" />
+    <Event code="428" service="UdpSocket/nx_udp_socket_checksum_disable" class="14" params="1:11,2:14" />
+    <Event code="429" service="UdpSocket/nx_udp_socket_checksum_enable" class="14" params="1:11,2:14" />
+    <Event code="430" service="UdpSocket/nx_udp_socket_create" class="14" params="1:11,2:14,3:u,4:u" />
+    <Event code="431" service="UdpSocket/nx_udp_socket_delete" class="14" params="1:11,2:14" />
+    <Event code="432" service="UdpSocket/nx_udp_socket_info_get" class="14" params="1:11,2:14,3:u,4:u" />
+    <Event code="433" service="UdpSocket/nx_udp_socket_port_get" class="14" params="1:11,2:14,3:u" />
+    <Event code="434" service="UdpSocket/nx_udp_socket_receive" class="14" params="1:11,2:14,3:p,4:d" />
+    <Event code="435" service="UdpSocket/nx_udp_socket_receive_notify" class="14" params="1:11,2:14,3:p" />
+    <Event code="436" service="UdpSocket/nx_udp_socket_send" class="14" params="1:14,2:p,3:d,4:u" />
+    <Event code="437" service="UdpSocket/nx_udp_socket_unbind" class="14" params="1:11,2:14,3:u" />
+    <Event code="438" service="UdpSocket/nx_udp_source_extract" class="14" params="1:p,2:u,3:u" />
+
+    <!--Ip 439-->
+    <Event code="439" service="Ip/nx_ip_interface_attach" class="11" params="1:11,2:u,3:u" />
+
+    <!--UdpSocket 440-->
+    <Event code="440" service="UdpSocket/nx_udp_socket_bytes_available" class="14" />
+
+    <!--Ip 441 - 442-->
+    <Event code="441" service="Ip/nx_ip_static_route_add" class="11" params="1:11,2:u,3:u,4:u" />
+    <Event code="442" service="Ip/nx_ip_static_route_delete" class="11" params="1:11,2:u,3:u" />
+
+    <!--TcpSocket 443 - 444-->
+    <Event code="443" service="TcpSocket/nx_tcp_socket_peer_info_get" class="13" params="1:13,2:u,3:u" />
+    <Event code="444" service="TcpSocket/nx_tcp_socket_window_update_notify_set" class="13" />
+
+    <!--UdpSocket 445-->
+    <Event code="445" service="UdpSocket/nx_udp_socket_interface_set" class="13" params="1:14,2:u" />
+
+    <!--Ip 446-->
+    <Event code="446" service="Ip/nx_ip_interface_info_get" class="11" params="1:11,2:u,3:u,4:u" />
+
+    <!--PacketPool 447-->
+    <Event code="447" service="PacketPool/nx_packet_data_extract_offset" class="12" />
+
+    <!--TcpSocket 448-->
+    <Event code="448" service="TcpSocket/nx_tcp_socket_bytes_available" class="13" params="1:11,2:13,3:u" />
+
+    <!--UsbHpstStackDevice 600-->
+    <Event code="600" service="UsbHostStackDevice/ux_host_stack_events_base" class="21" />
+
+    <!--UsbHostClass 601 - 602-->
+    <Event code="601" service="UsbHostClass/ux_host_stack_class_instance_create" params="1:u,2:24" />
+    <Event code="602" service="UsbHostClass/ux_host_stack_class_instance_destroy" params="1:u,2:24" />
+
+    <!--UsbHostStackInterface 603 - 607-->
+    <Event code="603" service="UsbHostStackInterface/ux_host_stack_configuration_delete" params="1:u" />
+    <Event code="604" service="UsbHostStackInterface/ux_host_stack_configuration_enumerate" params="1:21" />
+    <Event code="605" service="UsbHostStackInterface/ux_host_stack_configuration_instance_create" params="1:u" />
+    <Event code="606" service="UsbHostStackInterface/ux_host_stack_configuration_instance_delete" params="1:u" />
+    <Event code="607" service="UsbHostStackInterface/ux_host_stack_configuration_set" params="1:u" />
+
+    <!--UsbHostStackDevice 608 - 614-->
+    <Event code="608" service="UsbHostStackDevice/ux_host_stack_device_address_set" class="21" params="1:21,2:u" />
+    <Event code="609" service="UsbHostStackDevice/ux_host_stack_device_configuration_get" class="21" params="1:21,2:u" />
+    <Event code="610" service="UsbHostStackDevice/ux_host_stack_device_configuration_select" class="21"
+           params="1:21,2:u" />
+    <Event code="611" service="UsbHostStackDevice/ux_host_stack_device_descriptor_read" class="21" />
+    <Event code="612" service="UsbHostStackDevice/ux_host_stack_device_get" params="1:u" />
+    <Event code="613" service="UsbHostStackDevice/ux_host_stack_device_remove" params="1:u,2:u,3:u,4:21" />
+    <Event code="614" service="UsbHostStackDevice/ux_host_stack_device_resource_free" class="21" />
+
+    <!--UsbHostEndPoint 615 - 618-->
+    <Event code="615" service="UsbHostEndPoint/ux_host_stack_endpoint_instance_create" class="23" params="1:21,2:23" />
+    <Event code="616" service="UsbHostEndPoint/ux_host_stack_endpoint_instance_delete" class="23" params="1:21,2:23" />
+    <Event code="617" service="UsbHostEndPoint/ux_host_stack_endpoint_reset" class="23" params="1:21,2:23" />
+    <Event code="618" service="UsbHostEndPoint/ux_host_stack_endpoint_transfer_abort" class="23" params="1:23" />
+
+    <!--UsbHostStackInterface 619 - 625-->
+    <Event code="619" service="UsbHostStackInterface/ux_host_stack_hcd_register" class="22" params="1:u" />
+    <Event code="620" service="UsbHostStackInterface/ux_host_stack_initialize" />
+    <Event code="621" service="UsbHostStackInterface/ux_host_stack_interface_endpoint_get" class="22" params="1:21,2:u" />
+    <Event code="622" service="UsbHostStackInterface/ux_host_stack_interface_instance_create" class="22" />
+    <Event code="623" service="UsbHostStackInterface/ux_host_stack_interface_instance_delete" class="22" />
+    <Event code="624" service="UsbHostStackInterface/ux_host_stack_interface_set" class="22" />
+    <Event code="625" service="UsbHostStackInterface/ux_host_stack_interface_setting_select" class="22" />
+
+    <!--UsbHostStackDevice 626 - 627-->
+    <Event code="626" service="UsbHostStackDevice/ux_host_stack_new_configuration_create" class="21" params="1:21,2:u" />
+    <Event code="627" service="UsbHostStackDevice/ux_host_stack_new_device_create" class="21" params="1:u,2:u,3:u,4:21" />
+
+    <!--UsbHostEndPoint 628-->
+    <Event code="628" service="UsbHostEndPoint/ux_host_stack_new_endpoint_create" class="23" params="1:22,2:23" />
+
+    <!--UsbHostStackInterface 629 - 633-->
+    <Event code="629" service="UsbHostStackInterface/ux_host_stack_rh_change_process" class="22" params="1:u" />
+    <Event code="630" service="UsbHostStackInterface/ux_host_stack_rh_device_extraction" class="22" params="1:u,2:u" />
+    <Event code="631" service="UsbHostStackInterface/ux_host_stack_rh_device_insertion" class="22" params="1:u,2:u" />
+    <Event code="632" service="UsbHostStackInterface/ux_host_stack_transfer_request" class="22" params="1:21,2:23,3:u" />
+    <Event code="633" service="UsbHostStackInterface/ux_host_stack_transfer_request_abort" class="22"
+           params="1:21,2:23,3:u" />
+
+    <!--UsbHostClass 650 - 835-->
+    <Event code="650" service="UsbHostClass/ux_host_class_events_base" class="24" />
+    <Event code="651" service="UsbHostClass/ux_host_class_asix_activate" class="24" />
+    <Event code="652" service="UsbHostClass/ux_host_class_asix_deactivate" class="24" />
+    <Event code="653" service="UsbHostClass/ux_host_class_asix_interrupt_notification" class="24" />
+    <Event code="654" service="UsbHostClass/ux_host_class_asix_read" class="24" params="1:24,2:p,3:u" />
+    <Event code="655" service="UsbHostClass/ux_host_class_asix_write" class="24" params="1:24,2:p,3:u" />
+    <Event code="660" service="UsbHostClass/ux_host_class_audio_activate" class="24" />
+    <Event code="661" service="UsbHostClass/ux_host_class_audio_control_value_get" class="24" />
+    <Event code="662" service="UsbHostClass/ux_host_class_audio_control_value_set" class="24" params="1:24,2:u" />
+    <Event code="663" service="UsbHostClass/ux_host_class_audio_deactivate" class="24" />
+    <Event code="664" service="UsbHostClass/ux_host_class_audio_read" class="24" params="1:24,2:p,3:u" />
+    <Event code="665" service="UsbHostClass/ux_host_class_audio_streaming_sampling_get" class="24" />
+    <Event code="666" service="UsbHostClass/ux_host_class_audio_streaming_sampling_set" class="24" params="1:24,2:u" />
+    <Event code="667" service="UsbHostClass/ux_host_class_audio_write" class="24" params="1:24,2:p,3:u" />
+    <Event code="670" service="UsbHostClass/ux_host_class_cdc_acm_activate" class="24" />
+    <Event code="671" service="UsbHostClass/ux_host_class_cdc_acm_deactivate" class="24" />
+    <Event code="672" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_set_line_coding" class="24" params="1:24,2:u" />
+    <Event code="673" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_get_line_coding" class="24" params="1:24,2:u" />
+    <Event code="674" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_set_line_state" class="24" params="1:24,2:u" />
+    <Event code="675" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_send_break" class="24" params="1:24,2:u" />
+    <Event code="676" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_abort_in_pipe" class="24" params="1:24,2:23" />
+    <Event code="677" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_abort_out_pipe" class="24" params="1:24,2:23" />
+    <Event code="678" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_notification_callback" class="24"
+           params="1:24,2:u" />
+    <Event code="679" service="UsbHostClass/ux_host_class_cdc_acm_ioctl_get_device_status" class="24" params="1:24,2:u" />
+    <Event code="680" service="UsbHostClass/ux_host_class_cdc_acm_read" class="24" params="1:24,2:p,3:u" />
+    <Event code="681" service="UsbHostClass/ux_host_class_cdc_acm_reception_start" class="24" />
+    <Event code="682" service="UsbHostClass/ux_host_class_cdc_acm_reception_stop" class="24" />
+    <Event code="683" service="UsbHostClass/ux_host_class_cdc_acm_write" class="24" params="1:24,2:p,3:u" />
+    <Event code="690" service="UsbHostClass/ux_host_class_hid_activate" class="24" />
+    <Event code="691" service="UsbHostClass/ux_host_class_hid_client_register" params="1:u" />
+    <Event code="692" service="UsbHostClass/ux_host_class_hid_deactivate" class="24" />
+    <Event code="693" service="UsbHostClass/ux_host_class_hid_idle_get" class="24" />
+    <Event code="694" service="UsbHostClass/ux_host_class_hid_idle_set" class="24" />
+    <Event code="695" service="UsbHostClass/ux_host_class_hid_keyboard_activate" class="24" params="1:24,2:p" />
+    <Event code="696" service="UsbHostClass/ux_host_class_hid_keyboard_deactivate" class="24" params="1:24,2:p" />
+    <Event code="697" service="UsbHostClass/ux_host_class_hid_mouse_activate" class="24" params="1:24,2:p" />
+    <Event code="698" service="UsbHostClass/ux_host_class_hid_mouse_deactivate" class="24" params="1:24,2:p" />
+    <Event code="699" service="UsbHostClass/ux_host_class_hid_remote_control_activate" class="24" params="1:24,2:p" />
+    <Event code="700" service="UsbHostClass/ux_host_class_hid_remote_control_deactivate" class="24" params="1:24,2:p" />
+    <Event code="701" service="UsbHostClass/ux_host_class_hid_report_get" class="24" params="1:24,2:p" />
+    <Event code="702" service="UsbHostClass/ux_host_class_hid_report_set" class="24" params="1:24,2:p" />
+    <Event code="710" service="UsbHostClass/ux_host_class_hub_activate" class="24" />
+    <Event code="712" service="UsbHostClass/ux_host_class_hub_change_detect" class="24" />
+    <Event code="713" service="UsbHostClass/ux_host_class_hub_port_change_connection_process" class="24"
+           params="1:24,2:u,3:u" />
+    <Event code="714" service="UsbHostClass/ux_host_class_hub_port_change_enable_process" class="24"
+           params="1:24,2:u,3:u" />
+    <Event code="715" service="UsbHostClass/ux_host_class_hub_port_change_over_current_process" params="1:24,2:u,3:u" />
+    <Event code="716" service="UsbHostClass/ux_host_class_hub_port_change_reset_process" class="24"
+           params="1:u,2:u,3:u" />
+    <Event code="717" service="UsbHostClass/ux_host_class_hub_port_change_suspend_process" class="24"
+           params="1:24,2:u,3:u" />
+    <Event code="718" service="UsbHostClass/ux_host_class_hub_deactivate" class="24" />
+    <Event code="720" service="UsbHostClass/ux_host_class_pima_activate" class="24" />
+    <Event code="721" service="UsbHostClass/ux_host_class_pima_deactivate" class="24" />
+    <Event code="722" service="UsbHostClass/ux_host_class_pima_device_info_get" class="24" params="1:24,2:p" />
+    <Event code="723" service="UsbHostClass/ux_host_class_pima_device_reset" class="24" />
+    <Event code="724" service="UsbHostClass/ux_host_class_pima_notification" class="24" params="1:24,2:u,3:u,4:u" />
+    <Event code="725" service="UsbHostClass/ux_host_class_pima_num_objects_get" class="24" />
+    <Event code="726" service="UsbHostClass/ux_host_class_pima_object_close" class="24" params="1:24,2:p" />
+    <Event code="727" service="UsbHostClass/ux_host_class_pima_object_copy" class="24" params="1:24,2:p" />
+    <Event code="728" service="UsbHostClass/ux_host_class_pima_object_delete" class="24" params="1:24,2:p" />
+    <Event code="729" service="UsbHostClass/ux_host_class_pima_object_get" class="24" params="1:24,2:p,3:p" />
+    <Event code="730" service="UsbHostClass/ux_host_class_pima_object_info_get" class="24" params="1:24,2:p,3:p" />
+    <Event code="731" service="UsbHostClass/ux_host_class_pima_object_info_send" class="24" params="1:24,2:p,3:u,4:u" />
+    <Event code="732" service="UsbHostClass/ux_host_class_pima_object_move" class="24" params="1:24,2:p,3:p" />
+    <Event code="733" service="UsbHostClass/ux_host_class_pima_object_send" class="24" params="1:24,2:p,3:u,4:u" />
+    <Event code="734" service="UsbHostClass/ux_host_class_pima_object_transfer_abort" class="24" params="1:24,2:p,3:p" />
+    <Event code="735" service="UsbHostClass/ux_host_class_pima_read" class="24" params="1:24,2:p,3:u" />
+    <Event code="736" service="UsbHostClass/ux_host_class_pima_request_cancel" class="24" />
+    <Event code="737" service="UsbHostClass/ux_host_class_pima_session_close" class="24" params="1:24,2:p" />
+    <Event code="738" service="UsbHostClass/ux_host_class_pima_session_open" class="24" params="1:24,2:p" />
+    <Event code="739" service="UsbHostClass/ux_host_class_pima_storage_ids_get" class="24" params="1:24,2:u,3:u" />
+    <Event code="740" service="UsbHostClass/ux_host_class_pima_storage_info_get" class="24" params="1:24,2:u,3:u" />
+    <Event code="741" service="UsbHostClass/ux_host_class_pima_thumb_get" class="24" params="1:24,2:p" />
+    <Event code="742" service="UsbHostClass/ux_host_class_pima_write" class="24" params="1:24,2:p,3:u" />
+    <Event code="750" service="UsbHostClass/ux_host_class_printer_activate" params="1:u,2:p,3:u,4:u" />
+    <Event code="751" service="UsbHostClass/ux_host_class_printer_deactivate" class="24" />
+    <Event code="752" service="UsbHostClass/ux_host_class_printer_name_get" class="24" />
+    <Event code="753" service="UsbHostClass/ux_host_class_printer_read" class="24" params="1:24,2:p,3:u" />
+    <Event code="754" service="UsbHostClass/ux_host_class_printer_write" class="24" params="1:24,2:p,3:u" />
+    <Event code="755" service="UsbHostClass/ux_host_class_printer_soft_reset" class="24" />
+    <Event code="756" service="UsbHostClass/ux_host_class_printer_status_get" class="24" params="1:24,2:u" />
+    <Event code="760" service="UsbHostClass/ux_host_class_prolific_activate" class="24" />
+    <Event code="761" service="UsbHostClass/ux_host_class_prolific_deactivate" class="24" />
+    <Event code="762" service="UsbHostClass/ux_host_class_prolific_ioctl_set_line_coding" class="24" params="1:24,2:u" />
+    <Event code="763" service="UsbHostClass/ux_host_class_prolific_ioctl_get_line_coding" class="24" params="1:24,2:u" />
+    <Event code="764" service="UsbHostClass/ux_host_class_prolific_ioctl_set_line_state" class="24" params="1:24,2:u" />
+    <Event code="765" service="UsbHostClass/ux_host_class_prolific_ioctl_purge" class="24" params="1:24,2:u" />
+    <Event code="766" service="UsbHostClass/ux_host_class_prolific_ioctl_send_break" class="24" />
+    <Event code="767" service="UsbHostClass/ux_host_class_prolific_ioctl_abort_in_pipe" class="24" params="1:24,2:23" />
+    <Event code="768" service="UsbHostClass/ux_host_class_prolific_ioctl_abort_out_pipe" class="24" params="1:24,2:23" />
+    <Event code="769" service="UsbHostClass/ux_host_class_prolific_ioctl_report_device_status_change" class="24"
+           params="1:24,2:u" />
+    <Event code="770" service="UsbHostClass/ux_host_class_prolific_ioctl_get_device_status" class="24"
+           params="1:24,2:u" />
+    <Event code="771" service="UsbHostClass/ux_host_class_prolific_read" class="24" params="1:24,2:p,3:u" />
+    <Event code="772" service="UsbHostClass/ux_host_class_prolific_reception_start" class="24" />
+    <Event code="773" service="UsbHostClass/ux_host_class_prolific_reception_stop" class="24" />
+    <Event code="774" service="UsbHostClass/ux_host_class_prolific_write" class="24" params="1:24,2:p,3:u" />
+    <Event code="780" service="UsbHostClass/ux_host_class_storage_activate" class="24" />
+    <Event code="781" service="UsbHostClass/ux_host_class_storage_deactivate" class="24" />
+    <Event code="782" service="UsbHostClass/ux_host_class_storage_media_capacity_get" class="24" />
+    <Event code="783" service="UsbHostClass/ux_host_class_storage_media_format_capacity_get" class="24" />
+    <Event code="784" service="UsbHostClass/ux_host_class_storage_media_mount" class="24" params="1:24,2:u" />
+    <Event code="785" service="UsbHostClass/ux_host_class_storage_media_open" class="24" params="1:24,2:u" />
+    <Event code="786" service="UsbHostClass/ux_host_class_storage_media_read" class="24" params="1:24,2:u,3:u,4:p" />
+    <Event code="787" service="UsbHostClass/ux_host_class_storage_media_write" class="24" params="1:24,2:u,3:u,4:p" />
+    <Event code="788" service="UsbHostClass/ux_host_class_storage_request_sense" class="24" />
+    <Event code="789" service="UsbHostClass/ux_host_class_storage_start_stop" class="24" params="1:24,2:u" />
+    <Event code="790" service="UsbHostClass/ux_host_class_storage_unit_ready_test" class="24" />
+    <Event code="800" service="UsbHostClass/ux_host_class_dpump_activate" class="24" />
+    <Event code="801" service="UsbHostClass/ux_host_class_dpump_deactivate" class="24" />
+    <Event code="802" service="UsbHostClass/ux_host_class_dpump_read" class="24" params="1:24,2:p,3:u" />
+    <Event code="803" service="UsbHostClass/ux_host_class_dpump_write" class="24" params="1:24,2:p,3:u" />
+    <Event code="810" service="UsbHostClass/ux_host_class_swar_activate" class="24" />
+    <Event code="811" service="UsbHostClass/ux_host_class_swar_deactivate" class="24" />
+    <Event code="812" service="UsbHostClass/ux_host_class_swar_ioctl_abort_in_pipe" class="24" />
+    <Event code="813" service="UsbHostClass/ux_host_class_swar_ioctl_abort_out_pipe" class="24" />
+    <Event code="814" service="UsbHostClass/ux_host_class_swar_read" class="24" />
+    <Event code="815" service="UsbHostClass/ux_host_class_swar_reception_start" class="24" />
+    <Event code="816" service="UsbHostClass/ux_host_class_swar_reception_stop" class="24" />
+    <Event code="817" service="UsbHostClass/ux_host_class_swar_write" class="24" />
+    <Event code="820" service="UsbHostClass/ux_host_class_gser_activate" class="24" />
+    <Event code="821" service="UsbHostClass/ux_host_class_gser_deactivate" class="24" />
+    <Event code="822" service="UsbHostClass/ux_host_class_gser_ioctl_set_line_coding" class="24" />
+    <Event code="823" service="UsbHostClass/ux_host_class_gser_ioctl_get_line_coding" class="24" />
+    <Event code="824" service="UsbHostClass/ux_host_class_gser_ioctl_set_line_state" class="24" />
+    <Event code="825" service="UsbHostClass/ux_host_class_gser_ioctl_purge" class="24" />
+    <Event code="826" service="UsbHostClass/ux_host_class_gser_ioctl_send_break" class="24" />
+    <Event code="827" service="UsbHostClass/ux_host_class_gser_ioctl_abort_in_pipe" class="24" />
+    <Event code="828" service="UsbHostClass/ux_host_class_gser_ioctl_abort_out_pipe" class="24" />
+    <Event code="829" service="UsbHostClass/ux_host_class_gser_ioctl_report_device_status_change" class="24" />
+    <Event code="830" service="UsbHostClass/ux_host_class_gser_ioctl_get_device_status" class="24" />
+    <Event code="831" service="UsbHostClass/ux_host_class_gser_ioctl_notification_callback" class="24" />
+    <Event code="832" service="UsbHostClass/ux_host_class_gser_read" class="24" />
+    <Event code="833" service="UsbHostClass/ux_host_class_gser_reception_start" class="24" />
+    <Event code="834" service="UsbHostClass/ux_host_class_gser_reception_stop" class="24" />
+    <Event code="835" service="UsbHostClass/ux_host_class_gser_write" class="24" />
+
+    <!--UsbDevice 850-->
+    <Event code="850" service="UsbDevice/ux_device_stack_events_base" class="25" />
+
+    <!--UsbDeviceInterface 851 - 852-->
+    <Event code="851" service="UsbDeviceInterface/ux_device_stack_alternate_setting_get" class="26" />
+    <Event code="852" service="UsbDeviceInterface/ux_device_stack_alternate_setting_set" class="26" />
+
+    <!--UsbDeviceClass 853-->
+    <Event code="853" service="UsbDeviceClass/ux_device_stack_class_register" params="1:u,2:u,3:u" />
+
+    <!--UsbDevice 854 - 862-->
+    <Event code="854" service="UsbDevice/ux_device_stack_clear_feature" params="1:u,2:u,3:u" />
+    <Event code="855" service="UsbDevice/ux_device_stack_configuration_get" params="1:u" />
+    <Event code="856" service="UsbDevice/ux_device_stack_configuration_set" params="1:u" />
+    <Event code="857" service="UsbDevice/ux_device_stack_connect" />
+    <Event code="858" service="UsbDevice/ux_device_stack_descriptor_send" params="1:u,2:u" />
+    <Event code="859" service="UsbDevice/ux_device_stack_disconnect" params="1:u" />
+    <Event code="860" service="UsbDevice/ux_device_stack_endpoint_stall" class="27" />
+    <Event code="861" service="UsbDevice/ux_device_stack_get_status" />
+    <Event code="862" service="UsbDevice/ux_device_stack_host_wakeup" />
+    <Event code="863" service="UsbDevice/ux_device_stack_initialize" />
+
+    <!--UsbDeviceInterface 863 - 865-->
+    <Event code="864" service="UsbDeviceInterface/ux_device_stack_interface_delete" class="26" />
+    <Event code="865" service="UsbDeviceInterface/ux_device_stack_interface_get" class="26" />
+    <Event code="866" service="UsbDeviceInterface/ux_device_stack_interface_set" params="1:u,2:u" />
+
+    <!--UsbDevice 866 - 870-->
+    <Event code="867" service="UsbDevice/ux_device_stack_set_feature" params="1:u,2:u" />
+    <Event code="868" service="UsbDevice/ux_device_stack_transfer_abort" params="1:u,2:u" />
+    <Event code="869" service="UsbDevice/ux_device_stack_transfer_all_request_abort" params="1:27,2:u" />
+    <Event code="870" service="UsbDevice/ux_device_stack_transfer_request" params="1:u" />
+    <Event code="871" service="UsbDevice/ux_device_stack_microsoft_extension_register" />
+
+    <!--UsbDeviceClass 900 - 996-->
+    <Event code="900" service="UsbDeviceClass/ux_device_class_events_base" class="28" />
+    <Event code="901" service="UsbDeviceClass/ux_device_class_dpump_activate" class="28" params="1:28" />
+    <Event code="902" service="UsbDeviceClass/ux_device_class_dpump_deactivate" class="28" params="1:28" />
+    <Event code="903" service="UsbDeviceClass/ux_device_class_dpump_read" class="28" params="1:28,2:p,3:u" />
+    <Event code="904" service="UsbDeviceClass/ux_device_class_dpump_write" class="28" params="1:28,2:p,3:u" />
+    <Event code="905" service="UsbDeviceClass/ux_device_class_dpump_change" class="28" />
+    <Event code="910" service="UsbDeviceClass/ux_device_class_cdc_acm_activate" class="28" params="1:28" />
+    <Event code="911" service="UsbDeviceClass/ux_device_class_cdc_acm_deactivate" class="28" params="1:28" />
+    <Event code="912" service="UsbDeviceClass/ux_device_class_cdc_acm_read" class="28" params="1:28,2:p,3:u" />
+    <Event code="913" service="UsbDeviceClass/ux_device_class_cdc_acm_write" class="28" params="1:28,2:p,3:u" />
+    <Event code="920" service="UsbDeviceClass/ux_device_class_hid_activate" class="28" />
+    <Event code="921" service="UsbDeviceClass/ux_device_class_hid_deactivate" class="28" />
+    <Event code="922" service="UsbDeviceClass/ux_device_class_hid_event_get" class="28" />
+    <Event code="923" service="UsbDeviceClass/ux_device_class_hid_event_set" class="28" />
+    <Event code="924" service="UsbDeviceClass/ux_device_class_hid_report_get" class="28" params="1:28,2:u,3:u" />
+    <Event code="925" service="UsbDeviceClass/ux_device_class_hid_report_set" class="28" params="1:28,2:u,3:u" />
+    <Event code="926" service="UsbDeviceClass/ux_device_class_hid_descriptor_send" class="28" />
+    <Event code="930" service="UsbDeviceClass/ux_device_class_pima_activate" class="28" />
+    <Event code="931" service="UsbDeviceClass/ux_device_class_pima_deactivate" class="28" />
+    <Event code="932" service="UsbDeviceClass/ux_device_class_pima_device_info_send" class="28" />
+    <Event code="933" service="UsbDeviceClass/ux_device_class_pima_event_get" class="28" params="1:28,2:u" />
+    <Event code="934" service="UsbDeviceClass/ux_device_class_pima_event_set" class="28" params="1:28,2:u" />
+    <Event code="935" service="UsbDeviceClass/ux_device_class_pima_object_add" class="28" params="1:28,2:p" />
+    <Event code="936" service="UsbDeviceClass/ux_device_class_pima_object_data_get" class="28" params="1:28,2:p" />
+    <Event code="937" service="UsbDeviceClass/ux_device_class_pima_object_data_send" class="28" params="1:28,2:p" />
+    <Event code="938" service="UsbDeviceClass/ux_device_class_pima_object_delete" class="28" params="1:28,2:p" />
+    <Event code="939" service="UsbDeviceClass/ux_device_class_pima_object_handles_send" class="28"
+           params="1:28,2:u,3:u,4:u" />
+    <Event code="940" service="UsbDeviceClass/ux_device_class_pima_object_info_get" class="28" params="1:28,2:p" />
+    <Event code="941" service="UsbDeviceClass/ux_device_class_pima_object_info_send" class="28" />
+    <Event code="942" service="UsbDeviceClass/ux_device_class_pima_objects_number_send" class="28"
+           params="1:28,2:u,3:u,4:p" />
+    <Event code="943" service="UsbDeviceClass/ux_device_class_pima_partial_object_data_get" class="28"
+           params="1:28,2:p,3:u,4:u" />
+    <Event code="944" service="UsbDeviceClass/ux_device_class_pima_response_send" class="28" params="1:28,2:u,3:u,4:u" />
+    <Event code="945" service="UsbDeviceClass/ux_device_class_pima_storage_id_send" class="28" />
+    <Event code="946" service="UsbDeviceClass/ux_device_class_pima_storage_info_send" class="28" />
+    <Event code="947" service="UsbDeviceClass/ux_device_class_pima_get_device_prop_desc_get" class="28" />
+    <Event code="948" service="UsbDeviceClass/ux_device_class_pima_get_device_prop_value" class="28" />
+    <Event code="949" service="UsbDeviceClass/ux_device_class_pima_get_device_prop_value_set" class="28" />
+    <Event code="950" service="UsbDeviceClass/ux_device_class_pima_get_object_prop_desc" class="28" />
+    <Event code="951" service="UsbDeviceClass/ux_device_class_pima_get_object_prop_value" class="28" />
+    <Event code="952" service="UsbDeviceClass/ux_device_class_pima_objects_props_supported_get" class="28" />
+    <Event code="953" service="UsbDeviceClass/ux_device_class_pima_get_object_references" class="28" />
+    <Event code="954" service="UsbDeviceClass/ux_device_class_pima_objects_props_supported_set" class="28" />
+    <Event code="955" service="UsbDeviceClass/ux_device_class_pima_set_object_references" class="28" />
+    <Event code="956" service="UsbDeviceClass/ux_device_class_pima_storage_format" class="28" />
+    <Event code="957" service="UsbDeviceClass/ux_device_class_pima_device_reset" class="28" />
+    <Event code="958" service="UsbDeviceClass/ux_device_class_pima_set_object_prop_value" class="28" />
+    <Event code="960" service="UsbDeviceClass/ux_device_class_rndis_activate" class="28" />
+    <Event code="961" service="UsbDeviceClass/ux_device_class_rndis_deactivate" class="28" />
+    <Event code="962" service="UsbDeviceClass/ux_device_class_rndis_packet_receive" class="28" />
+    <Event code="963" service="UsbDeviceClass/ux_device_class_rndis_packet_transmit" class="28" />
+    <Event code="964" service="UsbDeviceClass/ux_device_class_rndis_msg_query" class="28" params="1:28,2:u" />
+    <Event code="965" service="UsbDeviceClass/ux_device_class_rndis_msg_keep_alive" class="28" />
+    <Event code="966" service="UsbDeviceClass/ux_device_class_rndis_msg_reset" class="28" />
+    <Event code="967" service="UsbDeviceClass/ux_device_class_rndis_msg_set" class="28" params="1:28,2:u" />
+    <Event code="970" service="UsbDeviceClass/ux_device_class_storage_activate" class="28" />
+    <Event code="971" service="UsbDeviceClass/ux_device_class_storage_deactivate" class="28" />
+    <Event code="972" service="UsbDeviceClass/ux_device_class_storage_format" class="28" params="1:28,2:u" />
+    <Event code="973" service="UsbDeviceClass/ux_device_class_storage_inquiry" class="28" params="1:28,2:u" />
+    <Event code="974" service="UsbDeviceClass/ux_device_class_storage_mode_select" class="28" params="1:28,2:u" />
+    <Event code="975" service="UsbDeviceClass/ux_device_class_storage_mode_sense" class="28" params="1:28,2:u" />
+    <Event code="976" service="UsbDeviceClass/ux_device_class_storage_prevent_allow_media_removal" class="28"
+           params="1:28,2:u" />
+    <Event code="977" service="UsbDeviceClass/ux_device_class_storage_read" class="28" params="1:28,2:u,3:u,4:u" />
+    <Event code="978" service="UsbDeviceClass/ux_device_class_storage_read_capacity" class="28" params="1:28,2:u" />
+    <Event code="979" service="UsbDeviceClass/ux_device_class_storage_read_format_capacity" class="28"
+           params="1:28,2:u" />
+    <Event code="980" service="UsbDeviceClass/ux_device_class_storage_read_toc" class="28" params="1:28,2:u" />
+    <Event code="981" service="UsbDeviceClass/ux_device_class_storage_request_sense" class="28"
+           params="1:28,2:u,3:u,4:u" />
+    <Event code="982" service="UsbDeviceClass/ux_device_class_storage_test_ready" class="28" params="1:28,2:u" />
+    <Event code="983" service="UsbDeviceClass/ux_device_class_storage_start_stop" class="28" params="1:28,2:u" />
+    <Event code="984" service="UsbDeviceClass/ux_device_class_storage_verify" class="28" params="1:28,2:u" />
+    <Event code="985" service="UsbDeviceClass/ux_device_class_storage_write" class="28" params="1:28,2:u,3:u,4:u" />
+    <Event code="988" service="UsbDeviceClass/ux_device_class_dfu_activate" class="28" />
+    <Event code="989" service="UsbDeviceClass/ux_device_class_dfu_deactivate" class="28" />
+    <Event code="990" service="UsbDeviceClass/ux_device_class_cdc_ecm_activate" class="28" />
+    <Event code="991" service="UsbDeviceClass/ux_device_class_cdc_ecm_deactivate" class="28" />
+    <Event code="992" service="UsbDeviceClass/ux_device_class_cdc_ecm_change" class="28" />
+    <Event code="993" service="UsbDeviceClass/ux_device_class_cdc_ecm_read" class="28" />
+    <Event code="994" service="UsbDeviceClass/ux_device_class_cdc_ecm_write" class="28" />
+    <Event code="995" service="UsbDeviceClass/ux_device_class_cdc_ecm_packet_transmit" class="28" />
+    <Event code="996" service="UsbDeviceClass/ux_device_class_cdc_ecm_packet_receive" class="28" />
+
+    <!--TraceError 999-->
+    <Event code="999" service="ux_error" class="0" />
+
+
+  </EventCodeTable>
+
+  <ObjectClassTable>
+    <ObjectClass code="0" name="NotValid" />
+    <ObjectClass code="1" name="Thread" />
+    <ObjectClass code="2" name="Timer" />
+    <ObjectClass code="3" name="Queue" />
+    <ObjectClass code="4" name="Semaphore" />
+    <ObjectClass code="5" name="Mutex" />
+    <ObjectClass code="6" name="EventFlags" />
+    <ObjectClass code="7" name="BlockPool" />
+    <ObjectClass code="8" name="BytePool" />
+    <ObjectClass code="9" name="Media" />
+    <ObjectClass code="10" name="File" />
+    <ObjectClass code="11" name="IP" />
+    <ObjectClass code="12" name="PacketPool" />
+    <ObjectClass code="13" name="TcpSocket" />
+    <ObjectClass code="14" name="UdpSocket" />
+    <!-- 15-20 Reserved -->
+    <ObjectClass code="21" name="UsbHostStackDevice" />
+    <ObjectClass code="22" name="UsbHostStackInterface" />
+    <ObjectClass code="23" name="UsbHostEndPoint" />
+    <ObjectClass code="24" name="UsbHostClass" />
+    <ObjectClass code="25" name="UsbDevice" />
+    <ObjectClass code="26" name="UsbDeviceInterface" />
+    <ObjectClass code="27" name="UsbDeviceEndPoint" />
+    <ObjectClass code="28" name="UsbDeviceClass" />
+  </ObjectClassTable>
+</CodeTables>

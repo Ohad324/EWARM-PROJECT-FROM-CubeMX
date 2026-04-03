@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>CPU Load Graph</title>
+  <keywords>
+    <keyword>CPU</keyword>
+    <keyword>load</keyword>
+    <keyword>graph</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The CPU Load Graph displays CPU usage over time, per actor and in total. By default, it shows all actors except the idle task. The analysis works by dividing the trace into a number of intervals, the default is 50 intervals.
+        </p>
+        <p>
+          The CPU usage for an actor in an interval is the amount of CPU time used by the actor within this interval, divided by the length of the interval. For each interval, all actors executing in that interval will be drawn as rectangles stacked on top of each other.
+          The height of each actor's rectangle represents the CPU usage for that actor in that time interval and the combined height is the total CPU usage for that interval.
+        </p>
+
+        <p>
+          <A HREF="img/Cpu_Load_Graph.png" target="$IMAGETARGET">
+            <img src="img/Cpu_Load_Graph.png" widTH="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          To customize the view, use the Select Actor(s) menu. There you can select which actors you wish to include in the view. If the graph is "noisy" (due to short intervals), you can reduce the number of intervals through the Resolution menu. If you wish a more detailed graph, you can increase the number of intervals by selecting a higher resolution.
+          If you wish to focus on a specific area, you can click and drag to select an interval and use the Zoom menu or right click to zoom in on it. You can also use the Zoom or right click menu to show the selection or current view in the trace view or in all open views.
+        </p>
+
+        <p>Clicking an actor in the graph will display information about that actor in the clicked interval and double clicking an actor will center the trace view on that interval. A gray outlined rectangle shows the interval of the current trace view. This rectangle may be very narrow and appear as a line if the trace view is small.</p>
+
+      </text>
+    </section>
+  </body>
+</page>

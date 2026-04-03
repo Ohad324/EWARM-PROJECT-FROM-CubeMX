@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Actor Instance Graphs</title>
+  <keywords>
+    <keyword>actor</keyword>
+    <keyword>time</keyword>
+    <keyword>execution</keyword>
+    <keyword>response</keyword>
+    <keyword>interference</keyword>
+    <keyword>wait</keyword>
+    <keyword>fragmentation</keyword>
+    <keyword>startup</keyword>
+    <keyword>separation</keyword>
+    <keyword>periodicity</keyword>
+    <keyword>graph</keyword>
+    <keyword>plot</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Views</header>
+      <text>
+        <p>
+          The Actor Instance Graph views display timing properties of each actor instance, like execution time, response time, response interference and fragmentation. This allows for viewing the distribution and how the properties vary over time, for example if some tasks have occational anomalies in the response time.
+          Use the combo box at the top to select which property to see.
+         </p>
+         <p>
+          Each data point in the graph represents a specific actor instance, where the x-axis shows the timing information and the y-axis the property value.
+        </p>
+		  <p>
+			  <A HREF="img/Actor Instance Graph.png" target="$IMAGETARGET">
+				  <img src="img/Actor Instance Graph.png" width="$IMAGEWIDTH" border="0" />
+			  </A>
+		  </p>
+		  <p>
+			  This example shows execution time per actor. 
+			  Clicking a plotted instance will show and highlight it in the trace view.
+			  You can filter actors by clicking on an actor in the legend to the right.
+		  </p>
+      </text>
+    </section>
+  </body>
+</page>

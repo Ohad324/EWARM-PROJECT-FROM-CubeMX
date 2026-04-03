@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Docked Legends</title>
+  <keywords>
+    <keyword>docked</keyword>
+    <keyword>legends</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        
+        <!--<p>
+          <A HREF="img/img.png" target="$IMAGETARGET">
+            <img src="img/img.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>-->
+
+        </text>
+    </section>
+  </body>
+</page>

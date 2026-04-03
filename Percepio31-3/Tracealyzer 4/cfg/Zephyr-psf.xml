@@ -1,0 +1,751 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+	<TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+	<KernelServiceGroups>
+		<KernelServiceGroup name="Thread">
+			<!-- Scheduler specific invocation of thread functions that a user can call. These are separate to allow
+			us to show when these are called implicitly by the system and when they are invoked by a user. -->
+			<KernelService name="k_thread_sched_wakeup"			operation="StartInstance"		parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_sched_abort"          operation="Deinitialize"		parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_sched_priority_set"	operation="ChangePriority"		parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="prio" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_sched_resume"         operation="StartInstance"/>
+			<KernelService name="k_thread_sched_suspend"        operation="Delay"/>
+
+			<!-- User specific thread function calls. -->
+			<KernelService name="k_thread_foreach"                                        parameters="NumericParameter">
+				<Parameter name="user_cb" format="0x{0:X8}"/>
+				<Parameter name="user_data" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_thread_foreach_unlocked"                               parameters="NumericParameter">
+				<Parameter name="user_cb" format="0x{0:X8}"/>
+				<Parameter name="user_data" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_thread_create"         operation="StartInstance"       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="stack_size" format="{0}"/>
+				<Parameter name="prio" format="{0}"/>
+				<ReturnValue name="return" format=" returned 0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_thread_user_mode_enter" parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="entry" format="0x{0:X8}"/>
+				<Parameter name="p1" format="0x{0:X8}"/>
+				<Parameter name="p2" format="0x{0:X8}"/>
+				<Parameter name="p3" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_thread_heap_assign"										parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="heap" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_join"           operation="Delay"					parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_sleep"                 operation="Delay"					parameters="NumericParameter">
+				<Parameter name="timeout" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_msleep"                operation="Delay"					parameters="NumericParameter">
+				<Parameter name="ms" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_usleep"                operation="Delay"					parameters="NumericParameter">
+				<Parameter name="us" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_busy_wait"             operation="Delay"					parameters="NumericParameter">
+				<Parameter name="usec_to_wait" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_yield"													parameters="None"/>
+			<KernelService name="k_wakeup"													parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_abort"											parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_start"          operation="StartInstance"			parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_priority_set"										parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="prio" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_suspend"											parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_thread_resume"											parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_sched_lock"/>
+			<KernelService name="k_sched_unlock"/>
+			<KernelService name="k_thread_name_set"                                       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="value" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Work">
+			<KernelService name="k_work_init"											parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="handler" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_work_submit_to_queue"								parameters="ObjectAndNumericParameter">
+				<Parameter name="queue" format="{0}"/>
+				<Parameter name="work" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_submit"											parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_flush"											parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="sync" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_cancel"											parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_cancel_sync"									parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="sync" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="WorkQueue">
+			<KernelService name="k_work_queue_start"									parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="stack" format="0x{0:X8}"/>
+				<Parameter name="stack_size" format="{0}"/>
+				<Parameter name="prio" format="{0}"/>
+				<Parameter name="cfg" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_work_queue_drain"									parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="plug" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_queue_unplug"									parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+		
+		<KernelServiceGroup name="WorkDelayable">
+			<KernelService name="k_work_init_delayable"									parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<parameter name="handler" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_work_schedule_for_queue"								parameters="ObjectAndNumericParameter">
+				<Parameter name="queue" format="{0}"/>
+				<Parameter name="dwork" format="{0}"/>
+				<Parameter name="delay" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_schedule"										parameters="ObjectAndNumericParameter">
+				<Parameter name="dwork" format="{0}"/>
+				<Parameter name="delay" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_reschedule_for_queue"							parameters="ObjectAndNumericParameter">
+				<Parameter name="queue" format="{0}"/>
+				<Parameter name="dwork" format="{0}"/>
+				<Parameter name="delay" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_reschedule"										parameters="ObjectAndNumericParameter">
+				<Parameter name="dwork" format="{0}"/>
+				<Parameter name="delay" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_flush_delayable"								parameters="ObjectAndNumericParameter">
+				<Parameter name="dwork" format="{0}"/>
+				<Parameter name="sync" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_cancel_delayable"								parameters="ObjectAndNumericParameter">
+				<Parameter name="dwork" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_cancel_delayable_sync"							parameters="ObjectAndNumericParameter">
+				<Parameter name="dwork" format="{0}"/>
+				<Parameter name="sync" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="WorkUser">
+			<KernelService name="k_work_user_init"										parameters="ObjectAndNumericParameter">
+				<Parameter name="work" format="{0}"/>
+				<Parameter name="handler" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_work_user_submit_to_queue"							parameters="ObjectAndNumericParameter">
+				<Parameter name="work_q" format="{0}"/>
+				<Parameter name="work" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="WorkUserQueue">
+			<KernelService name="k_work_user_queue_start"								parameters="ObjectAndNumericParameter">
+				<Parameter name="work_q" format="{0}"/>
+				<Parameter name="stack" format="{0}"/>
+				<Parameter name="stack_size" format="{0}"/>
+				<Parameter name="prio" format="{0}"/>
+				<Parameter name="name" format="{0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="WorkPoll">
+			<KernelService name="k_work_poll_init"										parameters="ObjectAndNumericParameter">
+				<Parameter name="work" format="{0}"/>
+				<Parameter name="handler" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_work_poll_submit_to_queue"							parameters="ObjectAndNumericParameter">
+				<Parameter name="work_q" format="{0}"/>
+				<Parameter name="work" format="{0}"/>
+				<Parameter name="events" format="{0}"/>
+				<Parameter name="num_events" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_poll_submit"									parameters="ObjectAndNumericParameter">
+				<Parameter name="work" format="{0}"/>
+				<Parameter name="events" format="{0}"/>
+				<Parameter name="num_events" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_work_poll_cancel"									parameters="ObjectAndNumericParameter">
+				<Parameter name="work" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="PollAPI">
+			<KernelService name="k_poll_event_init">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="type" format="{0}"/>
+				<Parameter name="mode" format="{0}"/>
+				<Parameter name="obj" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_poll">
+				<Parameter name="events" format="0x{0:X8}"/>
+				<Parameter name="num_events" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_poll_signal_init">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_poll_signal_reset">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_poll_signal_check">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="signaled" format="0x{0:X8}"/>
+				<Parameter name="result" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_poll_signal_raise">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="result" format="0x{0:X8}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Semaphore">
+			<KernelService name="k_sem_init"              operation="Initialize" parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="initial_count" format="{0}"/>
+				<Parameter name="limit" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_sem_take"              operation="DecreaseSemaphore" parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_sem_give"              operation="IncreaseSemaphore" parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_sem_reset"             operation="MinimizeSemaphoreNoLock" parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Mutex">
+			<KernelService name="k_mutex_init"    operation="Initialize">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_mutex_unlock"  operation="ReleaseMutex">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_mutex_lock"    operation="LockMutex"                     parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Condvar">
+			<KernelService name="k_condvar_init"                operation="Initialize"      parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_condvar_signal"              operation="OtherWrite"      parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_condvar_broadcast"           operation="OtherWrite"      parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_condvar_wait"                operation="OtherWrite"      parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="mutex" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Queue">
+			<KernelService name="k_queue_init"                  operation="Initialize"      parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_queue_cancel_wait"           operation="OtherRead"		parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="queue_insert"                  operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_append"                operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_queue_alloc_append"          operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_prepend"               operation="EnqueueFirst"    parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_queue_alloc_prepend"         operation="EnqueueFirst"    parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_insert"                operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="prev" format="0x{0:X8}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_queue_append_list"           operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="head" format="0x{0:X8}"/>
+				<Parameter name="tail" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_merge_slist"           operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="list" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_get"                   operation="Dequeue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_remove"                operation="Dequeue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_unique_append"         operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_queue_peek_head"             operation="OtherRead"       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned 0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_queue_peek_tail"             operation="OtherRead"       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned 0x{0:X8}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="FIFO">
+			<KernelService name="k_fifo_init"					operation="Initialize"      parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_fifo_cancel_wait"			operation="OtherRead"       parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_fifo_put"					operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_fifo_alloc_put"				operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_fifo_put_list"				operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="head" format="0x{0:X8}"/>
+				<Parameter name="tail" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_fifo_put_slist"				operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="list" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_fifo_get"					operation="Dequeue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_fifo_peek_head"				operation="OtherRead"       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned 0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_fifo_peek_tail"				operation="OtherRead"       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned 0x{0:X8}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="LIFO">
+			<KernelService name="k_lifo_init"					operation="Initialize"      parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_lifo_put"					operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_lifo_alloc_put"				operation="Enqueue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_lifo_get"					operation="Dequeue"         parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Stack">
+			<KernelService name="k_stack_init"                    operation="Initialize"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="buffer" format="0x{0:X8}"/>
+				<parameter name="num_entries" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_stack_alloc_init"              operation="Initialize"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="num_entries" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_stack_cleanup"                 operation="Clear"       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_stack_push"                    operation="Enqueue"     parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_stack_pop"                     operation="Dequeue"     parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Mailbox">
+			<KernelService name="k_mbox_init"                     operation="Initialize"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="message_put"                     operation="OtherWrite"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="msg" format="0x{0:X8}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_mbox_put"                      operation="OtherWrite"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="msg" format="0x{0:X8}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_mbox_async_put"                operation="OtherWrite"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="sem" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_mbox_get"                      operation="OtherRead"   parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="msg" format="0x{0:X8}"/>
+				<Parameter name="buffer" format="0x{0:X8}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_mbox_data_get"                 operation="OtherRead"   parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="rx_msg" format="0x{0:X8}"/>
+				<Parameter name="buffer" format="0x{0:X8}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Pipe">
+			<KernelService name="k_pipe_init"                     operation="Initialize"    parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="buffer" format="0x{0:X8}"/>
+				<Parameter name="size" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_pipe_cleanup"                  operation="OtherWrite"    parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_pipe_alloc_init"               operation="Initialize"    parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="size" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_pipe_put"                      operation="OtherWrite"    parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<Parameter name="bytes_to_write" format="{0}"/>
+				<Parameter name="bytes_written" format="0x{0:X8}"/>
+				<Parameter name="min_xfer" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_pipe_get"                      operation="OtherRead"     parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<Parameter name="bytes_to_read" format="{0}"/>
+				<Parameter name="bytes_read" format="0x{0:X8}"/>
+				<Parameter name="min_xfer" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_pipe_block_put"                operation="OtherRead"     parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="block" format="0x{0:X8}"/>
+				<Parameter name="size" format="{0}"/>
+				<Parameter name="sem" format="{0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="MessageQueue">
+			<KernelService name="k_msgq_init"                     operation="Initialize"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="buffer" format="0x{0:X8}"/>
+				<Parameter name="msg_size" format="{0}"/>
+				<Parameter name="max_msgs" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_msgq_alloc_init"               operation="Initialize"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="msg_size" format="{0}"/>
+				<Parameter name="max_msgs" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_msgq_cleanup"                  operation="Deinitialize"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_msgq_put"                      operation="Enqueue"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_msgq_get"                      operation="Dequeue"   parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_msgq_peek"                     operation="Peek"      parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="data" format="0x{0:X8}"/>
+				<ReturnValue name="return" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_msgq_purge"                    operation="Clear">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="MemoryHeap">
+			<KernelService name="k_heap_init"                     operation="Initialize"      parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="mem" format="0x{0:X8}"/>
+				<Parameter name="bytes" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_heap_aligned_alloc"            operation="AllocateMemory"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="bytes" format="{0}" heapSize="true"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ptr" format=" returned 0x{0:X8}" heapAddress="true"/>
+			</KernelService>
+			<KernelService name="k_heap_alloc"                    operation="OtherRead"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="bytes" format="{0}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_heap_free"                     operation="FreeMemory"      parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="mem" format="0x{0:X8}" heapAddress="true"/>
+			</KernelService>
+			<KernelService name="k_aligned_alloc"                 operation="OtherRead"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}" hidden="true"/>
+				<Parameter name="align" format="{0}"/>
+				<Parameter name="size" format="{0}"/>
+				<ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_malloc"                        operation="OtherRead"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}" hidden="true"/>
+				<Parameter name="size" format="{0}"/>
+				<ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_free"                          operation="OtherRead"      parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_calloc"                        operation="OtherRead"  parameters="Object">
+				<Parameter name="handle" format="{0}" hidden="true"/>
+				<Parameter name="nmemb" format="{0}"/>
+				<Parameter name="size" format="{0}"/>
+				<ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="MemorySlab">
+			<KernelService name="k_mem_slab_init"                 operation="Initialize"      parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="buffer" format="0x{0:X8}"/>
+				<Parameter name="block_size" format="{0}"/>
+				<Parameter name="num_blocks" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_mem_slab_alloc"                operation="DecreaseSemaphore"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="mem" format="0x{0:X8}"/>
+				<Parameter name="timeout" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+			<KernelService name="k_mem_slab_free"                 operation="IncreaseSemaphore"  parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="mem" format="0x{0:X8}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Timer">
+			<KernelService name="k_timer_init"                    operation="Initialize"          parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="expiry_fn" format="0x{0:X8}"/>
+				<Parameter name="stop_fn" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_timer_start"                   operation="StartInstance"       parameters="ObjectAndNumericParameter">
+				<Parameter name="handle" format="{0}"/>
+				<Parameter name="duration" format="{0}"/>
+				<Parameter name="period" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_timer_stop"                    operation="StartInstance"       parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+			</KernelService>
+			<KernelService name="k_timer_status_sync"             operation="Delay"               parameters="Object">
+				<Parameter name="handle" format="{0}"/>
+				<ReturnValue name="ret" format=" returned {0}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="Heap">
+			<KernelService name="k_malloc"                        operation="AllocateMemory"  parameters="NumericParameterOnly">
+				<Parameter name="size" format="{0}"/>
+				<ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_free"                          operation="FreeMemory"      parameters="NumericParameterOnly">
+				<Parameter name="ptr" format="0x{0:X8}"/>
+			</KernelService>
+			<KernelService name="k_calloc"                        operation="AllocateMemory"  parameters="NumericParameterOnly">
+				<Parameter name="nmemb" format="{0}"/>
+				<Parameter name="size" format="{0}"/>
+				<ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+			</KernelService>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="System">
+			<KernelService name="sys_call"                        operation="OtherRead"       parameters="None">
+			</KernelService>
+		</KernelServiceGroup>
+
+
+		<KernelServiceGroup name="EventGroup">
+			<KernelService name="xEventGroupCreate" operation="Initialize"/>
+			<KernelService name="xEventGroupSync" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+			<KernelService name="xEventGroupWaitBits" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+			<KernelService name="xEventGroupClearBits" operation="OtherWrite" parameters="ObjectAndNumericParameter"/>
+			<KernelService name="xEventGroupClearBitsFromISR" operation="OtherWrite" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+			<KernelService name="xEventGroupSetBits" operation="OtherWrite" parameters="ObjectAndNumericParameter"/>
+			<KernelService name="xEventGroupDelete" operation="Deinitialize"/>
+			<KernelService name="xEventGroupSetBitsFromISR" operation="OtherWrite" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+		</KernelServiceGroup>
+
+		<KernelServiceGroup name="TaskNotify">
+			<KernelService name="xTaskNotify" operation="OtherWrite"/>
+			<KernelService name="ulTaskNotifyTake" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+			<KernelService name="xTaskNotifyWait" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+			<KernelService name="xTaskNotifyFromISR" operation="OtherWrite" isrOnly="true"/>
+			<KernelService name="vTaskNotifyGiveFromISR" operation="OtherWrite" isrOnly="true"/>
+		</KernelServiceGroup>
+	</KernelServiceGroups>
+
+	<ObjectClasses>
+		<ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+		<ObjectClass name="EventGroup" type="Other"/>
+		<ObjectClass name="StreamBuffer" type="Other"/>
+
+
+		<ObjectClass name="Thread" type="Actor"/>
+		<ObjectClass name="Work" type="Other"/>
+		<ObjectClass name="WorkQueue" type="Other"/>
+		<ObjectClass name="WorkDelayable" type="Other"/>
+		<ObjectClass name="WorkUser" type="Other"/>
+		<ObjectClass name="WorkUserQueue" type="Other"/>
+		<ObjectClass name="WorkPoll" type="Other"/>
+		<ObjectClass name="PollEvent" type="Other"/>
+		<ObjectClass name="PollSignal" type="Other"/>
+		<ObjectClass name="ISR" type="Actor"/>
+		<ObjectClass name="Heap" type="Heap" options="NoIpcGraph"/>
+		<ObjectClass name="Semaphore" type="Semaphore"/>
+		<ObjectClass name="Mutex" type="Mutex"/>
+		<ObjectClass name="Condvar" type="Other"/>
+		<ObjectClass name="Queue" type="Queue"/>
+		<ObjectClass name="FIFO" type="Queue"/>
+		<ObjectClass name="LIFO" type="Queue"/>
+		<ObjectClass name="Stack" type="Queue"/>
+		<ObjectClass name="MessageQueue" type="Queue"/>
+		<ObjectClass name="Mailbox" type="Other"/>
+		<ObjectClass name="Pipe" type="Other"/>
+		<ObjectClass name="MemoryHeap" type="Heap" options="NoIpcGraph"/>
+		<ObjectClass name="MemorySlab" type="Semaphore"/>
+		<ObjectClass name="Timer" type="Other"/>
+		<ObjectClass name="System" type="Other"/>
+	</ObjectClasses>
+</TargetPlatform>

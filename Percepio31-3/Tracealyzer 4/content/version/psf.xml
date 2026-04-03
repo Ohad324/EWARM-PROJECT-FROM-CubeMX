@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<updates>
+  <modules>
+    <module name="PSF Core">
+      <history>
+        <entry>
+          <version>2.0.0</version>
+          <note>Initial TZ 4.0 release</note>
+        </entry>
+      </history>
+    </module>
+  </modules>
+</updates>

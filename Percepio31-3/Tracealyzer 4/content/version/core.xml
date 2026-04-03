@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<updates>
+  <modules>
+    <module name="Tracealyzer.Core">
+      <history>
+        <entry>
+          <version>4.0.0</version>
+          <note>Initial TZ 4.0 release</note>
+        </entry>
+      </history>
+    </module>
+  </modules>
+</updates>

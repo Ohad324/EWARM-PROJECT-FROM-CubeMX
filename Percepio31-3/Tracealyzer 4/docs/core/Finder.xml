@@ -1,0 +1,262 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Finder</title>
+  <keywords>
+    <keyword>finder</keyword>
+    <keyword>events</keyword>
+    <keyword>actors</keyword>
+    <keyword>timestamps</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Finder window lets you quickly find actor instances, service calls and user events, using various filters.
+          It also lets you jump to a particular point in time.
+        </p>
+
+        <p>
+        </p>
+
+        <p>
+          <A HREF="img/Finder.png" target="$IMAGETARGET">
+            <img src="img/Finder.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <subsection>
+          <header>Two Finder Tools</header>
+          <text>
+            <p>
+			  $PNAME includes two "Finder" tools, the "Quick Finder" and the more advanced "Finder". They allow for searching for just about anything in $PNAME, including events, actors, views, and even help pages.
+			  Events are matched with respect to their displayed text, including user event channel names etc.
+			</p>
+			<p>
+			  When combining multiple terms in a search query, the result will include hits on any search term, but the best matching entries will be shown first.			  
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Quick Finder</header>
+          <text>
+            <p>
+              The Quick Finder is a small search bar which will open inside the current view. It performs fast searches but only shows a limited amount of hits.
+              Use the arrow keys and Enter, or the mouse, to select something from the list of hits, or refine the search keywords. When something is selected the default behavior is to close the Quick Finder.
+              Cancel the search with the close button, or by pressing Escape.
+           </p>
+            <p>
+              The best way to open the Quick Finder is via the keyboard shortcut (default is Ctrl + F), but the Find menu can also be used.
+              There is a special case of the Quick Finder that only finds timestamps in the current trace, with the default keyboard shortcut of Ctrl + G.
+              These keyboard shortcuts can be changed using the <a href="KeyboardMapping.html">Keyboard Mapping</a> settings.
+            </p>
+            <p>
+              To keep the Quick Finder open when something is selected, click the small Pin button on its top right corner.
+              The small D (for Detach) button on top will open the same search in the full Finder.
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Full Finder</header>
+          <text>
+            <p>
+              The full Finder view can be opened from the Find menu, or using the key shortcut Ctrl + Shift + F (default mapping).
+			  The main difference compared to the Quick Finder is that it will keep finding all items until done, or until you stop it.
+			  This makes it useful for larger searches, i.e. that may result in many matching events.
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Advanced Find using Tracealyzer Query Language (TQL)</header>
+          <text>
+            <p>
+              With the Tracealyzer Query Language (TQL) it is possible to quickly apply advanced filters on the items to find.
+              Two parts will affect the outcome, any prefix keywords and the <b>where</b> clause.
+            </p>
+            <p>
+              If the first word in the search string matches a keyword, like <i>actor</i> or <i>time</i>,
+              items from the corresponding group will be ranked higher in the find result.
+            </p>
+            <p>
+              To apply advanced filters, start by adding a <b>where</b> clause at the end.
+              The <b>where</b> clause will not actually apply until it is complete, so while typing the find result may even become empty. You may add several filters if you wish to restrict the search further, using <b>and</b> or <b>or</b>.
+            </p>
+            <p>
+              If both keywords and where is applied, only results matching the keywords will appear.
+            </p>			
+			<p>
+				Examples are shown later in this section.
+			</p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Actor Instances</header>
+          <text>
+            <p>
+              Finding actor instances can be prioritized by adding <i>actor</i> or <i>instance</i> as a keyword.
+            </p>
+            <p>
+              If an actor is selected in the result, press the <b>TAB</b> key to see min/max values for the current actor, like execution time and fragmentation.
+              This will help when setting an advanced filter.
+            </p>
+            <p>
+              Supported keywords for where clause:
+              <ul>
+                <li><b>start</b> - the start time of the instance</li>
+                <li><b>ready</b> - the ready time of the instance</li>
+                <li><b>end</b> - the end time of the instance</li>
+                <li><b>timestamp</b> - same as <b>start</b></li>
+                <li><b>instance</b> - the instance number, starting from 1</li>
+                <li><b>index</b> - same as <b>instance</b></li>
+                <li><b>execution</b> - the execution time of the instance</li>
+                <li><b>response</b> - the response time of the instance</li>
+                <li><b>wait</b> - the wait time of the instance</li>
+                <li><b>fragments</b> - the number of fragments of an instance</li>
+                <li><b>period</b> - the period of the instance (time from start of previous instance to start of this instance)<br/>Not available for live traces</li>
+                <li><b>separation</b> - the separation of the instance (time from end of previous instance to start of this instance)<br/>Not available for live traces</li>
+              </ul>
+			  You don't need to use the full name of keywords after <i>where</i>, as $PNAME then guesses which one you mean.
+			  For instance, entering "... where exec > 1000" works will be interpreted as "... where execution > 1000".
+			  </p>
+			  <p>			
+				Keywords can be compared with decimal values, and most can also be compared to <b>min</b> and <b>max</b>.
+            </p>
+            <p>
+              Example where clauses for actor instances:
+              <ul>
+                <li>where exec is max</li>
+                <li>where frag &gt; 2 and wait &lt; 10000</li>
+              </ul>
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Events</header>
+          <text>
+            <p>
+              Finding events can be prioritized by adding <i>event</i> as a keyword.
+            </p>
+            <p>
+              The whole event text is used for matching, including displayed parameter values.
+              Events will not be included in the search until terms with at least three characters are included.
+            </p>
+            <p>
+              Supported keywords for where clause:
+              <ul>
+                <li><b>time</b> - the time of the event, in current time mode</li>
+              </ul>
+            </p>
+            <p>
+              Example where clauses for events:
+              <ul>
+                <li>where time &lt; 100000</li>
+                <li>where time between 200000 and 300000</li>
+              </ul>
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Timestamps and Intervals</header>
+          <text>
+            <p>
+              Finding timestamps or intervals can be prioritized by adding <i>time</i> as a keyword.
+            </p>
+            <p>
+              If one time is entered, it will be used as a timestamp.
+              If two times are entered, it will be used as an interval.
+              Any more times after this will be used as timestamps.
+            </p>
+            <p>
+              Timestamps and intervals will ignore where clauses.
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Opening Views</header>
+          <text>
+            <p>
+              Finding views to open can be prioritized by adding <i>view</i> or <i>open</i> as a keyword.
+            </p>
+            <p>
+              The view will be matched by the name, but also additional keywords that describes what the view shows.
+              Results will not only allow new views to be opened, but also currently active views that match the search terms.
+            </p>
+            <p>
+              Opening views will ignore where clauses.
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>User Manual</header>
+          <text>
+            <p>
+              Finding views to open can be prioritized by adding <i>help</i> as a keyword.
+            </p>
+            <p>
+              All pages from the User Manual can be found from the Finder.<br/>
+              It will however not search through the whole text of the page, but do a quick match on keywords, similar to how views are matched.<br/>
+              To perform free text searches in the whole User Manual, simply open it (default shortcut is F1) and use the built in find.
+            </p>
+            <p>
+              User Manual will ignore where clauses.
+            </p>
+            <p>
+              <note>User manual searches is only included if the built in User Manual is available.</note>
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>Keywords</header>
+          <text>
+            <p>
+              In addition to the contents of the current trace, all views, and user manual, there are a few useful keywords to perform certain actions:
+              <ul>
+                <li><b>start</b> - scroll to the start of the trace</li>
+                <li><b>top</b> - same as <b>start</b></li>
+                <li><b>left</b> - same as <b>start</b></li>
+                <li><b>end</b> - scroll to the end of the trace</li>
+                <li><b>bottom</b> - same as <b>end</b></li>
+                <li><b>right</b> - same as <b>end</b></li>
+                <li><b>all</b> - zoom out to show the whole trace</li>
+                <li><b>full</b> - same as <b>all</b></li>
+                <li><b>zoom in</b> - same as using the zoom in button</li>
+                <li><b>zoom out</b> - same as using the zoom in button</li>
+                <li><b>zoom</b> - same as <b>zoom in</b></li>
+              </ul>
+            </p>
+            <p>
+              Keywords will ignore where clauses.
+            </p>
+          </text>
+        </subsection>
+		 <subsection>
+			<header>Examples</header>
+			<text>
+				<p>
+					<ul class="list">											
+						<li><i>time 200000</i><br/>Centers the current View Port on timestamp 200000.</li>				
+						<li><i>actor MyTask where exec is max</i><br/>Instances of actor "MyTask" with highest observed execution time.</li>
+						<li><i>actor MyTask where resp > 2000</i><br/>Instances of actor "MyTask" with response times above 2000 time units (normally µs).</li>
+						<li><i>actor MyTask where frag &gt; 2 and wait &lt; 10000</i><br/>Instances of actor "MyTask" with more than 2 fragments and wait time below 10000.</li>
+						<li><i>event MyEvent where time &lt; 1000000</i><br/>Events containing the word "MyEvent" occuring before timestamp 1000000</li>
+						<li><i>event MyEvent where time between 100000 and 200000</i><br/>Events containing the word "MyEvent" occurring after timestamp 100000 and before timestamp 200000.</li>
+						<li><i>end</i><br/>Scrolls to the end of the trace.</li>				
+						<li><i>all</i><br/>Zooms out to show the whole trace.</li>				
+					</ul>
+				</p>
+			</text>
+		</subsection>
+      </text>
+    </section>
+  </body>
+</page>

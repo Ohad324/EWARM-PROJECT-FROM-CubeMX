@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>VxWorks</title>
+  <keywords>
+    <keyword>recorder</keyword>
+    <keyword>VxWorks</keyword>
+    <keyword>recording</keyword>
+    <keyword>record</keyword>
+    <keyword>trace</keyword>
+    <keyword>debugger</keyword>
+    <keyword>probe</keyword>
+    <keyword>wvlib</keyword>
+    <keyword>wvEvent</keyword>
+    <keyword>tzEvent</keyword>
+    <keyword>tracealyzer.c</keyword>
+    <keyword>tracealyzer.h</keyword>
+    <keyword>library</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Introduction</header>
+      <text>
+        <p>
+          $PNAME uses the existing trace recording framework in VxWorks, wvLib, that produces .wvr trace files.
+		  $PNAME reads .wvr files from VxWorks v5.5 or newer and visualizes this information in 
+		  innovative ways that makes the data easy to understand and overview.
+        </p>
+        <p>
+		  An example trace can be found in the <A HREF="$BINDIR/VxWorks">VxWorks</A> folder.
+        </p>
+        <p>
+          <A HREF="img/system_overview_vxworks.png" target ="_blank">
+            <img src="img/system_overview_vxworks.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+      </text>
+    </section>
+
+    <section>
+      <header>Recording traces</header>
+      <text>
+        <p>
+		  $PNAME includes a small library for VxWorks (<A HREF="$BINDIR/VxWorks/">tracealyzer.c/.h</A>) that allows for configuring, starting and stopping the recording, and also for storing formatted user events. 
+		  This works as a simplified interface to the integrated VxWorks recorder (wvLib).
+		 </p>
+        <p>
+		  The public functions provided by this library are listed below.
+		</p>
+        <p>
+<code>
+STATUS tzStart(int traceLevel)
+</code><br/>
+Starts the tracing. The parameter "traceLevel" decides the level of detail.
+</p>
+
+        <p>
+<code>
+STATUS tzStop(void)
+</code><br/>
+Stops the tracing. May also store the trace, depending on the Storage configuration (see tzConfigStorage).
+</p>
+
+        <p>
+<code>
+STATUS tzEvent(char* channelName, char* formatStr, ...)
+</code><br/>
+Stores a formatted User Event (see <a href="#formatteduserevents">Formatted User Events</a>).
+</p>
+
+        <p>
+<code>
+STATUS tzConfigStorage(int storageMode, int storageMethod, char* arg1, int arg2, int storeOnStop)
+</code><br/>
+Configures how traces are stored. Default settings are used if this is omitted. 
+</p>
+
+        <p>
+<code>
+STATUS tzConfigureBuffer(int bufferCount, int bufferSize);			
+</code><br/>
+Configures the size of the trace buffer (rBuff). Default settings are used if this is omitted (4 x 64 KB).	
+</p>
+        <p>
+	The easiest way of recording traces using this library is with the default settings. In that case, you only need to call <i>tzStart()</i> to begin the recording and <i>tzStop()</i> when you have finished your test case. 
+	In the default setup, the trace is kept in memory during the recording and stored to a file ("tz.wvr") on the target device when tzStop is called.	
+	The default setup uses the <i>deferred storage mode</i> (TZ_MODE_DEFERRED), which means that the uploading is on command (tzStop) rather than continuous. Thus, the trace length is limited to the size of trace buffer (by default 256 KB). 
+	If the buffer becomes full before tzStop is called, older events will be overwritten.
+</p>
+        <p>
+	The functions <i>tzConfigStorage()</i> and <i>tzConfigBuffer()</i> may optionally be called prior to tzStart, in order to apply a different configuration.
+	The default setting corresponds to <code>tzConfigStorage(TZ_MODE_DEFERRED, TZ_METHOD_FILE, "tz.wvr", O_CREAT, 1);</code> 
+</p>
+        <p>
+	To instead stream continuously to a file, use <code>tzConfigStorage(TZ_MODE_CONTINUOUS, TZ_METHOD_FILE, "tz.wvr", O_WRONLY, 0);</code>
+</p>
+
+        <p>		  
+	For more details about the $PNAME Library for VxWorks, including other tracing configurations, please refer to the code documentation in  <A HREF="$BINDIR/VxWorks/">tracealyzer.h</A>.
+	Please note that socket-based streaming (TZ_METHOD_SOCKET) directly to the $PNAME host application is not yet supported, as of v4.2.9. 
+	Full streaming support should be available soon, but for now we recommend using TZ_METHOD_FILE.
+</p>
+        <p>		  
+	Note that you may also record traces using Wind River Workbench and view the resulting .wvr files in $PNAME.
+</p>
+      </text>
+    </section>
+
+    <section>
+      <header>User Events and VxWorks</header>
+      <text>
+        <subsection>
+          <header>VxWorks User Events</header>
+          <text>
+            <p>
+		      The VxWorks trace recorder (wvLib) allows you to store custom events from your application using the function wvEvent(). 
+			  This allows for writing binary data to the trace buffer.<br/><br/>
+		      <code>
+STATUS wvEvent(event_t usrEventId, char* buffer, size_t bufSize);<br/>
+		      </code>
+			  <br/>
+			  $PNAME can display such events, but makes no interpretation by default. It is just a chunk of bytes, without formatting or meaning. 
+			  You may however configure <a href="EventInterpretation.html">Event Interpretation</a> for such events to display them better in $PNAME. 
+			  This allows for extracting strings and values, that can e.g. be plotted in the User Event Signal Plot.<br/>
+			  </p>
+            <p>
+			  There is however an easier way to add formatted log messages to the trace - the <i>tzEvent()</i> function in the $PNAME Library for VxWorks. See <a href="#formatteduserevents">Formatted User Events</a>.
+			  </p>
+          </text>
+        </subsection>
+        <p>
+          <a name="formatteduserevents"/>
+        </p>
+        <subsection>
+          <header>Formatted User Events</header>
+          <text>
+            <p>
+		      $PNAME includes a small target-system library for VxWorks (<A HREF="$BINDIR/VxWorks/">tracealyzer.c/.h</A>) that wraps and extends the basic wvEvent function to allow for formatted user events, generated using the function <i>tzEvent()</i>. 
+			  When using the tzEvent function, it is not necessary to use the "User Event Interpretations" feature needed for native wvEvents (<a href="EventInterpretation.html">described here</a>).<br/><br/>
+		      <code>
+STATUS tzEvent(char* channelName, char* formatStr, ...);<br/>
+		      </code>
+			  <br/>
+		      The tzUserEvent function provides an interface similar to a classic printf, but the actual formatting is done off-line in the $PNAME visualization which makes tzEvent much faster than a printf. Moreover, unlike a printf you get the information visualized in the $PNAME views, which allows you to correlate the event with other recorded events, such as scheduling and system calls.
+		    </p>
+            <p>
+		      The parameters of tzEvent() are:
+			  <ul>
+			    <li>
+			      <b>channelName</b>: A textual name that specifies the User Event Channel of the event, that allows the user events to be filtered easily. This name is displayed in the View Filter treeview (in the lower right on the main trace view) under the User Event category.
+			    </li>
+			    <li>
+			      <b>fmtString</b>: A format string allowing for text and format specifiers like a classic printf, that allows you to embed data arguments into the string. Most common format specifiers from printf are supported, see tracealyzer.h for details.
+			    </li>
+			    <li>
+			      <b>data arguments</b>: Optionally, you can include a variable number of data arguments, as specified by the format string. 
+			    </li>
+			  </ul>
+		    </p>
+            <p>
+              <b>Example usage:</b>
+              <br/>
+              <br/>
+              <code>
+tzEvent("Debug", "Entering function foo()");<br/>
+tzEvent("Voltage U1", "U1: %lf v", voltage_u1);<br/>
+tzEvent("FSM State Changes", "(%s) %s -&gt; %s (%s)", "FSM_1", fsm1StateNames[oldStateID], fsm1StateNames[newStateID], fsm1EventNames[eventID]);<br/>
+			  </code>
+            </p>
+            <p>
+              By default, formatted user events are limited to 256 bytes, which shall contain channel name and format string (including null-terminated), any data arguments and four initial bytes that identifies the event as a $PNAME formatted user event.<br/>
+              However, this limit can be increased by adjusting MAX_ARG_SIZE in <A HREF="$BINDIR/VxWorks/">tracealyzer.h</A>. Decreasing this value reduces stack usage.
+            </p>
+            <p>
+              The VxWorks wvEvent function uses a numerical identifier for all events. This is not used for formatted user events in $PNAME, so tzEvent uses a constant for this purpose (WVEVENT_ID), which by default is 0. This is defined in <A HREF="$BINDIR/VxWorks/">tracealyzer.h</A> in case you wish to change this value (e.g. to avoid "collisions" with existing events).
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

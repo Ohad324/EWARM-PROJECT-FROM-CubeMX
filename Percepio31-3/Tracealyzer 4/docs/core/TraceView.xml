@@ -1,0 +1,493 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Trace View</title>
+  <keywords>
+    <keyword>vertical</keyword>
+    <keyword>horizontal</keyword>
+    <keyword>live</keyword>
+    <keyword>traces</keyword>
+    <keyword>viewer</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Trace View</header>
+      <text>
+        <p>
+          This is the main view of $PNAME, showing all recorded events on a vertical timeline going downwards, or a horizontal timeline going right.
+        </p>
+
+        <p>
+          <A HREF="img/Trace View.png" target="$IMAGETARGET">
+            <img src="img/Trace View.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+        <p>
+          First some terminology. By <i>actor</i> we mean an execution context - a task or ISR. The colored rectangles (<i>fragments</i>) in the "CPU0" field represent uninterrupted execution
+          of an actor, starting and ending with a context-switch.
+        </p>
+        <p>
+          Each actor has a unique color, based on its scheduling priority. The same color is used to represent the actor in all $PNAME views.
+          The default color scheme is the natural light spectrum, going from red (high priority) to blue (low priority), and finally light gray for the idle task.
+          The exact colors used depends on the number of actors in the trace and their relative priorities. The color scheme can be changed and you can even set your own custom colors, see <i>View</i> -> <i>Trace View Settings</i> -> <i>Set Color Scheme</i>.
+        </p>
+
+		  <subsection>
+			  <header>Events</header>
+			  <text>
+				  <p>
+					  The main view also show event labels of different types, notices, service calls and user events, if enabled in the visibility filter in the lower right.
+					  The events are shown as color coded labels to the right of the fragment in which they occur.
+				  </p>
+
+				  <p>
+					  Events labels are shown in different colors depending on type:
+				  </p>
+
+				  <p>
+					  <UL class="list">
+						  <LI>
+							  Red labels - blocking service calls.
+						  </LI>
+						  <LI>
+							  Green labels - successful return of blocking service calls.
+						  </LI>
+						  <LI>
+							  White labels - service calls that completed without blocking.
+						  </LI>
+						  <li>
+							  Orange labels - service calls that returned due to a timeout.
+						  </li>
+						  <li>
+							  Yellow labels - user events.
+						  </li>
+						  <li>
+							  Light blue labels - notices, such as "Actor Ready" - when tasks become ready to execute.
+						  </li>						  
+					  </UL>
+				  </p>
+				  <p>
+					  Note that delay calls are shown in white, not red, even though they block the executing task.
+					  This since delays are unconditional blocking, and the sole purpose of these service calls.
+					  The red, green and orange labels are used only for blocking on shared resources, e.g., message queues, semaphores and mutexes, where the blocking may not be intentional and thus of greater interest to study.
+				  </p>
+
+				  <p>
+					  <A HREF="img/ActorInfo.png" target="$IMAGETARGET">
+						  <img src="img/ActorInfo.png" width="$IMAGEWIDTH" border="0" />
+					  </A>
+				  </p>
+				  <p>
+					  <b>Clicking</b> on a task or ISR fragment selects the corresponding actor instance and highlights it.
+					  You can follow the execution of the selected actor using the "Previous" and "Next" buttons in <a href="SelectionDetails.html">Selection Details</a>, or simply by clicking on the actor name in the trace view.
+				  </p>
+				  <p>
+					  Clicking an event label selects and highlights both the actor instance and the event.
+
+					  When an actor instance is selected, the Actor Information display is updated, as illustrated above.
+					  This is a tree structure containing a lot of information, both general statistics of the actor and information about the specific instance.
+					  Most tree nodes that refer to a particular point in the trace are links to that location. By double-clicking them you navigate the
+					  trace view to that position. The linked tree nodes include all "Lowest" and "Highest", Triggered By", "Triggers" as well as the list of events in the end.
+				  </p>
+
+				  <p>
+					  <b>Double-clicking</b> on an actor opens the Instance Details view or the Event Log, depending the product variant used.<br/>
+					  <b>Double-clicking</b> on a service call opens the Kernel Object History view or the Event Log, depending the product variant used.
+				  </p>
+
+				  <p>
+					  When selecting a blocking call (red label) or a resume from blocking (green label), the matching event (call or return) event is also highlighted.
+					  You may jump to that event by using the button in <a href="SelectionDetails.html">Selection Details</a> pressing F8, or by using the context menu option "Find Entry/Exit of Blocking Service Call".
+				  </p>
+
+				  <note>
+					  When there are too many events in the current view to fit on the screen, they'll be hidden and replaced by
+					  the text <i>X events not shown</i>.
+					  To see the events, either zoom in or use the filter to reduce the number of events in the view.					  
+				  </note>
+
+				  <note>
+					  If a large number of events are hidden, it is possible to see where they are located by looking for the gray rectangles ("Event Hotspots") on the left side of the Events field.
+				  </note>
+
+			  </text>
+		  </subsection>
+
+		  <subsection>
+			  <header>Fields</header>
+			  <text>
+				  <p>
+					  Each section in the Trace View is called a <i>Field</i>. The different Fields are separated by thick lines. The field names are shown in the <i>header</i>, i.e. in the top part of the trace view, when using the vertical orientation.
+					  Fields can be configured or hidden by right-clicking the header, or by clicking on the "gear" icon (<img src="img/Settings_16.png"/>).
+					  There are multiple field types, showing different kinds of information, such as the Scheduling field and the Events field.
+				  </p>
+				  <p>
+					  Apart from the main field types, there is also the "Actor Names" field, although typically not visible by default. This supports the Scheduling field by showing labels with Actor names.
+					  To see it, click <i>View</i> -&gt; <i>Show Actor Names</i>.					  
+				  </p>
+
+				  <p>
+					  To add a new Field, click <i>View</i> -&gt; <i>Add Field</i> and select one from the list.<br/>
+					  It is also possible to configure and rearrange the fields, using <i>View</i> -&gt; <i>Setup Fields</i>.<br/>
+					  All fields have configuration available which can be accessed using the gear icon in its header (at the top or to the left) of the field, or by right-clicking on header.
+				  </p>
+
+			  </text>
+		  </subsection>
+	
+		  <subsection>
+			  <header>Scheduling Field</header>
+			  <text>
+				  <p>Shows the execution of actors (tasks, threads, interrupts), as solid rectangles (i.e. fragments). On multi-core traces you will also have "Core0", "Core1", etc.</p>
+
+				  <p>
+					  This field can be customized to only show a subset of the available actors by using <i>Select Actors</i>. For multi core traces the option is instead called <i>Select Cores and Actors</i>.<br/>
+					  <b>Note!</b> This actor selection is independent from the main filter. For an actor to be displayed, it needs to be included in both places.
+				  </p>
+				  <p>
+					  Normal sort order for the field is highest priority to the right for vertical mode, or bottom for horizontal mode. This can be changed by checking <i>Reverse Draw Order</i>.
+				  </p>
+				  <p>
+					  For traces with many actors it is possible to activate <i>Hide Inactive Actors</i>. This will only show "lanes" for actors that have an active instance in view, otherwise they will be hidden.<br/>
+					  Each hidden actor will be "shrunk" to a slim line, making it easy to get an indication on if there are many or few actors hidden.<br/>
+					  <b>Note!</b> Each field will remember the setting for hiding, as long as $PNAME is set to remember layout. If the default value is to be changed, use Settings -&gt; <a href="GeneralSettings.html">Project Settings</a>.
+				  </p>
+				  <p>
+					  <A HREF="img/Trace View - Inactive Actors.png" target="$IMAGETARGET">
+						  <img src="img/Trace View - Inactive Actors.png" width="$IMAGEWIDTH" border="0" />
+					  </A>
+				  </p>
+
+			  </text>
+		  </subsection>
+
+		  <subsection>
+			  <header>Events Field</header>
+			  <text>
+				  <p>Shows event labels for e.g. kernel API calls and user events.</p>
+				  <p>
+					  This field can be set to show <i>Event Hotspots</i>, which will indicate where the events are located when zooming out as gray squares at the edge of the Event Field.
+					  This will help identifying if there are certain times when more events than usual is happening.
+				  </p>
+				  <p>
+					  <A HREF="img/Trace View - Event Hotspots.png" target="$IMAGETARGET">
+						  <img src="img/Trace View - Event Hotspots.png" border="0" />
+					  </A>
+				  </p>
+
+				  <p>
+					  Note that Events field only displays events originating from fields on its <i>left side</i>.
+					  So, if adding additional fields, or rearranging the fields, note that the make sure that each Scheduling field has an Events field on its right side.
+					  Multiple Scheduling fields may however share a common Events field.
+				  </p>
+				  
+			  </text>
+		  </subsection>
+
+		  <subsection>
+			  <!-- For Profile and Tracealyzer -->
+			  <requirement>CoreFeatures.Streaming</requirement>
+
+			  <header>Metrics Field</header>
+			  <text>
+				  <p>
+					  This field shows metrics like CPU load or execution time as a field within the trace view.
+				  </p>
+				  <p>					  
+					  When the field is created, a Select Metrics dialog will be shown to show the available metrics. The same dialog can be opened by clicking <i>Select Metrics</i>.
+					  Some metrics has different channels available, and when this is available it will be possible to switch the channel directly from the menu without having to open the dialog.
+				  </p>
+			  </text>
+		  </subsection>
+
+		  <subsection>
+			  <!-- For Tracealyzer only -->
+			  <requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+
+			  <header>Intervals Field</header>
+			  <text>
+				  <p>
+					  Displays Intervals and State Machines as a field within the trace view. Such fields are named after the displayed data set.
+				  </p>
+				  <p>
+					  The interval field can be changed to show a different interval than it was originally created with, see <A HREF="IntervalStateIntroduction.html">Interval</A> for more information.
+				  </p>
+			  </text>
+		  </subsection>
+
+
+
+
+
+				<subsection>
+					<!-- For Tracealyzer only -->
+					<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+					<header>Horizontal Mode</header>
+					<text>
+						<p>
+							You may change the orientation of the trace view between vertical and horizontal in the local <i>View</i> menu of the trace window.
+							Both modes offer the same features, but we recommend vertical orientation to make it easier to read text labels.
+						</p>
+
+						<p>
+							<A HREF="img/Trace View - Horizontal.png" target="$IMAGETARGET">
+								<img src="img/Trace View - Horizontal.png" width="$IMAGEWIDTH" border="0" />
+							</A>
+						</p>
+						<p>
+							In horizontal mode, you may close the Event field and instead add <A HREF="IntervalStateIntroduction.html">Interval</A> fields to display application states and kernel objects, such as message queues.
+							An example is shown in the above screenshot. To do this, select <i>View</i> -&gt; <i>Add Field</i> -&gt; <i>Interval field</i> and then click the "Add Interval..." button. You then get a list of all available data sets, including predefined data sets for e.g. message queues.
+						</p>
+					</text>
+				</subsection>
+				<subsection>
+					<!-- For View/Profile -->
+					<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+					<header>Horizontal Mode</header>
+          <text>
+            <p>
+              You may change the orientation of the trace view between vertical and horizontal in the local <i>View</i> menu of the trace window.
+              Both modes offer the same features, but we recommend vertical orientation to make it easier to read text labels.
+            </p>
+
+            <p>
+              <A HREF="img/Trace View - Horizontal.png" target="$IMAGETARGET">
+                <img src="img/Trace View - Horizontal.png" width="$IMAGEWIDTH" border="0" />
+              </A>
+            </p>
+          </text>
+        </subsection>
+        
+        <subsection>
+					<!-- For Tracealyzer only -->
+					<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+					<header>View Presets</header>
+          <text>
+            <p>
+              The execution of tasks and interrupts can be visualized using different visualization presets, which you can quickly switch between to get best clarity in each situation.<br/>
+              Each preset will set up the fields needed to show the type of information required.<br/>
+              The presets are:
+              <table width="100%">
+                <tr>
+                  <td width="150px" valign="top">
+                    <b>Gantt Preset</b>
+                  </td>
+                  <td>
+                    Shows one column per task and interrupt.
+                    This is best for spotting execution patterns, rare tasks or interrupts.
+                    <br/>(Default shortcut key "G")
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top">
+                    <b>Merged Preset</b>
+                  </td>
+                  <td>
+                    Shows all tasks and interrupts in a single column, with sideways indents to show preemption and blocking.
+                    This gives a more compact display compared to Gantt View Mode and the best sense of execution order and preemption hot-spots.
+                    <i>This preset uses calculated data it is not available for live tracing.</i>
+                    <br/>(Default shortcut key "M")
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top">
+                    <b>Split Preset</b>
+                  </td>
+                  <td>
+                    Shows tasks and interrupts in two columns, with indents like in the Merged View Mode.
+                    This removes the "noise" from interrupts by presenting them separately.
+                    <i>This preset uses calculated data it is not available for live tracing.</i>
+                    <br/>(Default shortcut key "S")
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top">
+                    <b>Flat Preset</b>
+                  </td>
+                  <td>
+                    Shows all tasks and interrupts in one single column (per core).
+                  </td>
+                </tr>
+                <tr>
+                  <td valign="top">
+                    <b>Intervals Preset</b>
+                  </td>
+                  <td>
+                    Only show intervals, see <a href="IntervalStateIntroduction.html">Intervals</a> for more information.
+                    <i>This preset is only available when there are intervals active.</i>
+                  </td>
+                </tr>
+              </table>
+            </p>
+            <p>
+              It is also possible to set up custom presets. Under the <i>View</i> -&gt; <i>View Presets</i>, either select <i>Save Preset</i> or <i>Manage Presets</i>.
+            </p>
+
+            <!-- link here, so it will show the next title when clicked -->
+            <p>
+              <A NAME="event_info"></A>
+            </p>
+          </text>
+        </subsection>
+
+				<subsection>
+					<header>View Presets</header>
+					<!-- For View/Profile -->
+					<requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+					<text>
+						<p>
+							The execution of tasks and interrupts can be visualized using different visualization presets, which you can quickly switch between to get best clarity in each situation.<br/>
+							Each preset will set up the fields needed to show the type of information required.<br/>
+							The presets are:
+							<table width="100%">
+								<tr>
+									<td width="150px" valign="top">
+										<b>Gantt Preset</b>
+									</td>
+									<td>
+										Shows one column per task and interrupt.
+										This is best for spotting execution patterns, rare tasks or interrupts.
+										<br/>(Default shortcut key "G")
+									</td>
+								</tr>
+								<tr>
+									<td valign="top">
+										<b>Merged Preset</b>
+									</td>
+									<td>
+										Shows all tasks and interrupts in a single column, with sideways indents to show preemption and blocking.
+										This gives a more compact display compared to Gantt View Mode and the best sense of execution order and preemption hot-spots.
+										<i>This preset uses calculated data it is not available for live tracing.</i>
+										<br/>(Default shortcut key "M")
+									</td>
+								</tr>
+								<tr>
+									<td valign="top">
+										<b>Split Preset</b>
+									</td>
+									<td>
+										Shows tasks and interrupts in two columns, with indents like in the Merged View Mode.
+										This removes the "noise" from interrupts by presenting them separately.
+										<i>This preset uses calculated data it is not available for live tracing.</i>
+										<br/>(Default shortcut key "S")
+									</td>
+								</tr>
+								<tr>
+									<td valign="top">
+										<b>Flat Preset</b>
+									</td>
+									<td>
+										Shows all tasks and interrupts in one single column (per core).
+									</td>
+								</tr>
+							</table>
+						</p>
+						<p>
+							It is also possible to set up custom presets. Under the <i>View</i> -&gt; <i>View Presets</i>, either select <i>Save Preset</i> or <i>Manage Presets</i>.
+						</p>
+
+						<!-- link here, so it will show the next title when clicked -->
+						<p>
+							<A NAME="event_info"></A>
+						</p>
+					</text>
+				</subsection>
+
+
+				<subsection>
+          <header>Zoom and navigation features</header>
+          <text>
+            <p>To navigate the trace, you can use the mouse wheel or the scroll bar (in the right). You can also drag the view by holding down the mouse wheel or middle mouse button. The arrow buttons and page up/down buttons can also be used when the trace view area has focus.</p>
+
+            <p>You can select an interval by holding in the left mouse button. By right-clicking on the selection, you open a context menu with various options for the selection interval, such as Zoom In.</p>
+
+            <p>
+              To measure the time between two events, select one of the events and then hold the SHIFT key while selecting another event.<br/>
+              The first event will still be selected, making it possible to measure to different events and see the result.
+            </p>
+
+            <note>
+              When searching for a particular location, it is often easier to use the <a href="Finder.html">Finder</a> or one of the graphical overviews to find it. When using another view to navigate the trace, you can click or double click to focus the trace view on this location. All graphical views also support selecting a time interval (by pressing the left mouse button and dragging) and showing this interval in the trace view.
+            </note>
+
+            <p>To zoom in or out, use the zoom buttons on the tool panel, the numpad + and - buttons or the zoom options in the right-click menu.</p>
+
+            <p>You can also zoom with your mouse wheel when holding down the Ctrl key. The scroll-to-zoom behavior is always active when Scroll Lock is enabled. If your mouse features back and forward buttons, you can use these to quickly zoom in and out.</p>
+
+		    <p>When using the Dynamic Legend (default), you can click on the Actor names in the top of the scheduling field to find the next (left-click) or previous (right-click) instance.</p>
+			  
+          </text>
+			
+        </subsection>
+
+		  <subsection>
+			  <header>Dynamic Legend</header>
+			  <text>
+				  <p>
+					  The Trace View offers two ways of displaying actor names.
+					  The default ("Dynamic Legend") shows the names at the top of each swimlane, or on the left side if using the horizontal mode.
+					  You can click on these names to find the next (left-click) or previous (right-click) entry.
+				  </p>
+				  <p>
+					  You may also select "Background Legend", that instead show the names in the background of each swimlane. This gives more screen space for the view content, but can be harder to read if there is lots of activity.
+				  </p>
+				  <p>
+					  <table>
+						  <tr>
+							  <td>
+								  <b>Dynamic Legend</b>
+								  <br/>
+								  <A HREF="img/Trace View - Legend Enabled.png" target="$IMAGETARGET">
+									  <img src="img/Trace View - Legend Enabled.png" />
+								  </A>
+							  </td>
+							  <td width="10px">
+							  </td>
+							  <td>
+								  <b>Background Legend</b>
+								  <br/>
+								  <A HREF="img/Trace View - Legend Disabled.png" target="$IMAGETARGET">
+									  <img src="img/Trace View - Legend Disabled.png" />
+								  </A>
+							  </td>
+						  </tr>
+					  </table>
+				  </p>
+				  <p>
+					  To quickly toggle between Background Legend and Dynamic Legend, simply press the L button when the Trace View is selected,
+					  or use the menu check box option View &gt; Show Dynamic Legend.
+				  </p>
+			  </text>
+		  </subsection>
+
+		  <subsection>
+				<requirement>CoreFeatures.AutomaticEventFiltering</requirement>
+			  <header>Automatic Event Filtering</header>
+			  <text>
+				  <p>
+					  This is an optional feature and disabled by default.
+					  If enabled in the Project Settings, if not all event labels can be displayed in the Trace View (the Events field), $PNAME will hide events depending on specified priority levels per event type. For example, service calls might be hidden while User Events might remain.
+				  </p>
+				  <p>
+					  To enable this and to change the event filtering, go to <a href="AutomaticEventFilteringSettings.html">Automatic Event Filtering settings</a>.
+				  </p>
+			  </text>
+		  </subsection>
+
+		  <!--<subsection>
+          <header>Advanced features</header>
+          <text>
+            <p>$PNAME can identify activation causes for actor instances. For example, an instance might be activated when another actor sends to a queue or signals a semaphore. To go to the activation cause of the selected actor instance, press F9.</p>
+
+            <p>$PNAME can also identify instances triggered by the selected instance, either from the Actor Information display ("Triggers") or by pressing F10. If there are multiple instances activated by the selected instance, pressing F10 will display a menu where you can select the activated actor you wish to follow.</p>
+
+            <p>For service calls, you can go to the sending or receiving event with F11. For a semaphore, pressing F11 on a "SemaphoreTake" call will take you to the corresponding SemaphoreGive call. For a queue send, F11 will take you to the event where the particular data is received. </p>
+
+            <p>For blocking service call events, using F12 you can show the reason for the triggering/released blocking, if this is due to a system call. This is also available in the Actor Information display ("Triggered By"). This will in many cases produce the same result as using F11, but not always. For example, if a queue send blocks due to a full queue, F12 shows the most recent receive event since that allows the send operation to complete, while F11 shows the location where the received message was sent.</p>
+          </text>
+        </subsection>-->
+      </text>
+    </section>
+  </body>
+</page>

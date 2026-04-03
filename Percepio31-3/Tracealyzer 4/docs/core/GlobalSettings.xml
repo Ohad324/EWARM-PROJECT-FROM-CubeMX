@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Global Settings</title>
+  <keywords>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Here you find general settings for the $PNAME application, not tied to a particular project, such as "Reopen last Project on Startup".
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

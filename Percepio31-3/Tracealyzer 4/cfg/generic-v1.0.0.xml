@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<PlatformExtension>
+	<EventCodes>
+	<EventGroup name="Core">      
+	  <Event code="0x01" type="TraceStart" />
+      <Event code="0x03" type="ObjectName" />
+      <Event code="0x04" type="PriorityChange">
+        <Param index="0" type="Handle" class="Task" useAs="Actor"></Param>
+        <Param index="1" type="Int32" useAs="Priority"></Param>
+      </Event>
+      <Event code="0x05" type="IsrProperties" />
+      
+      <Event code="0x08" type="InstanceEnd" instanceEndMode="NextCall" />
+      <Event code="0x09" type="InstanceEnd" instanceEndMode="Instant" />
+	  
+      <Event code="0x20" type="TaskReady" />
+
+      <Event code="0x21" type="SwitchToInterrupt" resumeInstance="false" />
+      <Event code="0x22" type="SwitchToInterrupt" resumeInstance="true" />
+
+      <Event code="0x23" type="SwitchToTask"  resumeInstance="false"/>
+      <Event code="0x24" type="SwitchToTask"  resumeInstance="true" />
+      <Event code="0x25" type="SwitchToTask"  resumeInstance="false"/>
+
+      <Event code="0x38" type="LowPowerBegin" />
+      <Event code="0x39" type="LowPowerEnd" />
+
+      <Event key="Forget" type="ForgetObject">
+        <Param index="0" type="Handle" />
+      </Event>
+    </EventGroup>
+    <EventGroup name="Task">
+      <Event code="0x10" type="ObjectState">
+        <Param index="0" type="Handle" class="Task"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="AddTaskCreateCall" />
+      </Event>
+      <Event key="AddTaskCreateCall" service="Task/xTaskCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x11" service="Task/xTaskDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+      <Event code="0x12" type="ObjectState">
+        <Param index="0" type="Handle" class="Process"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="AddProcessCreateCall" />
+      </Event>
+      <Event key="AddProcessCreateCall" service="Process/xProcessCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Process" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x13" service="Process/xProcessDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Process" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+		  </Event>
+		  <Event code="0x14" type="ObjectState">
+        <Param index="0" type="Handle" class="Task"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="AddThreadOwner" />
+      </Event>
+      <Event key="AddThreadOwner" type="ObjectOwner">
+        <Param paramId="Object" index="0" type="Handle" class="Task"></Param>
+        <Param paramId="Owner" index="2" type="Handle" class="Process"></Param>
+        <FollowWith key="AddThreadCreateCall" />
+      </Event>
+      <Event key="AddThreadCreateCall" service="Thread/xThreadCreate" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="UInt32" useAs="Arg"></Param>
+      </Event>
+      <Event code="0x15" service="Thread/xThreadDelete" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="Handle" class="Task" useAs="Arg"></Param>
+        <Param index="1" type="Int32" useAs="StateAfter"></Param>
+        <FollowWith key="Forget" />
+      </Event>
+    </EventGroup>
+    <EventGroup name="Memory">
+      <Event code="0x30" service="Heap/malloc" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="UInt32" useAs="Return"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+      </Event>
+      <Event code="0x31" service="Heap/free" type="KernelServiceReturn" status="StatusOK">
+        <Param index="0" type="UInt32" useAs="Arg"></Param>
+        <Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+        <Param index="1" type="Int32" useAs="Return"></Param>
+      </Event>
+      <Event code="0x32" service="Heap/malloc" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="UInt32" useAs="Return"></Param>
+        <Param index="1" type="Int32" useAs="Arg"></Param>
+        <Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+      </Event>
+      <Event code="0x33" service="Heap/free" type="KernelServiceReturn" status="StatusTimeout">
+        <Param index="0" type="UInt32" useAs="Arg"></Param>
+        <Param index="-1" type="SpecialHandle" useAs="Arg" specialHandle="SystemHeap" class="Heap"></Param>
+        <Param index="1" type="Int32" useAs="Return"></Param>
+		  </Event>
+		</EventGroup>
+	  <EventGroup>
+		  <Event code="0x40" type="StateMachineStateCreate"  />
+		  <Event code="0x41" type="StateMachineCreate"  />
+		  <Event code="0x42" type="StateMachineStateChange"  />
+		  <Event code="0x43" type="IntervalChannelCreate"  />
+		  <Event code="0x44" type="IntervalStart"  />
+		  <Event code="0x45" type="IntervalEnd"  />
+		  <Event code="0x46" type="IntervalChannelSetCreate"  />
+	  </EventGroup>
+	  <EventGroup>
+		  <Event code="0x47" type="LoadExtension"  />
+		  <Event code="0x48" type="NullEvent"  />
+		  <Event code="0x49" type="NullEvent"  />
+		  <Event code="0x4A" type="NullEvent"  />
+		  <Event code="0x4B" type="NullEvent"  />
+		  <Event code="0x4C" type="LoadDependency">
+			  <Param index="0" type="StringHandle" useAs="Arg" />
+			  <Param index="1" type="UInt32" useAs="Arg" />
+		  </Event>
+		  <Event code="0x4D" type="RegisterRunnable"  />
+		  <Event code="0x4E" type="RunnableStart"  />
+		  <Event code="0x4F" type="RunnableStop"  />
+	  </EventGroup>
+	<EventGroup name="UserEvent">
+		<Event code="0x50" type="UserEvent">
+		<Param index="0" type="StringHandle" useAs="Channel"></Param>
+		<Param index="1" type="String" useAs="Message"></Param>
+	</Event>
+		<Event code="0x51" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="String" useAs="Message"></Param>
+		</Event>
+		<Event code="0x52" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" useAs="PrintfArgStart"></Param>
+			<Param index="2" type="String" useAs="Message"></Param>
+		</Event>
+		<Event code="0x53" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" useAs="PrintfArgStart"></Param>
+			<Param index="3" type="String" useAs="Message"></Param>
+		</Event>
+		<Event code="0x54" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" useAs="PrintfArgStart"></Param>
+			<Param index="4" type="String" useAs="Message"></Param>
+		</Event>
+		<Event code="0x55" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" useAs="PrintfArgStart"></Param>
+			<Param index="5" type="String" useAs="Message"></Param>
+		</Event>
+		<Event code="0x56" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" useAs="PrintfArgStart"></Param>
+			<Param index="6" type="String" useAs="Message"></Param>
+		</Event>
+		<Event code="0x57" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" useAs="PrintfArgStart"></Param>
+			<Param index="7" type="String" useAs="Message"></Param>
+		</Event>
+		<Event code="0x58" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+		</Event>
+		<Event code="0x59" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+			<Param index="2" useAs="PrintfArgStart"></Param>
+		</Event>
+		<Event code="0x5A" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+			<Param index="2" useAs="PrintfArgStart"></Param>
+		</Event>
+		<Event code="0x5B" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+			<Param index="2" useAs="PrintfArgStart"></Param>
+		</Event>
+		<Event code="0x5C" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+			<Param index="2" useAs="PrintfArgStart"></Param>
+		</Event>
+		<Event code="0x5D" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+			<Param index="2" useAs="PrintfArgStart"></Param>
+		</Event>
+		<Event code="0x5E" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+			<Param index="2" useAs="PrintfArgStart"></Param>
+		</Event>
+		<Event code="0x5F" type="UserEvent">
+			<Param index="0" type="StringHandle" useAs="Channel"></Param>
+			<Param index="1" type="StringHandle" useAs="Message"></Param>
+			<Param index="2" useAs="PrintfArgStart"></Param>
+		</Event>
+	  </EventGroup>	
+	  <EventGroup name="Debug">
+		  <Event code="0xFFF" type="DebugExpect"  />
+		  <Event code="0xFFE" type="DebugExpectEmpty"  />
+		  <Event code="0xFFD" type="DebugExpectNever"  />
+	  </EventGroup>
+  </EventCodes>
+
+  <TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+    <HasProcesses>True</HasProcesses>
+	<KernelServiceGroups>
+      <KernelServiceGroup name="Task">
+      <KernelService name="xTaskCreate"             operation="StartInstance" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskDelete"             operation="Deinitialize"/>
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Process">
+      <KernelService name="xProcessCreate"             operation="Initialize" parameters="Object"/>
+      <KernelService name="xProcessDelete"             operation="Deinitialize"/>
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Thread">
+      <KernelService name="xThreadCreate"             operation="Initialize" parameters="Object"/>
+      <KernelService name="xThreadDelete"             operation="Deinitialize"/>
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Heap">
+      <KernelService name="malloc" operation="AllocateMemory" parameters="NumericParameterOnly">
+        <Parameter name="size" format="{0}"/>
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+       </KernelService>
+       <KernelService name="free" operation="FreeMemory" parameters="NumericParameterOnly">
+         <Parameter name="ptr" format="0x{0:X8}"/>
+         <ReturnValue name="size" format=" released {0} bytes"/>
+        </KernelService>
+      </KernelServiceGroup>
+    
+    </KernelServiceGroups>
+	
+    <ObjectClasses>
+      <ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+    <ObjectClass name="Process" type="ActorGroup" />
+      <!-- Note: the order of the elements matters, regular tasks should be before ISRs -->
+      <ObjectClass name="Task" type="Actor"/>
+      <ObjectClass name="ISR" type="Actor"/>
+    <ObjectClass name="Heap" type="Heap" options="NoIpcGraph"/>
+    </ObjectClasses>
+  </TargetPlatform>
+</PlatformExtension>

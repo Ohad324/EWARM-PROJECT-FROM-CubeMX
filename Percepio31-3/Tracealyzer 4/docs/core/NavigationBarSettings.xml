@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Navigation Bar Settings</title>
+  <keywords>
+    <keyword>navigate</keyword>
+    <keyword>navigation</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Navigation Bar Settings will allow you to customize which icons will show up in the navigation bar, and also the sort order.
+        </p>
+
+        <p>
+          <A HREF="img/NavigationBarSettings.png" target="$IMAGETARGET">
+            <img src="img/NavigationBarSettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          <h5>Sort Order</h5>
+          <ul>
+            <li>
+              <b>Sort by activated time</b> - In this mode the sort order is the time spent with each view open.
+            </li>
+            <li>
+              <b>Sort by number of activations</b> - In this mode the sort order is the number of times a views has been opened, including times it is opened by setting/changing layout.
+            </li>
+            <li>
+              <b>Custom order</b> - In this mode it is possible to change the order of the icons, where the first ones are on top.
+            </li>
+          </ul>
+        </p>
+
+        <note>Even if using Custom order, views that are part of a group will be shown in the extended menu.</note>
+      </text>
+    </section>
+  </body>
+</page>

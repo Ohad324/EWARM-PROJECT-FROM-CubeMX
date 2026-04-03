@@ -1,0 +1,275 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<PlatformExtension>
+  <TargetPlatform>
+    <KernelServiceGroups>
+      <KernelServiceGroup name="System Core">
+        <KernelService name="netInitialize" operation="" parameters="None">
+          <Parameter name="version" format="version: {0}" />
+        </KernelService>
+      </KernelServiceGroup>
+
+      <KernelServiceGroup name="TCP Socket">
+        <KernelService name="InitSockets" operation="" parameters="None">
+          <Parameter name="sockets" format="sockets: {0}" />
+          <Parameter name="mss" format="mss: {0}" />
+        </KernelService>
+        <KernelService name="ListenSocket" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="port" format="port: {0}" />
+        </KernelService>
+        <KernelService name="ShowFrameHeader" distinctName="TCP Socket/ShowFrameHeader" operation="" parameters="None">
+          <Parameter name="dport" format="dport: {0}" />
+          <Parameter name="sport" format="sport: {0}" />
+          <Parameter name="seq" format="seq: {0}" />
+          <Parameter name="ack" format="ack: {0}" />
+          <Parameter name="flags" format="flags: {0}" />
+          <Parameter name="win" format="win: {0}" />
+          <Parameter name="cksum" format="cksum: {0}" />
+        </KernelService>
+        <KernelService name="ShowSendWindow" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="send_win" format="send_win: {0}" />
+        </KernelService>
+        <KernelService name="ShowRttVariables" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="rto" format="rto: {0}" />
+          <Parameter name="sa" format="sa: {0}" />
+          <Parameter name="sv" format="sv: {0}" />
+        </KernelService>
+        <KernelService name="ShowCongestionVariables" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="cwnd" format="cwnd: {0}" />
+          <Parameter name="ssth" format="ssth: {0}" />
+        </KernelService>
+        <KernelService name="ReleaseSocket" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+        </KernelService>
+        <KernelService name="SocketAllocated" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+        </KernelService>
+        <KernelService name="SocketEstablished" operation="Initialize" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+        </KernelService>
+        <KernelService name="CloseSocket" operation="Deinitialize" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+        </KernelService>
+        <KernelService name="SetOptionDelayedAck" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="enable" format="enable: {0}" />
+        </KernelService>
+        <KernelService name="TimeoutInState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="MappedToSocket" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="MapSocketWrongFlagsSet" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+        </KernelService>
+        <KernelService name="FrameNotMapped" operation="" parameters="None">
+          <Parameter name="size" format="size: {0}" />
+        </KernelService>
+        <KernelService name="ParseHeaderOptions" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="opt_len" format="opt_len: {0}" />
+        </KernelService>
+        <KernelService name="OptionMss" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="mss" format="mss: {0}" />
+        </KernelService>
+        <KernelService name="NextState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="AckNextState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="FinNextState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="FinAckNextState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="SimultOpenNextState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="SimultCloseNextState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="LastAckNextState" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+          <Parameter name="state" format="state: {0}" />
+        </KernelService>
+        <KernelService name="SendControl" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" />
+        </KernelService>
+        <KernelService name="TwaitTimeoutClosing" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+        </KernelService>
+        <KernelService name="RepeatedFin" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+        </KernelService>
+        <KernelService name="CallbackEventAck" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+        </KernelService>
+        <KernelService name="SendReset" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+        </KernelService>
+        <KernelService name="SendData" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+          <Parameter name="size" format="size: {0}" ioSize="true" />
+        </KernelService>
+        <KernelService name="DataAcked" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+          <Parameter name="size" format="size: {0}" ioSize="true" />
+        </KernelService>
+        <KernelService name="CloseDataUnacked" operation="" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+          <Parameter name="size" format="size: {0}" ioSize="true" />
+        </KernelService>
+        <KernelService name="SendFrame" operation="OtherWrite" parameters="None">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+          <Parameter name="size" format="size: {0}" ioSize="true" />
+        </KernelService>
+        <KernelService name="ReceiveFrame" operation="OtherRead">
+          <Parameter name="socket" format="socket: {0}" ioSource="true" />
+          <Parameter name="size" format="size: {0}" ioSize="true" />
+        </KernelService>
+      </KernelServiceGroup>
+
+      <KernelServiceGroup name="Memory Management">
+        <KernelService name="InitMemory" operation="Initialize" parameters="None">
+          <Parameter name="pool_size" format="pool_size: {0}" />
+          <Parameter name="limit0" format="limit0: {0}" />
+          <Parameter name="limit1" format="limit1: {0}" />
+        </KernelService>
+        <KernelService name="AllocMemory" operation="AllocateMemory" parameters="None">
+          <Parameter name="pool" format="pool: {0}" />
+          <Parameter name="block" format="block: {0}" heapAddress="true" hidden="true" />
+          <Parameter name="size" format="size: {0}" heapSize="true" />
+          <Parameter name="used" format="used: {0}" />
+        </KernelService>
+        <KernelService name="AllocLimitExceeded" operation="" parameters="None">
+          <Parameter name="pool" format="pool: {0}" />
+          <Parameter name="size" format="size: {0}" />
+          <Parameter name="used" format="used: {0}" />
+        </KernelService>
+        <KernelService name="AllocOutOfMemory" operation="" parameters="None">
+          <Parameter name="pool" format="pool: {0}" />
+          <Parameter name="size" format="size: {0}" />
+          <Parameter name="used" format="used: {0}" />
+        </KernelService>
+        <KernelService name="ShrinkMemory" operation="FreeMemory" parameters="None">
+          <Parameter name="pool" format="pool: {0}" />
+          <Parameter name="new_size" format="new_size: {0}" />
+          <Parameter name="old_size" format="old_size: {0}" />
+          <Parameter name="block" format="block: {0}" heapAddress="true" hidden="true" />
+          <Parameter name="size" format="size: {0}" heapSize="true" hidden="true" />
+        </KernelService>
+        <KernelService name="FreeMemory" operation="FreeMemory" parameters="None">
+          <Parameter name="pool" format="pool: {0}" />
+          <Parameter name="block" format="block: {0}" heapAddress="true" hidden="true" />
+          <Parameter name="size" format="size: {0}" heapSize="true" />
+          <Parameter name="used" format="used: {0}" />
+        </KernelService>
+        <KernelService name="FreeInvalidBlock" operation="" parameters="None">
+          <Parameter name="pool" format="pool: {0}" />
+          <Parameter name="size" format="size: {0}" />
+        </KernelService>
+        <KernelService name="FreeLinkCorrupted" operation="" parameters="None">
+          <Parameter name="pool" format="pool: {0}" />
+          <Parameter name="size" format="size: {0}" />
+        </KernelService>
+      </KernelServiceGroup>
+
+      <KernelServiceGroup name="ETH Interface">
+        <KernelService name="InitInterface" operation="" parameters="None">
+          <Parameter name="name" format="name: {0}" />
+        </KernelService>
+        <KernelService name="SetMacAddress" operation="" parameters="None">
+          <Parameter name="mac" format="mac: {0}" />
+        </KernelService>
+        <KernelService name="ShowFrameHeader" distinctName="ETH Interface/ShowFrameHeader" operation="" parameters="None">
+          <Parameter name="dst" format="dst: {0}" />
+          <Parameter name="src" format="src: {0}" />
+          <Parameter name="proto" format="proto: {0}" />
+        </KernelService>
+      </KernelServiceGroup>
+    </KernelServiceGroups>
+
+
+    <StateMachineModels>
+      <!--
+        Disabling the state unused parts of the model.
+      -->
+      <StateMachineModel name="TCP Connection State">
+        <States>
+          <!--
+            <State id="0" name="UNUSED">
+            </State>
+          -->
+          <State id="CLOSED" name="CLOSED">
+          </State>
+          <State id="LISTEN" name="LISTEN">
+            <ExpectedTransitions>
+              <Transition>SYN_RECEIVED</Transition>
+            </ExpectedTransitions>
+          </State>
+          <State id="SYN_RECEIVED" name="SYN_RECEIVED">
+            <ExpectedTransitions>
+              <Transition>ESTABLISHED</Transition>
+            </ExpectedTransitions>
+          </State>
+          <State id="SYN_SENT" name="SYN_SENT">
+          </State>
+          <State id="FIN_WAIT_1" name="FIN_WAIT_1">
+            <ExpectedTransitions>
+              <Transition>FIN_WAIT_2</Transition>
+              <Transition>TIME_WAIT</Transition>
+            </ExpectedTransitions>
+          </State>
+          <State id="FIN_WAIT_2" name="FIN_WAIT_2">
+            <ExpectedTransitions>
+              <Transition>TIME_WAIT</Transition>
+            </ExpectedTransitions>
+          </State>
+          <State id="CLOSING" name="CLOSING">
+          </State>
+          <State id="LAST_ACK" name="LAST_ACK">
+          </State>
+          <State id="TIME_WAIT" name="TIME_WAIT">
+            <ExpectedTransitions>
+              <Transition>LISTEN</Transition>
+              <Transition>ESTABLISHED</Transition>
+            </ExpectedTransitions>
+          </State>
+          <State id="ESTABLISHED" name="ESTABLISHED">
+            <ExpectedTransitions>
+              <Transition>LISTEN</Transition>
+              <Transition>FIN_WAIT_1</Transition>
+              <Transition>FIN_WAIT_2</Transition>
+            </ExpectedTransitions>
+          </State>
+        </States>
+      </StateMachineModel>
+    </StateMachineModels>
+
+    <ObjectClasses>
+      <ObjectClass name="Network Memory Pool" type="Heap" options="NoIpcGraph|Internal|SizeOnly" />
+      <ObjectClass name="TCP Socket" type="IOChannel" >
+        <StateMachineModels>
+          <StateMachineModel name="TCP Connection State"/>
+        </StateMachineModels>
+      </ObjectClass>
+      <ObjectClass name="UDP Socket" type="IOChannel" />
+    </ObjectClasses>
+  </TargetPlatform>
+</PlatformExtension>

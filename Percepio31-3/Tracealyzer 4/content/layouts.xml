@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Layouts>
+  <Layout name="Trace View, CPU and User Events">
+    <Windows>
+      <Window>
+        <Views>
+          <View name="TraceView">
+          </View>
+          <View name="CPU" active="true">
+          </View>
+          <View name="UEPLOT">
+            <LayoutOverride dockWith="CPU"/>
+          </View>
+        </Views>
+      </Window>
+    </Windows>
+  </Layout>
+  <Layout name="Trace View Only">
+    <Windows>
+      <Window>
+        <Views>
+          <View name="TraceView">
+          </View>
+        </Views>
+      </Window>
+    </Windows>
+  </Layout>
+  <Layout name="Trace View, Event Log, CPU and User Events">
+    <Windows>
+      <Window>
+        <Views>
+          <View name="TraceView" active="true">
+          </View>
+          <View name="CPU">
+          </View>
+          <View name="UEPLOT">
+          </View>
+          <View name="EventLog">
+            <LayoutOverride state="Document" dockWith="TraceView"/>
+          </View>
+        </Views>
+      </Window>
+    </Windows>
+  </Layout>
+  <Layout name="System Overview with Streaming">
+    <Windows>
+      <Window>
+        <Views>
+          <View name="TraceView" active="true">
+          </View>
+          <View name="CPU">
+          </View>
+          <View name="LiveStream" active="true">
+            <LayoutOverride state="Document" dockWith="CPU"/>
+          </View>
+          <View name="HEAPS" active="true">
+          </View>
+          <View name="UnusedStack">
+            <LayoutOverride state="Document" dockWith="HEAPS"/>
+          </View>
+          <View name="UEPLOT">
+            <LayoutOverride state="Document" dockWith="HEAPS"/>
+          </View>
+          <View name="EventLog">
+            <LayoutOverride state="Document" dockWith="TraceView"/>
+          </View>
+        </Views>
+      </Window>
+    </Windows>
+  </Layout>
+</Layouts>

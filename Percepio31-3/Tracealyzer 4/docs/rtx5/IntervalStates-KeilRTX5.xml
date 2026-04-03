@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+	<title>Intervals and States for Keil RTX5</title>
+	<keywords>
+		<keyword>uvision</keyword>
+		<keyword>µvision</keyword>
+		<keyword>micro</keyword>
+		<keyword>vision</keyword>
+		<keyword>settings</keyword>
+	</keywords>
+	<body>
+		<section>
+			<header>Overview</header>
+			<text>
+				<p>
+					When tracing an RTX5 system, there is a possibility to include events from the TCP stack in Keil MDK.
+					$PNAME includes awareness of the Keil TCP events and generates a state machine for each TCP socket in the trace.
+				</p>
+
+				<p>
+					They are however not shown by default. To see them in the trace, open the <a href="IntervalInstances.html">Intervals and State Machines</a> tool
+					and select "Add Predefined", where all sockets found in the trace are listed. Select and add the ones you are interested in, and they are shown in the trace.
+				</p>
+			</text>
+		</section>
+	</body>
+</page>

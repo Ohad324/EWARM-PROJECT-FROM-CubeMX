@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- 
+Tracealyzer for RTX5 Platform Extension
+Percepio AB, 2018
+
+Note: Attributes are case-sensitive!
+-->
+
+<!--
+
+To allow ThreadSetName events to work:
+1. Uncomment the sections below (KernelServiceGroup and EventGroup) and restart Tracealyzer
+2. Add an .scvd file to your µVision project, see http://www.keil.com/support/man/docs/uv4/uv4_ca_manage_scvd.htm
+
+NOTE! The name ThreadSetName and API/Detail level must be set correctly, see definition of ThreadGetName in RTX5.scvd.
+* The payload of the first event is the thread id (and optionally the address of the string; it is not used by Tracealyzer).
+* The payload of the second event is the name as an ASCII string.
+
+NOTE! If multiple calls are done for the same thread, only the first will actually be used.
+It is not possible to rename a thread once a name has been set, either through osThreadNew or previous ThreadSetName call.
+
+
+
+Example file with ThreadSetName event:
+
+<?xml version="1.0" encoding="utf-8"?>
+
+<component_viewer schemaVersion="0.1" xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="Component_Viewer.xsd">
+
+<component name="ThreadSetNameTest" version="1.0.0"/>
+<events>
+  <group name="TSNTest">
+    <component name="Thread Info Extension" brief="ThreadInfoExt" no="0xB0" />
+  </group>
+
+  <event id="0xB000" level="API" property="ThreadSetName" value="thread=%x[val1] name_addr=%x[val2]" />
+  <event id="0xB001" level="Detail" property="ThreadSetName" value="name=%S[val1]" />
+</events>
+
+</component_viewer>
+
+-->
+
+<PlatformExtension>
+  <TargetPlatform>
+    <KernelServiceGroups>
+      <!--
+      <KernelServiceGroup name="Thread Info Ext">
+        <KernelService name="osThreadSetName" operation="">
+          <Parameter name="thread" format="thread: {0}"/>
+          <Parameter name="name" format="name: {0}" />
+        </KernelService>
+      </KernelServiceGroup>
+      -->
+    </KernelServiceGroups>
+
+    <ObjectClasses>
+    </ObjectClasses>
+  </TargetPlatform>
+
+  <EventMap>
+
+    <!--
+    <EventGroup name="Thread Info Ext" serviceName="Thread Info Ext">
+      <Event name="ThreadSetName" level="API" service="osThreadSetName" pendingType="PendingMessage" pendingParameter="ThreadSetName|Detail" action="Call">
+        <Parameter index="0" translation="GetThread" nullResult="InstantFail" />
+      </Event>
+      <Event name="ThreadSetName" level="Detail" service="osThreadSetName" action="Call" useKernelServiceParameters="true">
+        <Parameter index="0" translation="PayloadString"/>
+      </Event>
+    </EventGroup>
+    -->
+
+  </EventMap>
+</PlatformExtension>

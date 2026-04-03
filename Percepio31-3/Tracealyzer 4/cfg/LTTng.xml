@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+  <HasProcesses>True</HasProcesses>
+  <!--<KernelServiceGroups>
+    <KernelServiceGroup name="IO">
+      <KernelService name="open"  operation=""/>
+      <KernelService name="close"  operation=""/>
+      <KernelService name="read"  operation="OtherRead"/>
+      <KernelService name="write"  operation="OtherWrite"/>
+      <KernelService name="readv"  operation="OtherRead"/>
+      <KernelService name="writev"  operation="OtherWrite"/>
+      <KernelService name="recvmmsg"  operation="OtherRead"/>
+      <KernelService name="sendmmsg"  operation="OtherWrite"/>
+      <KernelService name="pipe"  operation=""/>
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Socket">
+      <KernelService name="socket" operation=""/>
+      <KernelService name="bind" operation=""/>
+      <KernelService name="connect" operation=""/>
+      <KernelService name="listen" operation=""/>
+      <KernelService name="accept" operation=""/>
+      <KernelService name="getsockname" operation=""/>
+      <KernelService name="getpeername" operation=""/>
+      <KernelService name="socketpair" operation=""/>
+      <KernelService name="send" operation="OtherWrite"/>
+      <KernelService name="recv" operation="OtherRead"/>
+      <KernelService name="sendto" operation="OtherWrite"/>
+      <KernelService name="recvfrom" operation="OtherRead"/>
+      <KernelService name="shutdown" operation=""/>
+      <KernelService name="setsockopt" operation=""/>
+      <KernelService name="getsockopt" operation=""/>
+      <KernelService name="sendmsg" operation="OtherWrite"/>
+      <KernelService name="recvmsg" operation="OtherRead"/>
+      <KernelService name="accept4" operation=""/>
+    </KernelServiceGroup>
+    <KernelServiceGroup name="Futex">
+      <KernelService name="FUTEX_WAIT" operation="DecreaseSemaphore">
+        <Parameter name="Futex"/>
+      </KernelService>
+      <KernelService name="FUTEX_WAKE"  operation="IncreaseSemaphore"/>
+      <KernelService name="FUTEX_REQUEUE"  operation=""/>
+      <KernelService name="FUTEX_CMP_REQUEUE"  operation=""/>
+    </KernelServiceGroup>
+  </KernelServiceGroups>-->
+  <ObjectClasses>
+    <!--<ObjectClass name="Inode" type="Other"/>-->
+    <ObjectClass name="Thread" type="Actor"/>
+    <ObjectClass name="ISR" type="Actor"/>
+    <ObjectClass name="Process" type="ActorGroup"/>
+    <!--<ObjectClass name="Futex" type="Semaphore"/>
+    <ObjectClass name="FileDesc" type="Other"/>
+    <ObjectClass name="Socket" type="Other"/>
+    <ObjectClass name="Heap" type="Heap" options="NoIpcGraph"/>-->
+  </ObjectClasses>
+</TargetPlatform>
+

@@ -1,0 +1,490 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Event Recorder">
+      <KernelService name="EventRecorderInitialize" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="EventRecorderStop" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="EventRecorderStart" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Kernel">
+      <KernelService name="osKernelInitialize" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelStart" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osKernelSuspend" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelResume" operation="">
+        <Parameter name="time" format="time: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osKernelLock" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelUnlock" operation="" parameters="None">
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelRestoreLock" operation="">
+        <Parameter name="lock" format="lock: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osKernelGetTickCount" operation="" parameters="None">
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelGetTickFreq" operation="" parameters="None">
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelGetSysTimerCount" operation="" parameters="None">
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelGetSysTimerFreq" operation="" parameters="None">
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelGetState" operation="" parameters="None">
+        <ReturnValue name="state" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osKernelGetInfo" operation="" parameters="None">
+        <ReturnValue name="state" format=" returns '{0}'" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Wait">
+      <KernelService name="osDelay" distinctName="Wait/osDelay" operation="">
+        <Parameter name="ticks" format="ticks: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osDelayUntil" distinctName="Wait/osDelayUntil" operation="">
+        <Parameter name="until" format="until: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Memory">
+      <KernelService name="Malloc" operation="AllocateMemory">
+        <Parameter name="heap" format="mem: {0}" hidden="true" />
+        <Parameter name="address" format="address: {0:X8}" heapAddress="true" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+      </KernelService>
+      <KernelService name="Free" operation="FreeMemory">
+        <Parameter name="heap" format="mem: {0}" hidden="true" />
+        <Parameter name="address" format="address: {0:X8}" heapAddress="true" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+      </KernelService>
+
+      <KernelService name="osRtxMemoryInit" operation="Initialize">
+        <Parameter name="heap" format="mem: {0}" />
+        <Parameter name="size" format="size: {0} bytes" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osRtxMemoryAlloc" operation="AllocateMemory">
+        <Parameter name="heap" format="mem: {0}" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+        <Parameter name="type" format="type: {0}" />
+        <ReturnValue name="address" format=" returns 0x{0:X8}" heapAddress="true" />
+      </KernelService>
+      <KernelService name="osRtxMemoryFree" operation="FreeMemory">
+        <Parameter name="heap" format="mem: {0}" />
+        <Parameter name="address" format="block: 0x{0:X8}" heapAddress="true" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <!-- Don't mix up "osRtxMemoryPool with osMemoryPool; the "rtx" one are for internal memory -->
+      <KernelService name="osRtxMemoryPoolInit" operation="Initialize">
+        <Parameter name="heap" format="mem: {0}" />
+        <Parameter name="block_count" format="block_count: {0}" />
+        <Parameter name="block_size" format="block_size: {0} bytes" />
+        <Parameter name="block_mem" format="block: 0x{0:X8}" />
+      </KernelService>
+      <KernelService name="osRtxMemoryPoolAlloc" operation="AllocateMemory">
+        <Parameter name="heap" format="mem: {0}" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+        <ReturnValue name="address" format=" returns 0x{0:X8}" heapAddress="true" />
+      </KernelService>
+      <KernelService name="osRtxMemoryPoolFree" operation="FreeMemory">
+        <Parameter name="heap" format="mem: {0}" />
+        <Parameter name="address" format="block: 0x{0:X8}" heapAddress="true" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <!-- this is a faked event to make sure the heap is zeroed out when the actual memory pool is -->
+      <KernelService name="osRtxMemoryPoolDelete" operation="Deinitialize">
+        <Parameter name="heap" format="mem: {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Memory Pool">
+      <KernelService name="osMemoryPoolNew" operation="Initialize">
+        <Parameter name="heap" format="heap: {0}" />
+        <Parameter name="block_count" format="block_count: {0}" />
+        <Parameter name="block_size" format="block_size: {0} bytes" />
+        <ReturnValue name="mem" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMemoryPoolAlloc" operation="AllocateMemory">
+        <Parameter name="heap" format="heap: {0}" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+        <Parameter name="timeout" format="timeout: {0}" />
+        <Parameter name="address" format="0x{0:X8}" heapAddress="true" hidden="true" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMemoryPoolFree" operation="FreeMemory">
+        <Parameter name="heap" format="heap: {0}" />
+        <Parameter name="address" format="block: 0x{0:X8}" heapAddress="true" />
+        <Parameter name="size" format="size: {0} bytes" heapSize="true" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osMemoryPoolDelete" operation="Deinitialize">
+        <Parameter name="heap" format="heap: {0}" />
+      </KernelService>
+
+      <KernelService name="osMemoryPoolGetBlockSize">
+        <Parameter name="heap" format="heap: {0}" />
+        <ReturnValue name="size" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMemoryPoolGetCapacity">
+        <Parameter name="heap" format="heap: {0}" />
+        <ReturnValue name="size" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMemoryPoolGetCount">
+        <Parameter name="heap" format="heap: {0}" />
+        <ReturnValue name="size" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMemoryPoolGetSpace">
+        <Parameter name="heap" format="heap: {0}" />
+        <ReturnValue name="size" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMemoryPoolGetName" operation="">
+        <Parameter name="heap" format="heap: {0}" />
+        <ReturnValue name="name" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Thread">
+      <KernelService name="osThreadNew" operation="Initialize">
+        <Parameter name="thread" format="thread: {0}" />
+        <Parameter name="argument" format="arg: 0x{0:X8}" />
+        <Parameter name="flags" format=" flags: {0}" />
+        <Parameter name="priority" format=" prio: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadTerminate" operation="Deinitialize">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osDelay" distinctName="Thread/osDelayUntil" operation="Delay">
+        <Parameter name="thread" format="thread: {0}" />
+        <Parameter name="time" format="time: {0}" />
+      </KernelService>
+      <KernelService name="osDelayUntil" distinctName="Thread/osDelayUntil" operation="Delay">
+        <Parameter name="thread" format="thread: {0}" />
+        <Parameter name="until" format="until: {0}" />
+      </KernelService>
+      <KernelService name="osThreadYield" operation="Delay">
+        <Parameter name="thread" format="thread: {0}" />
+      </KernelService>
+      <KernelService name="osThreadSuspend">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadResume">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadDetach">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadJoin">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadExit">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Thread Info">
+      <KernelService name="osThreadSetPriority" operation="">
+        <Parameter name="thread" format="thread: {0}" />
+        <Parameter name="priority" format=" prio: {0}" />
+        <ReturnValue name="priority" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadGetPriority" operation="">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="priority" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osThreadGetState" operation="">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="state" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osThreadEnumerate" operation="">
+        <Parameter name="address" format="block: 0x{0:X8}" />
+        <Parameter name="size" format="size: {0}" />
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadGetCount" operation="" parameters="None">
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadGetId" operation="">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="thread" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadGetName" operation="">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="name" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadGetStackSize" operation="">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="size" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadGetStackSpace" operation="">
+        <Parameter name="thread" format="thread: {0}" />
+        <ReturnValue name="space" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Thread Flags">
+      <KernelService name="osThreadFlagsGet" operation="">
+        <Parameter name="threadFlags" format="{0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadFlagsSet" operation="OtherWrite">
+        <Parameter name="threadFlags" format="{0}" />
+        <Parameter name="flags" format="flags: 0x{0:X4}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadFlagsClear" operation="">
+        <Parameter name="threadFlags" format="{0}" />
+        <Parameter name="flags" format="flags: 0x{0:X4}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osThreadFlagsWait" operation="OtherRead">
+        <Parameter name="threadFlags" format="{0}" />
+        <Parameter name="flags" format="flags: 0x{0:X4}" />
+        <Parameter name="options" format="options: {0}" />
+        <Parameter name="time" format="time: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="osSemaphoreNew" operation="Initialize">
+        <Parameter name="semaphore" format="semaphore: {0}" />
+        <Parameter name="max" format="max: {0}" />
+        <Parameter name="initial" format="initial: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osSemaphoreDelete" operation="Deinitialize">
+        <Parameter name="semaphore" format="semaphore: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osSemaphoreAcquire" operation="DecreaseSemaphore">
+        <Parameter name="semaphore" format="semaphore: {0}" />
+        <Parameter name="timeout" format="timeout: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osSemaphoreRelease" operation="IncreaseSemaphore">
+        <Parameter name="semaphore" format="semaphore: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osSemaphoreGetName" operation="">
+        <Parameter name="semaphore" format="semaphore: {0}" />
+        <ReturnValue name="name" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osSemaphoreGetCount" operation="">
+        <Parameter name="semaphore" format="semaphore: {0}" />
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="osMutexNew" operation="Initialize">
+        <Parameter name="mutex" format="mutex: {0}" />
+        <Parameter name="flags" format="flags: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMutexDelete" operation="Deinitialize">
+        <Parameter name="mutex" format="mutex: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osMutexAcquire" operation="LockMutex">
+        <Parameter name="mutex" format="mutex: {0}" />
+        <Parameter name="timeout" format="timeout: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMutexRelease" operation="ReleaseMutex">
+        <Parameter name="mutex" format="mutex: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osMutexGetName" operation="">
+        <Parameter name="mutex" format="mutex: {0}" />
+        <ReturnValue name="name" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMutexGetOwner" operation="">
+        <Parameter name="mutex" format="mutex: {0}" />
+        <ReturnValue name="owner" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Message Queue">
+      <KernelService name="osMessageQueueNew" operation="Initialize">
+        <Parameter name="queue" format="queue: {0}" />
+        <Parameter name="count" format="count: {0}" />
+        <Parameter name="size" format="size: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMessageQueueDelete" operation="Deinitialize">
+        <Parameter name="queue" format="queue: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osMessageQueuePut" operation="Enqueue">
+        <Parameter name="queue" format="queue: {0}" />
+        <Parameter name="message" format="msg: 0x{0:X8}" />
+        <Parameter name="prio" format="prio: {0}" />
+        <Parameter name="timeout" format="timeout: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMessageQueueGet" operation="Dequeue">
+        <Parameter name="queue" format="queue: {0}" />
+        <Parameter name="message" format="msg: 0x{0:X8}" />
+        <Parameter name="prio" format="prio: {0}" />
+        <Parameter name="timeout" format="timeout: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMessageQueueReset" operation="">
+        <Parameter name="queue" format="queue: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osMessageQueueGetCapacity" operation="">
+        <Parameter name="queue" format="queue: {0}" />
+        <ReturnValue name="capacity" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMessageQueueGetCount" operation="">
+        <Parameter name="queue" format="queue: {0}" />
+        <ReturnValue name="count" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMessageQueueGetMsgSize" operation="">
+        <Parameter name="queue" format="queue: {0}" />
+        <ReturnValue name="size" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMessageQueueGetName" operation="">
+        <Parameter name="queue" format="queue: {0}" />
+        <ReturnValue name="name" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osMessageQueueGetSpace" operation="">
+        <Parameter name="queue" format="queue: {0}" />
+        <ReturnValue name="space" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Timer">
+      <KernelService name="osTimerNew" operation="Initialize">
+        <Parameter name="timer" format="timer: {0}" />
+        <Parameter name="type" format="type: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osTimerDelete" operation="Deinitialize">
+        <Parameter name="timer" format="timer: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osTimerStart" operation="">
+        <Parameter name="timer" format="timer: {0}" />
+        <Parameter name="delay" format="delay: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osTimerStop" operation="">
+        <Parameter name="timer" format="timer: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osTimerGetName" operation="">
+        <Parameter name="timer" format="timer: {0}" />
+        <ReturnValue name="name" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osTimerIsRunning" operation="">
+        <Parameter name="timer" format="timer: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Event Flags">
+      <KernelService name="osEventFlagsNew" operation="Initialize">
+        <Parameter name="event flags" format="{0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osEventFlagsDelete" operation="Deinitialize">
+        <Parameter name="event flags" format="{0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osEventFlagsSet" operation="OtherWrite">
+        <Parameter name="event flags" format="{0}" />
+        <Parameter name="flags" format="flags: 0x{0:X4}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osEventFlagsWait" operation="OtherRead">
+        <Parameter name="event flags" format="{0}" />
+        <Parameter name="flags" format="flags: 0x{0:X4}" />
+        <Parameter name="options" format="options: {0}" />
+        <Parameter name="time" format="time: {0}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osEventFlagsClear" operation="">
+        <Parameter name="event flags" format="{0}" />
+        <Parameter name="flags" format="flags: 0x{0:X4}" />
+        <ReturnValue name="status" format=" returns {0}" />
+      </KernelService>
+
+      <KernelService name="osEventFlagsGetName" operation="">
+        <Parameter name="event flags" format="{0}" />
+        <ReturnValue name="name" format=" returns {0}" />
+      </KernelService>
+      <KernelService name="osEventFlagsGet" operation="">
+        <Parameter name="event flags" format="{0}" />
+        <ReturnValue name="flags" format=" returns {0}" />
+      </KernelService>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+    <ObjectClass name="Thread" type="Actor" />
+    <ObjectClass name="ISR" type="Actor" />
+    <ObjectClass name="Mutex" type="Mutex" />
+    <ObjectClass name="Semaphore" type="Semaphore" />
+    <ObjectClass name="Timer" type="Other" />
+    <ObjectClass name="Event Flags" type="Other" />
+    <ObjectClass name="Thread Flags" type="Other" />
+    <ObjectClass name="Message Queue" type="Queue" />
+    <ObjectClass name="Heap" type="Heap" options="NoIpcGraph" />
+    <ObjectClass name="Internal Heap" type="Heap" options="NoIpcGraph|Internal" />
+    <ObjectClass name="Memory Pool" type="Heap" options="NoIpcGraph" />
+  </ObjectClasses>
+</TargetPlatform>

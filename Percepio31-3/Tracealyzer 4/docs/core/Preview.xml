@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Trace Preview</title>
+  <keywords>
+    <keyword>trace</keyword>
+    <keyword>preview</keyword>
+    <keyword>statistics</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>The trace preview window shows a high level summary, from which you can select and load a smaller section of the trace of relevance.
+		This is intended for very large traces that can't be loaded in full, due to the amount of RAM required.
+		</p>
+		
+		<p>
+		The preview shows the CPU load of the target system over the entire trace, which gives a high-level overview of the system behavior. 
+		From this graph, you may select and load a smaller section by holding down the left mouse button in the graphs and dragging.
+		</p>
+
+		<p>
+			The table below the graphs shows statistics and extreme values for actor properties, such as execution times and response time, over the entire trace.
+			You can locate the corresponding point of an extreme value by double-clicking on the corresponding table cell. This will highlight the point in the graphs and select a section centered on this point. 	  
+		</p>
+		  
+         <p>
+          <A HREF="img/Trace Preview.png" target="$IMAGETARGET">
+            <img src="img/Trace Preview.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+				
+        <subsection>
+          <header>Memory Estimate</header>
+          <text>
+            <p>In the bottom of the preview window, you find the memory estimate indicator. Since loading a very long trace can easily eat up all available memory, you should make sure to not load too long sections. The memory estimate shows the estimated memory usage of loading the current selection, helping you avoid running out of RAM.</p>
+            <p>The gray part (on the left) shows the amount of memory used by your operating system and other applications.</p>
+            <p>The blue part (in the middle) shows how much memory $PNAME is currently using.</p>
+            <p>The right-most part is green if the current selection is estimated to fit in memory, yellow if the selection is estimated to be a close fit, or red if estimated to be too large to load.</p>
+            <note>A yellow or red area does not necessarily mean that the trace can't be loaded. This is just an estimate, and if there is enough virtual memory available the trace will load anyway, but the performance of your computer is likely to be affected.</note>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

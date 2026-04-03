@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Snapshot Settings</title>
+  <keywords>
+    <keyword>snapshot</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+			Sets the default connection type (Snapshot Engine) for the Snapshot tool, for example GDB or SEGGER J-Link.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

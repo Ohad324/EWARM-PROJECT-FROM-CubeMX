@@ -1,0 +1,1126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EventMap>
+  <EventGroup name="Event Recorder">
+    <Event name="Init Event" service="EventRecorderInitialize" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+    <Event name="Start Event" service="EventRecorderStart" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+    <Event name="Stop Event" service="EventRecorderStop" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Event Recorder Control" serviceName="Event Recorder">
+    <Event name="EventRecorderInitialize" service="EventRecorderInitialize" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+    <Event name="EventRecorderStart" service="EventRecorderStart" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+    <Event name="EventRecorderStop" service="EventRecorderStop" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Kernel Events" serviceName="Kernel">
+    <Event name="KernelError" service="" action="HandleError">
+      <ReturnValue index="0" translation="Status" />
+    </Event>
+
+    <Event name="KernelInitialize" service="osKernelInitialize" action="PrepareError">
+    </Event>
+    <Event name="KernelInitializeCompleted" service="osKernelInitialize" action="Call">
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+    <Event name="KernelInitialized" service="osKernelInitialize" action="Call">
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+
+    <Event name="KernelStart" service="osKernelStart" action="PrepareError">
+    </Event>
+    <Event name="KernelStarted" service="osKernelStart" action="Call">
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+
+    <Event name="KernelGetTickCount" service="osKernelGetTickCount" action="Call">
+      <ReturnValue index="0" translation="Timer" />
+    </Event>
+    <Event name="KernelGetTickFreq" service="osKernelGetTickFreq" action="Call">
+      <ReturnValue index="0" translation="Timer" />
+    </Event>
+    <Event name="KernelGetSysTimerCount" service="osKernelGetSysTimerCount" action="Call">
+      <ReturnValue index="0" translation="Timer" />
+    </Event>
+    <Event name="KernelGetSysTimerFreq" service="osKernelGetSysTimerFreq" action="Call">
+      <ReturnValue index="0" translation="Timer" />
+    </Event>
+    <Event name="KernelGetState" service="osKernelGetState" action="Call">
+      <ReturnValue index="0" translation="KernelState" />
+    </Event>
+
+    <Event name="KernelGetInfo" service="osKernelGetInfo" action="None">
+    </Event>
+    <Event name="KernelInfoRetrieved" level="Op" service="osKernelGetInfo" pendingType="PendingMessage" pendingParameter="KernelInfoRetrieved|Detail" action="Call">
+      <ReturnValue defaultValue="N/A" />
+    </Event>
+    <Event name="KernelInfoRetrieved" level="Detail" service="osKernelGetInfo" action="Call">
+      <ReturnValue index="0" translation="PayloadString" defaultValue="N/A" />
+    </Event>
+
+    <Event name="KernelLock" service="osKernelLock" action="PrepareError">
+    </Event>
+    <Event name="KernelLocked" service="osKernelLock" action="Call">
+      <ReturnValue index="0" translation="Boolean" translationParameter="locked|already locked" />
+    </Event>
+
+    <Event name="KernelUnlock" service="osKernelUnlock" action="PrepareError">
+    </Event>
+    <Event name="KernelUnlocked" service="osKernelUnlock" action="Call">
+      <ReturnValue index="0" translation="Boolean" translationParameter="already unlocked|unlocked" />
+    </Event>
+
+    <Event name="KernelRestoreLock" service="osKernelRestoreLock" action="PrepareError">
+      <Parameter index="0" translation="Boolean" translationParameter="unlock|lock" />
+    </Event>
+    <Event name="KernelLockRestored" service="osKernelRestoreLock" action="Call" useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="Boolean" translationParameter="unlocked|locked" />
+    </Event>
+
+    <Event name="KernelSuspend" service="osKernelSuspend" action="PrepareError">
+    </Event>
+    <Event name="KernelSuspended" service="osKernelSuspend" action="Call">
+      <ReturnValue index="0" translation="Timer" />
+    </Event>
+
+    <Event name="KernelResume" service="osKernelResume" action="PrepareError">
+      <Parameter index="0" translation="Timer" />
+    </Event>
+    <Event name="KernelResumed" service="osKernelResume" action="Call" useKernelServiceParameters="true">
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Generic Wait Events" serviceName="Wait">
+    <Event name="DelayError" service="" action="HandleError">
+      <ReturnValue index="0" translation="Status" />
+    </Event>
+
+    <Event name="Delay" level="API" service="osDelay" action="Call|NewInstance" pendingType="PendingMessageNoGroup" pendingParameter="DelayError">
+      <Parameter index="0" />
+    </Event>
+    <Event name="DelayUntil" level="API" service="osDelayUntil" action="Call|NewInstance" pendingType="PendingMessageNoGroup" pendingParameter="DelayError">
+      <Parameter index="0" />
+    </Event>
+
+    <Event name="DelayStarted" level="Op" service="" action="None|PostProcess">
+      <Parameter index="0" />
+    </Event>
+    <Event name="DelayUntilStarted" level="Op" service="" action="None|PostProcess">
+      <Parameter index="0" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Mutex Events" serviceName="Mutex">
+    <Event name="MutexError" service="" action="HandleError">
+      <Parameter index="0" translation="GetMutex" />
+      <ReturnValue index="1" translation="Status" />
+    </Event>
+
+    <Event name="MutexNew" level="API" service="osMutexNew" action="PrepareError">
+      <Parameter default="0" />
+      <Parameter default="0" />
+    </Event>
+    <Event name="MutexNew" level="Detail" service="osMutexNew" action="None">
+    </Event>
+    <Event name="MutexCreated" service="osMutexNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateMutex" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateMutex|UseFlags" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="MutexDelete" service="osMutexDelete" action="PrepareError">
+      <Parameter index="0" translation="GetMutex" />
+    </Event>
+    <Event name="MutexDestroyed" service="osMutexDelete" action="Call|MarkDeleted">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="MutexGetName" level="API" service="osMutexGetName" pendingType="PendingMessage" pendingParameter="MutexGetName|Detail" action="Call">
+        <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+        <ReturnValue defaultValue="N/A" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MutexGetName" level="API" service="osMutexGetName" action="Call|PostProcess">
+        <Parameter index="0" translation="GetOrCreateMutex" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="PayloadString|LookupSymbol" defaultValue="N/A" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <!-- Keep the detail version, since it matches the old definition -->
+    <Event name="MutexGetName" level="Detail" service="osMutexGetName" action="Call" useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="PayloadString" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="MutexGetOwner" service="osMutexGetOwner" action="Call">
+        <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="GetThread" defaultValue="none" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MutexGetOwner" service="osMutexGetOwner" action="Call">
+        <Parameter index="0" translation="GetOrCreateMutex" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="GetThread" defaultValue="none" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <Event name="MutexAcquire" service="osMutexAcquire" action="PrepareError">
+      <Parameter index="0" translation="GetMutex" />
+      <Parameter index="1" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="MutexAcquirePending" service="osMutexAcquire" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateMutex" nullResult="InstantFail" />
+      <Parameter index="1" translation="Timer" />
+    </Event>
+    <Event name="MutexAcquireTimeout" service="osMutexAcquire" action="CallReturn" pendingType="PendingTimeout"
+           defaultResult="InstantFail">
+      <Parameter index="0" translation="GetOrCreateMutex" nullResult="InstantFail" />
+      <Parameter index="1" translation="Timer" />
+      <ReturnValue defaultValue="-2" translation="Status" />
+    </Event>
+    <Event name="MutexAcquired" service="osMutexAcquire" pendingType="PendingLastUnblocked" pendingParameter="MutexAcquire" action="CallReturn">
+      <Parameter index="0" translation="GetOrCreateMutex" nullResult="InstantFail" />
+      <Parameter defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="MutexNotAcquired" service="osMutexAcquire" action="CallReturn" defaultResult="InstantFail">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+      <Parameter index="1" translation="Timer" />
+      <ReturnValue defaultValue="-3" translation="Status" />
+    </Event>
+
+    <Event name="MutexRelease" service="osMutexRelease" action="PrepareError">
+      <Parameter index="0" translation="GetMutex" />
+    </Event>
+    <Event name="MutexReleased" service="osMutexRelease" action="Call">
+      <Parameter index="0" translation="GetOrCreateMutex" nullResult="InstantFail" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Semaphore Events" serviceName="Semaphore">
+    <Event name="SemaphoreError" service="" action="HandleError">
+      <Parameter index="0" translation="GetSemaphore" />
+      <ReturnValue index="1" translation="Status" />
+    </Event>
+
+    <Event name="SemaphoreNew" level="API" service="osSemaphoreNew" action="PrepareError">
+      <Parameter default="0" />
+      <Parameter index="0" />
+      <Parameter index="1" />
+    </Event>
+    <Event name="SemaphoreNew" level="Detail" service="osSemaphoreNew" action="None">
+    </Event>
+    <Event name="SemaphoreCreated" service="osSemaphoreNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateSemaphore" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateSemaphore|UseMaxCount" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateSemaphore|UseInitialCount" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="SemaphoreDelete" service="osSemaphoreDelete" action="PrepareError">
+      <Parameter index="0" translation="GetSemaphore" />
+    </Event>
+    <Event name="SemaphoreDestroyed" service="osSemaphoreDelete" action="Call|MarkDeleted">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="SemaphoreGetName" level="API" service="osSemaphoreGetName" pendingType="PendingMessage" pendingParameter="SemaphoreGetName|Detail" action="Call">
+        <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+        <ReturnValue defaultValue="N/A" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="SemaphoreGetName" level="API" service="osSemaphoreGetName" action="Call|PostProcess">
+        <Parameter index="0" translation="GetOrCreateSemaphore" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="PayloadString|LookupSymbol" defaultValue="N/A" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <!-- Keep the detail version, since it matches the old definition -->
+    <Event name="SemaphoreGetName" level="Detail" service="osSemaphoreGetName" action="Call" useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="PayloadString" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="SemaphoreGetCount" service="osSemaphoreGetCount" action="Call">
+        <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="SemaphoreGetCount" service="osSemaphoreGetCount" action="Call">
+        <Parameter index="0" translation="GetOrCreateSemaphore" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <Event name="SemaphoreAcquire" service="osSemaphoreAcquire" action="PrepareError">
+      <Parameter index="0" translation="GetSemaphore" />
+      <Parameter index="1" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="SemaphoreAcquirePending" service="osSemaphoreAcquire" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateSemaphore" nullResult="InstantFail" />
+      <Parameter index="1" translation="Timer" />
+    </Event>
+    <Event name="SemaphoreAcquireTimeout" service="osSemaphoreAcquire" action="CallReturn" pendingType="PendingTimeout"
+           defaultResult="InstantFail">
+      <Parameter index="0" translation="GetOrCreateSemaphore" nullResult="InstantFail" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="-2" translation="Status" />
+    </Event>
+    <Event name="SemaphoreAcquired" service="osSemaphoreAcquire" pendingType="PendingLastUnblocked"
+           pendingParameter="SemaphoreAcquire" action="CallReturn">
+      <Parameter index="0" translation="GetOrCreateSemaphore" nullResult="InstantFail" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+    <Event name="SemaphoreNotAcquired" service="osSemaphoreAcquire" action="CallReturn" defaultResult="InstantFail">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+      <Parameter index="1" translation="Timer" />
+      <ReturnValue defaultValue="-3" translation="Status" />
+    </Event>
+
+    <Event name="SemaphoreRelease" service="osSemaphoreRelease" action="PrepareError">
+      <Parameter index="0" translation="GetSemaphore" />
+    </Event>
+    <Event name="SemaphoreReleased" service="osSemaphoreRelease" action="Call">
+      <Parameter index="0" translation="GetOrCreateSemaphore" nullResult="InstantFail" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Thread Events" serviceName="Thread">
+    <Event name="ThreadError" service="" action="HandleError">
+      <Parameter index="0" translation="GetThread" />
+      <ReturnValue index="1" translation="Status" />
+    </Event>
+
+    <Event name="ThreadSwitch" service="" action="None" />
+    <Event name="ThreadSwitched" service="" action="None" />
+    <Event name="ThreadUnblocked" service="" action="None" />
+    <Event name="ThreadPreempted" service="" action="None" />
+
+    <Event name="ThreadNew" level="API" service="osThreadNew" action="PrepareError">
+      <Parameter index="0" />
+      <Parameter index="1" />
+      <Parameter default="0" />
+      <Parameter default="0" />
+    </Event>
+    <Event name="ThreadNew" level="Detail" service="osThreadNew" action="None">
+    </Event>
+    <Event name="ThreadCreated" service="osThreadNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" translation="GetOrCreateThread|UseAddress" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" translation="GetOrCreateThread|UseFlags" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" translation="GetOrCreateThread|UsePriority" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="ThreadExit" service="osThreadExit" action="Call" pendingType="PendingMessage" pendingParameter="ThreadError">
+      <Parameter translation="GetCurrentThread" nullResult="InstantFail" />
+    </Event>
+    <Event name="ThreadTerminate" service="osThreadTerminate" action="Call" pendingType="PendingMessage" pendingParameter="ThreadError">
+      <Parameter index="0" translation="GetThread" nullResult="InstantFail" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+    <Event name="ThreadDestroyed" service="osThreadTerminate" action="None|PostProcess|MarkDeleted">
+      <Parameter index="0" translation="GetThread" />
+    </Event>
+
+    <Event name="ThreadDelay" service="osDelay" action="Call|NewInstance">
+      <Parameter translation="GetCurrentThread" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="ThreadDelayUntil" service="osDelayUntil" action="Call|NewInstance">
+      <Parameter translation="GetCurrentThread" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" translation="UInt64" />
+    </Event>
+    <Event name="ThreadDelayCompleted" service="" action="None">
+    </Event>
+    <Event name="ThreadYield" service="osThreadYield" pendingType="PendingMessage" pendingParameter="ThreadError"
+           action="Call|PostProcess">
+      <Parameter translation="GetCurrentThread" nullResult="InstantFail" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+
+    <Event name="ThreadBlocked" service="" action="None|NewInstance">
+    </Event>
+
+    <Event name="ThreadSuspend" service="osThreadSuspend" action="PrepareError">
+      <Parameter index="0" translation="GetOrCreateThread" />
+    </Event>
+    <Event name="ThreadSuspended" service="osThreadSuspend" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+    <Event name="ThreadResume" service="osThreadResume" action="PrepareError">
+      <Parameter index="0" translation="GetOrCreateThread" />
+    </Event>
+    <Event name="ThreadResumed" service="osThreadResume" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+    <Event name="ThreadDetach" service="osThreadDetach" action="PrepareError">
+      <Parameter index="0" translation="GetOrCreateThread" />
+    </Event>
+    <Event name="ThreadDetached" service="osThreadDetach" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+
+    <Event name="ThreadJoin" service="osThreadJoin" action="PrepareError">
+      <Parameter index="0" translation="GetOrCreateThread" />
+    </Event>
+    <Event name="ThreadJoinPending" service="osThreadJoin" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+    </Event>
+    <Event name="ThreadJoined" service="osThreadJoin" action="CallReturn" pendingType="PendingLastUnblocked"
+           pendingParameter="ThreadJoin">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Thread Events" serviceName="Thread Flags">
+    <Aliases>
+      <Alias name="ThreadFlags Events"/>
+    </Aliases>
+    <Event name="ThreadFlagsSet" service="osThreadFlagsSet" pendingType="PendingMessage" pendingParameter="ThreadError"
+           action="Call">
+      <Parameter index="0" defaultValue="0" translation="GetOrCreateThread|UseThreadFlagsHandle" />
+      <Parameter index="1" defaultValue="0" />
+    </Event>
+    <Event name="ThreadFlagsSetDone" service="osThreadFlagsSet" action="None">
+    </Event>
+
+    <Event name="ThreadFlagsClear" service="osThreadFlagsClear" action="PrepareError">
+      <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" />
+      <Parameter index="0" defaultValue="0" />
+    </Event>
+    <Event name="ThreadFlagsClearDone" service="osThreadFlagsClear" action="Call">
+      <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" />
+      <Parameter index="0" defaultValue="0" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+
+    <Event name="ThreadFlagsWait" service="osThreadFlagsWait" action="PrepareError">
+      <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" />
+      <Parameter index="0" defaultValue="0" />
+      <Parameter index="1" defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter index="2" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="ThreadFlagsWaitNotCompleted" service="osThreadFlagsWait" action="CallReturn"
+           defaultResult="InstantFail" useKernelServiceParameters="true">
+      <ReturnValue defaultValue="-3" translation="Status" />
+    </Event>
+    <Event name="ThreadFlagsWaitPending" service="osThreadFlagsWait" action="Call|NewInstance" defaultResult="Block">
+      <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" />
+      <Parameter index="1" defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter index="2" defaultValue="0" translation="Timer" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="ThreadFlagsWaitCompleted" service="osThreadFlagsWait" pendingType="PendingLastUnblocked"
+                    pendingParameter="ThreadFlagsWait" action="CallReturn">
+        <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" />
+        <Parameter index="0" defaultValue="0" />
+        <Parameter index="1" defaultValue="0" translation="ThreadFlagsOptions" />
+        <Parameter index="2" defaultValue="0" translation="Timer" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.5.0.2" name="ThreadFlagsWaitCompleted" service="osThreadFlagsWait" pendingType="PendingLastUnblocked"
+                    pendingParameter="ThreadFlagsWait" action="CallReturn">
+        <Parameter index="3" translation="GetThread|UseThreadFlagsHandle" />
+        <Parameter index="0" defaultValue="0" />
+        <Parameter index="1" defaultValue="0" translation="ThreadFlagsOptions" />
+        <Parameter index="2" defaultValue="0" translation="Timer" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="ThreadFlagsWaitTimeout" service="osThreadFlagsWait" pendingType="PendingTimeout" action="CallReturn" defaultResult="InstantFail">
+        <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" />
+        <ReturnValue defaultValue="-2" translation="Status" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.5.0.2" name="ThreadFlagsWaitTimeout" service="osThreadFlagsWait" pendingType="PendingTimeout" action="CallReturn" defaultResult="InstantFail">
+        <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" />
+        <ReturnValue defaultValue="-2" translation="Status" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <Event name="ThreadFlagsGet" service="osThreadFlagsGet" action="Call">
+      <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" />
+      <ReturnValue index="0" defaultValue="0" translation="Hex4" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Thread Events" serviceName="Thread Info">
+    <Event name="ThreadEnumerate" service="osThreadEnumerate" action="Call">
+      <Parameter index="0" defaultValue="0" nullValue="0" nullResult="InstantFail" />
+      <Parameter index="1" defaultValue="0" nullValue="0" />
+      <ReturnValue index="2" defaultValue="0" />
+    </Event>
+    <Event name="ThreadGetCount" service="osThreadGetCount" action="Call">
+      <ReturnValue index="0" defaultValue="0" />
+    </Event>
+    <Event name="ThreadGetPriority" service="osThreadGetPriority" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue index="1" defaultValue="0" translation="Priority" />
+    </Event>
+    <Event name="ThreadSetPriority" service="osThreadSetPriority" pendingType="PendingMessage"
+           pendingParameter="ThreadError" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <Parameter index="1" defaultValue="0" translation="Priority" />
+      <ReturnValue index="1" defaultValue="0" translation="Priority" />
+    </Event>
+    <Event name="ThreadGetStackSize" service="osThreadGetStackSize" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue index="1" defaultValue="0" />
+    </Event>
+    <Event name="ThreadGetStackSpace" service="osThreadGetStackSpace" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue index="1" defaultValue="0" />
+    </Event>
+    <Event name="ThreadGetState" service="osThreadGetState" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue index="1" defaultValue="0" translation="ThreadState" />
+    </Event>
+    <Event name="ThreadGetId" service="osThreadGetId" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+      <ReturnValue index="0" defaultValue="0" translation="Hex8" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="ThreadGetName" level="API" service="osThreadGetName" pendingType="PendingMessage" pendingParameter="ThreadGetName|Detail" action="Call">
+        <Parameter index="0" translation="GetThread" nullResult="InstantFail" />
+        <ReturnValue defaultValue="N/A" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="ThreadGetName" level="API" service="osThreadGetName" action="Call|PostProcess">
+        <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="PayloadString|LookupSymbol" defaultValue="N/A" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <!-- Keep the detail version, since it matches the old definition -->
+    <Event name="ThreadGetName" level="Detail" service="osThreadGetName" action="Call" useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="PayloadString" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Memory Events" serviceName="Memory">
+    <Event name="MemoryInit" service="osRtxMemoryInit" action="Call">
+      <Parameter index="0" translation="GetOrCreateHeap" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <ReturnValue index="2" defaultValue="-1" translation="Status" />
+    </Event>
+    <Event name="MemoryAlloc" service="osRtxMemoryAlloc" action="Call|PostProcess">
+      <Parameter index="0" translation="GetOrCreateHeap" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="2" translation="Boolean" translationParameter="generic|control block" />
+      <ReturnValue index="3" nullResult="InstantFail" nullValue="0" />
+    </Event>
+    <Event name="MemoryFree" service="osRtxMemoryFree" action="Call|PostProcess">
+      <Parameter index="0" translation="GetOrCreateHeap" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" secondaryIndex="1" translation="GetOrCreateHeap|GetAllocated" />
+      <ReturnValue index="2" defaultValue="0" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+
+    <Event name="MemoryBlockInit" service="osRtxMemoryPoolInit" action="Call">
+      <Parameter index="0" translation="GetOrCreateHeap|IsInternalHeap" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="2" />
+      <Parameter index="3" />
+    </Event>
+    <Event name="MemoryBlockAlloc" service="osRtxMemoryPoolAlloc" action="Call">
+      <Parameter index="0" translation="GetOrCreateHeap|IsInternalHeap" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateHeap|UseBlockSize" nullResult="InstantFail" />
+      <ReturnValue index="1" nullResult="InstantFail" nullValue="0" />
+    </Event>
+    <Event name="MemoryBlockFree" service="osRtxMemoryPoolFree" action="Call" defaultResult="InstantFail">
+      <Parameter index="0" translation="GetOrCreateHeap|IsInternalHeap" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetOrCreateHeap|UseBlockSize" nullResult="InstantFail" />
+      <ReturnValue index="2" translation="Status" nullValue="0" nullResult="InstantSuccess" defaultValue="okOK (0)" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="MemoryPool Events" serviceName="Memory Pool">
+    <Event name="MemoryPoolError" service="" action="HandleError">
+      <Parameter index="0" translation="GetMemoryPool" />
+      <ReturnValue index="1" translation="Status" />
+    </Event>
+
+    <Event name="MemoryPoolNew" level="API" service="osMemoryPoolNew" action="PrepareError">
+      <Parameter defaultValue="0" />
+      <Parameter index="0" />
+      <Parameter index="1" />
+    </Event>
+    <Event name="MemoryPoolNew" level="Detail" service="osMemoryPoolNew" action="None">
+    </Event>
+    <Event name="MemoryPoolCreated" service="osMemoryPoolNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateMemoryPool" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateMemoryPool|UseBlockCount" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateMemoryPool|UseBlockSize" nullResult="InstantFail" />
+      <ReturnValue index="0" translation="Hex8" />
+    </Event>
+
+    <Event name="MemoryPoolDelete" service="osMemoryPoolDelete" action="PrepareError">
+      <Parameter index="0" translation="GetMemoryPool" />
+    </Event>
+    <Event name="MemoryPoolDestroyed" service="osMemoryPoolDelete" action="Call|PostProcess|MarkDeleted">
+      <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="MemoryPoolAlloc" service="osMemoryPoolAlloc" action="PrepareError">
+      <Parameter index="0" translation="GetMemoryPool" />
+      <Parameter index="0" translation="GetMemoryPool|UseBlockSize" />
+      <Parameter index="1" translation="Timer" />
+      <Parameter defaultValue="0" />
+    </Event>
+    <Event name="MemoryPoolAllocPending" service="osMemoryPoolAlloc" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateMemoryPool" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateMemoryPool|UseBlockSize" nullResult="InstantFail" />
+      <Parameter index="1" translation="Timer" />
+      <Parameter defaultValue="0" />
+    </Event>
+    <Event name="MemoryPoolAllocTimeout" service="osMemoryPoolAlloc" action="CallReturn" pendingType="PendingTimeout"
+           defaultResult="InstantFail">
+      <Parameter index="0" translation="GetOrCreateMemoryPool" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateMemoryPool|UseBlockSize" nullResult="InstantFail" />
+      <Parameter index="1" translation="Timer" />
+      <Parameter defaultValue="0" />
+      <ReturnValue defaultValue="-2" translation="Status" />
+    </Event>
+    <!-- <Event name="MemoryPoolAllocated" service="osMemoryPoolAlloc" pendingType="PendingLastUnblocked" pendingParameter="MemoryPoolAlloc"  action="CallReturn"> -->
+    <Event name="MemoryPoolAllocated" service="osMemoryPoolAlloc" action="CallReturn">
+      <Parameter index="0" translation="GetOrCreateMemoryPool" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateMemoryPool|UseBlockSize" nullResult="InstantFail" />
+      <Parameter defaultValue="0" translation="Timer" />
+      <Parameter index="1" />
+      <ReturnValue index="1" translation="Hex8" />
+    </Event>
+    <Event name="MemoryPoolAllocFailed" service="osMemoryPoolAlloc" action="Call" defaultResult="InstantFail">
+      <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetMemoryPool|UseBlockSize" nullResult="InstantFail" />
+      <Parameter defaultValue="0" translation="Timer" />
+      <Parameter defaultValue="0" />
+      <ReturnValue defaultValue="-1" translation="Status" />
+    </Event>
+
+    <Event name="MemoryPoolFree" service="osMemoryPoolFree" action="PrepareError">
+      <Parameter index="0" translation="GetMemoryPool" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetMemoryPool|UseBlockSize" />
+    </Event>
+    <Event name="MemoryPoolFreeFailed" service="osMemoryPoolFree" action="Call" defaultResult="InstantFail">
+      <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetMemoryPool|UseBlockSize" />
+      <ReturnValue defaultValue="-1" translation="Status" />
+    </Event>
+    <Event name="MemoryPoolDeallocated" service="osMemoryPoolFree" action="Call">
+      <Parameter index="0" translation="GetOrCreateMemoryPool" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetOrCreateMemoryPool|UseBlockSize" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="MemoryPoolGetBlockSize" service="osMemoryPoolGetBlockSize" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MemoryPoolGetBlockSize" service="osMemoryPoolGetBlockSize" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="MemoryPoolGetCapacity" service="osMemoryPoolGetCapacity" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MemoryPoolGetCapacity" service="osMemoryPoolGetCapacity" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="MemoryPoolGetCount" service="osMemoryPoolGetCount" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MemoryPoolGetCount" service="osMemoryPoolGetCount" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="MemoryPoolGetSpace" service="osMemoryPoolGetSpace" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MemoryPoolGetSpace" service="osMemoryPoolGetSpace" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="MemoryPoolGetName" level="API" service="osMemoryPoolGetName" pendingType="PendingMessage"
+                    pendingParameter="MemoryPoolGetName|Detail" action="Call">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue defaultValue="N/A" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MemoryPoolGetName" level="API" service="osMemoryPoolGetName" action="Call|PostProcess">
+        <Parameter index="0" translation="GetMemoryPool" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="PayloadString|LookupSymbol" defaultValue="N/A" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <!-- Keep the detail version, since it matches the old definition -->
+    <Event name="MemoryPoolGetName" level="Detail" service="osMemoryPoolGetName" action="Call"
+           useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="PayloadString" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="MessageQueue Events" serviceName="Message Queue">
+    <Event name="MessageQueueError" service="" action="HandleError">
+      <Parameter index="0" translation="GetQueue" />
+      <ReturnValue index="1" translation="Status" />
+    </Event>
+
+    <Event name="MessageQueueNew" level="API" service="osMessageQueueNew" action="PrepareError">
+      <Parameter default="0" />
+      <Parameter index="0" />
+      <Parameter index="1" />
+    </Event>
+    <Event name="MessageQueueNew" level="Detail" service="osMessageQueueNew" action="None">
+    </Event>
+    <Event name="MessageQueueCreated" service="osMessageQueueNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateQueue|UseCount" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateQueue|UseSize" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="MessageQueueDelete" service="osMessageQueueDelete" action="PrepareError">
+      <Parameter index="0" translation="GetQueue" />
+    </Event>
+    <Event name="MessageQueueDestroyed" service="osMessageQueueDelete" action="Call|PostProcess|MarkDeleted">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="MessageQueueGet" service="osMessageQueueGet" action="PrepareError">
+      <Parameter index="0" translation="GetQueue" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetQueue|EnqueuedPriority" />
+      <Parameter index="3" default="0" translation="Timer" />
+    </Event>
+    <Event name="MessageQueueGetPending" service="osMessageQueueGet" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetQueue|EnqueuedPriority" />
+      <Parameter index="2" default="0" translation="Timer" />
+    </Event>
+    <Event name="MessageQueueGetTimeout" service="osMessageQueueGet" action="CallReturn" pendingType="PendingTimeout"
+           defaultResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+      <Parameter default="0" />
+      <Parameter index="0" translation="GetQueue|EnqueuedPriority" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="-2" translation="Status" />
+    </Event>
+    <Event name="MessageQueueRetrieved" service="osMessageQueueGet" pendingType="PendingLastUnblocked"
+           pendingParameter="MessageQueueGet" action="CallReturn|PostProcess">
+      <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetQueue|EnqueuedPriority" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+    <Event name="MessageQueueNotRetrieved" service="osMessageQueueGet" action="CallReturn" defaultResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" translation="GetQueue|EnqueuedPriority" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="-3" translation="Status" />
+    </Event>
+
+    <Event name="MessageQueuePut" service="osMessageQueuePut" action="PrepareError|PostProcess">
+      <Parameter index="0" translation="GetOrCreateQueue" />
+      <Parameter index="1" />
+      <Parameter index="2" />
+      <Parameter index="3" default="0" translation="Timer" />
+    </Event>
+    <Event name="MessageQueuePutPending" service="osMessageQueuePut" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" secondaryIndex="1" translation="GetQueue|PendingPriority" nullResult="InstantFail" />
+      <Parameter index="2" default="0" translation="Timer" />
+    </Event>
+    <Event name="MessageQueueInsertPending" service="osMessageQueuePut" action="Call|PostProcess|NewInstance"
+           defaultResult="Detect">
+      <!--
+        Because this one is internal it will be put in Pending mode even when the result is successfull in the next event.
+        That is why the defaultResult should be Detect and not Blocking (opposite of how MessageQueuePutPending is handled).
+        -->
+      <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" secondaryIndex="1" translation="GetQueue|PendingPriority" />
+      <Parameter index="2" default="0" translation="Timer" />
+    </Event>
+    <Event name="MessageQueuePutTimeout" service="osMessageQueuePut" action="CallReturn" pendingType="PendingTimeout"
+           defaultResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+      <Parameter default="0" />
+      <Parameter default="0" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="-2" translation="Status" />
+    </Event>
+    <Event name="MessageQueueInserted" service="osMessageQueuePut" action="CallReturn|PostProcess">
+      <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" secondaryIndex="1" translation="GetQueue|PendingPriority" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="0" translation="Status" />
+    </Event>
+    <Event name="MessageQueueNotInserted" service="osMessageQueuePut" action="CallReturn|PostProcess"
+           defaultResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <Parameter index="0" secondaryIndex="1" translation="GetQueue|PendingPriority" />
+      <Parameter default="0" translation="Timer" />
+      <ReturnValue defaultValue="-3" translation="Status" />
+    </Event>
+
+    <Event name="MessageQueueReset" service="osMessageQueueReset" action="PrepareError">
+      <Parameter index="0" translation="GetQueue" />
+    </Event>
+    <Event name="MessageQueueResetDone" service="osMessageQueueReset" action="Call">
+      <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="MessageQueueGetName" level="API" service="osMessageQueueGetName" pendingType="PendingMessage"
+                    pendingParameter="MessageQueueGetName|Detail" action="Call">
+        <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+        <ReturnValue defaultValue="N/A" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MessageQueueGetName" level="API" service="osMessageQueueGetName" action="Call|PostProcess">
+        <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="PayloadString|LookupSymbol" defaultValue="N/A" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <Event name="MessageQueueGetName" level="Detail" service="osMessageQueueGetName" action="Call"
+           useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="PayloadString" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="MessageQueueGetCapacity" service="osMessageQueueGetCapacity" action="Call">
+        <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MessageQueueGetCapacity" service="osMessageQueueGetCapacity" action="Call">
+        <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="MessageQueueGetCount" service="osMessageQueueGetCount" action="Call">
+        <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MessageQueueGetCount" service="osMessageQueueGetCount" action="Call">
+        <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="MessageQueueGetMsgSize" service="osMessageQueueGetMsgSize" action="Call">
+        <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MessageQueueGetMsgSize" service="osMessageQueueGetMsgSize" action="Call">
+        <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <VersionedEvent>
+      <DefaultEvent name="MessageQueueGetSpace" service="osMessageQueueGetSpace" action="Call">
+        <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="MessageQueueGetSpace" service="osMessageQueueGetSpace" action="Call">
+        <Parameter index="0" translation="GetOrCreateQueue" nullResult="InstantFail" />
+        <ReturnValue index="1" />
+      </VersionEvent>
+    </VersionedEvent>
+  </EventGroup>
+
+  <EventGroup name="Timer Events" serviceName="Timer">
+    <Event name="TimerError" service="" action="HandleError">
+      <Parameter index="0" translation="GetTimer" />
+      <ReturnValue index="1" translation="Status" />
+    </Event>
+
+    <Event name="TimerNew" level="API" service="osTimerNew" action="PrepareError">
+      <Parameter default="0" />
+      <Parameter index="1" />
+    </Event>
+    <Event name="TimerNew" level="Detail" service="osTimerNew" action="None">
+    </Event>
+    <Event name="TimerCreated" service="osTimerNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateTimer" nullResult="InstantFail" />
+      <Parameter index="0" translation="GetOrCreateTimer|UseType" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="TimerDelete" service="osTimerDelete" action="PrepareError">
+      <Parameter index="0" translation="GetTimer" />
+    </Event>
+    <Event name="TimerDestroyed" service="osTimerDelete" action="Call|MarkDeleted">
+      <Parameter index="0" translation="GetTimer" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="TimerCallback" service="" action="None|PostProcess">
+    </Event>
+
+    <Event name="TimerStart" service="osTimerStart" action="PrepareError">
+      <Parameter index="0" translation="GetTimer" />
+      <Parameter index="1" translation="Timer" />
+    </Event>
+    <Event name="TimerStarted" service="osTimerStart" action="Call" useKernelServiceParameters="true">
+    </Event>
+
+    <Event name="TimerStop" service="osTimerStop" action="PrepareError">
+      <Parameter index="0" translation="GetTimer" />
+    </Event>
+    <Event name="TimerStopped" service="osTimerStop" action="Call">
+      <Parameter index="0" translation="GetOrCreateTimer" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="TimerGetName" level="API" service="osTimerGetName" pendingType="PendingMessage"
+                    pendingParameter="TimerGetName|Detail" action="Call">
+        <Parameter index="0" translation="GetTimer" nullResult="InstantFail" />
+        <ReturnValue defaultValue="N/A" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="TimerGetName" level="API" service="osTimerGetName" action="Call|PostProcess">
+        <Parameter index="0" translation="GetOrCreateTimer" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="PayloadString|LookupSymbol" defaultValue="N/A" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <!-- Keep the detail version, since it matches the old definition -->
+    <Event name="TimerGetName" level="Detail" service="osTimerGetName" action="Call" useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="PayloadString" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="TimerIsRunning" service="osTimerIsRunning" action="Call">
+        <Parameter index="0" translation="GetTimer" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="Boolean" translationParameter="no|yes" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="TimerIsRunning" service="osTimerIsRunning" action="Call">
+        <Parameter index="0" translation="GetOrCreateTimer" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="Boolean" translationParameter="no|yes" />
+      </VersionEvent>
+    </VersionedEvent>
+  </EventGroup>
+
+  <EventGroup name="EventFlags Events" serviceName="Event Flags">
+    <Event name="EventFlagsError" service="" action="HandleError">
+      <Parameter index="0" translation="GetEventFlags" />
+      <ReturnValue index="1" translation="Status" />
+    </Event>
+
+    <Event name="EventFlagsNew" level="API" service="osEventFlagsNew" action="PrepareError">
+      <Parameter default="0" />
+    </Event>
+    <Event name="EventFlagsNew" level="Detail" service="osEventFlagsNew" action="None">
+    </Event>
+    <Event name="EventFlagsCreated" service="osEventFlagsNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="EventFlagsDelete" service="osEventFlagsDelete" action="PrepareError">
+      <Parameter index="0" translation="GetEventFlags" />
+    </Event>
+    <Event name="EventFlagsDestroyed" service="osEventFlagsDelete" action="Call|MarkDeleted">
+      <Parameter index="0" translation="GetEventFlags" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="EventFlagsSet" service="osEventFlagsSet" pendingType="PendingMessage"
+           pendingParameter="EventFlagsError" action="Call">
+      <Parameter index="0" defaultValue="0" translation="GetEventFlags" />
+      <Parameter index="1" defaultValue="0" />
+    </Event>
+    <Event name="EventFlagsSetDone" service="osEventFlagsSet" action="None">
+    </Event>
+
+    <Event name="EventFlagsClear" service="osEventFlagsClear" action="PrepareError">
+      <Parameter index="0" translation="GetEventFlags" />
+      <Parameter index="1" />
+    </Event>
+    <Event name="EventFlagsClearDone" service="osEventFlagsClear" action="Call">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" />
+    </Event>
+
+    <Event name="EventFlagsWait" service="osEventFlagsWait" action="PrepareError">
+      <Parameter index="0" translation="GetEventFlags" />
+      <Parameter index="1" defaultValue="0" />
+      <Parameter index="2" defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter index="3" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="EventFlagsWaitNotCompleted" service="osEventFlagsWait" action="CallReturn" defaultResult="InstantFail"
+           useKernelServiceParameters="true">
+      <ReturnValue defaultValue="-3" translation="Status" />
+    </Event>
+    <Event name="EventFlagsWaitPending" service="osEventFlagsWait" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" defaultValue="0" />
+      <Parameter index="2" defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter index="3" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="EventFlagsWaitCompleted" service="osEventFlagsWait" pendingType="PendingLastUnblocked"
+           pendingParameter="EventFlagsWait" action="CallReturn">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" defaultValue="0" />
+      <Parameter index="2" defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter index="3" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="EventFlagsWaitTimeout" service="osEventFlagsWait" pendingType="PendingTimeout" action="CallReturn"
+           defaultResult="InstantFail">
+      <ReturnValue defaultValue="-2" translation="Status" />
+    </Event>
+
+    <VersionedEvent>
+      <DefaultEvent name="EventFlagsGetName" level="API" service="osEventFlagsGetName" pendingType="PendingMessage"
+                    pendingParameter="EventFlagsGetName|Detail" action="Call">
+        <Parameter index="0" translation="GetEventFlags" nullResult="InstantFail" />
+        <ReturnValue defaultValue="N/A" />
+      </DefaultEvent>
+
+      <VersionEvent fromVersion="5.4.0" name="EventFlagsGetName" level="API" service="osEventFlagsGetName"  action="Call|PostProcess">
+        <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+        <ReturnValue index="1" translation="PayloadString|LookupSymbol" defaultValue="N/A" />
+      </VersionEvent>
+    </VersionedEvent>
+
+    <!-- Keep the detail version, since it matches the old definition -->
+    <Event name="EventFlagsGetName" level="Detail" service="osEventFlagsGetName" action="Call"
+           useKernelServiceParameters="true">
+      <ReturnValue index="0" translation="PayloadString" />
+    </Event>
+
+    <Event name="EventFlagsGet" service="osEventFlagsGet" action="Call">
+      <Parameter index="0" translation="GetEventFlags" nullResult="InstantFail" />
+      <ReturnValue index="1" translation="Hex4" />
+    </Event>
+  </EventGroup>
+
+  <!--
+  Here we define a few cases where the trace will show incorrect information if we don't show that "ISR" is used,
+  i.e. the code is executing in "kernel mode".
+  
+  Anyone that want to see more information on how RTX5 is working "behind the scenes", enabling/extending sections
+  are very simple. For this case, the message queue events are kept, but commented out.
+  
+  The name="*" mean any message.
+  The max="10" is the maximum number of allowed messages inbetween. Keep as short as reasonably possible,
+  because it affects how many events are kept in order to match patterns.
+  Flagging irq="True" shows only IRQ messages are accepted. This is mainly used for "any" pattern.
+  -->
+  <IsrSections>
+    <IsrSection name="ISR_ExitCurrentThread" useIsrName="false">
+      <Pattern name="ThreadExit" group="Thread Events" />
+      <Pattern name="*" max="10" />
+      <Pattern name="ThreadSwitch" irq="True" group="Thread Events" />
+      <Pattern name="MemoryFree" irq="True" group="Memory Events" />
+      <Pattern name="*" max="10" irq="True" />
+      <Pattern name="ThreadDestroyed" irq="True" group="Thread Events" />
+    </IsrSection>
+
+    <IsrSection name="ISR_CreateTimerQueue" useIsrName="false" >
+      <Pattern name="MessageQueuePut" group="MessageQueue Events" />
+      <Pattern name="*" max="10" />
+      <Pattern name="MessageQueueInsertPending" irq="True" group="MessageQueue Events" />
+      <Pattern name="*" max="10" irq="True" />
+      <Pattern name="ThreadSwitch" irq="True" group="Thread Events" />
+    </IsrSection>
+
+    <!--<IsrSection name="ISR_KernelStart" useIsrName="true" >
+      <Pattern name="KernelStart" group="Kernel Events" />
+      <Pattern name="ThreadCreated" irq="True" group="Thread Events" />
+      <Pattern name="ThreadSwitch" irq="True" group="Thread Events" />
+      <Pattern name="KernelStarted" irq="True" group="Kernel Events" />
+    </IsrSection>-->
+
+    <!--<IsrSection name="new thread">
+      <Pattern name="ThreadNew" group="Thread Events" />
+      <Pattern name="*" max="10" />
+      <Pattern name="MemoryAlloc" irq="True" group="Memory Events" />
+      <Pattern name="MemoryAlloc" irq="True" group="Memory Events" />
+      <Pattern name="*" max="10" irq="True" />
+      <Pattern name="ThreadCreated" irq="True" group="Thread Events" />
+    </IsrSection>-->
+
+    <!--<IsrSection name="new thread (error)">
+      <Pattern name="ThreadNew" group="Thread Events" />
+      <Pattern name="*" max="10" />
+      <Pattern name="ThreadError" irq="True" group="Thread Events" />
+    </IsrSection>-->
+
+    <!--<IsrSection name="terminate another thread">
+      <Pattern name="ThreadTerminate" group="Thread Events" />
+      <Pattern name="*" max="10" />
+      <Pattern name="MemoryFree" irq="True" group="Memory Events" />
+      <Pattern name="MemoryFree" irq="True" group="Memory Events" />
+      <Pattern name="*" max="10" irq="True" />
+      <Pattern name="ThreadDestroyed" irq="True" group="Thread Events" />
+    </IsrSection>-->
+
+    <!--<IsrSection name="queue new">
+      <Pattern name="MessageQueueNew" group="MessageQueue Events" />
+      <Pattern name="*" max="10" irq="True" />
+      <Pattern name="MessageQueueCreated" irq="True" group="MessageQueue Events" />
+    </IsrSection>-->
+
+    <!--<IsrSection name="queue delete">
+      <Pattern name="MessageQueueDelete" group="MessageQueue Events" />
+      <Pattern name="*" max="10" irq="True" />
+      <Pattern name="MessageQueueDestroyed" irq="True" group="MessageQueue Events" />
+    </IsrSection>-->
+  </IsrSections>
+</EventMap>

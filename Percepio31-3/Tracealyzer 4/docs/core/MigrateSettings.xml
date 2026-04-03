@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Migrate Settings</title>
+  <keywords>
+    <keyword>migrate</keyword>
+    <keyword>migration</keyword>
+    <keyword>settings</keyword>
+    <keyword>tools</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>This allows you to import and export settings in between $PNAME installations.</p>
+      </text>
+    </section>
+  </body>
+</page>

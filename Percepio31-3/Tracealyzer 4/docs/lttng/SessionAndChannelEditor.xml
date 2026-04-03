@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Session and channel editor</title>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This tool lets you edit you LTTng session and channel configurations.
+        </p>
+        <subsection>
+          <header>Edit Session Types</header>
+          <text>
+            <p>This tab lets you define session types for use when starting sessions from the Target Library.</p>
+            <p>To the left is a list of defined session types. Selecting an entry will allow you to edit that session. Below the session type list are buttons to add, clone or remove entries.</p>
+
+            <p>When a session is selected, the right side of the tool will allow you to configure it.</p>
+            <p>
+              <ul>
+                <li>
+                  <b>Session Name</b> - The name of the session. This will be used to reference the session in commands and will also be used as part of the directory name for the trace. Spaces and special characters are not recommended.
+                </li>
+                <li>
+                  <b>Default Subbuffer Size</b> - If non-empty, this will be used as subbuffer size for channels that don't have their own values defined.
+                </li>
+                <li>
+                  <b>Default Subbuffer Count</b> - If non-empty, this will be used as subbuffer count for channels that don't have their own values defined.
+                </li>
+                <li>
+                  <b>Channels</b> - Select which channels to include in this session type.
+                </li>
+              </ul>
+            </p>
+
+          </text>
+        </subsection>
+        <subsection>
+          <header>Edit Predefined Channels</header>
+          <text>
+            <p>This tab lets you define channels to be referenced in the Edit Session Types tab.</p>
+            <p>To the left is a list of defined channels. Selecting an entry will allow you to edit that channel definition. Below the channel list are buttons to add, clone or remove entries.</p>
+
+            <p>When a channel entry is selected, the right side of the tool will allow you to edit its properties.</p>
+            <p>
+              <ul>
+                <li>
+                  <b>Channel Name</b> - The name of this channel. This is primarily used to identify the channel in the Edit Session Types tab and in commands, but it's also used as part of the filename for event streams belonging to the channel, so spaces and special characters should not be used.
+                </li>
+                <li>
+                  <b>Domain</b> - This is the tracing domain of this channel. <b>-k</b> is the kernel tracer and <b>-u</b> is the user space tracer. There are also additional domains for Python and Java tracing.
+                </li>
+                <li>
+                  <b>Contexts</b> - Which contexts to add to all events in this channel. For channels with scheduling events, <i>pid</i> and <i>ppid</i> are highly recommended as they are needed for thread grouping and process relations.
+                </li>
+                <li>
+                  <b>Subbuffer Count</b> - If defined, the number of subbuffers to use for this channel. If not defined, the session defaults will be used if defined.
+                </li>
+                <li>
+                  <b>Subbuffer Size</b> - If defined, the size of each subbuffer in this channel. If not defined, the session defaults will be used if defined.
+                </li>
+                <li>
+                  <b>Events to enable</b> - The events to enable for this channel. Each line will be treated as an event expression that will be passed as is to the enable-events command. Since they are passed as is, you can use wildcards or flags like --syscall -a, or a comma separated list of events (no spaces!).
+                </li>
+              </ul>
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

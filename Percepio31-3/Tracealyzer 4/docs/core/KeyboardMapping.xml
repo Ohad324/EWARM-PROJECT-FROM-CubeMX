@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Keyboard Mapping</title>
+  <keywords>
+    <keyword>keyboard</keyword>
+    <keyword>keys</keyword>
+    <keyword>mapping</keyword>
+    <keyword>tools</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          All keyboard shortcuts can be changed for the current user.
+          It is also possible to assign shortcuts to your favorite view.
+        </p>
+
+        <p>
+          <A HREF="img/Keyboard Mapping.png" target="$IMAGETARGET">
+            <img src="img/Keyboard Mapping.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          Select a command to add or edit its shortcut. Clicking Restore restores the default shortcut for the command.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

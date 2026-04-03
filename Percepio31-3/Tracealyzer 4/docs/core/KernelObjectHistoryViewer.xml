@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Object History</title>
+  <keywords>
+    <keyword>kernel</keyword>
+    <keyword>objects</keyword>
+    <keyword>history</keyword>
+	<keyword>memory leak</keyword>
+	<keyword>malloc</keyword>
+	<keyword>free</keyword>
+	<keyword>show remaining only</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Object History view displays all service calls for a specific object, or memory allocations (malloc/free) on a Heap object.
+          This view is easiest to open by double-clicking on an event label, e.g., in the <a href="TraceView.html">Trace View</a>.
+        </p>
+
+        <p>
+          The Object History is displayed as a list, where each line corresponds to an event - the actor making the call, the type of event and the status of the object.
+        </p>
+
+        <p>
+          <A HREF="img/object_history_view.png" target="$IMAGETARGET">
+            <img src="img/object_history_view.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          For queue objects, the current length of the queue is shown in the right column, with sequence numbers on the individual messages (the rectangles). The color of a message indicates the actor that sent the message.
+          If selecting a successful send or receive event, it is possible to follow the message to the receiver or sender by using the buttons in the tool panel on the right, "Goto sending event" and "Goto receiving event".
+          This allows you to follow the messages sent between individual task instances, e.g. to find the location where a queue message with incorrect data was sent.
+        </p>
+
+        <p>The event list can be filtered to only display events of a certain service or from a certain task, using the two Filter menus. Clicking an event will display details about it in the panel to the right, which also features navigation buttons. Double-clicking an event will highlight it in the trace view.</p>
+
+		  <p>
+			  When viewing heap memory allocation events, such as "malloc" and "free", it is possible to filter out all the allocations that have been freed, leaving only the remaining allocation.
+			  This makes it easier to find memory leaks. This option is found under Filter Calls -&gt; Show Remaining Only.
+		  </p>
+		  <p>
+			  <A HREF="img/ShowRemainingOnly.png" target="$IMAGETARGET">
+				  <img src="img/ShowRemainingOnly.png" width="800" border="0" />
+			  </A>
+		  </p>
+
+		  <p>
+			  The <A HREF="MemoryHeapUtilization.html">Memory Heap Utilization</A> can also be used for finding memory leaks by visualizing the accumulated allocations over time.
+		  </p>
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Message Receive Time</title>
+  <keywords>
+    <keyword>message</keyword>
+    <keyword>receive</keyword>
+    <keyword>recieve</keyword>
+    <keyword>time</keyword>
+    <keyword>plot</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This plot shows the message receive time, i.e., the time from a queue is put in a message queue, until it is received. This way, you can see if messages to a task are delayed.
+        </p>
+
+        <p>
+          <A HREF="img/Message Receive Time.png" target="$IMAGETARGET">
+            <img src="img/Message Receive Time.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+      
+      </text>
+    </section>
+  </body>
+</page>

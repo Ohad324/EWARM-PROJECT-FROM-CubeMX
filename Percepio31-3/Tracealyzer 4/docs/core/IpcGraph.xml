@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Communication Flow</title>
+  <keywords>
+    <keyword>communication</keyword>
+    <keyword>flow</keyword>
+    <keyword>graph</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Communication Flow graph offers a quick overview of the communication and synchronization between actors in a trace, through message queues, semaphores and mutexes.
+        </p>
+        <p>
+          This graph can be generated over a whole trace, or for a specific interval only. For example, you might use the CPU Load Graph view to identify a peak where there is a lot of activity, then select
+          that peak using a mouse drag selection, right click and select "Show Communication Flow" in the context menu to show the communication flow graph of that specific interval.
+        </p>
+		
+        <p>
+          <A HREF="img/Communication_Flow.png" target="$IMAGETARGET">
+            <img src="img/Communication_Flow.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          For RTOS systems, actors are shown as rectangles, and other objects are shown as ellipses or hexagons.
+		  Ellipses are used for directional communication such as Semaphores and Queues, where the object is used like a one-way signal from Actor A to Actor B.
+		  Hexagons are used for bi-directional objects like Mutexes and similar, where the same actor does both "read" and "write" operations on the object.
+		  The symbols used depends parlty on the static type, and partly on how the object is used. For example, if a semaphore is used as a signal (directional) it will appear as an ellipse, but if it used as a lock (bi-directional) a hexagon is used instead.
+ 	   </p>
+
+	   <p>
+          Double-clicking on any node opens a related view that displays all matching events, such as the Object History view or Event Log.
+       </p>
+
+        <p>
+			For RTOS systems there are two modes, found under the local "View" menu:
+			<UL>
+            <LI>Actors and Objects: Shows all objects and dependencies, both actor communication and dependencies on synchronization objects, like Mutexes.</LI>
+            <LI>Actors Only: In this mode, only those actors are shown which have communication dependencies to other tasks. Dependencies on bi-directional objects (e.g. Mutexes) are not shown.</LI>
+          </UL>
+        </p>
+
+		  <p>
+			  For Linux traces (LTTng), the Communication Flow graph provides other view modes:
+			  <ul>
+				  <li>Linux: Files, Sockets and Pipes</li>
+				  <li>Linux: Process Tree</li>
+				  <li>Linux: Signal</li>
+			  </ul>
+			  These are found in the the local "View" menu in the Communication Flow window.
+		  </p>
+
+
+        <subsection>
+          <header>Applying filters</header>
+          <text>
+            <p>
+              Sometimes it's useful to filter out specific tasks or objects, such as if you have a debug or log writer task that many other tasks send data to. By default, all actors and objects that do not perform any communication are hidden, but you can adjust these settings using <i>View -&gt; Select Objects...</i>. You can also right-click a node to hide it.
+            </p>
+
+            <p>When right-clicking a node, you'll also be presented with options to show only connected nodes, in one, two or unlimited steps. This shows only actors and objects that affect or are affected by the selected actor or object via directed communication (undirected communication such as through mutexes are not followed even though the objects will be displayed). </p>
+
+            <p>
+              The Show All Connected and the Show All Connected Only options will show the same nodes (actors/objects) but might show different sets of edges (lines). The difference is that the former does not hide communication between those nodes even if it's unrelated to the selected node. For example, if you have the communication chains
+              <i>taskA -&gt; queueB -&gt; taskB -&gt; outputQueue</i> and <i>taskA -&gt; outputQueue</i> and you show nodes connected to
+              <i>taskB</i>, Show All Connected Only (2 steps) would show only the first chain while Show All Connected (2 steps) would also show the second chain.
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

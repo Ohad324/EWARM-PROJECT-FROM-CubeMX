@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Filter</title>
+  <keywords>
+    <keyword>filters</keyword>
+    <keyword>filtering</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Filtering in $PNAME is done in the Filter view, which shows application objects organized in different groups.
+          Each group lists all objects of that type that can be filtered on.
+        </p>
+
+        <p>
+          Filterable objects are sometimes also organized in a hierarchy, giving you the option to easily enable or disable a whole group of objects.
+        </p>
+
+        <p>
+          Since filtering is potentially set per view, the filter dialog will show the attached view that the filter affects.
+          All views belonging to the same synch group will be affected when changing the filter.
+        </p>
+
+        <p>
+          <A HREF="img/Filter_Slim.png" target="$IMAGETARGET">
+            <img src="img/Filter_Slim.png" border="0" />
+          </A>
+        </p>
+
+        <p>
+          If the filter view is wide enough, the group selection will be shown as a list instead of a combo box.
+        </p>
+
+        <p>
+          <A HREF="img/Filter.png" target="$IMAGETARGET">
+            <img src="img/Filter.png" border="0" />
+          </A>
+        </p>
+
+        <p>
+          There is a search box that can be used to find matching objects in the filter.<br/>
+		  Press Enter to find all matching objects and highlight the first match.<br/>
+          Press Enter again to highlight the next match and Shift+Enter to highlight the previous match.<br/>
+		  The Escape key will clear the search.
+        </p>
+
+        <p>
+          Filters will by default be saved between $PNAME sessions. This can be disabled in the window menu by toggling View &gt; Auto Load Filter.<br/>
+          It is also possible to save or load explicit filters using View &gt; Save Filter from Current View/Load Filter to Current View.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

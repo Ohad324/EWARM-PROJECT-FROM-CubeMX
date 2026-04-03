@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>Synopsys EVRT Tracing</title>
+  <keywords>
+    <keyword>OpenVX</keyword>
+    <keyword>trace</keyword>
+    <keyword>Synopsys</keyword>
+    <keyword>EVTracer</keyword>
+    <keyword>EV6x</keyword>
+    <keyword>ARC</keyword>
+    <keyword>MetaWare</keyword>   
+  </keywords>
+  <body>
+    <section>
+      <header>Introduction</header>
+      <text>
+        <p>
+			$PNAME for OpenVX allows you to visualize and profile OpenVX and CNN applications developed using Synopsys ARC® MetaWare EV Development Toolkit.
+			This way you can identify performance issues and bottlenecks, where minor optimizations can make a big difference in performance. 
+		</p>
+		  
+		<p>
+			The tracing is done using the EVTracer API in the Synopsys EV Runtime (EVRT) software. OpenVX and CNN events are traced automatically, and you may also add custom "User Events" using the EVTracer API. 
+			Note that the CNN tracing support was not available in the initial version but added in Metaware EV version O-2018.12 and $PNAME v4.2.10.
+		</p>		
+		  
+		<p>
+			To illustrate how $PNAME can be used in this context, we provide an example trace recorded from a Synopsys OpenVX demo application.
+			You can find this trace from the "Welcome to $PNAME" screen (demo_synopsys_ev6x_openvx.xml), or in the <a href="$BINDIR/Synopsys">Synopsys</a> folder, and begin exploring the $PNAME features directly.
+			The OpenVX graph is shown below, together with a screenshot from the trace view.
+		</p>
+		<p>
+          <A HREF="img/openvx_trace_example.png" target ="_blank">
+            <img src="img/openvx_trace_example.png" width="485" border="0"/>
+          </A>
+        </p>
+
+		<p>
+			The screenshot shows the trace view displaying a timeline of the OpenVX graph execution. This allows you to study the scheduling, pipelining and timing in great detail. 
+			You can see how EVRT schedules the graph using two cores. Core 0 reads the input frames and feeds it to the sobel3x3 node. 
+			The result is then processed further on Core 1, using the magnitude and convert_depth filters.
+		</p>
+		<p>
+			The EVRT processing is run-to-completion, so each rectangle (fragment) in the trace is a separate job.
+			There are no preemptions. The short fragments of the filter functions (e.g. sobel3x3) are precondition checks, while the long fragments show the actual filter processing.
+			Note that interrupts are not recorded by the EVTracer API, so the execution of interrupt handlers will be accounted to the currently running node.
+		</p>
+		<p>
+			You may have noticed that the magnitude node starts before the sobel3x3 node is completed. This is possible since the Synopsys OpenVX implementation divides each frame into tiles. 
+			One node may output multiple tiles, that are written to the output buffer one by one, as soon as completed. The following node (e.g. magnitude) can therefore start as soon as the first tile is available, assuming the nodes run on different cores. 
+			This allows for a pipelined processing that utilizes the cores in an efficient manner. 
+		</p>
+			
+		<note>
+			Learn more about how $PNAME can be applied on Synopsys OpenVX applications in <A HREF="https://percepio.com/wp-content/uploads/2018/10/Percepio-Application-Note-PA-025.pdf">Percepio Application Note PA-025, "OpenVX Profiling on Synopsys EV6x Vision Processors using $PNAME"</A>.
+		</note>		 
+		  
+      </text>
+    </section>
+
+    <section>
+      <header>Notes on Terminology</header>
+      <text>
+        <p>
+			$PNAME frequently uses the term "Actor", in general meaning "execution context". In the OpenVX context this means "graph node".
+			An "Actor Instance" means an individual execution of a graph node.
+		</p>		  
+		<p>
+			In $PNAME, the term "CPU" really means a logical CPU core. Thus, the cores of a dual-core processor are denoted CPU0 and CPU1.
+        </p>
+		</text>
+	</section>
+	  
+    <section>
+      <header>Using the EVTracer API</header>
+      <text>
+		  <p>
+			The tracing in Synopsys EV Runtime is done using the EVTracer API. The OpenVX functions are already instrumented using this API and traced automatically.
+		  </p>
+		  <p>
+			Follow these steps to record a $PNAME trace:
+			<OL class="list">
+			<LI>In your application code, add the following include statement:<br/>
+<code><pre>
+#include &lt;evtreads.h&gt;
+</pre></code>
+			</LI>
+			<LI>Add a call to evTraceDumpFile, like below. This should be made after your application has executed for a while, typically when a particular test has finished.<br/> 
+<code><pre>
+evTraceDumpFile("dump.bin");
+</pre></code>
+			</LI>
+			<LI>Run your application to record a trace and save it to <i>dump.bin</i>:
+<code><pre>
+$$ make run
+</pre></code>
+			</LI>
+			<LI>
+				Copy the resulting <i>dump.bin</i> to <i>$$EVSS_HOME/software/tracing</i>.
+			</LI>
+			<LI>
+				In the <i>$$EVSS_HOME/software/tracing</i> directory, run the python script <i>dump_to_tracealyzer.py</i> to convert the binary trace file to an XML file for $PNAME:
+<code><pre>
+$$ python dump_to_tracealyzer.py dump.bin trace.xml
+</pre></code>
+			</LI>
+			<LI>Open the resulting <i>trace.xml</i> in $PNAME by selecting <i>File</i> &gt; <i>Open</i>.</LI>
+		</OL>
+	  </p>
+	</text>
+    </section>
+	<section>
+      <header>Logging User Events</header>
+      <text>
+		  <p>
+		  You may extend the tracing to include any event and data of interest, by creating <i>User Events</i>. $PNAME can display such events in several ways, as explained in the <A HREF="UserEventIntroduction.html">User Event Introduction</A>.
+		  To add user events into your trace, see the below examples.
+<code><pre>#include &lt;evthreads.h&gt;
+
+// Register strings for two User Event Channels
+EV_TRACE_OBJECT ch1 = evTraceRegisterObject(TR_USER_OBJECT, "MyVariable");
+EV_TRACE_OBJECT ch2 = evTraceRegisterObject(TR_USER_OBJECT, "MyState");
+
+// Register a string event, in this case a state name
+EV_TRACE_OBJECT stateA = evTraceRegisterObject(TR_USER_OBJECT, "StateA");
+
+// Log the value of var1 on channel ch1 ("MyVariable")
+evTraceCustomEvent(ch1, &amp;var1, sizeof(var1)); 
+
+// Log the string event on channel ch2 ("MyState")
+evTraceObjectEvent(ch2, stateA);
+</pre></code>
+<br/>
+		Use evTraceCustomEvent() to store numerical values and evTraceObjectEvent() for string events. 
+		Note that evTraceRegisterObject is used to store strings in the trace, both for user event channel names and for textual user events. 
+		For further information, please refer to the EVTracer API described in the <i>Synopsys DesignWare EVRT Software User’s Guide</i>. 
+		</p>	  
+	  </text>
+	</section>
+
+	<section>
+      <header>Tracing of CNN Activity</header>
+      <text>
+		  <p>
+			 As mentioned, EVRT also traces the activity of the CNN accelerators. However, while the general OpenVX activity is displayed as Actors, CNN activity is instead displayed as <A HREF="IntervalStateIntroduction.html">Intervals</A>.
+			 This is because a CNN accelerator allows for parallel processing, while an Actor is assumed to run on a single-threaded CPU core.
+		 </p>
+		  <p>
+			  The processing of each CNN segment is traced using two events, START and END, containing the segment number and the frame number. These are displayed as User Events.
+			  $PNAME automatically generates Intervals between these events, corresponding to each segment. 
+			  Moreover, $PNAME also adds "Frame" intervals that shows the processing on frame-level. 
+		  </p>
+		  <p>
+			  Apart from the Intervals shown in the Trace View, CNN activity can also be analyzed using the <A HREF="IntervalStateIntroduction.html">Interval Plot</A> and the <i>Statistics Report</i> within <A HREF="IntervalInstances.html">Intervals and State Machines</A>. 
+			  With these features, you can analyze CNN processing times in two ways, as high-level statistics and as a plot over the timeline. In the latter case, the Y-axis shows the interval duration. 
+			  Note however that CNN activity is not displayed in Actor/CPU-oriented views, like the CPU Load Graph.
+		  </p>
+		  
+		  <p>
+			When using the Interval Plot, make sure to explore the <i>View</i> menu in the local window. This allows you to adjust the presentation.			
+			If you have relatively few data points, we recommend enabling the "Draw Markers" option. You may also explore the options under the sub-menu "Line Style".
+		  </p>
+		  
+		  <p>
+			  Note that CNN tracing support requires Metaware EV version O-2018.12 or later. 
+		  </p>
+	  </text>
+	</section>
+
+  </body>
+</page>

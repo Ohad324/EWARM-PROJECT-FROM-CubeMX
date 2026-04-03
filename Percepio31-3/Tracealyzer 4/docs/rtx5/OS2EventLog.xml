@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Keil EventRecorder Log</title>
+  <keywords>
+    <keyword>cmsis</keyword>
+    <keyword>os2</keyword>
+    <keyword>rtx5</keyword>
+    <keyword>events</keyword>
+    <keyword>log</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>When tracing via Keil EventRecorder, the CMSIS-OS2 Event Log can display raw events received from Keil µVision.</p>
+
+        <p>
+          <A HREF ="img/OS2 Raw Event Log.png" target ="_blank">
+            <img src="img/OS2 Raw Event Log.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+        <note>The CMSIS-OS2 Event Log does not support live mode, but can be used after a CMSIS-OS2 trace is loaded.</note>
+
+        <p>
+          The Raw Event Log shows the events in a list, ordered by when the event was received, with one line per event. By default, all events are shown. You may however use filters and either highlight the matching events (<i>Highlight items</i>) or hide any non-matching events (<i>Hide items</i>).
+          The filtering is only in the local view, it doesn't affect the data provided for the other $PNAME visualizations.
+        </p>
+        <p>
+          Filtering can be done in two ways, by <i>Level</i> (All Operations, API calls, Errors, ...) and/or by <i>Text Filter</i> (free text search, case insensitive) on the columns <i>Component</i>, <i>Event Property</i> and <i>Value</i>.
+          If both kinds of filters are set, Level and Text Filter, the events need to match both filters to be included.
+        </p>
+        <p>
+          The options <i>Highlight items</i> and <i>Hide items</i> decides what to do with the matching events. If using Highlight items, the <i>Next</i> button is enabled which allows for stepping to the next matching event.
+          The Hide items option can be used to hide all unrelated events. This can be used if only looking for a particular event, e.g. a specific error logged as a User Event.
+        </p>
+        <p>
+          Besides filtering, the <i>View</i> menu provide the options <i>Highlight Overflows</i> and <i>Highlight Incomplete</i>.
+          Overflow indicates that events are lost, in case more events are produced than the Event Recorder is able to transfer. Learn more about overflows in the <A HREF="Recorder-KeilRTX.html">Recording Traces for RTX5</A> section.
+          Incomplete events are ignored when the trace is loaded into the main $PNAME application, but are still shown in the Raw Event Log.
+        </p>
+        <p>
+          When running as a live view, the user can set the Event Log to not update on incoming events. This will make it
+          a little easier to set up a proper filter, although that could be done before the recording starts.
+          It will also show a drop-down with the current <A HREF="UserEvent-KeilRTX.html">SCVD files</A>.
+        </p>
+        <p>
+          To know how much time has passed between two events, select one of them and right-click to get the context menu
+          and pick <i>Set Time Reference</i>. When a reference time is set, selecting any item will show how far before or after
+          the reference time it is. You may then select <i>Reset Time Reference</i> to restore the normal view.
+        </p>
+        <p>
+          You may export the events to a file using <i>File > Export</i>. Select a filename and click <i>Save</i>
+          to save the file and open it in the default text editor. All events are exported, regardless of the filter.
+        </p>
+        <p>
+          It is also possible to open the Raw Event Log from an existing trace file. From the main menu in $PNAME, select <i>View &gt; Raw Event Log</i>.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

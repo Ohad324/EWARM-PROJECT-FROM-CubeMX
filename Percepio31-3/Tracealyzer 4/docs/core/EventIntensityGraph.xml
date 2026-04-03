@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Event Intensity</title>
+  <keywords>
+    <keyword>events</keyword>
+    <keyword>intensity</keyword>
+    <keyword>graph</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Event Intensity graph displays the number of events per event type, during the selected interval.
+        </p>
+
+        <p>
+          <A HREF="img/Event Intensity.png" target="$IMAGETARGET">
+            <img src="img/Event Intensity.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          By default, the interval is divided into 50 time slices. The number of slices can be changed via the Resolution or Time Resolution menus.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

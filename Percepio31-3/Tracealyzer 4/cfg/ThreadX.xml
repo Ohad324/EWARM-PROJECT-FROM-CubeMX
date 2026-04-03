@@ -1,0 +1,713 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>LowerNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">
+      <KernelService name="tx_queue_create" parameters="Variable" operation="Initialize" />
+      <KernelService name="tx_queue_send" parameters="Variable" operation="IncreaseSemaphore" />
+      <KernelService name="tx_queue_receive" parameters="Variable" operation="DecreaseSemaphore" />
+      <KernelService name="tx_queue_flush" parameters="Variable" operation="Flush" />
+      <KernelService name="tx_queue_delete" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="tx_queue_front_send" parameters="Variable" operation="IncreaseSemaphore" />
+      <KernelService name="tx_queue_send_notify" parameters="Variable" operation="IncreaseSemaphore" />
+      <KernelService name="tx_queue_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_queue_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_queue_performance_system_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_queue_prioritize" parameters="Variable" operation="ChangePriority" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="tx_semaphore_create" parameters="Variable" operation="Initialize" />
+      <KernelService name="tx_semaphore_ceiling_put" parameters="Variable" operation="MaximizeSemaphore" />
+      <KernelService name="tx_semaphore_put" parameters="Variable" operation="IncreaseSemaphore" />
+      <KernelService name="tx_semaphore_put_notify" parameters="Variable" operation="IncreaseSemaphore" />
+      <KernelService name="tx_semaphore_get" parameters="Variable" operation="DecreaseSemaphore" />
+      <KernelService name="tx_semaphore_delete" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="tx_semaphore_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_semaphore_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_semaphore_performance_system_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_semaphore_prioritize" parameters="Variable" operation="ChangePriority" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="tx_mutex_create" parameters="Variable" operation="Initialize" />
+      <KernelService name="tx_mutex_put" parameters="Variable" operation="ReleaseMutex" />
+      <KernelService name="tx_mutex_get" parameters="Variable" operation="LockMutex" />
+      <KernelService name="tx_mutex_delete" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="tx_mutex_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_mutex_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_mutex_performance_system_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_mutex_prioritize" parameters="Variable" operation="ChangePriority" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Thread">
+      <KernelService name="tx_thread_create" parameters="Variable" operation="StartInstance" />
+      <KernelService name="tx_thread_sleep" parameters="Variable" operation="Delay" />
+      <KernelService name="tx_thread_suspend" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_resume" parameters="Variable" operation="StartInstance" />
+      <KernelService name="tx_thread_delete" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="tx_thread_relinquish" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_entry_exit_notify" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_identify" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_performance_system_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_preemption_change" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_priority_change" parameters="Variable" operation="ChangePriority" />
+      <KernelService name="tx_thread_reset" parameters="Variable" operation="FreeMemory" />
+      <KernelService name="tx_thread_stack_error_notify" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_terminate" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="tx_thread_time_slice_change" parameters="Variable" operation="" />
+      <KernelService name="tx_thread_wait_abort" parameters="Variable" operation="" />
+      <KernelService name="nx_system_initialize" parameters="Variable" operation="" />
+      <KernelService name="ux_error" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Timer">
+      <KernelService name="tx_timer_create" parameters="Variable" operation="Initialize" />
+      <KernelService name="tx_timer_delete" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="tx_timer_activate" parameters="Variable" operation="StartInstance" />
+      <KernelService name="tx_timer_deactivate" parameters="Variable" operation="StartInstance" />
+      <KernelService name="tx_time_get" parameters="Variable" operation="" />
+      <KernelService name="tx_time_set" parameters="Variable" operation="" />
+      <KernelService name="tx_timer_change" parameters="Variable" operation="" />
+      <KernelService name="tx_timer_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_timer_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_timer_performance_system_info_get" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Interrupts">
+      <KernelService name="tx_interrupt_control" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="EventFlags">
+      <KernelService name="tx_event_flags_create" parameters="Variable" operation="Initialize" />
+      <KernelService name="tx_event_flags_delete" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="tx_event_flags_get" parameters="Variable" operation="OtherRead" />
+      <KernelService name="tx_event_flags_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_event_flags_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_event_flags_performance_system_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_event_flags_set" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="tx_event_flags_set_notify" parameters="Variable" operation="OtherWrite" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="BlockPool">
+      <KernelService name="tx_block_allocate" parameters="Variable" operation="AllocateMemory">
+        <Parameter name="pool" format="{0}" />
+        <Parameter name="dummySize" format="{0}" hidden="true" />
+        <Parameter name="timeout" format="{0}" />
+
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}" />
+      </KernelService>
+      <KernelService name="tx_block_pool_create" parameters="Variable" operation="" />
+      <KernelService name="tx_block_pool_delete" parameters="Variable" operation="" />
+      <KernelService name="tx_block_pool_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_block_pool_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_block_pool_prioritize" parameters="Variable" operation="" />
+      <KernelService name="tx_block_release" parameters="Variable" operation="FreeMemory">
+        <Parameter name="pool" format="{0}" />
+        <Parameter name="ptr" format="0x{0:X8}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="BytePool">
+      <KernelService name="tx_byte_allocate" parameters="Variable" operation="AllocateMemory">
+        <Parameter name="pool" format="{0}" />
+        <Parameter name="size" format="{0}" />
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}" />
+      </KernelService>
+      <KernelService name="tx_byte_pool_performance_system_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_byte_pool_create" parameters="Variable" operation="" />
+      <KernelService name="tx_byte_pool_delete" parameters="Variable" operation="" />
+      <KernelService name="tx_byte_pool_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_byte_pool_performance_info_get" parameters="Variable" operation="" />
+      <KernelService name="tx_byte_pool_prioritize" parameters="Variable" operation="" />
+      <KernelService name="tx_byte_release" parameters="Variable" operation="FreeMemory">
+        <Parameter name="pool" format="{0}" />
+        <Parameter name="ptr" format="0x{0:X8}" />
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Media">
+      <KernelService name="fx_directory_attributes_read" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_attributes_set" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_create" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_default_get" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_default_set" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_delete" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_first_entry_find" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_first_full_entry_find" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_information_get" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_local_path_clear" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_local_path_get" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_local_path_restore" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_local_path_set" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_long_name_get" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_name_test" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_next_entry_find" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_next_full_entry_find" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_rename" parameters="Variable" operation="" />
+      <KernelService name="fx_directory_short_name_get" parameters="Variable" operation="" />
+      <KernelService name="fx_media_abort" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_media_cache_invalidate" parameters="Variable" operation="" />
+      <KernelService name="fx_media_check" parameters="Variable" operation="" />
+      <KernelService name="fx_media_close" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_media_flush" parameters="Variable" operation="" />
+      <KernelService name="fx_media_format" parameters="Variable" operation="" />
+      <KernelService name="fx_media_open" parameters="Variable" operation="Initialize" />
+      <KernelService name="fx_media_read" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_media_space_available" parameters="Variable" operation="" />
+      <KernelService name="fx_media_abort" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_media_volume_get" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_media_volume_set" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_media_write" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_unicode_directory_create" parameters="Variable" operation="" />
+      <KernelService name="fx_unicode_directory_rename" parameters="Variable" operation="" />
+      <KernelService name="fx_unicode_file_create" parameters="Variable" operation="" />
+      <KernelService name="fx_unicode_file_rename" parameters="Variable" operation="" />
+      <KernelService name="fx_unicode_length_get" parameters="Variable" operation="" />
+      <KernelService name="fx_unicode_name_get" parameters="Variable" operation="" />
+      <KernelService name="fx_unicode_short_name_get" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Internal">
+      <KernelService name="fx_internal_log_sector_cache_miss" parameters="Variable" operation="" />
+      <KernelService name="fx_internal_dir_cache_miss" parameters="Variable" operation="" />
+      <KernelService name="fx_internal_media_flush" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_internal_dir_entry_read" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_internal_dir_entry_write" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_internal_io_driver_read" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_internal_io_driver_write" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_internal_io_driver_flush" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_internal_io_driver_abort" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_internal_io_driver_init" parameters="Variable" operation="Initialize" />
+      <KernelService name="fx_internal_io_driver_boot_read" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_internal_io_driver_release_sectors" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_internal_io_driver_boot_write" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_internal_io_driver_uninit" parameters="Variable" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="File">
+      <KernelService name="fx_file_allocate" parameters="Variable" operation="" />
+      <KernelService name="fx_file_attributes_read" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_file_attributes_set" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_file_best_effort_allocate" parameters="Variable" operation="" />
+      <KernelService name="fx_file_close" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="fx_file_create" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_file_date_time_set" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_file_delete" parameters="Variable" operation="" />
+      <KernelService name="fx_file_open" parameters="Variable" operation="Initialize" />
+      <KernelService name="fx_file_read" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_file_relative_seek" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_file_rename" parameters="Variable" operation="OtherWrite" />
+      <KernelService name="fx_file_seek" parameters="Variable" operation="OtherRead" />
+      <KernelService name="fx_file_truncate" parameters="Variable" operation="" />
+      <KernelService name="fx_file_truncate_release" parameters="Variable" operation="" />
+      <KernelService name="fx_file_write" parameters="Variable" operation="OtherWrite" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="IP">
+      <KernelService name="nx_internal_arp_request_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_arp_request_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_arp_response_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_arp_response_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_icmp_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_icmp_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_igmp_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_ip_receive" parameters="Variable" operation="OtherRead">
+        <Parameter name="ip" format="{0}" ioSource="true" />
+        <Parameter name="src" format="{0}" />
+        <Parameter name="data" format="{0}" />
+        <Parameter name="size" format="{0}" ioSize="true" />
+      </KernelService>
+      <KernelService name="nx_internal_ip_send" parameters="Variable" operation="OtherWrite">
+        <Parameter name="ip" format="{0}" ioSource="true" />
+        <Parameter name="dst" format="{0}" />
+        <Parameter name="data" format="{0}" />
+        <Parameter name="size" format="{0}" ioSize="true" />
+      </KernelService>
+      <KernelService name="nx_internal_tcp_data_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_data_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_fin_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_fin_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_reset_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_reset_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_syn_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_syn_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_udp_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_udp_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_rarp_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_rarp_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_retry" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_tcp_state_change" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_packet_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_initialize" parameters="Variable" operation="Initialize" />
+      <KernelService name="nx_internal_io_driver_link_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_link_disable" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_packet_broadcast" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_arp_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_arp_response_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_rarp_send" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_multicast_join" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_multicast_leave" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_get_status" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_get_speed" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_get_duplex_type" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_get_error_count" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_get_rx_count" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_get_tx_count" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_get_alloc_errors" parameters="Variable" operation="" />
+      <KernelService name="nx_internal_io_driver_uninitialize" parameters="Variable" operation="Deinitialize" />
+      <KernelService name="nx_internal_io_driver_deferred_processing" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_dynamic_entries_invalidate" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_dynamic_entry_set" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_gratuitous_send" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_hardware_address_find" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_ip_address_find" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_static_entries_delete" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_static_entry_create" parameters="Variable" operation="" />
+      <KernelService name="nx_arp_static_entry_delete" parameters="Variable" operation="" />
+      <KernelService name="nx_icmp_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_icmp_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_icmp_ping" parameters="Variable" operation="" />
+      <KernelService name="nx_igmp_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_igmp_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_igmp_loopback_disable" parameters="Variable" operation="" />
+      <KernelService name="nx_igmp_loopback_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_igmp_multicast_join" parameters="Variable" operation="" />
+      <KernelService name="nx_igmp_multicast_leave" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_address_change_notify" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_address_get" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_address_set" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_create" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_delete" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_driver_direct_command" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_forwarding_disable" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_forwarding_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_fragment_disable" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_fragment_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_gateway_address_set" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_raw_packet_disable" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_raw_packet_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_raw_packet_receive" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_raw_packet_send" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_status_check" parameters="Variable" operation="" />
+      <KernelService name="nx_rarp_disable" parameters="Variable" operation="" />
+      <KernelService name="nx_rarp_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_rarp_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_interface_attach" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_static_route_add" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_static_route_delete" parameters="Variable" operation="" />
+      <KernelService name="nx_ip_interface_info_get" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="PacketPool">
+      <KernelService name="nx_packet_allocate" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_copy" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_data_append" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_data_retrieve" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_length_get" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_pool_create" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_pool_delete" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_pool_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_release" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_transmit_release" parameters="Variable" operation="" />
+      <KernelService name="nx_packet_data_extract_offset" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="TcpSocket">
+      <KernelService name="nx_tcp_client_socket_bind" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_client_socket_connect" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_client_socket_port_get" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_client_socket_unbind" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_free_port_find" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_server_socket_accept" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_server_socket_listen" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_server_socket_relisten" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_server_socket_unaccept" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_server_socket_unlisten" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_create" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_delete" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_disconnect" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_mss_get" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_mss_peer_get" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_mss_set" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_receive" parameters="Variable" operation="OtherRead">
+        <Parameter name="ip" format="{0}" ioSource="true" />
+        <Parameter name="data" format="{0}" />
+        <Parameter name="size" format="{0}" ioSize="true" />
+        <Parameter name="seq" format="{0}" />
+      </KernelService>
+      <KernelService name="nx_tcp_socket_receive_notify" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_send" parameters="Variable" operation="OtherWrite">
+        <Parameter name="ip" format="{0}" ioSource="true" />
+        <Parameter name="data" format="{0}" />
+        <Parameter name="size" format="{0}" ioSize="true" />
+        <Parameter name="seq" format="{0}" />
+      </KernelService>
+      <KernelService name="nx_tcp_socket_state_wait" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_transmit_configure" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_peer_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_window_update_notify_set" parameters="Variable" operation="" />
+      <KernelService name="nx_tcp_socket_bytes_available" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UdpSocket">
+      <KernelService name="nx_udp_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_free_port_find" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_bind" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_checksum_disable" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_checksum_enable" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_create" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_delete" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_info_get" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_port_get" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_receive" parameters="Variable" operation="OtherRead">
+        <Parameter name="ip" format="{0}" />
+        <Parameter name="sock" format="{0}" ioSource="true" />
+        <Parameter name="data" format="{0}" />
+        <Parameter name="size" format="{0}" ioSize="true" />
+      </KernelService>
+      <KernelService name="nx_udp_socket_receive_notify" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_send" parameters="Variable" operation="OtherWrite">
+        <Parameter name="sock" format="{0}" ioSource="true" />
+        <Parameter name="data" format="{0}" />
+        <Parameter name="size" format="{0}" ioSize="true" />
+        <Parameter name="dest" format="{0}" />
+      </KernelService>
+      <KernelService name="nx_udp_socket_unbind" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_source_extract" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_bytes_available" parameters="Variable" operation="" />
+      <KernelService name="nx_udp_socket_interface_set" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbHostStackDevice">
+      <KernelService name="ux_host_stack_events_base" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_device_address_set" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_device_configuration_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_device_configuration_select" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_device_descriptor_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_device_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_device_remove" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_device_resource_free" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_new_configuration_create" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_new_device_create" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbHostStackInterface">
+      <KernelService name="ux_host_stack_configuration_delete" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_configuration_enumerate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_configuration_instance_create" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_configuration_instance_delete" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_configuration_set" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_hcd_register" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_initialize" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_interface_endpoint_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_interface_instance_create" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_interface_instance_delete" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_interface_set" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_interface_setting_select" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_rh_change_process" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_rh_device_extraction" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_rh_device_insertion" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_transfer_request" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_transfer_request_abort" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbHostEndPoint">
+      <KernelService name="ux_host_stack_endpoint_instance_create" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_endpoint_instance_delete" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_endpoint_reset" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_endpoint_transfer_abort" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_new_endpoint_create" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbHostClass">
+      <KernelService name="ux_host_stack_class_instance_create" parameters="Variable" operation="" />
+      <KernelService name="ux_host_stack_class_instance_destroy" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_events_base" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_asix_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_asix_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_asix_interrupt_notification" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_asix_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_asix_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_control_value_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_control_value_set" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_streaming_sampling_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_streaming_sampling_set" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_audio_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_set_line_coding" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_get_line_coding" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_set_line_state" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_send_break" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_abort_in_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_abort_out_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_notification_callback" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_ioctl_get_device_status" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_reception_start" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_reception_stop" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_cdc_acm_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_client_register" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_idle_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_idle_set" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_keyboard_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_keyboard_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_mouse_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_mouse_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_remote_control_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_remote_control_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_report_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hid_report_set" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_change_detect" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_port_change_connection_process" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_port_change_enable_process" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_port_change_over_current_process" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_port_change_reset_process" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_port_change_suspend_process" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_hub_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_device_info_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_device_reset" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_notification" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_num_objects_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_close" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_copy" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_delete" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_info_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_info_send" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_move" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_send" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_object_transfer_abort" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_request_cancel" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_session_close" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_session_open" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_storage_ids_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_storage_info_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_thumb_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_pima_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_printer_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_printer_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_printer_name_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_printer_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_printer_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_printer_soft_reset" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_printer_status_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_set_line_coding" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_get_line_coding" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_set_line_state" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_purge" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_send_break" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_abort_in_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_abort_out_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_report_device_status_change" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_ioctl_get_device_status" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_reception_start" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_reception_stop" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_prolific_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_media_capacity_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_media_format_capacity_get" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_media_mount" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_media_open" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_media_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_media_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_request_sense" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_start_stop" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_storage_unit_ready_test" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_dpump_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_dpump_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_dpump_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_dpump_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_ioctl_abort_in_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_ioctl_abort_out_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_reception_start" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_reception_stop" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_swar_write" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_set_line_coding" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_get_line_coding" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_set_line_state" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_purge" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_send_break" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_abort_in_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_abort_out_pipe" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_report_device_status_change" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_get_device_status" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_ioctl_notification_callback" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_read" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_reception_start" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_reception_stop" parameters="Variable" operation="" />
+      <KernelService name="ux_host_class_gser_write" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbDevice">
+      <KernelService name="ux_device_stack_events_base" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_clear_feature" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_configuration_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_configuration_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_connect" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_descriptor_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_disconnect" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_endpoint_stall" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_get_status" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_host_wakeup" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_initialize" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_set_feature" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_transfer_abort" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_transfer_all_request_abort" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_transfer_request" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_microsoft_extension_register" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbDeviceInterface">
+      <KernelService name="ux_device_stack_alternate_setting_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_alternate_setting_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_interface_delete" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_interface_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_stack_interface_set" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbDeviceEndpoint">
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="UsbDeviceClass">
+      <KernelService name="ux_device_stack_class_register" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_events_base" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_dpump_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_dpump_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_dpump_read" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_dpump_change" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_dpump_write" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_acm_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_acm_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_acm_read" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_acm_write" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_hid_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_hid_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_hid_event_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_hid_event_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_hid_report_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_hid_report_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_hid_descriptor_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_device_info_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_event_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_event_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_object_add" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_object_data_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_object_data_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_object_delete" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_object_handles_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_object_info_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_object_info_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_objects_number_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_partial_object_data_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_response_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_storage_id_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_storage_info_send" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_get_device_prop_desc_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_get_device_prop_value" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_get_device_prop_value_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_get_object_prop_desc" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_get_object_prop_value" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_objects_props_supported_get" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_get_object_references" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_objects_props_supported_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_set_object_references" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_storage_format" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_device_reset" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_pima_set_object_prop_value" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_packet_receive" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_packet_transmit" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_msg_query" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_msg_keep_alive" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_msg_reset" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_rndis_msg_set" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_format" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_inquiry" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_mode_select" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_mode_sense" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_prevent_allow_media_removal" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_read" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_read_capacity" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_read_format_capacity" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_read_toc" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_request_sense" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_test_ready" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_start_stop" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_verify" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_storage_write" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_dfu_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_dfu_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_ecm_activate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_ecm_deactivate" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_ecm_change" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_ecm_read" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_ecm_write" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_ecm_packet_transmit" parameters="Variable" operation="" />
+      <KernelService name="ux_device_class_cdc_ecm_packet_receive" parameters="Variable" operation="" />
+    </KernelServiceGroup>
+
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="NotValid" />
+    <ObjectClass name="Thread" type="Actor" />
+    <ObjectClass name="ISR" type="Actor" />
+    <ObjectClass name="Timer" />
+    <ObjectClass name="Queue" type="Semaphore" options="EnqueuesOnBlock" />
+    <ObjectClass name="Semaphore" type="Semaphore" />
+    <ObjectClass name="Mutex" type="Mutex" />
+    <ObjectClass name="EventFlags" />
+    <ObjectClass name="BlockPool" type="Heap" options="NoIpcGraph" />
+    <ObjectClass name="BytePool" type="Heap" options="NoIpcGraph" />
+    <ObjectClass name="Media" />
+    <ObjectClass name="File" />
+    <ObjectClass name="IP" type="IOChannel"/>
+    <ObjectClass name="PacketPool" />
+    <ObjectClass name="TcpSocket" type="IOChannel"/>
+    <ObjectClass name="UdpSocket" type="IOChannel"/>
+    <!-- 15-20 Reserved -->
+    <ObjectClass name="UsbHostStackDevice" />
+    <ObjectClass name="UsbHostStackInterface" />
+    <ObjectClass name="UsbHostEndPoint" />
+    <ObjectClass name="UsbHostClass" />
+    <ObjectClass name="UsbDevice" />
+    <ObjectClass name="UsbDeviceInterface" />
+    <ObjectClass name="UsbDeviceEndPoint" />
+    <ObjectClass name="UsbDeviceClass" />
+  </ObjectClasses>
+</TargetPlatform>

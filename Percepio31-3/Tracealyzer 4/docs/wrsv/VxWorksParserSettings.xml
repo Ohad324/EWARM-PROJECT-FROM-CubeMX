@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>VxWorks Parser</title>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The VxWorks Parser Settings allow you to toggle the dummy actor behavior on <i>EVENT_INT_EXIT_K</i> events, also known as <i>intExitK</i>, where the following actor can't be reliably detected. When this option is enabled, a dummy actor called <b>UNKNOWN STATE <i>n</i></b> will be used to clearly highlight that the real actor is unknown. If this option is disabled, execution will instead be assumed to continue in the actor that was executing before the interrupt.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">
+      <KernelService name="xQueueCreate"              operation="Initialize"/>
+      <KernelService name="xQueueSend"                operation="Enqueue"/>
+      <KernelService name="xQueueSendToFront"         operation="EnqueueFirst"/>
+      <KernelService name="xQueueReceive"             operation="Dequeue"/>
+      <KernelService name="xQueueSendFromISR"         operation="Enqueue" isrOnly="true"/>
+      <KernelService name="xQueueSendToFrontFromISR"  operation="EnqueueFirst" isrOnly="true"/>
+      <KernelService name="xQueueReceiveFromISR"      operation="Dequeue" isrOnly="true"/>
+      <KernelService name="xQueuePeek"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="xSemaphoreCreate"        operation="Initialize"/>
+      <KernelService name="xSemaphoreGive"          operation="IncreaseSemaphore"/>
+      <KernelService name="xSemaphoreTake"          operation="DecreaseSemaphore"/>
+      <KernelService name="xSemaphoreGiveFromISR"   operation="IncreaseSemaphore" isrOnly="true"/>
+      <KernelService name="xSemaphoreTakeFromISR"   operation="DecreaseSemaphore" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="xMutexCreate"            operation="Initialize"/>
+      <KernelService name="xMutexGive"              operation="ReleaseMutex"/>
+      <KernelService name="xMutexTake"              operation="LockMutex" />
+    </KernelServiceGroup>
+    
+    <KernelServiceGroup name="Task">
+      <KernelService name="xTaskCreate"             operation="StartInstance"/>
+      <KernelService name="xTaskDelayUntil"         operation="Delay"               parameters="NumericParameterOnly"/>
+      <KernelService name="xTaskDelay"              operation="Delay"               parameters="NumericParameterOnly" />
+      <KernelService name="xTaskSuspend"            operation=""/>
+      <KernelService name="xTaskResume"             operation="StartInstance"/>
+      <KernelService name="xTaskResumeFromISR"      operation="StartInstance"  isrOnly="true"/>
+      <KernelService name="xTaskPrioritySet"        operation="ChangePriority"      parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskDelete"             operation="Deinitialize"/>
+      <KernelService name="xTaskNotifyWait"         operation="OtherRead"           parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskNotifySend"         operation="OtherWrite"/>
+      <KernelService name="xTaskNotifySendFromISR"  operation="OtherWrite" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Timer">
+      <KernelService name="xTimerCreate"                operation="Initialize"/>
+      <KernelService name="xTimerDelete"                operation=""/>
+      <KernelService name="xTimerStart"                 operation="StartInstance"/>
+      <KernelService name="xTimerStop"                  operation=""/>
+      <KernelService name="xTimerChangePeriod"          operation=""/>
+      <KernelService name="xTimerStartFromISR"          operation="StartInstance" isrOnly="true"/>
+      <KernelService name="xTimerStopFromISR"           operation=""              isrOnly="true"/>
+      <KernelService name="xTimerChangePeriodFromISR"   operation="" isrOnly="true"/>
+    </KernelServiceGroup>
+  
+    <KernelServiceGroup name="EventGroup">
+      <KernelService name="xEventGroupCreate"           operation="Initialize"/>
+      <KernelService name="xEventGroupDelete"           operation="Deinitialize"/>
+      <KernelService name="xEventGroupWaitBits"         operation="OtherRead"/>
+      <KernelService name="xEventGroupClearBits"        operation="OtherWrite"/>
+      <KernelService name="xEventGroupClearBitsFromISR" operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="xEventGroupSetBits"          operation="OtherWrite" />
+      <KernelService name="xEventGroupSetBitsFromISR"   operation="OtherWrite" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="StreamBuffer">
+      <KernelService name="xStreamBufferCreate"            operation="Initialize"/>
+      <KernelService name="xStreamBufferSend"              operation="OtherWrite"/>
+      <KernelService name="xStreamBufferReceive"           operation="OtherRead"/>
+      <KernelService name="xStreamBufferSendFromISR"       operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="xStreamBufferReceiveFromISR"    operation="OtherRead" isrOnly="true"/>
+      <KernelService name="xStreamBufferReset"             operation="Clear"/>
+    </KernelServiceGroup>
+
+  <KernelServiceGroup name="MessageBuffer">
+      <KernelService name="xMessageBufferCreate"            operation="Initialize"/>
+      <KernelService name="xMessageBufferSend"              operation="OtherWrite"/>
+      <KernelService name="xMessageBufferReceive"           operation="OtherRead"/>
+      <KernelService name="xMessageBufferSendFromISR"       operation="OtherWrite" isrOnly="true"/>
+      <KernelService name="xMessageBufferReceiveFromISR"    operation="OtherRead" isrOnly="true"/>
+      <KernelService name="xMessageBufferReset"             operation="Clear"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="EvtMplx">
+      <KernelService name="xEvtMplxCreate"                  operation="Initialize"/>
+      <KernelService name="xEvtMplxDelete"                  operation="Deinitialize"/>
+      <KernelService name="xEvtMplxAddObjEvent"             operation="OtherWrite"/>
+      <KernelService name="xEvtMplxModifyObjEvent"          operation="OtherWrite"/>
+      <KernelService name="xEvtMplxRemoveObjEvent"          operation="OtherWrite"/>
+      <KernelService name="xEvtMplxUpdate"                  operation="OtherWrite"/>
+      <KernelService name="xEvtMplxWait"                    operation="OtherRead"/>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+  
+  
+  <ObjectClasses>
+    <ObjectClass name="Queue" type="Queue"/>
+    <ObjectClass name="Task" type="Actor"/>
+    <ObjectClass name="ISR" type="Actor"/>
+    <ObjectClass name="Timer" type="Other"/>
+    <ObjectClass name="EventGroup" type="Other"/>
+    <ObjectClass name="Semaphore" type="Semaphore"/>
+    <ObjectClass name="Mutex" type="Mutex"/>
+    <ObjectClass name="EvtMplx" type="Other"/>
+    <ObjectClass name="StreamBuffer" type="Other"/>
+    <ObjectClass name="MessageBuffer" type="Other"/>
+  </ObjectClasses>
+</TargetPlatform>

@@ -1,0 +1,111 @@
+﻿Percepio End User License Agreement (EULA)
+November 2024
+
+THIS SOFTWARE IS LICENSED TO YOU BY PERCEPIO AB ("PERCEPIO"), SUBJECT TO THE TERMS CONTAINED IN THIS END USER LICENSE AGREEMENT ("EULA"). THE SOFTWARE, ALONG WITH ANY ASSOCIATED MEDIA OR ELECTRONIC DOCUMENTATION ("SOFTWARE") IS PROTECTED BY INTERNATIONAL PROPERTY LAWS AND TREATIES. THE SOFTWARE IS LICENSED, NOT SOLD. ALL RIGHTS, OTHER THAN THOSE GRANTED UNDER THIS LICENSE, ARE RESERVED.
+
+THIS EULA IS A CONTRACT BETWEEN YOU ("CUSTOMER", "YOU", "YOURS") AND PERCEPIO. READ THE TERMS OF THIS EULA CAREFULLY. BY INSTALLING, COPYING OR OTHERWISE USING THE SOFTWARE AS DEFINED BELOW, YOU AGREE TO BE BOUND BY THE TERMS OF THIS EULA. IF YOU DO NOT AGREE TO THE TERMS OF THIS EULA, DO NOT INSTALL, COPY OR USE THE SOFTWARE. 
+
+DEFINITIONS
+SOFTWARE – shall mean Percepio Tracealyzer, Percepio View, Percepio Profile, Percepio Detect and Percepio License Manager, and other software products made available from Percepio from time to time.
+
+CUSTOMER – shall mean the individual, company or other legal entity (as applicable) purchasing or subscribing to a SOFTWARE license. 
+
+SITE – One specific geographical location where the SOFTWARE is installed and used by the CUSTOMER.
+
+MULTI-SITE – Any site(s) belonging to the CUSTOMER (but not possible subsidiaries and otherwise affiliated companies).
+
+NODE – One specific personal computer (PC) or laptop.
+
+PERPETUAL – a license to SOFTWARE which does not expire and entails a perpetual right to use the same, subject to the provisions of the EULA. Maintenance and Support agreement needs to be up to date to receive technical support, updates, upgrades, and bug fixes.
+
+SUBSCRIPTION – a time restricted SOFTWARE license with automatic prolongation, which must be renewed to continue using the license.
+
+FREEMIUM – a license offering SOFTWARE with limited features at no cost and which may require USER registration with PERCEPIO, providing an upgrade path for a premium charge.
+
+USER – shall mean individuals who have installed and access the SOFTWARE at the CUSTOMER
+
+LICENSE GRANT
+Without a commercial or FREEMIUM license provided by PERCEPIO or its partners, CUSTOMER may use the SOFTWARE in accordance with EVALUATION LICENSE only, as provided on registration. Registration requires a valid email address and permission for PERCEPIO and its authorized representatives to contact the CUSTOMER representative during the evaluation period and for a reasonable time thereafter.
+
+EVALUATION LICENSE
+The EVALUATION LICENSE grants the CUSTOMER full functionality during a limited time period, and is intended for evaluation purposes only. All commercial use of an EVALUATION LICENSE is strictly prohibited. Using the EVALUATION LICENSE, CUSTOMER may test the SOFTWARE on real applications, but CUSTOMER is not allowed to use the SOFTWARE to investigate specific issues within commercial software development.
+
+NODE LOCKED LICENSE
+CUSTOMER that has purchased and/or subscribing to a NODE-LOCKED LICENSE may install and use the SOFTWARE on one (1) physical computer or laptop. "Use" means storing, loading, installing and executing.
+
+FLOATING NETWORK LICENSE
+CUSTOMER that has purchased and/or are subscribing a FLOATING NETWORK LICENSE may install and use the SOFTWARE on any number of computers at a single SITE, but only a specified number of concurrent users are allowed. The number of concurrent users is regulated in the license file and is technically enforced by the Percepio License Manager software ("Percepio License Manager"). CUSTOMER may install and use the one (1) copy of the Percepio License Manager software on one (1) specific computer, serving as license server. A FLOATING NETWORK LICENSE may be used by any person working at the same SITE that the Percepio License Manager software is installed in. "Use" means storing, loading, installing and executing.
+
+MULTI-SITE FLOATING NETWORK LICENSE
+CUSTOMER that has purchased and/or are subscribing a MULTI-SITE FLOATING NETWORK LICENSE may install and use the SOFTWARE on any number of computers within the same CUSTOMER company, but only a specified number of concurrent users are allowed. The number of concurrent users is regulated in the license file and is technically enforced by the Percepio License Manager software ("Percepio License Manager"). CUSTOMER may install and use the one (1) copy of the Percepio License Manager software on one (1) specific computer, serving as license server. A MULTI-SITE FLOATING NETWORK LICENSE may be used by any person working at the same CUSTOMER company that the Percepio License Manager software is installed in. "Use" means storing, loading, installing and executing.
+
+SUBSCRIPTION LICENSE (Time Limited License)
+CUSTOMER that has purchased a subscription license, which can be of any of the types of license listed above, may install and use the SOFTWARE under the conditions set forth above for the duration of the SUBSCRIPTION period. "Use" means storing, loading, installing and executing. SUBSCRIPTION will automatically renew for a consecutive time period, corresponding to the initial term, if not terminated by CUSTOMER by giving 30 days notice written notice.
+
+FREEMIUM LICENSE
+The SOFTWARE "PERCEPIO View" is provided to CUSTOMER as a FREEMIUM license, and can be upgraded to a SUBSCRIPTION license, e.g. Percepio Profile and Percepio Tracealyzer. A FREEMIUM license do not provide a maintenance- and support plan, and a USER of a FREEMIUM license is not entitled to technical support from PERCEPIO.
+
+The CUSTOMER may not modify or reverse-engineer (or enable or permit a third party to anything of the aforesaid) the SOFTWARE in any way without prior written permission by PERCEPIO. The CUSTOMER agrees to use all reasonable efforts to protect the SOFTWARE from unauthorized use. 
+
+The CUSTOMER is not granted any rights to any trademarks or service marks of PERCEPIO. PERCEPIO retains all rights not expressly granted.
+
+MAINTENANCE AND SUPPORT PLAN for PERPETUAL Licenses
+The Maintenance and Support Plan includes technical support via e-mail, phone and video conference as well as updates within the same major version (i.e., v4.7 -> v4.8, but not v4.9 -> v5.0). CUSTOMER must through a USER register their PERCEPIO SOFTWARE License at the PERCEPIO website, to activate the right to receive support and updates per above. PERCEPIO reserves the right to withhold support and update services for any unregistered SOFTWARE license. 
+
+CUSTOMER that has purchased a PERPETUAL license receives a Maintenance and Support Plan valid for 12 months after the license delivery date.
+
+As of 31 March, 2023 CUSTOMER with PERPETUAL licenses and an active Maintenance and Support Plan may thereafter extend the Maintenance and Support Plan for an additional fee in order to receive continued support and updates. Lapsed Maintenance and Support Plans may not be restarted.
+
+MAINTENANCE AND SUPPORT PLAN for SUBSCRIPTION Licenses
+The Maintenance and Support Plan includes technical support for the SOFTWARE via e-mail, phone and video conference as well as updates including major version upgrades (i.e., including v4.7 -> v5.0) for the duration of the SUBSCRIPTION.
+
+PROPRIETARY RIGHTS RESERVED
+The SOFTWARE and the Software License Key is licensed, not sold. All right, title, and interest in and to the SOFTWARE and the Software License Key and in all related copyrights, tradesecrets, patents, trademarks, and any other intellectual and industrial property and proprietary rights, including registrations, applications, renewals, and extensions of such rights are retained by PERCEPIO and its licensors.
+
+RESTRICTIONS
+The CUSTOMER may not (i) sell, lease, license, sublicense, distribute or otherwise transfer in whole or in part the SOFTWARE or the Software License Key to another party; (ii) provide, disclose, divulge or make available to, or permit use of the SOFTWARE or the Software License Key in whole or in part by, any third party without prior written consent from PERCEPIO; (iii) decompile, disassemble, reverse engineer, or otherwise attempt to derive source code from the SOFTWARE or the Software License Key, in whole or in part; (iv) modify or create derivative works based upon the SOFTWARE or the Software License Key; or (v) use the SOFTWARE or the Software License Key on a service bureau or hosting basis to provide Remote Access Services to the SOFTWARE.
+
+INFRINGEMENTS
+Subject to the agreed limitation of liability in this EULA, PERCEPIO shall ensure that the SOFTWARE does not infringe the intellectual property rights of a third party except for patent infringements, which expressly are excluded from PERCEPIO’s responsibility and liability under this EULA, both in relation to you, your customers and other third Parties. 
+
+PERCEPIO will, subject to the above, defend, indemnify you against costs, claims, fees, damages, penalties, interest, losses and liabilities (including your reasonable legal fees) arising out of, or incurred as a result of the SOFTWARE infringing intellectual property rights of any third party (however expressly excluding other entities in your company group, if any).
+
+In the event that any third party shall bring claim, suit or proceeding against you (the "Indemnified Party"), PERCEPIO´s obligations (the "Indemnifying Party") shall apply if and provided that:
+A) The Indemnified Party notifies the Indemnifying Party in writing within ten (10) working days of being informed of such claim, suit or proceeding;
+B) if so requested from the Indemnifying Party, the Indemnified Party shall be given sole and exclusive control and authority over the defence of any such claim, suit or proceeding; or
+C) the Indemnified Party shall at the reasonable request of the Indemnifying Party fully cooperate with the Indemnifying Party (at the Indemnifying Party’s expense) in defending such allegations, action or proceedings including providing the Indemnifying Party with all required information and assistance to deal with and defend any such claim, suit or proceedings.
+
+In the event it is agreed or otherwise determined by a court of competent jurisdiction that all or any part of the SOFTWARE infringes the intellectual property rights of such third party, or PERCEPIO reasonably believes this may be the case, then PERCEPIO shall have the following option, at its own expense to:
+A) modify the SOFTWARE, so that it becomes non-infringing without detracting from functionality or performance when compared with the infringing SOFTWARE; and/or
+B) replace the SOFTWARE with a non-infringing deliverable of equivalent function and performance; and/or
+C) ensure technically, legally and commercially required access to a license to continue using and exploiting SOFTWARE in accordance with this EULA at no additional cost for the other you and without liability or restriction.
+
+PERCEPIO shall not be considered to be in breach of this EULA provided that PERCEPIO is able to comply with the provisions of this section.
+
+Notwithstanding the above, PERCEPIO shall have no liability to you, if and to the extent that any infringement or claim, suit or action is caused by: (i) the use of SOFTWARE, in conjunction with a third-party product where the use of the SOFTWARE otherwise would not infringe; and/or (ii) failure by you to use a replacement or other modification solution of the SOFTWARE provided by PERCEPIO, which is of equivalent function and performance to the infringing SOFTWARE, to avoid an actual or alleged infringement; and/or (iii) the use of the SOFTWARE in an application, for a purpose, in a market area (i.e. other than the agreed market, if any)) or in an environment for which it was not designed or permitted under this EULA.
+
+IN NO EVENT, HOWEVER, SHALL PERCEPIO’S AGGREGATE INDEMNIFICATION UNDERTAKING AND RESULTING LIABILITY FOR ALL CLAIMS UNDER THIS EULA OR ANY SOFTWARE LICENSE (AS APPLICABLE) FOR INFRINGEMENT OR CLAIMED INFRINGEMENT OF ANY THIRD PARTY’S INTELLECTUAL PROPERTY RIGHTS EXCEED THE GREATER OF: (A) AN AMOUNT CORRESPONDING TO TWO TIMES (2X) THE AGGREGATE PAYMENT PERCEPIO HAS RECEIVED FROM CUSTOMER IN THE TWENTY-FOUR(24) MONTHS LEADING UP TO THE CLAIM OR (B) FIVE-HUNDRED-THOUSAND (USD 500,000) US DOLLARS.
+
+PERCEPIO’S LIABILITY AND INDEMNIFICATION UNDERTAKING SET OUT ABOVE, EXPRESSLY EXCLUDES - AND PERCEPIO ACCORDINGLY REJECTS ANY RESPONSIBILITY FOR - ALL AND ANY INDEMNIFICATION OR LIABILITY CLAIMS AND POSSIBLE INFRINGEMENTS OCCURRING WITHIN THE TERRITORIAL AREAS OR HAVING ITS LEGAL GROUND UNDER LOCAL LAW FROM RUSSIA, CHINA AND ANY COUNTRIES ON THE US DENIED PERSONS LIST; (https://www.bis.doc.gov/index.php/policy-guidance/lists-of-parties-of-concern/denied-persons-list) as applicable from time to time.
+
+TERMINATION AND PROLONGATION
+PERCEPIO may terminate this EULA if CUSTOMER fails to comply with any term of this agreement. In the event of termination, CUSTOMER must destroy all copies of the SOFTWARE and Software License Key. In addition, CUSTOMER must remove all copies of the SOFTWARE from all computers and terminals on which it is installed. 
+
+SUBSCRIPTION will automatically renew and prolong for a consecutive time period corresponding to the initial term, if not terminated by CUSTOMER by giving 30 days written notice. PERCEPIO may alter the conditions and price for the consecutive time period of SUBSCRIPTION by giving 60 days notice. CUSTOMER accepts its obligation to provide payment to PERCEPIO for SBUSCRIPTION licenses for the full term of the subscription time period also under a prolonged subscription.
+
+NO WARRANTY
+The SOFTWARE is being delivered to you AS IS and PERCEPIO makes no warranty as to its use or performance. PERCEPIO DOES NOT AND CANNOT WARRANT THE PERFORMANCE OR RESULTS YOU MAY OBTAIN BY USING THE SOFTWARE OR DOCUMENTATION. PERCEPIO MAKE NO WARRANTIES, EXPRESS OR IMPLIED, EXCEPTS AS TO NONINFRINGEMENT OF THIRD PARTY RIGHTS (WHICH IS SPECIFICALLY SET OUT HEREIN IN THE INDEMNIFICATION SECTION), MERCHANTABILITY, OR FITNESS FOR ANY PARTICULAR PURPOSE. IN NO EVENT WILL PERCEPIO, ITS TECHNOLOGY PARTNERS, OR DISTRIBUTORS BE LIABLE TO YOU FOR ANY CONSEQUENTIAL, INCIDENTAL OR SPECIAL DAMAGES, INCLUDING ANY LOST PROFITS OR LOST SAVINGS, EVEN IF A REPRESENTATIVE OF PERCEPIO HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, OR FOR ANY CLAIM BY ANY THIRD PARTY. Some states or jurisdictions do not allow the exclusion or limitation of incidental, consequential or special damages, or the exclusion of implied warranties or limitations on how long an implied warranty may last, so the above limitations may not apply to you.
+
+LIMITATION OF LIABILITY
+IN NO EVENT WILL PERCEPIO, ITS TECHNOLOGY PARTNERS, OR DISTRIBUTORS BE LIABLE FOR ANY LOST PROFITS OR BUSINESS OPPORTUNITIES, LOSS OF USE, BUSINESS INTERRUPTION, LOSS OF DATA, OR ANY OTHER INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES UNDER ANY THEORY OF LIABILITY, WHETHER BASED IN CONTRACT, TORT, NEGLIGENCE, PRODUCT LIABILITY, INDEMNIFICATION UNDERTAKINGS OR OTHERWISE. THIS LIMITATION SHALL APPLY REGARDLESS OF WHETHER PERCEPIO, ITS TECHNOLOGY PARTNERS, ITS DISTRIBUTORS OR OTHER REPRESENTATIVES HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. THE LIABILITY OF PERCEPIO, ITS TECHNOLOGY PARTNERS, DISTRIBUTORS OR OTHER REPRESENTATIVES UNDER THIS EULA WILL NOT, IN ANY EVENT, EXCEED THE LICENSE FEES, IF ANY, PAID BY YOU TO PERCEPIO FOR THE SOFTWARE LICENSED BY YOU UNDER THIS EULA.
+
+GOVERNING LAW AND GENERAL PROVISIONS
+This EULA will be governed by the material laws of Sweden. If any part of this EULA is found void and unenforceable, it will not affect the validity of the balance of the EULA, which shall remain valid and enforceable according to its terms. This EULA shall automatically terminate upon failure by you to comply with its terms. This Agreement may only be modified in writing signed by an authorized officer of the SOFTWARE owner.
+
+CONTACT INFORMATION
+If you have any questions about this EULA, or if you want to contact PERCEPIO for any reason, please e-mail us at: info@percepio.com.
+
+Percepio AB is a Swedish company based in Västerås, with organization number 556771-9686.
+Email: info@percepio.com
+Phone: +46 21 146210
+Website: https://percepio.com

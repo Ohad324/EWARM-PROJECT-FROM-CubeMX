@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Target Library</title>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This tool lets you connect to targets and control their tracing. It uses SSH to connect to the target (even when the target is localhost).
+        </p>
+        <p>
+          To the left is the actual library where defined targets as well as current connections are listed. Under the Active Connections node a list of currently connected targets will be listed. When a connected target is selected, the right side of the view will show the target view (see below). Under the Target Library node, a list of defined targets are listed. Double clicking a defined target will connect to it.
+        </p>
+        <p>
+          Below the target list are buttons to add, remove and edit entries, as well as connect and disconnect.
+          <ul>
+            <li>
+              <b>New</b> - Add a new target to the library.
+            </li>
+            <li>
+              <b>Edit</b> - Modify the selected target entry.
+            </li>
+            <li>
+              <b>Delete</b> - Remove the selected target entry.
+            </li>
+            <li>
+              <b>Connect</b> - Connect to the selected entry.
+            </li>
+            <li>
+              <b>Disconnect</b> - Disconnect from the selected entry.
+            </li>
+          </ul>
+        </p>
+        <p>
+          At the bottom of the library is the option to quick connect using a connection string. The connection string is a series of semicolon separated <i>key=value</i> pairs.
+          <ul>
+            <li>
+              <b>host</b> - Hostname or address of the target.
+            </li>
+            <li>
+              <b>port</b> - The SSH port to connect to on the target.
+            </li>
+            <li>
+              <b>myhost</b> - The IP address of the development machine. Depending on setup, this may be needed for streaming to host if the target is unable to look up the address by development machine hostname.
+            </li>
+            <li>
+              <b>user</b> - Username of the SSH user on the target.
+            </li>
+            <li>
+              <b>pass</b> - Password of the SSH user on the target.
+            </li>
+            <li>
+              <b>keyFile</b> - Path to identity (private key) file to be used. 
+            </li>
+            <li>
+              <b>cmdname</b> - The name of the lttng executable on target. Default is <i>lttng</i>. If you are building LTTng with a command name prefix, you can specify the full name of the command using this option.
+            </li>
+          </ul>
+        </p>
+        <subsection>
+          <header>Target View</header>
+          <text>
+            <p>
+              On the right side of the tool is the target view, where you can view and control LTTng tracing sessions, as well as review the log of all commands issued to control these.
+            </p>
+            <p>
+              The session list contains a list of current sessions on the target. To the right of the list are buttons to control these sessions.
+              <ul>
+                <li>
+                  <b>Start New Session</b> - Will let you start a new session from a list of defined session types and control where it is to be stored (on target storage, streamed to host or in target memory, that is snapshot).
+                </li>
+                <li>
+                  <b>Refresh</b> - Updates the list of sessions. This can be useful if you are manually controlling your sessions through SSH or scripts.
+                </li>
+                <li>
+                  <b>Stop Session</b> - Stops the selected session.
+                </li>
+                <li>
+                  <b>Destroy session</b> - Destroys the selected session.
+                </li>
+                <li>
+                  <b>Open</b> - Opens the trace of the selected session.
+                </li>
+              </ul>
+            </p>
+            <p>In addition to these main controls, sessions can be right clicked for additional actions depending on session type and state.</p>
+
+            <p>The log lists commands issued by $PNAME to gather information or control sessions. Selecting a line will show the issued command as well as its output in the textbox below, which can be useful when troubleshooting.</p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

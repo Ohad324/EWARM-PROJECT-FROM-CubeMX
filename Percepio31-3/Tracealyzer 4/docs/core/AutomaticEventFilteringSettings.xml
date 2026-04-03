@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Automatic Event Filtering Settings</title>
+  <keywords>
+    <keyword>events</keyword>
+    <keyword>types</keyword>
+    <keyword>filter</keyword>
+    <keyword>priority</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This setting controls which event labels that are displayed in an Event Field, in case the window is too small to display all events enabled in the main Filter.		  		  
+          By enabling the automatic event filtering, you can often avoid the "all or nothing" display in Event Fields when scrolling or zooming. This way, you can still see important evens (e.g. User Events) even if there are a lots of less important events in the current view.
+          Note that the Automatic Event Filtering is independent of the main Filter settings.
+        </p>
+
+        <p>
+          <A HREF="img/AutomaticEventFilteringSettings.png" target="$IMAGETARGET">
+            <img src="img/AutomaticEventFilteringSettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <note>
+          Automatic Event Filtering is disabled by default.
+        </note>
+
+        <p>
+          When the <a href="TraceView.html">Trace View</a> is zoomed out too much to show all events in the view, the events with lower priority will be hidden first, 
+          see the <a href="TraceView.html">Trace View</a> for more details.
+        </p>
+        
+        <p>
+          To change the priority order, drag and drop the event types to the desired priority level (highest at the top, lowest at the bottom).
+        </p>
+
+        <note>
+          In Mono there is a problem with the drag and drop support, so instead buttons are added to move the types to higher or lower level.
+        </note>
+
+        <note>
+          Changes will not be saved until <i>Apply</i> or <i>OK</i> is clicked.
+        </note>
+
+        <p>
+          To reset to default display priorities, click the <i>Reset to Default</i> button, and then apply.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

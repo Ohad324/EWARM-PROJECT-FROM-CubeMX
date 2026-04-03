@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>DevAlert AWS Dashboard</title>
+  <keywords>
+    <keyword>amazon</keyword>
+    <keyword>web</keyword>
+    <keyword>services</keyword>
+    <keyword>aws</keyword>
+    <keyword>dev</keyword>
+    <keyword>alert</keyword>
+    <keyword>devalert</keyword>
+    <keyword>cloud</keyword>
+    <keyword>trace</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view is a summary for DevAlert traces.
+          The Latest Trace links can be clicked to fetch the trace from the cloud and open them in $PNAME.
+        </p>
+        <p>
+          <A HREF="img/DevAlert_Dashboard_Alerts.png" target="$IMAGETARGET">
+            <img src="img/DevAlert_Dashboard_Alerts.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+        <p>
+          If new alerts are detected, they will be shown at the top, and will be highlighted with red color.
+        </p>
+      </text>
+    </section>
+    <section>
+      <header>Signing in</header>
+      <text>
+        <p>
+          When starting the Dashboard (from the Welcome screen, or from the Dashboard tool directly),
+          a login to DevAlert Console is needed. If the password is saved in settings (not default option),
+          the connect will be done directly. If not, the Sign in note will be shown.
+          Click the highlighted link to get the login dialog, and when logged in the issue list will load.
+        </p>
+        <p>
+          <A HREF="img/DevAlert_Dashboard_SignIn.png" target="$IMAGETARGET">
+            <img src="img/DevAlert_Dashboard_SignIn.png" border="0" />
+          </A>
+        </p>
+      </text>
+    </section>
+    <section>
+      <header>Settings</header>
+      <text>
+        <p>
+          If the Dashboard has problems loading, an error message will be shown.
+          Then either go to the direct settings for either the Core or the Storage settings,
+          or use the link to go through the DevAlert Connection Wizard.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

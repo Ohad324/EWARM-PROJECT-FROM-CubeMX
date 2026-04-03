@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">
+      <KernelService name="xQueueCreate"            operation="Initialize"/>
+      <KernelService name="xQueueSend"              operation="Enqueue"/>
+      <KernelService name="xQueueReceive"           operation="Dequeue"/>
+      <KernelService name="xQueueSendFromISR"       operation="Enqueue" isrOnly="true"/>
+      <KernelService name="xQueueReceiveFromISR"    operation="Dequeue" isrOnly="true"/>
+      <KernelService name="xQueuePeek"/>
+    </KernelServiceGroup>
+    
+    <KernelServiceGroup name="Task">
+      <KernelService name="xTaskCreate"             operation="StartInstance"/>
+      <KernelService name="xTaskDelayUntil"         operation="Delay"               parameters="NumericParameterOnly"/>
+      <KernelService name="xTaskDelay"              operation="Delay"               parameters="NumericParameterOnly" />
+      <KernelService name="xTaskSuspend"            operation=""/>
+      <KernelService name="xTaskResume"             operation="StartInstance"/>
+      <KernelService name="xTaskResumeFromISR"      operation="StartInstance"  isrOnly="true"/>
+      <KernelService name="xTaskPrioritySet"        operation="ChangePriority"               parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskDelete"             operation="Deinitialize"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Timer">
+      <KernelService name="xTimerCreate"            operation="Initialize"/>
+      <KernelService name="xTimerDelete"            operation="Deinitialize"/>
+      <KernelService name="xTimerStart"             operation="StartInstance"/>
+      <KernelService name="xTimerReset"             operation="StartInstance"/>
+      <KernelService name="xTimerStartFromISR"      operation="StartInstance" isrOnly="true"/>
+      <KernelService name="xTimerResetFromISR"      operation="StartInstance" isrOnly="true"/>      
+      <KernelService name="xTimerStop"              operation=""/>
+      <KernelService name="xTimerStopFromISR"       operation=""              isrOnly="true"/>
+      <KernelService name="xTimerChangePeriod"      operation="" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerChangePeriodFromISR" operation="" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+      <KernelService name="xTimerPendFunctionCall"  operation="" parameters="None"/>
+      <KernelService name="xTimerPendFunctionCallFromISR" operation="" parameters="None" isrOnly="true"/>
+
+    </KernelServiceGroup>
+  
+    <KernelServiceGroup name="EventGroup">
+      <KernelService name="xEventGroupCreate" operation="Initialize"/>
+      <KernelService name="xEventGroupSync" operation="OtherRead" parameters="ObjectAndNumericParameter"/>      
+      <KernelService name="xEventGroupWaitBits" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupClearBits" operation="OtherWrite" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupClearBitsFromISR" operation="OtherWrite" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+      <KernelService name="xEventGroupSetBits" operation="OtherWrite" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xEventGroupDelete" operation="Deinitialize"/>
+      <KernelService name="xEventGroupSetBitsFromISR" operation="OtherWrite" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="TaskNotify">
+      <KernelService name="xTaskNotifyWait" operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskNotifySend" operation="OtherWrite"/>
+      <KernelService name="xTaskNotifySendFromISR" operation="OtherWrite" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Heap">
+      <KernelService name="malloc" operation="AllocateMemory" parameters="NumericParameterOnly">
+        <Parameter name="size" format="{0}"/>
+        <ReturnValue name="ptr" format=" returned 0x{0:X8}"/>
+       </KernelService>
+       <KernelService name="free" operation="FreeMemory" parameters="NumericParameterOnly">
+         <Parameter name="ptr" format="0x{0:X8}"/>
+         <ReturnValue name="size" format=" released {0} bytes"/>
+       </KernelService>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+  
+  
+  <ObjectClasses>
+    <ObjectClass name="Queue" type="Queue"/>
+    <ObjectClass name="Task" type="Actor"/>
+    <ObjectClass name="ISR" type="Actor"/>
+    <ObjectClass name="Timer" type="Other"/>
+    <ObjectClass name="EventGroup" type="Other"/>
+	<ObjectClass name="Heap" type="Heap" options="Hidden, NoIpcGraph"/>
+  </ObjectClasses>
+</TargetPlatform>

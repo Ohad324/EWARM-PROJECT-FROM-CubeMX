@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Empty event codes for Percepio Streaming Format (PSF) -->
+
+<PsfCodes>
+	<Events>
+
+		<EventGroup name="Core">
+
+		</EventGroup>
+
+	</Events>
+</PsfCodes>

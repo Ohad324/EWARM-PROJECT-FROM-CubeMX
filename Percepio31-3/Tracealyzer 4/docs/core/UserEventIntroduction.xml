@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Introduction</title>
+  <keywords>
+    <keyword>user</keyword>
+    <keyword>events</keyword>
+  </keywords>
+  <body>
+    <section>
+		<!-- For Tracealyzer only -->
+		<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+		<header>Overview</header>
+      <text>
+        <p>
+          You may log any event or data in your application code as <i>User Events</i> by adding calls to the recorder library.  
+        </p>
+		<p>
+          As shown below, user events are displayed in in the Trace view (as yellow labels in the left view), in the Event Log (lower right view) and if you include data arguments in your user events, you can plot this data using the <A HREF="UserEventSignal.html">User Event Signal Plot</A>. 
+        </p>
+		 <p>
+			 <A HREF="img/User Events.png" target="$IMAGETARGET">
+				<img src="img/User Events.png" width="$IMAGEWIDTH" border="0" />
+			</A>
+		</p>
+		  
+		
+		  <p>
+			If you log any kind of state transitions in your system as user events, you can define a <A HREF="IntervalStateIntroduction.html">State Machine</A> based on these events.
+		</p>		  
+		<p>
+			User events inserted at strategic locations can be used for detailed profiling of your system, i.e., to measure the time between these events. This by defining a <A HREF="IntervalStateIntroduction.html">Custom Interval</A> based on the user events.
+		</p>		  
+		<p>
+			The details of logging user events depends on the recorder library used, which depends on which RTOS you are using. 
+			Learn more under <A HREF="CreatingAndLoadingTraces.html">Creating and Loading Traces</A>, in the subsection about your specific RTOS.		
+		</p>  
+		
+		
+		  
+      </text>
+    </section>
+
+
+	  <section>
+		  <!-- For Profile only -->
+		  <requirement>CoreFeatures.Streaming</requirement>
+		  <requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+		  <header>Overview</header>
+		  <text>
+			  <p>
+				  You may log any event or data in your application code as <i>User Events</i>, by adding calls to the TraceRecorder API.
+			  </p>
+			  <p>
+				  As shown below, user events are displayed in in the Trace view (as yellow labels in the left view), in the Event Log (lower right view) and if you include data arguments in your user events, you can plot this data using the <A HREF="UserEventSignal.html">User Event Signal Plot</A>.
+			  </p>
+			  <p>
+				  <A HREF="img/User Events.png" target="$IMAGETARGET">
+					  <img src="img/User Events.png" width="$IMAGEWIDTH" border="0" />
+				  </A>
+			  </p>
+
+		  </text>
+	  </section>
+
+
+
+	  <section>
+		  <!-- For View only -->
+		  <requirement inverted="true">CoreFeatures.Streaming</requirement>
+		  <header>Overview</header>
+		  <text>
+			  <p>
+				  You may log any event or data in your application code as <i>User Events</i>, by adding calls to the TraceRecorder API.
+			  </p>
+			  <p>
+				  As shown below, user events are displayed in in the Trace view (as yellow labels in the left view) and in the Event Log (lower right view). 
+				  Note that the data plotting feature seen in the screenshot, User Event Signal Plot, is only provided with Percepio Profile or Percepio Tracealyzer.
+			  </p>
+			  <p>
+				  <A HREF="img/User Events.png" target="$IMAGETARGET">
+					  <img src="img/User Events.png" width="$IMAGEWIDTH" border="0" />
+				  </A>
+			  </p>
+
+		  </text>
+	  </section>
+	  
+	  
+  </body>
+</page>

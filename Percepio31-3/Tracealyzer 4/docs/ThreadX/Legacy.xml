@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<page>
+    <title>ThreadX (tx_trace)</title>
+    <body>
+        <section>
+            <header>Introduction</header>
+            <text>
+                <p>
+                    $PNAME supports ThreadX in two ways, either using Percepio's TraceRecorder library (recommended) or using the tx_trace library included in ThreadX and described in this section.				
+				</p>
+				<p>				
+					The recommended ThreadX integration using the Percepio TraceRecorder library allows for both snapshots and streaming trace, while the tx_trace library described here is limited to snapshots from a ring-buffer.				
+				</p>
+				
+				<p>
+					The ThreadX tx_trace library monitors not only the core ThreadX kernel, but also the NetX, UsbX and FileX middleware stacks.
+                    All such events can be analyzed with $PRODUCT, as well as User Events that allow for custom logging in the system.
+                </p>
+
+                <note>
+                    The tx_trace library does not always provide the status of API calls, which affects the $PNAME functionality.
+                    Errors or timeout (orange labels) are only shown in some special cases (like tx_byte_allocate).
+					For other API functions, white or green labels are no guarantee that the call succeeded.
+                    You may however insert User Events to log relevant error codes returned by the API calls. 
+					Consider using the TraceRecorder integration instead of the tx_trace library.
+                </note>
+            </text>
+        </section>
+
+		<section>
+            <header>Enable Tracing</header>
+            <text>
+                <p>
+                    In ThreadX-based systems, the master switch for event tracing is the ThreadX configuration option <i>TX_ENABLE_EVENT_TRACE</i>.
+                    Set this to 1 in <b>tx_user.h</b> or in the project build options:
+<pre>#define TX_ENABLE_EVENT_TRACE 1</pre>					
+					
+					Verify you have a call to tx_trace_enable, typically in the startup code, otherwise it needs to be added.
+<pre>
+	char my_buffer[10000];
+	...
+	int status = tx_trace_enable (&amp;my_buffer, sizeof(my_buffer), 40); // Max 40 ThreadX objects
+	if (status != TX_SUCCESS)
+	{
+	    // Error, e.g. too small buffer.
+	    for(;;);
+	}
+</pre>				
+                </p>				
+            </text>
+        </section>
+
+		<section>
+			<header>Idle thread detection</header>
+			<text>
+				<p>
+					Some applications use an explicit idle thread (or one per core on SMP systems).
+					If present, $PNAME has to detect these in order to meaningfully calculate CPU load.
+					When loading tx_trace traces (.trx files), $PNAME uses the thread name and scheduling priority to recognize idle threads.
+					It assumes that any thread using priority 31 is an idle thread, regardless of TX_MAX_PRIORITIES.
+					If the wrong thread is recognized as idle, the trace might not load or display properly.
+					Please check the following before using $PNAME with tx_trace traces:
+				</p>
+				<p>
+					<ul>
+						<li>
+							When you have an idle thread in your system, make sure that either its name contains the word "idle" in any casing, or that its priority is 31.
+						</li>
+						<li>
+							Check that the word "idle" (in any casing) is not used in names of regular (non-idle) threads.
+							For example, "briDleTask" would be incorrectly matched as an idle thread.
+						</li>
+						<li>
+							Ensure that priority 31 is not used by regular (non-idle) threads.
+						</li>
+					</ul>
+				</p>
+			</text>
+		</section>
+		
+        <section>
+            <header>Saving the trace</header>
+            <text>
+                <p>
+                    To view the trace in $PNAME, you need to save a binary dump of the trace buffer (the one specified for <A HREF="#tx_trace_enable">tx_trace_enable</A>) to a host-side file named "&lt;file name&gt;.trx", that you open in $PNAME.
+                    The data should be in binary or Intel Hex format.
+                </p>
+                <p>
+                    You can easily configure IAR Embedded Workbench and e2 studio to save the trace and also open it in $PNAME, as described below. Similar integrations are also possible using other IDEs.
+                </p>
+                <subsection>
+                    <header>Using IAR Embedded Workbench</header>
+                    <text>
+                        <p>
+                            The IAR debugger can be configured to save the trace buffer to a host-side file, either manually or automatically, using a debugger macro. 
+							See 
+							Follow these steps:
+
+                            <ol class="list">
+                                <li>
+                                    Create a macro file in the project directory (e.g. "save_trace_buffer.mac") with the following contents:
+<pre><code>__var start;
+__var end;
+
+save_trace_buffer()
+{
+	start = __smessage "Memory:0x",&amp;g_tx_trace_buffer:%x;
+	end  =  __smessage "Memory:0x",(g_tx_trace_buffer + sizeof(g_tx_trace_buffer) - 1):%x;
+	__memorySave(start, end, "intel-extended", "$$PROJ_DIR$$\\trace.trx", 0);
+
+	return 0;
+}
+</code></pre><br/>
+                                    Make sure that the buffer name is the same as specified for <code>tx_trace_enable()</code>. If using Renesas Synergy, the default trace buffer name is "g_tx_trace_buffer".
+                                </li>
+
+                                <li>
+                                    Add the macro file under <i>Options -> Debugger -> Use Macro File(s)</i>.
+                                </li>
+                                <li>
+                                    When in a debug session, open <i>View -> Macros -> Debugger Macros</i> and check that "save_trace_buffer" is included.
+                                </li>
+                                <li>
+                                    Now, to call the macro and thereby save the trace, you have three options:
+                                    <ul class="list">
+                                        <li><i>Manually</i>: In the Debugger Macros view, right-click on you macro and select "Add to Quicklaunch window". Now you can save the trace by double-clicking on the blue "refresh" icon in the Quicklaunch window.</li>
+                                        <li><i>On a breakpoint</i>: Place a breakpoint on a suitable location in the code. Open it in the breakpoint editor and enter your macro name (e.g., "save_trace_buffer()") in the <i>Action -> Expression</i> field. The trace is now saved every time that breakpoint is hit.</li>
+                                        <li><i>On every halt</i>: To update the trace on every halt, rename the "save_trace_buffer" function to <i>execUserExecutionStopped()</i>. That is a special hook that is called every time the execution is halted. Note that this can slow down single-stepping if the buffer is large.</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </p>
+                        <p>
+                            To enable quick access to $PNAME and the current trace, you may include $PNAME in the Tools menu, with "trace.trx" specified as parameter.
+                            <ol>
+                                <li>Select "Configure Tools..." in the Tools menu</li>
+                                <li>Add a new entry "$PNAME"</li>
+                                <li>
+                                    Set the path to the $PNAME executable (the ".exe" file).
+                                </li>
+                                <li>Set the argument to "$$PROJ_DIR$$\trace.trx"</li>
+                            </ol>
+                            This will open $PNAME and load the provided trace file.
+                        </p>
+
+                    </text>
+                </subsection>
+                <subsection>
+                    <header>Using e2 studio</header>
+                    <text>
+                        <p>
+                            $PNAME can utilize the same e2 studio integration as the legacy tool TraceX.
+                        </p>
+                        <p>
+                            To configure e2 studio to use $PNAME as trace viewer, go to Window -> Preferences -> Renesas -> TraceX, and enter the path to $PNAME instead of the legacy TraceX tool.
+                            On Windows, the default path is:
+                            <pre>C:\Program Files\Percepio\Tracealyzer 4\Tracealyzer.exe</pre>
+                        </p>
+                        <p>
+                            Then, to upload the trace from e2 studio, select Run -> TraceX -> Launch TraceX Debugging. Enter the address of the trace buffer (e.g. "&amp;g_tx_trace_buffer") and the size ("sizeof(g_tx_trace_buffer)").
+                            Click OK. Now e2 studio will save the trace buffer into a file and open it with $PNAME.
+                        </p>
+                    </text>
+                </subsection>
+            </text>
+        </section>
+
+        <section>
+            <header>Timestamping</header>
+            <text>
+                <p>
+                    The ThreadX recorder assigns a high-resolution timestamp to each event, but it does not report the "timestamp frequency", i.e., the clock frequency of the time source.
+                    So, to get an accurate time scale in $PNAME, you need to specify the timestamp frequency in File -> Settings -> Timestamp Frequency.
+                </p>
+
+                <p>
+                    <A HREF ="img/settings_timestamp_freq.png" target ="_blank">
+                        <img src="img/settings_timestamp_freq.png" border="0"/>
+                    </A>
+                </p>
+
+                <p>
+                    This setting should reflect how frequently the time source is updated. Depending on your ThreadX port, the timestamp
+                    frequency is often the processor's core clock frequency. For instance, if using a Renesas Synergy S7G2 processor at 240 Mhz, you should enter 240000000.
+                    After updating the timestamp frequency, you need to reload the trace for the setting to take effect.
+                </p>
+
+                <p>
+                    <b>Custom Timestamping</b><br/>
+                    The ThreadX timestamping is defined by these two macros in <b>tx_port.h</b>.
+                    In case you want to use a custom time source for the tracing, you can override these definitions, e.g., in <b>tx_user.h</b>.
+                </p>
+                <p>
+                    <ul class="list">
+                        <li>
+                            <i>TX_TRACE_TIME_SOURCE</i>: How to read the current time (i.e., the time source).
+                        </li>
+                        <li>
+                            <i>TX_TRACE_TIME_MASK</i>: A bit mask applied to the timestamp (e.g., 0x00FFFFFFUL for a 24-bit timer).
+                        </li>
+                    </ul>
+                </p>
+            </text>
+        </section>
+
+        <section>
+            <header>User Events</header>
+            <text>
+                <p>
+                    The ThreadX tx_trace library allows for inserting your own custom events, called <a href="UserEventIntroduction.html#User_Events___Introduction">User Events</a>.
+                    This allows you may trace and visualize any event or data in your firmware in several different ways, including data plots, custom intervals and state graphs.
+					You may also apply the <a href="EventInterpretation.html">Event Interpretation</a> feature to change how the events are displayed.
+                </p>
+
+				<p>
+					User Events are added by calling <i>tx_trace_user_event_insert</i>.
+                </p>
+
+                <p>
+                    <pre><code>UINT tx_trace_user_event_insert(ULONG event_id, ULONG info_field_1,
+                        ULONG info_field_2,
+                        ULONG info_field_3,
+                        ULONG info_field_4)</code></pre>
+                </p>
+
+                <p>
+                    The parameter <i>event_id</i> is a numeric code that you assign as a unique identifier for this event, in the range TX_TRACE_USER_EVENT_START (4096) to TX_TRACE_USER_EVENT_END (65535).
+                    The "info_field" parameters allow for logging up to four 32-bit integer values in a single timestamped event.
+                </p>
+
+                <p>
+                    User Event are saved quickly and can usually be used also in time-critical code without adding significant overhead.
+                    If taking ARM Cortex-M MCUs as example, a User Event takes about 100-200 clock cycles depending on compiler and optimization level. That is often less than 1 microsecond.
+                </p>
+
+                <p>
+                    Possible return values from tx_trace_user_event_insert are:<br/>
+                    <ul class="list">
+                        <li>
+                            <code>TX_SUCCESS (0x00)</code>: The user event was logged correctly.
+                        </li>
+                        <li>
+                            <code>TX_NOT_DONE (0x20)</code>: If the tracing has not been enabled correctly using <A HREF="#tx_trace_enable">tx_trace_enable</A>.
+                        </li>
+                        <li>
+                            <code>TX_FEATURE_NOT_ENABLED (0xFF)</code>: Returned if event tracing is not enabled in the build (see <i>TX_ENABLE_EVENT_TRACE</i> above).
+                        </li>
+                    </ul>
+                </p>
+            </text>
+        </section>
+
+        <section>
+            <header>ISR tracing</header>
+            <text>
+                <p>
+                    To trace Interrupt Service Routines, you need to add calls to <i>tx_trace_isr_enter_insert</i> and <i>tx_trace_isr_exit_insert</i> in each handler function you wish to trace.
+                </p>
+                <p>
+                    <pre><code>VOID tx_trace_isr_enter_insert(ULONG isr_id)</code></pre>
+                </p>
+                <p>Call <i>tx_trace_isr_enter_insert</i> in the very beginning of the ISRs you want to trace.</p>
+                <p>
+                    <pre><code>VOID tx_trace_isr_exit_insert(ULONG isr_id)</code></pre>
+                </p>
+                <p>Each call to "isr_enter" call should have a matching "isr_exit" call, in the very end of the traced ISR.</p>
+                <p>
+                    The parameter <i>isr_id</i> is the identifier displayed in $PNAME. For instance, if <i>isr_id</i> is 1, $PNAME will label this execution as "ISR1".
+                </p>
+            </text>
+        </section>
+
+        <section>
+            <header>tx_trace_enable</header>
+            <text>
+				<p><a name="tx_trace_enable" style="position: relative; top:-45;"></a></p>
+
+                <p>
+                    The ThreadX function tx_trace_enable() should be called in order to initialize and activate the event tracing.
+
+                    <pre><code>UINT tx_trace_enable(VOID* trace_buffer_start, ULONG trace_buffer_size, ULONG registry_entries)</code></pre>
+                </p>
+                <p>
+                    Where the parameters are:
+                    <ul class="list">
+                        <li>
+                            trace_buffer_start: Pointer to a buffer for the recorded events, allocated by the user.
+                        </li>
+                        <li>
+                            trace_buffer_size: The size of the buffer, in bytes.
+                        </li>
+                        <li>
+                            registry_entries: The number of ThreadX objects to keep in the trace registry. This allows for displaying object names, instead of just addresses.
+                        </li>
+                    </ul>
+                </p>
+                <p>
+                    <b>Example:</b>
+                    <br/>
+                    <pre>
+                        <code>
+   						    #define TRC_BUF_SIZE (500*32)  /* Buffer size 500 events */
+                            #define TRC_MAX_OBJ_COUNT (40) /* Max number of ThreadX objects */
+                            ...
+                            UCHAR myBuf[TRC_BUF_SIZE];
+                            ...
+                            status = tx_trace_enable(&amp;myBuf, TRC_BUF_SIZE, TRC_MAX_OBJ_COUNT);
+                        </code>
+                    </pre>
+                </p>
+                <p>
+                    Make sure to check the return values from tx_trace_enable. They are:<br/>
+                    <ul class="list">
+                        <li>
+                            <code>TX_SUCCESS (0x00)</code>: Tracing was enabled correctly.
+                        </li>
+                        <li>
+                            <code>TX_SIZE_ERROR (0x05)</code>: The provided buffer was too small.
+                        </li>
+                        <li>
+                            <code>TX_NOT_DONE (0x20)</code>: Returned if tx_trace_enable has already been called.
+                        </li>
+                        <li>
+                            <code>TX_FEATURE_NOT_ENABLED (0xFF)</code>: Returned if event tracing is not enabled in the build (see <i>TX_ENABLE_EVENT_TRACE</i> above).
+                        </li>
+                    </ul>
+                </p>
+
+                <p>
+                    Assuming that the return value is TX_SUCCESS, the event tracing is now active. The event data can be extracted from target RAM whenever suitable.
+                </p>
+            </text>
+        </section>
+    </body>
+</page>

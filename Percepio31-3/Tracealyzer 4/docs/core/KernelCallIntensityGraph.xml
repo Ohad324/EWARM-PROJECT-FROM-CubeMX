@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Service Call Intensity</title>
+  <keywords>
+    <keyword>kernel</keyword>
+    <keyword>services</keyword>
+    <keyword>graphs</keyword>
+    <keyword>calls</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Service Call Intensity graphs displays the number of Service Calls over time.
+          This allows you to find hot spots with many service calls.
+        </p>
+        <p>
+          The individual services are color coded using a separate color scheme, shown in the right-side legend.
+          You can toggle the visibility of services in this view by clicking on the labels in the legend.
+        </p>
+        <p>
+          <A HREF="img/ksi.png" target="$IMAGETARGET">
+            <img src="img/ksi.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+      </text>
+    </section>
+  </body>
+  Use
+</page>

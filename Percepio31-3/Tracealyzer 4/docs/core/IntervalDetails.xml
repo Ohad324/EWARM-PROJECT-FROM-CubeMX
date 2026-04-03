@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Interval Details</title>
+  <keywords>
+    <keyword>intervals</keyword>
+    <keyword>states</keyword>
+    <keyword>machines</keyword>
+    <keyword>statemachines</keyword>
+    <keyword>state-machines</keyword>
+    <keyword>details</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Whenever an interval or state machine is double-clicked, its details will be shown.
+        </p>
+
+        <p>
+          <A HREF="img/Interval Details.png" target="$IMAGETARGET">
+            <img src="img/Interval Details.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          The details includes the currently selected interval. Besides the details, these views are also available:
+          <ul>
+            <li>
+              Local Trace shows the current trace view with the selected instance focused, see <a href="TraceView.html">Trace View</a> for more information.
+            </li>
+            <li>
+              Interval Instances shows all available instances of the interval. The current selection is highlighted with light blue background, and if different the selection of the main window as well with a teal background.
+            </li>
+            <li>
+              State Machine will show a state machine graph of the current machine, only available of the interval describes a state machine.
+            </li>
+            <li>
+              Transitions will show all transitions, if the interval describes a state machine. It can also be set to filter for specific From or To states, either with Or logic (match either) or And logic (match both).
+            </li>
+          </ul>
+        </p>
+
+        <p>
+          If the interval describes a state machine, additional buttons "Prev State" and "Next State" will be available in the Details section, which will step to the previous/next transition of <i>any channel</i>,
+          while the normal Previous and Next buttons will step to the previous/next interval instance of the <i>same channel</i>.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

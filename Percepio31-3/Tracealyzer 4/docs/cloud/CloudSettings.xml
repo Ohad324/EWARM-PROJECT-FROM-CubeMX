@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>DevAlert Backend Settings using Local Storage</title>
+  <keywords>
+    <keyword>alert</keyword>
+    <keyword>dev</keyword>
+    <keyword>devalert</keyword>
+    <keyword>cloud</keyword>
+    <keyword>trace</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+					The settings here are for $PNAME to find your traces using your local file system.
+				</p>
+
+        <p>
+          <A HREF="img/DevAlert_Storage_Settings_Local_Storage.png" target="$IMAGETARGET">
+            <img src="img/DevAlert_Storage_Settings_Local_Storage.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <subsection>
+          <header>Settings</header>
+          <text>
+            <p>
+              Any path your computer can find can be used as the trace location. This can be on your local hard drive,
+              on a shared network disc, or any other mapped storage.
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

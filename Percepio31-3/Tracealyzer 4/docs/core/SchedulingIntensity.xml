@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Context Switch Intensity</title>
+  <keywords>
+    <keyword>schedule</keyword>
+    <keyword>scheduling</keyword>
+    <keyword>intensity</keyword>
+    <keyword>context</keyword>
+    <keyword>switch</keyword>
+    <keyword>graph</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Context Switch Intensity graph shows the amount of context switches over time. For each time interval, a bar is drawn for each actor beginning or resuming execution at least once in that interval.
+        </p>
+
+        <p>
+          <A HREF="img/Scheduling Intensity.png" target="$IMAGETARGET">
+            <img src="img/Scheduling Intensity.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          The height of each bar, or bar section, shows the number of context switches within the given interval.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

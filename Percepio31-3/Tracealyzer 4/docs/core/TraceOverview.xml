@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Trace Overview</title>
+  <keywords>
+    <keyword>trace</keyword>
+    <keyword>details</keyword>
+    <keyword>warnings</keyword>
+    <keyword>bookmarks</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Trace Overview shows details of the recorded trace as well as any warnings produced by the recorder.
+        </p>
+
+        <p>
+          <A HREF="img/Trace Overview.png" target="$IMAGETARGET">
+            <img src="img/Trace Overview.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          To allow loading traces with lots of warnings, like a trace where the communication was not fast enough for all data to come through,
+          the main tree view (left side) will only show all warnings if they are few enough. If all are not show, select the <b>Warnings from Recorder</b>
+          node, and the list (right side) will show all warnings.
+        </p>
+
+        <p>
+          To allow information to efficiently be copied from the trace overview to the clipboard, to use in other programs, the Selection menu can be used.<br/>
+          Options here can show Selection Mode, which sets a check box on each tree node to allow only selecting a subset of the nodes, and to select if the copy
+          should be done as a tree (i.e. tabbed), or as a flat list.<br/>
+          Copy Selected Nodes will copy the single selected node if not in Selection Mode (with check boxes).<br/>
+          Copy All Nodes will <i>not</i> include items that are not in the tree, e.g. if there are too many warnings.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

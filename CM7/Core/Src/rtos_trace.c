@@ -28,7 +28,7 @@
 #define TRACE_RTT_BUF_BYTES 8192u        /* RTT host-side buffer  */
 #define DRAIN_PERIOD_MS     5u           /* drain wakeup interval */
 #define CPU_CLK_HZ          480000UL     /* 480 MHz Cortex-M7     */
-#define WATERMARK_PERIOD_MS 30000u       /* stack HWM report interval */
+#define WATERMARK_PERIOD_MS 5000u        /* stack HWM report interval */
 #define MAX_TASK_COUNT      16u          /* upper bound for system state */
 
 /* ── Ring buffer record (16 bytes) ──────────────────────────────────────── */
@@ -229,9 +229,9 @@ static void emit_run_counts(void)
 /* ── Periodic stack watermark report ─────────────────────────────────────── */
 static void emit_stack_watermarks(void)
 {
-    TaskStatus_t  info[MAX_TASK_COUNT];
-    char          line[72];
-    UBaseType_t   n;
+    static TaskStatus_t  info[MAX_TASK_COUNT];  /* static: off the stack */
+    char                 line[72];
+    UBaseType_t          n;
 
     n = uxTaskGetSystemState(info, MAX_TASK_COUNT, NULL);
 

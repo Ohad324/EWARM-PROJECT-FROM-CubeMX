@@ -1,0 +1,186 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>User Events in Keil RTX5</title>
+  <keywords>
+    <keyword>user</keyword>
+    <keyword>events</keyword>
+    <keyword>RTX5</keyword>
+    <keyword>CMSIS</keyword>
+    <keyword>OS2</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          <i>User Events</i> are custom events that you generate from your application code. They can be used for logging any kind of event
+          and/or data, including variables in control algorithms, states, inputs and outputs.
+          User Events are logged and transferred in the same way as other events, but are intended to be generated from your application code rather than by kernel functions.
+        </p>
+        <p>
+          In Keil µVision, User Events are logged by calling the functions <i>EventRecord2</i>, <i>EventRecord4</i> or <i>EventRecordData</i>. Timestamps are stored automatically.
+          EventRecord2 stores two 32-bit integers while EventRecord4 allows for storing four integers. EventRecordData stores up to 1024 bytes and can be used for storing strings as ASCII text.
+          These are described further in the <a href="http://www.keil.com/pack/doc/compiler/EventRecorder/html/er_use.html">Event Recorder</a> documentation, but as an example, <i>EventRecord2</i> has the following declaration:
+        </p>
+
+        <p>
+          <pre>
+            <code>uint32_t EventRecord2(uint32_t id, uint32_t val1, uint32_t val2)</code>
+          </pre>
+        </p>
+        <p>
+          The <i>id</i> parameter is a numeric event code, containing three fields:
+
+          <ul class="list">
+            <li>
+              <i>msg_no</i> (bit 0-7): identifies the specific event, within the scope of the component.
+            </li>
+            <li>
+              <i>component</i> (bit 8-15): identifies the "producer" of the event, e.g. a certain software component or subsystem.
+            </li>
+            <li>
+              <i>level</i> (bit 16-17): the "importance" of the event (can be used for runtime filtering of events).
+              <ul class="list">
+                <li>EventLevelError (0x00000U): Run-time error in the component.</li>
+                <li>EventLevelAPI (0x10000U): API function call.</li>
+                <li>EventLevelOp (0x20000U): Internal operation.</li>
+                <li>EventLevelDetail (0x30000U): Additional detailed information of operations.</li>
+              </ul>
+            </li>
+          </ul>
+
+          To pack these three fields into a single 32-bit identifier for the EventRecord functions, you may use the <i>EventID</i> macro.
+        </p>
+        <p>
+          <u>Example:</u>
+          <br/>
+          <pre>
+            <code>#define ComponentSensorY 0xBB
+#define EventInputY 0x00
+...
+EventRecord2( EventID(EventLevelDetail, ComponentSensorY, EventInputY), mySensorValue, 0 );</code>
+          </pre>
+        </p>
+
+        <p>
+          The resulting events are shown with yellow labels, as illustrated below, assuming they are enabled in the View Filter. You can also view the User Event data in the <a href="EventLog.html">Event Log</a> Event Log and in the <A HREF="UserEventSignal.html">User Event Plot</A>.
+        </p>
+
+        <p>
+          <A HREF ="img/user_event_no_name.png" target ="_blank">
+            <img src="img/user_event_no_name.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+        <p>
+          The default numeric display can however be difficult to comprehend, at least if you have multiple types of events. To get a better understanding, you can setup $PNAME to translate the numeric codes into a custom format with descriptive names and labels, as illustrated below.
+        </p>
+
+        <p>
+          <A HREF ="img/user_event_with_name.png" target ="_blank">
+            <img src="img/user_event_with_name.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+      </text>
+    </section>
+    <section>
+      <header>Custom Formatting</header>
+      <text>
+
+        <p>
+          The custom formatting is specified by creating a SCVD file (Software Component View Description). SCVD is an XML format specified by ARM and <A HREF="http://www.keil.com/pack/doc/compiler/EventRecorder/html/SCVD_Format.html">detailed documentation is found here</A>.
+          The SCVD format allows you to specify custom formatting for your User Events, based on <b>Events</b> and <b>Components</b>. An example from the demo trace is shown below.
+        </p>
+
+        <p>
+          <A HREF ="img/user_event_scvd.png" target ="_blank">
+            <img src="img/user_event_scvd.png" border="0"/>
+          </A>
+          <center>
+            <a href="$BINDIR/RTX5/demo_rtx5/PercepioUserEvents.scvd">(Click to open file in external editor)</a>
+          </center>
+        </p>
+
+        <p>
+          The <b>Component</b> elements specify the producers of events, and is used for grouping the User Events into "User Event Channels", i.e., the names shown in the View Filter such as "Sensor Y" and "Sensor Z" in the above screenshot.
+          A component typically refers to a software component/module/subsystem, but the meaning of a Component is up to the user.
+          Note that components are not mandatory to specify. If no matching component is found for an Event, the numeric component code is shown instead.
+        </p>
+
+        <p>
+          For each Component specified, the following attributes are supported:
+          <ul class="list">
+            <li>
+              <i>no</i> (mandatory): The numerical code of the component, corresponding to bits 8-15 in the event id.
+              $PNAME groups all events matching this component code into the same User Event Channel.
+            </li>
+            <li>
+              <i>name</i> (mandatory): The name of the component, sets the name of the User Event Channel.
+            </li>
+            <li>
+              <i>brief</i>: A shorter name for the component (optional). Overrides as name for User Event Channel if specified.
+            </li>
+          </ul>
+        </p>
+
+        <p>
+          Note that Components must be placed withing a "Group" section, as shown in the example. However, $PNAME does not care about which Group a particular Component belongs to, the Group names or the number of Groups specified.
+        </p>
+
+        <p>
+          For <b>Events</b>, the following attributes are supported:
+          <ul class="list">
+            <li>
+              <i>id</i> (mandatory): the event code provided to the EventRecord calls (lower 16 bits, msg_no and component).
+            </li>
+            <li>
+              <i>property</i> (mandatory): the string to show for this event in $PNAME.
+            </li>
+            <li>
+              <i>level</i> (optional): the importance of the event (Error, API, Op, Detail).
+            </li>
+            <li>
+              <i>value</i> (optional): a format string for the data arguments, e.g. "%d[val1]", where %d specifies the data type and <i>val1</i> specifies to use the first parameter.
+              The follows format specifiers are supported:
+              <ul>
+                <li>%d: decimal integer value</li>
+                <li>%x: hexadecimal integer value (32-bit or 64-bit)</li>
+                <li>%S: address as symbolic name, or hexadecimal value if failed</li>
+                <li>%t: ASCII text</li>
+                <li>%E: symbolic enumeration value, or decimal value if failed</li>
+              </ul>
+              <p>
+                Multiple arguments can be specified within the format string, e.g. "%d[val1] %x[val2]". The value attribute is optional; the default formatting is used if not specified.
+              </p>
+              <p>
+                See the official ARM KEIL documentation page for <a href="http://www.keil.com/pack/doc/compiler/EventRecorder/html/value_output.html#format_examples">Value Output</a>
+                for more information.
+              </p>
+            </li>
+          </ul>
+        </p>
+
+        <p>
+          To apply your SCVD file to the trace data, you need to register the SCVD file in Keil µVision. You find this option under <i>Project > Options > Debug</i>.
+          There click on "Manage Component Viewer Description Files", then "Add Component Viewer Description Files" and there select your SCVD file.
+        </p>
+
+        <p>
+          <A HREF ="img/add_scvd_file.png" target ="_blank">
+            <img src="img/add_scvd_file.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+
+        <p>
+					To modify an existing SCVD file, you don't need to run a new trace session every time to verify the results.
+					You can simply edit the local copy of the SCVD file found in the trace directory (under "[User]\Documents\$PNAME for Keil RTX5-Traces\...") and reload the trace in $PNAME to apply your changes.
+					However, note that this is a <u>local copy</u> that won't be used for the next trace session, so remember to also update the original SCVD file as specified in "Manage Component Viewer Description Files".
+        </p>
+
+
+      </text>
+    </section>
+  </body>
+</page>

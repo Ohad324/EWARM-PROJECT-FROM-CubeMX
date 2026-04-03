@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <InitialSchedulingCapability>false</InitialSchedulingCapability>
+
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Trace">
+      <KernelService name="Trace Start" operation="" parameters="None">
+      </KernelService>
+      <KernelService name="Trace End" operation="" parameters="None">
+      </KernelService>
+      <KernelService name="Main Start" operation="" parameters="None">
+      </KernelService>
+      <KernelService name="Main End" operation="" parameters="None">
+      </KernelService>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+
+  <ObjectClasses>
+    <ObjectClass name="SystemGroup" type="ActorGroup" />
+    <ObjectClass name="DummyActor" type="Actor" />
+  </ObjectClasses>
+</TargetPlatform>

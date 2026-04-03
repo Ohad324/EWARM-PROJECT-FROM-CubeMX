@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Asynchronous Event References Graph</title>
+  <keywords>
+    <keyword>events</keyword>
+    <keyword>external</keyword>
+    <keyword>asynchronous</keyword>
+    <keyword>graph</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view shows the number of events of a particular type, grouped by the value of a specified field. This could for example be used with a trace point type event, to show number of hits per trace point.
+        </p>
+
+        <p>
+          By default, the interval is divided into 50 time slices. The number of slices can be changed via the Resolution or Time Resolution menus.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

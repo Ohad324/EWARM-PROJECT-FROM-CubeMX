@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+	<title>Object List</title>
+	<keywords>
+		<keyword>kernel</keyword>
+		<keyword>objects</keyword>
+		<keyword>list</keyword>
+		<keyword>live</keyword>
+	</keywords>
+	<body>
+		<section>
+			<requirement inverted="true">CoreFeatures.Streaming</requirement>
+			<header>Overview</header>
+			<text>
+				<p>
+					The Object list shows all kernel objects in the trace, such as threads and IPC objects.
+				</p>
+
+				<p>
+					The list can be sorted on either column by clicking the column headers.
+				</p>
+
+				<p>
+					<A HREF="img/Kernel Object List.png" target="$IMAGETARGET">
+						<img src="img/Kernel Object List.png" width="$IMAGEWIDTH" border="0" />
+					</A>
+				</p>		
+			</text>
+		</section>
+
+		<section>
+			<requirement>CoreFeatures.Streaming</requirement>
+			<header>Overview</header>
+			<text>
+				<p>
+					The Object list shows all kernel objects in the trace, such as threads and IPC objects.
+				</p>
+
+				<p>
+					The list can be sorted on either column by clicking the column headers.
+				</p>
+
+				<p>
+					<A HREF="img/Kernel Object List.png" target="$IMAGETARGET">
+						<img src="img/Kernel Object List.png" width="$IMAGEWIDTH" border="0" />
+					</A>
+				</p>
+
+				<p>
+					Double-clicking an entry in the list opens the Object History view for that object.
+				</p>
+
+			</text>
+		</section>
+		
+
+	</body>
+</page>

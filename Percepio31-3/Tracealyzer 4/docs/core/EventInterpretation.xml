@@ -1,0 +1,263 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Event Interpretations</title>
+  <keywords>
+    <keyword>user</keyword>
+    <keyword>events</keyword>
+    <keyword>interpretations</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Some supported platforms have no means for tracing custom events with explicit data structures and format strings, but does provides basic means for recording arbitrary events containing an arbitrary blob of binary data.
+          The <i>Event Interpretations</i> dialog allows for providing rules for how to interpret such raw binary data into $PNAME events, including User Events with format strings and values that can be plotted.<br />
+          This dialog is only available for some platforms where custom interpretation is needed to fully leverage all features of $PNAME (e.g. Linux, ThreadX and VxWorks) and is then accessed from the "Trace" menu of the main window.
+        </p>
+
+        <p>
+          <A HREF="img/Event Interpretation.png" target="$IMAGETARGET">
+            <img src="img/Event Interpretation.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <subsection>
+          <header>Setting up Event Interpretation</header>
+          <text>
+            <p>
+              To set up event interpretations for a channel, open the <i>Event Interpretations</i> tool. The list on the left shows all available event channels.
+              Helping the user find the right channel, text filtering can be applied and the list can also be filtered on mapped/unmapped.
+              It also allows filtering on channels with examples (included in the current trace) or without examples (previously set up but not included in the current trace). <br/>
+            </p>
+            <p>
+              When a channel is selected, the current mapping will be show. To change the mapping, click the <i>Change</i> button to change the mapping to use:
+              <ul>
+                <li><a href="#Mapping_UserEvent">User Event Mapping</a></li>
+                <li><a href="#Mapping_TimeSync">Time Sync Mapping</a></li>
+                <li><a href="#Mapping_SplitInstance">Instance Split Mapping</a></li>
+                <li><a href="#Mapping_RawEvent">Raw Event Mapping</a></li>
+                <li>Same as another Event Channel - Map the event channel to be the same as another channel</li>
+                <li>No Mapping - Remove existing event mapping</li>
+              </ul>
+              <A HREF="img/Event Interpretation - Select Type.png" target="$IMAGETARGET">
+                <img src="img/Event Interpretation - Select Type.png" width="$IMAGEWIDTH" border="0" />
+              </A>
+            </p>
+
+            <note>
+              Some mapping types might not be available for the current trace; if not they will be grayed out.
+            </note>
+          </text>
+        </subsection>
+
+        <p>
+          <a name="Mapping_UserEvent"/>
+        </p>
+        <subsection>
+          <header>User Event Mapping</header>
+          <text>
+            <p>
+              When selecting User Event Mapping, the first step will be to set up how the data will be interpreted
+              as <a href="#Mapping_RawData">Raw Data</a> or <a href="#Mapping_KeyValuePairData">Key Value Pair Data</a>, depending on the trace format.
+            </p>
+            <p>
+              The next step is setting up the text format.
+              <ul>
+                <li>The channel name can either be a fixed name (same for all events of this type), or taken from a field.</li>
+                <li>The text format must be set, but it does not have to use any of the data. For help setting up the field substitution, see <a href="#Mapping_FieldSubst">here</a>.</li>
+                <li>If there is more than one example, they can be cycled through with the arrow buttons next to <i>Selected Example</i>.</li>
+                <li>If the data mapping needs to change, press the <i>Previous</i> button to go back.</li>
+                <li>When the interpretation looks good, click the <i>Next</i> button.</li>
+              </ul>
+
+              <note>
+                For Key Value Pair data, the order of the text format will be used as the order of the event arguments.
+                This is important, since only the first argument will be plotted in the <a href="UserEventSignal.html">User Event Plot</a>.
+              </note>
+            </p>
+            <p>
+              <A HREF="img/Event Interpretation - User Event Text Format.png" target="$IMAGETARGET">
+                <img src="img/Event Interpretation - User Event Text Format.png" width="$IMAGEWIDTH" border="0" />
+              </A>
+            </p>
+
+            <p>
+              The final step is a confirmation, making sure the information is correct.
+            </p>
+          </text>
+        </subsection>
+
+        <subsection>
+          <header>User Event Mapping Example</header>
+          <text>
+            <p>
+              Extracted fields:
+              <ul>
+                <li><b>channel</b> - string, value: "my channel"</li>
+                <li><b>siz</b> - signed, 4 bytes, value: 42</li>
+                <li><b>addr</b> - unsigned, 8 bytes, value 536919791</li>
+              </ul>
+              "Name from Field" checked, and "channel" selected as channel name.<br/>
+              Text format used: "Address: 0x{addr:X8}, Size: {siz:0000}"<br/>
+              Created user event will be on channel "my channel", and have the event text "Address: 0x2000BEEF, Size: 0042".
+            </p>
+          </text>
+        </subsection>
+
+        <p>
+          <a name="Mapping_TimeSync"/>
+        </p>
+        <subsection>
+          <header>Time Sync Mapping</header>
+          <text>
+            <p>
+              When selecting Time Sync Mapping, the first step will be to set up how the data will be interpreted
+              as <a href="#Mapping_RawData">Raw Data</a> or <a href="#Mapping_KeyValuePairData">Key Value Pair Data</a>, depending on the trace format.
+            </p>
+
+            <p>
+              The next step is to set up the actual time sync mapping.
+
+              <ol>
+                <li>Select a value to handle in the Value Name (must be a numeric value, use Cast to Type if needed)</li>
+                <li>Select the resolution and multiplier</li>
+                <li>If needed, set a <i>base time</i> (e.g. 1970-01-01 for UNIX timestamp)</li>
+                <li>Check result in <i>Examples</i> at the bottom.<br/><b>Note!</b> If one (or more) part is not valid, it will only yield a Partial success; this will not be valid when loading a trace, but can be good to see that some parts are correct.</li>
+                <li>Repeat steps 1 through 4 until satisfied</li>
+              </ol>
+            </p>
+
+            <p>
+              The final step is a confirmation, making sure the information is correct.
+            </p>
+
+            <note>
+              Since all resulting values will be added together, there should only be one field that has a <i>base time</i> set, or it will be added multiple times.
+            </note>
+
+            <p>
+              <A HREF="img/Event Interpretation - Time Sync.png" target="$IMAGETARGET">
+                <img src="img/Event Interpretation - Time Sync.png" width="$IMAGEWIDTH" border="0" />
+              </A>
+            </p>
+          </text>
+        </subsection>
+
+        <p>
+          <a name="Mapping_SplitInstance"/>
+        </p>
+        <subsection>
+          <header>Instance Split Mapping</header>
+          <text>
+            <p>
+              If the trace doesn't contain logical instance splitters, this can be achieved by using explicit instance split events.
+            </p>
+            <p>
+              Currently only <i>End Instance on this Event</i> mode is supported, which will split the instance on the event.
+            </p>
+          </text>
+        </subsection>
+
+        <p>
+          <a name="Mapping_RawEvent"/>
+        </p>
+        <subsection>
+          <header>Raw Event Mapping</header>
+          <text>
+            <p>
+              If this is selected, the channel will always generate raw events even if they are generally turned off.
+              This can be useful to quickly get an interpretation for certain channels, without having to load in all raw events for the whole trace
+              (which makes the trace load time longer, and also the loaded trace larger).
+            </p>
+          </text>
+        </subsection>
+
+        <p>
+          <a name="Mapping_RawData"/>
+        </p>
+        <subsection>
+          <header>Raw Data Mapping</header>
+          <text>
+            <p>
+              For traces with raw data, like VxWorks and ThreadX, values must be described from the bytes:
+              <ol>
+                <li>Start by making a selection in the <b>Raw Data</b> area, to mark which bytes to use; this will set Offset and Size accordingly</li>
+                <li>Select the matching Data Type (signed, unsigned, float, string)</li>
+                <li>If cast is to be made (including string to numeric), set Cast to Type to a value different than None</li>
+                <li><i>Optional</i>: Change the name to better describe the value</li>
+                <li>Using Add Row/Delete Row and repeat the steps above until all values are extracted</li>
+              </ol>
+              
+              Some events will have different sizes. When this happens, $PNAME will give multiple examples. Extracted values can be tested with different examples, switch between them with the arrows at Selected Example at the top.
+            </p>
+
+            <p>
+              <A HREF="img/Event Interpretation - Raw Data.png" target="$IMAGETARGET">
+                <img src="img/Event Interpretation - Raw Data.png" width="$IMAGEWIDTH" border="0" />
+              </A>
+            </p>
+
+            <note>
+              For data interpretations you may use a negative offset to indicate the last N bytes. This is useful when events have variable size, e.g. a string field followed by a number.<br/>
+              For example, an offset of "-4" (and size "4") means the last 4 bytes.
+            </note>
+
+            <note>
+              <p>For signed/unsigned, sizes of 1, 2, 4 or 8 bytes are supported.</p>
+              <p>For float, size of 4 (single) or 8 (double) bytes are supported.</p>
+              <p>For string, either a hard coded size (positive) can be used, or 0 to indicate "read from offset until zero termination".</p>
+              <p>For string, only bytes up until the zero termination character will be used, even if a larger size is set.</p>
+            </note>
+          </text>
+        </subsection>
+
+        <p>
+          <a name="Mapping_KeyValuePairData"/>
+        </p>
+        <subsection>
+          <header>Key Value Pair Mapping</header>
+          <text>
+            <p>
+              For traces with Key Value Pair data, like Linux, it is possible to view fields and also add casting.
+              This is useful if e.g. stored string values actually contains numerical values.
+            </p>
+
+          </text>
+        </subsection>
+
+        <p>
+          <a name="Mapping_FieldSubst"/>
+        </p>
+
+        <subsection>
+          <header>Field Substitution</header>
+          <text>
+            <p>
+              To insert a field value into the format string, C# style field substitution is used, either <code>{field}</code> or <code>{field:formatting}</code>,
+              where <b>field</b> is the field name (from "Data to Fields Mapping") and <b>formatting</b> is an optional formatting specifier.              
+            </p>
+
+            <p>
+              The <b>field</b> must match a field name from "Data to Fields Mapping". This is case sensitive.
+              To use formatting, separate by <b>:</b> and enter the formatting, depending on the data type.
+            </p>
+
+            <p>
+              <h4>Formatting</h4>
+              Here are a few examples of format specifiers. Note that hexadecimal formatting will <i>not</i> add any leading "0x"; add this as part of the formatting string, before the field substitution.
+              <ul>
+                <li>0000 - decimal, 4 digits.<br/>Example: value 42 and <code>{value:0000}</code> gives result "0042".</li>
+                <li>x4 - hexadecimal, lower case, 4 digits<br/>Example: value 42 and <code>{value:x4}</code> gives result "002a".</li>
+                <li>X8 - hexadecimal, upper case, 8 digits<br/>Example: value 536919791 and <code>{value:X8}</code> gives result "2000BEEF".</li>
+                <li>0.00 - float value formatting, with at least one digit before the decimal point and at least two digits after<br/>
+                  Example: value 3.14159265 and <code>{value:0.00}</code> gives result "3.14".</li>
+              </ul>
+              For more details, see the <a href="https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-numeric-format-strings">.NET documentation</a>.
+            </p>
+          </text>
+        </subsection>
+      </text>
+    </section>
+  </body>
+</page>

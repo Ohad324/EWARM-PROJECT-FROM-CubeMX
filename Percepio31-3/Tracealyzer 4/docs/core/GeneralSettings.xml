@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Project Settings</title>
+  <keywords>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+		<requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+		<header>Overview</header>
+      <text>
+        <p>
+          These settings, and all pages in the tree, apply to the currently active project. Changes take effect when you click OK or Apply.
+        </p>
+
+        <p>
+          <A HREF="img/GeneralSettings.png" target="$IMAGETARGET">
+            <img src="img/GeneralSettings.png" border="0" />
+          </A>
+        </p>
+
+        <p>
+          <i>Trace Directory</i> lets you specify where your traces are stored, in case the default location is not preferred.
+          By default this is empty, meaning the default location is used.
+        </p>
+        
+        <p>
+          Percepio Tracealyzer also offer settings for trace streaming. In case very large files are recorded, you can choose to open the Trace Preview that lets you load a smaller section of the trace.
+          
+          <ul>
+            <li>The lower threshold (ask if exceeding) decides when Trace Preview is suggested.</li>
+            <li>The higher threshold (always use if exceeding) decides when Trace Preview is opened automatically.</li>
+          </ul>
+        </p>
+
+        <note>
+          This is based on estimated host memory usage, not the size of the trace file.
+        </note>
+		  
+      </text>
+    </section>
+
+	  <section>
+		  <requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+		  <header>Overview</header>
+		  <text>
+			  <p>
+				  These settings, and all pages in the tree, apply to the currently active project. Changes take effect when you click OK or Apply.
+			  </p>
+			  
+			  <p>
+				  One noteworthy setting on the main Project Settings page is <i>Trace Directory</i>, that lets you specify where your traces are stored.
+				  By default this is empty, meaning the default location is used.
+			  </p>
+
+		  </text>
+	  </section>
+
+
+  </body>
+</page>

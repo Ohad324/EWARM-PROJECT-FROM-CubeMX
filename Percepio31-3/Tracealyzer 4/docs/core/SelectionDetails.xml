@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Selection Details</title>
+  <keywords>
+    <keyword>objects</keyword>
+    <keyword>selection</keyword>
+    <keyword>details</keyword>
+    <keyword>tools</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+	  <requirement>CoreFeatures.Streaming</requirement>
+      <header>Overview</header>
+      <text>
+        <p>
+          The Selection Details view displays information about the currently selected Actor in the main view.
+          The information displayed include among others timing, fragmentation and any events that have occurred.
+          Property values for the selected instance, as well as actor average, minimum and maximum values.
+          Double-clicking on a maximum or minimum value scrolls the main view to show the corresponding instance in the trace.
+        </p>
+
+        <p>
+          <A HREF="img/Selection Details.png" target="$IMAGETARGET">
+            <img src="img/Selection Details.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+      </text>
+    </section>
+
+	  <section>
+		  <requirement inverted="true">CoreFeatures.Streaming</requirement>
+		  <header>Overview</header>
+		  <text>
+			  <p>
+				  The Selection Details view displays information about the currently selected Actor and event in the main view, for example scheduling priority.
+			  </p>
+			  <p>
+				  More information is provided if using Percepio Profile or Percepio Tracealyzer, including timing metrics for the selected instance and average, minimum and maximum observed values for the actor.				  
+			  </p>
+
+			  <p>
+				  <A HREF="img/Selection Details.png" target="$IMAGETARGET">
+					  <img src="img/Selection Details.png" width="$IMAGEWIDTH" border="0" />
+				  </A>
+			  </p>
+
+		  </text>
+	  </section>
+
+  </body>
+</page>

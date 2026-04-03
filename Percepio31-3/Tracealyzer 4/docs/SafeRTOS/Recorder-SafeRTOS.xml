@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>SafeRTOS</title>
+  <keywords>
+    <keyword>recorder</keyword>
+    <keyword>SafeRTOS</keyword>
+	<keyword>recording</keyword>
+	<keyword>record</keyword>
+  	<keyword>trace</keyword>
+	<keyword>iar</keyword>
+	<keyword>keil</keyword>
+	<keyword>i-jet</keyword>
+	<keyword>ulink</keyword>
+	<keyword>itm</keyword>
+	<keyword>j-link</keyword>
+	<keyword>jlink</keyword>
+	<keyword>segger</keyword>
+	<keyword>rtt</keyword>
+	<keyword>swo</keyword>
+	<keyword>jtag</keyword>
+	<keyword>debugger</keyword>
+	<keyword>probe</keyword>
+  </keywords>
+  <body>
+
+	  <section>
+		  <header>Introduction</header>
+		  <text>
+
+			  <p>
+				  Using $PNAME with SafeRTOS requires an instrumented version of the SafeRTOS kernel (i.e. with trace hooks) as well as the TraceRecorder kernel port for SafeRTOS.
+				  These are provided on request by <A HREF="https://www.highintegritysystems.com/">Wittenstein high integrity systems</A>.
+			  </p>
+
+			  <p>
+				  The $PNAME integration for SafeRTOS uses the latest version of the TraceRecorder library, documented in <A HREF="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later">Using TraceRecorder v4.6 or later</A>.
+			  </p>
+			  
+			  <p>
+				  See <a href="Recorder.html#Creating_and_Loading_Traces___Percepio_TraceRecorder___Using_TraceRecorder_v4.6_or_later___TraceRecorder_API">TraceRecorder API</a> for pointers to the TraceRecorder code documentation.
+			  </p>			  
+
+	        </text>
+	  </section>
+	  
+
+  </body>
+</page>

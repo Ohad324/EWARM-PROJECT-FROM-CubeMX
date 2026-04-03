@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Event Interpretation Settings</title>
+  <keywords>
+    <keyword>users</keyword>
+    <keyword>events</keyword>
+    <keyword>mappings</keyword>
+    <keyword>time</keyword>
+    <keyword>mapping</keyword>
+    <keyword>interpretations</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          Here the user can enable or disable event interpretations.
+        </p>
+
+        <p>
+          <A HREF="img/EventInterpretationSettings.png" target="$IMAGETARGET">
+            <img src="img/EventInterpretationSettings.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          To modify the interpretations, see <a href="EventInterpretation.html">Event Interpretation</a>.
+        </p>
+
+        <note>
+          To apply the changes, the trace need to be reloaded.
+        </note>
+      </text>
+    </section>
+  </body>
+</page>

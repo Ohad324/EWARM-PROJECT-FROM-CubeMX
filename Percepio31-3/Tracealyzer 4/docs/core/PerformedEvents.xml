@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Performed Events</title>
+  <keywords>
+    <keyword>performed</keyword>
+    <keyword>events</keyword>
+    <keyword>list</keyword>
+    <keyword>tools</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          When anything is selected in any view, this view shows any associated events.
+        </p>
+
+        <p>
+          <A HREF="img/Performed Events.png" target="$IMAGETARGET">
+            <img src="img/Performed Events.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+      </text>
+    </section>
+  </body>
+</page>

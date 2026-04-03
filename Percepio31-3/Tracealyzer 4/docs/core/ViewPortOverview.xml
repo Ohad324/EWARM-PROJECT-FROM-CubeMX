@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>View Port Overview</title>
+  <keywords>
+    <keyword>views</keyword>
+    <keyword>area</keyword>
+    <keyword>overview</keyword>
+    <keyword>tool</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This tool shows the view ports that are used by any view.
+          Multiple views can share the same view port, see <a href="UserInterface.html">User Interface</a> section for more details.
+        </p>
+        <p>
+          Both the view ports and the view selection is visible.
+        </p>
+
+        <p>
+          <A HREF="img/View Port Overview.png" target="$IMAGETARGET">
+            <img src="img/View Port Overview.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Support and Licensing</title>
+  <keywords>
+    <keyword>support</keyword>
+    <keyword>license</keyword>
+    <keyword>licensing</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+		  For quotes, license questions or to access Percepio technical support, please contact us at <A HREF="https://percepio.com/contact-us/">https://percepio.com/contact-us/</A>.
+        </p>        
+      </text>
+    </section>
+  </body>
+</page>

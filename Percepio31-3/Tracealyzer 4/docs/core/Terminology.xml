@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Terminology</title>
+  <keywords>
+    <keyword>terminology</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <dictionary>
+          <term>
+            <word>Actor</word>
+            <meaning>An execution context - a task, thread or an Interrupt Service Routine (ISR).</meaning>
+          </term>
+          <term>
+            <word>Actor Instance</word>
+            <meaning>An execution of an actor. For interrupt service routines, this means from start to finish of the ISR handler. For tasks, this is application-dependent but typically means one iteration in the main loop. See Instance Finish Event. An Actor Instance consists of one or several fragments, depending on preemptions, blocking and interrupts.</meaning>
+          </term>
+          <term>
+            <word>Execution Time</word>
+            <meaning>The amount of CPU time used by an Actor Instance, excluding preemptions.</meaning>
+          </term>
+          <term>
+            <word>Response Time</word>
+            <meaning>The time from the start of an actor instance until it finishes.</meaning>
+          </term>
+          <term>
+            <word>Fragment</word>
+            <meaning>A time interval when a specific actor executes uninterrupted. Fragments are visualized as colored rectangles in the scheduling trace. A fragment belongs to a specific Actor Instance.</meaning>
+          </term>
+          <term>
+            <word>Fragmentation</word>
+            <meaning>The number of fragments within an Actor Instance. If an Actor Instance executes in full without preemptions, the fragmentation of the instance is 1.</meaning>
+          </term>
+          <term>
+            <word>Instance Finish Event</word>
+            <meaning>A service call that is considered as the finish of a task instance, typically in the context of repeating tasks with a main loop. By default, $PNAME considers blocking "receive" calls (including waiting for semaphores and other events) as well as "delay" calls to be Instance Finish Events. Blocking on Mutex calls are however not considered as IFEs.</meaning>
+          </term>
+          <term>
+            <word>ISR</word>
+            <meaning>Interrupt Service Routine, i.e., the handler of an interrupt.</meaning>
+          </term>
+          <term>
+            <word>Object</word>
+            <meaning>An object referenced in a traced event, such as a queue, semaphore, mutex or task.</meaning>
+          </term>
+          <term>
+            <word>Service</word>
+            <meaning>Typically an API function provided by the kernel, often performing an operation on a object.</meaning>
+          </term>
+          <term>
+            <word>Periodicity</word>
+            <meaning>The time between two consecutive instances of an actor, counted from the start of the previous actor instance to the start of the current actor instance.</meaning>
+          </term>
+          <term>
+            <word>Separation</word>
+            <meaning>The time between two consecutive instances of an actor, counted from the end of the previous actor instance to the start of the current actor instance.</meaning>
+          </term>
+          <term>
+            <word>Task</word>
+            <meaning>A thread of execution. $PNAME generally refer to threads as "tasks".</meaning>
+          </term>
+        </dictionary>
+      </text>
+    </section>
+  </body>
+</page>

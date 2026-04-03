@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">
+      <KernelService name="xQueueCreate" operation="Initialize" />
+      <KernelService name="xQueueSend" operation="Enqueue" />
+      <KernelService name="xQueueReceive" operation="Dequeue" />
+      <KernelService name="xQueueSendFromISR" operation="Enqueue" isrOnly="true" />
+      <KernelService name="xQueueReceiveFromISR" operation="Dequeue" isrOnly="true" />
+      <KernelService name="xQueuePeek" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Task">
+      <KernelService name="xTaskCreate" operation="StartInstance" />
+      <KernelService name="xTaskDelayUntil" operation="" parameters="NumericParameterOnly" />
+      <KernelService name="xTaskDelay" operation="" parameters="NumericParameterOnly" />
+      <KernelService name="xTaskSuspend" operation="" />
+      <KernelService name="xTaskResume" operation="StartInstance" />
+      <KernelService name="xTaskResumeFromISR" operation="StartInstance" isrOnly="true" />
+      <KernelService name="xTaskPrioritySet" operation="" parameters="ObjectAndNumericParameter" />
+      <KernelService name="xTaskDelete" operation="Deinitialize" />
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="TaskNotify">
+      <KernelService name="xTaskNotifyWait" operation="OtherRead" parameters="ObjectAndNumericParameter" />
+      <KernelService name="xTaskNotifySend" operation="OtherWrite" />
+      <KernelService name="xTaskNotifySendFromISR" operation="OtherWrite" isrOnly="true" />
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+
+
+  <ObjectClasses>
+    <ObjectClass name="Queue" type="Queue" />
+    <ObjectClass name="Task" type="Actor" />
+    <ObjectClass name="ISR" type="Actor" />
+    <ObjectClass name="Heap" type="Heap" options="Hidden, NoIpcGraph" />
+  </ObjectClasses>
+</TargetPlatform>

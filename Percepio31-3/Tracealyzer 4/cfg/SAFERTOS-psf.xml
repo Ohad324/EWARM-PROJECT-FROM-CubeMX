@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<TargetPlatform>
+  <TaskPriorityDirection>HigherNumberIsMoreImportant</TaskPriorityDirection>
+  <KernelServiceGroups>
+    <KernelServiceGroup name="Queue">
+      <KernelService name="xQueueCreate"              operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xQueueSend"                operation="Enqueue" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xQueueSendToFront"         operation="EnqueueFirst" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xQueueReceive"             operation="Dequeue" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xQueueSendFromISR"         operation="Enqueue" isrOnly="true"/>
+      <KernelService name="xQueueSendToFrontFromISR"  operation="EnqueueFirst" isrOnly="true"/>
+      <KernelService name="xQueueReceiveFromISR"      operation="Dequeue" isrOnly="true"/>
+      <KernelService name="xQueuePeek"                parameters="ObjectAndNumericParameter"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Semaphore">
+      <KernelService name="xSemaphoreCreate"        operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xSemaphoreGive"          operation="IncreaseSemaphore"/>
+      <KernelService name="xSemaphoreTake"          operation="DecreaseSemaphore" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xSemaphoreGiveFromISR"   operation="IncreaseSemaphore" isrOnly="true"/>
+      <KernelService name="xSemaphoreTakeFromISR"   operation="DecreaseSemaphore" isrOnly="true"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Mutex">
+      <KernelService name="xMutexCreate"            operation="Initialize"/>
+      <KernelService name="xMutexGive"              operation="ReleaseMutex"/>
+      <KernelService name="xMutexTake"              operation="LockMutex" parameters="ObjectAndNumericParameter"/>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Task">
+      <KernelService name="xTaskCreate"             operation="StartInstance"/>
+      <KernelService name="xTaskDelayUntil"         operation="Delay"               parameters="NumericParameterOnly"/>
+      <KernelService name="xTaskDelay"              operation="Delay"               parameters="NumericParameterOnly" />
+      <KernelService name="xTaskSuspend"            operation=""/>
+      <KernelService name="xTaskResume"             operation="StartInstance"/>
+      <KernelService name="xTaskResumeFromISR"      operation="StartInstance"  isrOnly="true"/>
+      <KernelService name="xTaskPrioritySet"        operation="ChangePriority"               parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskDelete"             operation="Deinitialize"/>
+      <KernelService name="xTaskNotifySend"         operation="OtherWrite">
+        <Parameter name="handle" format="{0}"/>
+        <Parameter name="bits" format="0x{0:X8}"/>
+      </KernelService>
+      <KernelService name="xTaskNotifyWait"         operation="OtherRead" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTaskNotifySendFromISR"  operation="OtherWrite" isrOnly="true">
+        <Parameter name="handle" format="{0}"/>
+        <Parameter name="bits" format="0x{0:X8}"/>
+      </KernelService>
+    </KernelServiceGroup>
+
+    <KernelServiceGroup name="Timer">
+      <KernelService name="xTimerCreate"            operation="Initialize" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerDelete"            operation="Deinitialize"/>
+      <KernelService name="xTimerStart"             operation="StartInstance"/>
+      <KernelService name="xTimerStop"              operation=""/>
+      <KernelService name="xTimerChangePeriod"      operation="" parameters="ObjectAndNumericParameter"/>
+      <KernelService name="xTimerStartFromISR"      operation="StartInstance" isrOnly="true"/>
+      <KernelService name="xTimerStopFromISR"       operation=""              isrOnly="true"/>
+      <KernelService name="xTimerChangePeriodFromISR" operation="" parameters="ObjectAndNumericParameter" isrOnly="true"/>
+      <!--<KernelService name="xTimerPendFunctionCall"  operation="" parameters="None"/>
+      <KernelService name="xTimerPendFunctionCallFromISR" operation="" parameters="None" isrOnly="true"/>-->
+
+    </KernelServiceGroup>
+  
+    <KernelServiceGroup name="EventGroup">
+      <KernelService name="xEventGroupCreate" operation="Initialize"/>
+      <KernelService name="xEventGroupSetBits" operation="OtherWrite">
+        <Parameter name="handle" format="{0}"/>
+        <Parameter name="bits" format="0x{0:X8}"/>
+      </KernelService>
+      <KernelService name="xEventGroupSetBitsFromISR" operation="OtherWrite" isrOnly="true">
+        <Parameter name="handle" format="{0}"/>
+        <Parameter name="bits" format="0x{0:X8}"/>
+      </KernelService>
+      <KernelService name="xEventGroupClearBits" operation="OtherWrite">
+        <Parameter name="handle" format="{0}"/>
+        <Parameter name="bits" format="0x{0:X8}"/>
+      </KernelService>
+      <KernelService name="xEventGroupClearBitsFromISR" operation="OtherWrite" isrOnly="true">
+        <Parameter name="handle" format="{0}"/>
+        <Parameter name="bits" format="0x{0:X8}"/>
+      </KernelService>
+      <KernelService name="xEventGroupWaitBits" operation="OtherRead" parameters="ObjectAndNumericParameter">
+        <Parameter name="handle" format="{0}"/>
+        <Parameter name="bits" format="0x{0:X8}"/>
+        <Parameter name="timeout" format="{0}"/>
+      </KernelService>
+      <KernelService name="xEventGroupDelete" operation="Deinitialize"/>
+    </KernelServiceGroup>
+  </KernelServiceGroups>
+
+
+  <ObjectClasses>
+    <ObjectClass name="SystemGroup" type="ActorGroup" options="Hidden" />
+    <ObjectClass name="Queue" type="Queue"/>
+    <ObjectClass name="Task" type="Actor"/>
+    <ObjectClass name="ISR" type="Actor"/>
+    <ObjectClass name="Timer" type="Other"/>
+    <ObjectClass name="EventGroup" type="Other"/>
+    <ObjectClass name="Semaphore" type="Other"/>
+    <ObjectClass name="Mutex" type="Other"/>
+  </ObjectClasses>
+</TargetPlatform>

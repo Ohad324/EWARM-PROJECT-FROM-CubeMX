@@ -1,0 +1,314 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<EventMap>
+  <EventGroup name="Event Recorder">
+    <Event name="Init Event" service="EventRecorderInitialize" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+    <Event name="Start Event" service="EventRecorderStart" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+    <Event name="Stop Event" service="EventRecorderStop" action="Call">
+      <ReturnValue defaultValue="1" translation="Boolean" translationParameter="failure|success" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Memory">
+    <Event name="Malloc" service="Malloc" action="Call">
+      <!-- system heap uses address 1 -->
+      <Parameter defaultValue="1" translation="GetOrCreateHeap" nullResult="InstantFail" />
+      <Parameter index="0" nullResult="InstantFail" nullValue="0" />
+      <Parameter index="1" nullResult="InstantFail" nullValue="0" />
+    </Event>
+    <Event name="Free" service="Free" action="Call">
+      <!-- system heap uses address 1 -->
+      <Parameter defaultValue="1" translation="GetOrCreateHeap" nullResult="InstantFail" />
+      <Parameter index="0" nullResult="InstantFail" nullValue="0" />
+      <Parameter index="1" nullResult="InstantFail" nullValue="0" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Thread">
+    <Event name="TaskCreate" service="osThreadNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="TaskDelete" service="osThreadTerminate" action="None|PostProcess|MarkDeleted">
+      <Parameter index="0" translation="GetThread" />
+    </Event>
+
+    <Event name="TaskSwitchedOut" service="" action="None" />
+    <Event name="TaskSwitchedIn" service="" action="None" />
+    <Event name="MovedTaskToReadyState" service="" action="None" />
+
+    <Event name="PostMovedTaskToReadyState" service="" action="None|PostProcess">
+    </Event>
+
+    <Event name="TaskIncrementTick" service="" action="None|PostProcess">
+    </Event>
+
+    <Event name="TaskDelay" service="osDelay" action="Call|NewInstance">
+      <Parameter translation="GetCurrentThread" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="TaskDelayUntil" service="osDelayUntil" action="Call|NewInstance">
+      <Parameter translation="GetCurrentThread" nullResult="InstantFail" />
+      <Parameter index="0" defaultValue="0" translation="Timer" />
+    </Event>
+
+    <Event name="TaskSuspend" service="osThreadSuspend" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+    </Event>
+    <Event name="TaskResume" service="osThreadResume" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+    </Event>
+    <Event name="TaskResumeFromIsr" service="osThreadResume" action="Call">
+      <Parameter index="0" translation="GetOrCreateThread" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="TaskPriorityInherit" service="" action="None|PostProcess">
+    </Event>
+    <Event name="TaskPriorityDisinherit" service="" action="None|PostProcess">
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Thread" serviceName="Thread Flags">
+    <Event name="TaskNotify" service="osThreadFlagsSet" action="Call">
+      <Parameter index="0" defaultValue="0" translation="GetOrCreateThread|UseThreadFlagsHandle" />
+      <Parameter index="1" defaultValue="0" />
+    </Event>
+    <Event name="TaskNotifyFromIsr" service="osThreadFlagsSet" action="Call">
+      <Parameter index="0" defaultValue="0" translation="GetOrCreateThread|UseThreadFlagsHandle" />
+      <Parameter index="1" defaultValue="0" />
+    </Event>
+
+    <Event name="TaskNotifyWait" service="osThreadFlagsWait" action="CallReturn">
+      <Parameter translation="GetCurrentThread|UseThreadFlagsHandle" nullResult="InstantFail" />
+      <Parameter index="0" />
+      <Parameter defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter defaultValue="0" translation="Timer" />
+    </Event>
+    <Event name="TaskNotifyWaitBlock" service="osThreadFlagsWait" action="Call|NewInstance" defaultResult="Block">
+      <Parameter translation="GetOrCreateThread|UseThreadFlagsHandle" nullResult="InstantFail" />
+      <Parameter defaultValue="0" />
+      <Parameter defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter index="0" translation="Timer" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Timer">
+    <Event name="TimerCreate" service="osTimerNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateTimer" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="TimerExpired" service="" action="None|PostProcess" />
+
+    <Event name="TimerCommandSend" service="" action="None|PostProcess">
+    </Event>
+    <Event name="TimerCommandReceived" service="" action="None">
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Message Queue">
+    <Event name="QueueCreate" service="osMessageQueueNew" action="Call" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="QueueDelete" service="osMessageQueueDelete" action="Call" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="QueueSend" service="osMessageQueuePut" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueSendFailed" service="osMessageQueuePut" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="QueueSendFromIsr" service="osMessageQueuePut" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueSendFromIsrFailed" service="osMessageQueuePut" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="BlockingOnQueueSend" service="osMessageQueuePut" action="Call|NewInstance" defaultResult="Block"
+           onlyOnResult="Block">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="QueueReceive" service="osMessageQueueGet" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueReceiveFailed" service="osMessageQueueGet" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="QueueReceiveFromIsr" service="osMessageQueueGet" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueReceiveFromIsrFailed" service="osMessageQueueGet" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="BlockingOnQueueReceive" service="osMessageQueueGet" action="Call|NewInstance" defaultResult="Block"
+           onlyOnResult="Block">
+      <Parameter index="0" translation="GetQueue" nullResult="InstantFail" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Semaphore">
+    <Event name="CreateCountingSemaphore" service="osSemaphoreNew" action="Call" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+    <Event name="CreateCountingSemaphoreFailed" service="osSemaphoreNew" action="Call" onlyOnResult="InstantFail">
+    </Event>
+    <Event name="QueueDelete" service="osSemaphoreDelete" action="Call" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="QueueSend" service="osSemaphoreRelease" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueSendFailed" service="osSemaphoreRelease" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="QueueSendFromIsr" service="osSemaphoreRelease" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueSendFromIsrFailed" service="osSemaphoreRelease" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="BlockingOnQueueSend" service="osSemaphoreRelease" action="Call|NewInstance" defaultResult="Block"
+           onlyOnResult="Block">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="QueueReceive" service="osSemaphoreAcquire" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueReceiveFailed" service="osSemaphoreAcquire" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="QueueReceiveFromIsr" service="osSemaphoreAcquire" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueReceiveFromIsrFailed" service="osSemaphoreAcquire" action="CallReturn"
+           defaultResult="InstantFail" onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="BlockingOnQueueReceive" service="osSemaphoreAcquire" action="Call|NewInstance" defaultResult="Block"
+           onlyOnResult="Block">
+      <Parameter index="0" translation="GetSemaphore" nullResult="InstantFail" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Mutex">
+    <Event name="CreateMutex" service="osMutexNew" action="Call" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+    <Event name="CreateMutexFailed" service="osMutexNew" action="Call" onlyOnResult="InstantFail">
+    </Event>
+    <Event name="QueueDelete" service="osMutexDelete" action="Call" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="QueueSend" service="osMutexRelease" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueSendFailed" service="osMutexRelease" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="QueueSendFromIsr" service="osMutexRelease" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueSendFromIsrFailed" service="osMutexRelease" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="GiveMutexRecursive" service="osMutexRelease" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+    <Event name="GiveMutexRecursiveFailed" service="osMutexRelease" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="BlockingOnQueueSend" service="osMutexRelease" action="Call|NewInstance" defaultResult="Block"
+           onlyOnResult="Block">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="QueueReceive" service="osMutexAcquire" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueReceiveFailed" service="osMutexAcquire" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="QueueReceiveFromIsr" service="osMutexAcquire" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+    <Event name="QueueReceiveFromIsrFailed" service="osMutexAcquire" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="TakeMutexRecursive" service="osMutexAcquire" action="CallReturn" onlyOnResult="InstantSuccess">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+    <Event name="TakeMutexRecursiveFailed" service="osMutexAcquire" action="CallReturn" defaultResult="InstantFail"
+           onlyOnResult="InstantFail">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantSuccess" />
+    </Event>
+    <Event name="BlockingOnQueueReceive" service="osMutexAcquire" action="Call|NewInstance" defaultResult="Block"
+           onlyOnResult="Block">
+      <Parameter index="0" translation="GetMutex" nullResult="InstantFail" />
+    </Event>
+  </EventGroup>
+
+  <EventGroup name="Event Flags">
+    <Event name="EventGroupCreate" service="osEventFlagsNew" action="Call">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+    </Event>
+    <Event name="EventGroupCreateFailed" service="osEventFlagsNew" action="Call" defaultResult="InstantFail">
+    </Event>
+
+    <Event name="EventGroupDelete" service="osEventFlagsDelete" action="Call">
+      <Parameter index="0" translation="GetEventFlags" nullResult="InstantFail" />
+    </Event>
+
+    <Event name="EventGroupClearBits" service="osEventFlagsClear" action="Call">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" />
+    </Event>
+    <Event name="EventGroupClearBitsFromIsr" service="osEventFlagsClear" action="Call">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" />
+    </Event>
+
+    <Event name="EventGroupSetBits" service="osEventFlagsSet" action="Call">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" />
+    </Event>
+    <Event name="EventGroupSetBitsFromIsr" service="osEventFlagsSet" action="Call">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" />
+    </Event>
+
+    <Event name="EventGroupWaitBitsBlock" service="osEventFlagsWait" action="Call|NewInstance" defaultResult="Block">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <!--Parameter defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter defaultValue="-1" translation="Timer" /-->
+    </Event>
+    <Event name="EventGroupWaitBitsEnd" service="osEventFlagsWait" action="CallReturn">
+      <Parameter index="0" translation="GetOrCreateEventFlags" nullResult="InstantFail" />
+      <Parameter index="1" />
+      <!--Parameter defaultValue="0" translation="ThreadFlagsOptions" />
+      <Parameter defaultValue="-1" translation="Timer" /-->
+    </Event>
+  </EventGroup>
+</EventMap>

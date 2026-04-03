@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>User Events Signal Plot</title>
+  <keywords>
+    <keyword>user</keyword>
+    <keyword>events</keyword>
+    <keyword>plot</keyword>
+    <keyword>live</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This view allows for plotting data from user events arguments. If a user event have multiple data arguments, only the first is plotted.
+		  Each user event channel is plotted as a separate curve. You can change what user event channels that are displayed in the Filter.
+        </p>
+
+        <p>
+          <A HREF="img/signalplot.png" target="$IMAGETARGET">
+            <img src="img/signalplot.png" width="$IMAGEWIDTH" border="0" />
+          </A>
+        </p>
+
+        <p>
+          For more information about user events, see <a href="UserEventIntroduction.html">User Events</a> section.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

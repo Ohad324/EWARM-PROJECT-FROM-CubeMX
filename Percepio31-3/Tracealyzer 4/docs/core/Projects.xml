@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Projects</title>
+  <keywords>
+    <keyword>projects</keyword>
+    <keyword>settings</keyword>
+  </keywords>
+  <body>
+    <section>
+	  <requirement>CoreFeatures.IntervalsAndStateMachines</requirement>
+      <header>Overview</header>
+      <text>
+        <p>
+          All settings, with the exception of those found under <a href="GlobalSettings.html">Global Settings</a>, are specific to a <i>project</i>.
+          These combine settings, like target connection information (streaming/snapshot settings) and the recently used traces, making it easier to switch.
+        </p>
+        <p>
+          When starting $PNAME the first time the <b>Default Project</b> is selected, to allow new users the easiest way to start using it.<br/>
+          If you are developing for multiple targets, it is a good idea to set up different <i>projects</i> for each.<br/>
+          Uncheck <b>Reopen last Project</b> either from the checkbox at the bottom of the Welcome screen, or from <a href="GlobalSettings.html">Global Settings</a>, to allow project switching on startup.
+        </p>
+        <p>
+          To switch between different projects, $PNAME has to be restarted. All currently available projects can be accessed by the File &gt; Project menu, which allows simple switching.
+        </p>
+      </text>
+    </section>
+
+
+	  <section>
+		  <requirement inverted="true">CoreFeatures.IntervalsAndStateMachines</requirement>
+		  <header>Overview</header>
+		  <text>
+			  <p>
+				  All settings, with the exception of those found under <a href="GlobalSettings.html">Global Settings</a>, are specific to a <i>project</i>.
+				  These combine settings, like target connection information (streaming/snapshot settings) and the recently used traces, making it easier to switch between different target systems.
+			  </p>
+			  <p>
+				  In $PNAME, only the default project is available. Support for multiple projects is provided in Percepio Tracealyzer.
+			  </p>
+		  </text>
+	  </section>
+  </body>
+</page>

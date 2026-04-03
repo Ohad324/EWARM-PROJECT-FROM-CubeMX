@@ -1,0 +1,52 @@
+
+Running Percepio Tracealyzer 4 on Linux hosts
+=============================================
+
+== Getting started ==
+This package requires Mono to be installed before running Tracealyzer. There is also a standalone package available, with Mono already integrated in the application.
+
+To install Mono, most distributions provide a package called "mono-complete", though some distributions and package systems may instead use simply "mono".
+
+Mono version 6.12 (or newer) is recommended. Note that many distributions only have Mono 6.8 in their default repositories, which is known to cause issues.
+Please visit the Mono website to get up do date version: https://www.mono-project.com/download/stable/
+
+Once installed, you will need to unpack the Tracealyzer tarball into a suitable location (replace <version> to match the archive filename).
+
+	$ tar xvf Tracealyzer-<version>-linux-mono.tgz
+
+Your installation is complete! You can now run Tracealyzer using the launch-tz.sh script.
+
+	$ cd Tracealyzer-<version>-linux64
+	$ ./launch-tz.sh
+
+Note that Tracealyzer is currently only available for 64-bit Linux. In case you have problems getting started, please contact support@percepio.com.
+
+== Licenses ==
+By default, Tracealyzer 4 on Linux will install the license for the current user. If the machine is shared between multiple users, it may be desirable to install the license machine wide instead. 
+To do so, copy License.xml (node locked license) or LMConfig.xml (floating license) from "~/.config/Tracealyzer Data" to "/usr/share/Tracealyzer Data".
+
+If you have questions about Tracealyzer licensing, please contact sales@percepio.com or the Percepio partner that provided the license.
+
+
+== SEGGER J-Link support ==
+To use the built-in support for SEGGER J-Link debuggers, you'll first need to download and install the J-Link Software and Documentation Pack from SEGGER's website (https://www.segger.com/downloads/jlink/).
+When starting Tracealyzer, the default path to SEGGER J-Link debugger libraries is included (/opt/SEGGER/JLink). If Tracealyzer still fail to find it, you may also need to create a link to libjlinkarm.so in your Tracealyzer application directory.
+
+	$ ln -s /path/to/JLink_Linux_<version>/libjlinkarm.so /path/to/Tracealyzer-<version>-linux64/libjlinkarm.so
+
+== Known Issues and Solution on Linux ==
+
+- Display scaling is not yet supported on Linux so it is recommended to use 100% scale factor (and perhaps lower screen resolution, to make the text readable).
+
+- "Gtk-Message: Failed to load module "canberra-gtk-module": This is a common warning and can be ignored. This package is only needed for event sounds (e.g. "beeps").
+   Install canberra-gtk-module to avoid the warning message.
+
+- "Gtk not found": This warning have been seen on Manjaro 23. No issues have been found related to this warning so it can most likely be ignored.
+   Install "gtk2" to avoid the warning message.
+
+- "Could not set X locale modifiers": This warning can be ignored.
+
+- Various warnings may appear in the terminal when opening a web browser from Tracealyzer, for example to view the User Manual.
+  Such warnings are not caused by Tracealyzer and can be ignored.
+
+Percepio AB, https://percepio.com		

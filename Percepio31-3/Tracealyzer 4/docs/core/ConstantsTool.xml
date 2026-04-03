@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+  <title>Constants</title>
+  <keywords>
+    <keyword>constants</keyword>
+    <keyword>flags</keyword>
+    <keyword>enums</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>
+          This is a tool that will let you decode raw numerical values into symbolic representations. It supports flags or enum values.
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

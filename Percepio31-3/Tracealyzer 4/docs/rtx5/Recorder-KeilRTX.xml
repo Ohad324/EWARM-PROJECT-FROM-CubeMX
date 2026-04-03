@@ -1,0 +1,213 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<page>
+  <title>Keil RTX5</title>
+  <keywords>
+    <keyword>recorder</keyword>
+    <keyword>RTX5</keyword>
+    <keyword>CMSIS</keyword>
+    <keyword>OS2</keyword>
+  </keywords>
+  <body>
+	  <section>
+		  <header>Introduction</header>
+		  <text>
+			  <p>
+				  $PNAME integrates with Keil µVision to allow for tracing of Keil RTX5 and the Keil MDK middleware.
+				  The tracing is done using the Keil <A HREF="http://www.keil.com/pack/doc/compiler/EventRecorder/html/">Event Recorder</A>, included in Keil MDK.
+				  $PNAME connects to Keil µVision to receive the trace data, and this connection also allows for controlling the Keil µVision debugger.
+				  An example trace can be found in the <A HREF="$BINDIR/RTX5">RTX5</A> folder. To open it, you can simply drag-and-drop <i>tracedata.evr</i> into $PNAME, or use the <i>File</i> -&gt; <i>Open</i> command.
+				  It is also possible to use <i>File</i> -&gt; <i>Open Folder</i>, or drag-and-drop the folder itself.
+			  </p>
+		  </text>
+		  
+	  </section>
+	  
+    <section>
+      <header>Enable Tracing</header>
+      <text>
+        <p>
+          $PRODUCT requires Keil MDK (µVision) version 5.30, but it is recommended to use the latest stable release. Specifically, it relies on the <a href="http://www.keil.com/pack/doc/compiler/EventRecorder/html/index.html">Event Recorder</a> interface. To configure this for use with $PNAME, follow these steps:
+        </p>
+
+        <p>
+          <b>Step 1.</b> In the "Manage Run-Time Environment" dialog, found under Project -&gt; Manage -&gt; Run-Time Environment, verify that you are using <i>RTX5</i> and not an older version of Keil RTX. Make sure there are no selections under <i>CMSIS:RTOS</i>
+          and make sure you have selected the <i>Source</i> variant of <i>CMSIS:RTOS2:Keil RTX5</i>. If your project was using an older version of RTX and you like to upgrade, see the
+          <a href="https://www.keil.com/pack/doc/CMSIS/RTOS2/html/os2MigrationGuide.html" target ="_blank">RTX5 Migration Guide</a>.
+        </p>
+        <p>
+          <A HREF ="img/manageruntimeenv.png" target ="_blank">
+            <img src="img/manageruntimeenv.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+        <p>
+          <b>Step 2.</b> Enable the Event Recorder support in the "Manage Run-Time Environment" dialog, under <i>Compiler:Event Recorder</i>, as illustrated above.
+        </p>
+
+        <p>
+          <A NAME="evconf"></A>
+          <b>Step 3.</b> Check the buffer size setting of the Event Recorder in <b>EventRecorderConf.h</b> ("Number of Records"), as illustrated below. The buffer needs to allow at least 512 records but it is recommend to record 1024 if you have enough RAM (each record uses 16 bytes).
+        </p>
+
+        <p>
+          <A HREF ="img/eventrecorderconf.png" target ="_blank">
+            <img src="img/eventrecorderconf.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+        <p>
+          <b>Step 4.</b> Add <b>#include "EventRecorder.h"</b> in your main file and add a call to <A HREF="http://www.keil.com/pack/doc/compiler/EventRecorder/html/group__EventRecorder__Setup.html">EventRecorderInitialize</A> early in your main function, preferably before calling <i>osKernelInitialize</i>, but after the clock initialization.
+          It is possible to initialize the Event Recorder at a later point, but this will not get a complete trace of the start up.
+        </p>
+
+        <p>
+          <img src="img/evinit.png" border="0"/>
+        </p>
+
+        <p>
+          <b>Step 5.</b> Verify that the Event Recorder is working through these steps:
+          <ol class="list">
+            <li>Build and Download to target</li>
+            <li>Start a Debugging session</li>
+            <li>
+              Open the Event Recorder view (under the "Analysis" button, see below screenshot)
+              <p>
+                <A HREF ="img/eventrecorder.png" target ="_blank">
+                  <img src="img/eventrecorder.png" width="580px" border="0"/>
+                </A>
+              </p>
+            </li>
+            <li>
+              Step over <i>EventRecorderInitialize</i> and verify the <i>Init Event</i> shows up in the view.
+            </li>
+            <li>
+              Step over the first <i>osThreadNew</i> call and verify events show up in the view.
+            </li>
+            <li>Run the target and check that events keep coming as expected.</li>
+          </ol>
+        </p>
+
+        <p>
+          To learn more about the Event Recorder and its API, see the
+          <a href="http://www.keil.com/pack/doc/compiler/EventRecorder/html/index.html" target ="_blank">Event Recorder documentation</a>.
+        </p>
+
+        <p>
+          <A NAME="debugconf"></A>
+          <b>Step 6.</b> For best performance, make sure the clock frequency of your debug interface is at the maximum setting. In the project options in Keil µVision, select the Debug page and "Settings" in the top right corner to open the settings of your debug probe. For ULINK debug probes, the setting is called Max. Clock. Select the highest setting allowed (e.g. 50 MHz).
+        </p>
+        <p>
+          <A HREF ="img/debug_settings.png" target ="_blank">
+            <img src="img/debug_settings.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+        <p>
+          <A NAME="traceclocksetting"></A>
+          <b>Step 7.</b> To ensure correct timestamps, verify that Core Clock setting is correct, under <i>Project > Options > Debug > Settings > Trace</i>. If not sure, you may inspect the global variable SystemCoreClock after SystemCoreClockUpdate has been executed.
+        </p>
+        <p>
+          <A HREF ="img/trace_clock_setting.png" target ="_blank">
+            <img src="img/trace_clock_setting.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+
+        <p>
+          <b>Step 8.</b> Finally, you need to enable the UVSOCK interface in Keil µVision. Select <i>Edit > Configuration > Other</i> and take a look at "UVSOCK (TCP/IP) Settings".
+          Check the "Enabled" checkbox. The Port setting can typically remain at the default value (4823), unless this port is already used by another application.
+        </p>
+        <p>
+          <A HREF ="img/keilsettings.png" target ="_blank">
+            <img src="img/keilsettings.png" border="0"/>
+          </A>
+        </p>
+
+      </text>
+    </section>
+
+    <section>
+      <header>Trace Recording</header>
+      <text>
+        <p>
+          When completed the steps to configure Keil µVision, now start $PNAME. First, verify that $PNAME uses the correct UVSOCK port by selecting
+          <i>File > Settings</i>. The "Keil µVision Port" setting needs to match the corresponding setting in Keil µVision, as described in step 8 above (i.e. under Edit > Configuration > Other > UVSOCK (TCP/IP) Settings > Port).
+        </p>
+        <p>
+          <A HREF ="img/uvsettings.png" target ="_blank">
+            <img src="img/uvsettings.png" border="0"/>
+          </A>
+        </p>
+
+        <p>
+          See <a href="UVSettings.html">Settings</a> for more information.
+        </p>
+
+        <p>
+          To record a trace simply click the Record button, normally found at the left side bar in $PNAME.
+          When connected to µVision there are a few additional actions to perform using the Action button, making it possible to Enter/Exit debug mode and to Run, Stop or Reset the target.
+          See <a href="Streaming.html">Streaming</a> section for more information.
+        </p>
+
+        <p>
+          <A HREF ="img/Streaming_RTX5.png" target ="_blank">
+            <img src="img/Streaming_RTX5.png" width="$IMAGEWIDTH" border="0"/>
+          </A>
+        </p>
+        <p>
+          When using the Record button, $PNAME will automatically try to start recording the trace after connecting to µVision.
+        </p>
+        <p>
+          When satisfied, select "Stop Session" in the Live Stream view. By default, the recorder trace is opened automatically.         
+        </p>
+      </text>
+    </section>
+
+    <section>
+      <header>Troubleshooting</header>
+      <text>
+        <p>
+          In order to get the best result when tracing, please consider the following:
+        </p>
+        <p>
+          <ul class="list">
+            <li>
+              It is advised to call EventRecorderInitialize() early in <i>main</i>, before creating any kernel objects, but make sure this is called <i>after</i> the core clock (i.e. the timestamping source) has been configured.
+            </li>
+            <li>
+              Start the recording session at the system startup. While it is possible to connect to a running system and receive a trace, it will lack information about all previous events.
+            </li>
+            <li>
+              Use constant strings instead of local (stack) variables when registering object names. This way $PNAME can read the names from target memory even when it is not receiving all create events.
+            </li>
+            <li>
+              If the time scale presented in $PNAME seems to be scaled incorrectly, verify the Core Clock setting, as explained in <A HREF="#traceclocksetting">Step 7</A> in the <i>Enabling Trace</i> guide.
+            </li>
+            <li>
+              If the debug probe used is not fast enough there may be overflows, i.e., that the Event Recorder is not able to keep up with the stream of events.
+              $PNAME will generate a warning if this is detected and mark the location in the trace where the overflow was detected.
+              The result is normally a gap in the trace, during which the last logged task seem to execute and may seem to have an unusually long execution time.
+
+              To avoid such problems, try the following:
+              <ul class="list">
+                <li>
+                  Increase the size of the Event Recorder buffer (see <A HREF="#evconf">Step 3</A> in the <i>Enabling Trace</i> guide).
+                </li>
+                <li>
+                  Increase the clock frequency of the debug interface (see <A HREF="#debugconf">Step 6</A> in the <i>Enabling Trace</i> guide.
+                </li>
+                <li>
+                  Try a faster debug probe - a <A HREF="http://www2.keil.com/mdk5/ulink">ULINKplus or ULINKpro</A> is recommended.
+                </li>
+              </ul>
+            </li>
+            <li>
+              Keil µVision allows for filtering of events in order to reduce the amount of data produced. But assuming your debug probe can manage the data rate, it is recommended to recording all events.
+              This since $PNAME does some pretty advanced analysis of the trace and calculate the states of objects based on the operations observed.
+              If you want to filter the trace in runtime, don't exclude kernel events related to task scheduling. You may exclude API calls, if excluding ALL events related to that kind of object.
+              Otherwise, if some kernel object is partially traced, it may be displayed incorrectly.
+            </li>
+          </ul>
+        </p>
+      </text>
+    </section>
+  </body>
+</page>

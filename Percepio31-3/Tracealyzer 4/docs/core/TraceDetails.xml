@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<page>
+  <title>Trace Details</title>
+  <keywords>
+    <keyword>trace</keyword>
+    <keyword>details</keyword>
+    <keyword>tools</keyword>
+  </keywords>
+  <body>
+    <section>
+      <header>Overview</header>
+      <text>
+        <p>This will show you details and statistics about the current trace.</p>
+
+      </text>
+    </section>
+  </body>
+</page>

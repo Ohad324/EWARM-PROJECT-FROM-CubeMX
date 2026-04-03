@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<page>
+	<title>J-Link Settings</title>
+	<keywords>
+		<keyword>j-link</keyword>
+		<keyword>jlink</keyword>
+		<keyword>link</keyword>
+		<keyword>settings</keyword>
+	</keywords>
+	<body>
+		<section>
+			<header>Overview</header>
+			<text>
+				<p>
+					Settings for SEGGER J-Link debug probes.
+				</p>
+
+				<p>
+					<A HREF="img/JLinkSettings.png" target="$IMAGETARGET">
+						<img src="img/JLinkSettings.png" border="0" />
+					</A>
+				</p>
+
+				<p>
+					<ul class="list">
+						<li>
+							<b>Debugger</b>: Select the connected J-Link debug probe to use.
+						</li>
+						<li>
+							<b>J-Link Speed</b>: The debugger clock frequency for the JTAG/SWD interface (KHz).
+						</li>
+						<li>
+							<b>Debugger Interface</b>:
+							<ul class="list">
+								<li>
+									<b>JTAG</b>: Configures the debug probe for JTAG. This is the default setting of J-Link debug probes.
+								</li>
+								<li>
+									<b>SWD</b>: Configures the debug probe for SWD.
+								</li>
+								<li>
+									<b>Default (don't change)</b>: $PNAME does not change the JTAG/SWD setting of the debug probe.
+									<br/><br/><B>NOTE!</B> It is recommended to explicitly select JTAG or SWD, matching the corresponding setting in your IDE. This "passive" option is known to cause problems with certain J-Link driver versions.
+								</li>
+							</ul>
+						</li>
+						<li>
+							<b>Target Device</b>: Opens a SEGGER J-Link dialog where you can select the device (processor). This is necessary in order for SEGGER RTT to connect automatically.
+							Note that the device list comes from the SEGGER J-Link driver. If your device is not listed, try update the J-Link driver.
+						</li>
+					</ul>
+				</p>
+
+			</text>
+		</section>
+	</body>
+</page>
