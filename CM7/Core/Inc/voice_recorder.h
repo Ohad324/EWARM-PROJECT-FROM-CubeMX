@@ -71,6 +71,7 @@ RecState_t VoiceRec_GetState(void);
 void VoiceRecTask(void *arg);   /* arg = QueueHandle_t xVoiceQueue */
 void SDWriteTask(void *arg);    /* arg = QueueHandle_t xVoiceQueue */
 void RTTLogTask(void *arg);     /* arg = NULL                      */
+void HealthMonTask(void *arg);  /* arg = NULL — SD health, 10 s cadence */
 
 /* IRQ trampoline — called from DMA1_Stream1_IRQHandler in stm32h7xx_it.c */
 void VoiceRec_DMA_IRQHandler(void);

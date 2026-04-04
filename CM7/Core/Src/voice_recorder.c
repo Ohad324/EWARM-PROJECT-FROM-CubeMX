@@ -31,6 +31,7 @@
 #include "semphr.h"
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
+#include "audio_sd.h"       /* AudioSD_GetErrorCode() — HealthMonTask */
 #include "SEGGER_RTT.h"         /* RTTLogTask uses SEGGER_RTT_Write */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
@@ -46,7 +47,7 @@
 #define DEBOUNCE_MS           300u
 
 /* ── WAV header (44 bytes, little-endian, packed) ───────────────────────── */
-typedef struct __attribute__((packed)) {
+typedef struct {
     char     riff[4];        /* "RIFF"                           */
     uint32_t chunkSize;      /* total file size minus 8 bytes    */
     char     wave[4];        /* "WAVE"                           */
@@ -240,22 +241,21 @@ void VoiceRecTask(void *arg)
             strncpy(err.filename, "NONE", sizeof(err.filename));
             xQueueSend(xLogQueue, &err, pdMS_TO_TICKS(100));
             g_State = REC_IDLE; __DSB();
-            LED_OFF();
             continue;
         }
 
         /* ── Active drain loop ──────────────────────────────────────────── */
         /* NEVER use vTaskDelay here — DMA is running and must be drained.  */
-        TickType_t deadline  = xTaskGetTickCount() + pdMS_TO_TICKS(RECORD_MS);
-        TickType_t ledToggle = xTaskGetTickCount() + pdMS_TO_TICKS(500u);
+        TickType_t deadline   = xTaskGetTickCount() + pdMS_TO_TICKS(RECORD_MS);
+        TickType_t ledToggle  = xTaskGetTickCount() + pdMS_TO_TICKS(1000u);
 
         while (xTaskGetTickCount() < deadline)
         {
-            /* Blink LED every 500 ms during recording */
+            /* Toggle LED every 1 s during recording */
             if (xTaskGetTickCount() >= ledToggle)
             {
                 LED_TOGGLE();
-                ledToggle = xTaskGetTickCount() + pdMS_TO_TICKS(500u);
+                ledToggle += pdMS_TO_TICKS(1000u);  /* fixed interval, no drift */
             }
 
             /* Wait up to 10 ms for a DMA half/full event */
@@ -278,7 +278,7 @@ void VoiceRecTask(void *arg)
          * during or just after the stop */
         while (xSemaphoreTake(s_dmaSem, 0) == pdTRUE) {}
 
-        LED_ON();   /* solid ON while SDWriteTask saves */
+        LED_ON();   /* stay ON — recording done, saving to SD */
 
         /* Signal SDWriteTask */
         uint32_t msg = 1u;
@@ -309,7 +309,6 @@ void SDWriteTask(void *arg)
         if (g_SysMode != SYS_MODE_RECORD)
         {
             g_State = REC_IDLE; __DSB();
-            LED_OFF();
             continue;
         }
 
@@ -332,7 +331,11 @@ void SDWriteTask(void *arg)
         strncpy(logMsg.filename, filename, sizeof(logMsg.filename));
         logMsg.filename[sizeof(logMsg.filename) - 1u] = '\0';
 
-        FIL      file;
+        /* FIL must be static + 32-byte aligned: FatFS FIL contains a 512-byte
+         * DMA buffer; SDMMC IDMA requires 32-byte cache-line alignment on
+         * STM32H747 with DCache.  Stack only guarantees 8-byte alignment →
+         * CFSR.UNALIGNED HardFault if FIL is declared as a local variable. */
+        static FIL file __attribute__((aligned(32)));
         UINT     bw;
         WavHdr_t hdr;
 
@@ -399,7 +402,6 @@ done:
 
         g_State = REC_IDLE;
         __DSB();
-        LED_OFF();
     }
 }
 
@@ -421,7 +423,15 @@ void RTTLogTask(void *arg)
     LogMsg_t msg;
     for (;;)
     {
-        xQueueReceive(xLogQueue, &msg, portMAX_DELAY);
+        /* Poll SD_DETECT (PI8, active-low) every 200 ms via queue timeout.
+         * LED2 (PI13) ON = card present, OFF = card absent. */
+        if (xQueueReceive(xLogQueue, &msg, pdMS_TO_TICKS(200u)) != pdTRUE)
+        {
+            GPIO_PinState det = HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8);
+            HAL_GPIO_WritePin(GPIOI, GPIO_PIN_13,
+                              (det == GPIO_PIN_RESET) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+            continue;
+        }
 
         if (msg.result == REC_OK)
         {
@@ -440,6 +450,71 @@ void RTTLogTask(void *arg)
                 (unsigned long)msg.timestamp);
         }
         SEGGER_RTT_WriteString(0, rttBuf);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ *  HealthMonTask — SD card health monitor, 10-second cadence
+ *
+ *  Prints to RTT channel 0 every 10 seconds:
+ *    [HEALTH] card=PRESENT  free=1234 KB  used=567 KB  err=0x00000000
+ *    [HEALTH] card=ABSENT
+ *
+ *  Checks:
+ *    - SD_DETECT pin PI8 (active-low: RESET = card present)
+ *    - f_getfree("0:") for free/used cluster count (only when card present
+ *      and SYS_MODE_RECORD — never touches FatFS when USB-MSC owns the card)
+ *    - s_hsd1.ErrorCode from audio_sd.c (exposed via AudioSD_GetErrorCode())
+ *
+ *  Priority 1 (lowest) — must not interfere with recording pipeline.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+void HealthMonTask(void *arg)
+{
+    (void)arg;
+
+    char buf[80];
+    for (;;)
+    {
+        vTaskDelay(pdMS_TO_TICKS(10000u));
+
+        /* SD_DETECT: PI8, active-low — RESET means card is inserted */
+        GPIO_PinState det = HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8);
+        if (det != GPIO_PIN_RESET)
+        {
+            SEGGER_RTT_WriteString(0, "[HEALTH] card=ABSENT\r\n");
+            continue;
+        }
+
+        /* Only query FatFS when FatFS owns the card */
+        if (g_SysMode != SYS_MODE_RECORD)
+        {
+            SEGGER_RTT_WriteString(0, "[HEALTH] card=PRESENT  mode=USB-MSC\r\n");
+            continue;
+        }
+
+        DWORD   freeClusters = 0u;
+        FATFS  *pfs          = NULL;
+        FRESULT fr           = f_getfree("0:", &freeClusters, &pfs);
+        if (fr == FR_OK && pfs != NULL)
+        {
+            /* cluster size in sectors × 512 bytes → KB */
+            uint32_t clusterKB  = (uint32_t)(pfs->csize) / 2u; /* sectors/cluster ÷ 2 = KB/cluster */
+            uint32_t freeKB     = (uint32_t)(freeClusters)             * clusterKB;
+            uint32_t totalKB    = (uint32_t)(pfs->n_fatent - 2u)       * clusterKB;
+            uint32_t usedKB     = totalKB - freeKB;
+            uint32_t errCode    = AudioSD_GetErrorCode();
+            snprintf(buf, sizeof(buf),
+                "[HEALTH] card=PRESENT  free=%lu KB  used=%lu KB  sdErr=0x%08lX\r\n",
+                (unsigned long)freeKB,
+                (unsigned long)usedKB,
+                (unsigned long)errCode);
+        }
+        else
+        {
+            snprintf(buf, sizeof(buf),
+                "[HEALTH] f_getfree fail: fr=%d\r\n", (int)fr);
+        }
+        SEGGER_RTT_WriteString(0, buf);
     }
 }
 

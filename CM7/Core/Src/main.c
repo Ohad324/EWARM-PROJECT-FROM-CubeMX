@@ -107,6 +107,9 @@ UART_HandleTypeDef huart8;
 /* BLE UART queue — receives messages from UARTReceiveTask, consumed by Model::tick() */
 QueueHandle_t xBleQueue;
 
+/* Voice recorder queue — VoiceRecTask signals SDWriteTask when 5s recording is done */
+static QueueHandle_t xVoiceQueue;
+
 
 /* ── DWT cycle-counter helpers (CM7 @ 480 MHz) ─────────────────────────── */
 #define DWT_CYCLES_PER_MS  480000UL
@@ -269,11 +272,12 @@ Error_Handler();
      The actual HAL_UARTEx_ReceiveToIdle_DMA() call happens inside
      UARTReceiveTask so the FreeRTOS ISR infrastructure is live first. */
   BLE_UART_Init();
-  /* Button-only init: arms PC13 EXTI, logs to RTT on press, no DFSDM/DMA.
-     Full VoiceRec_Init() stays disabled until recording pipeline is ready. */
-  VoiceRec_ButtonInit();
-  // AudioRec_Init();   /* DISABLED — DFSDM/GPIO conflict, re-enable after bring-up  */
+  /* Full voice recorder init: button EXTI + DFSDM + DMA + RTOS objects.
+     audio_rec.c is excluded from build so no DMA/GPIO conflict. */
+  VoiceRec_Init();
+  // AudioRec_Init();   /* DISABLED — superseded by voice_recorder.c */
   AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
+
   CommandHandler_Init(); /* create CMD: message queue                              */
   /* USER CODE END 2 */
 
@@ -297,6 +301,8 @@ Error_Handler();
   xBleQueue = xQueueCreate(8, BLE_MSG_LEN * sizeof(char));
   /* Music queues + JpegDisplayTask */
   Music_Init();
+  /* Voice recorder handoff queue: depth 1, VoiceRecTask → SDWriteTask */
+  xVoiceQueue = xQueueCreate(1, sizeof(uint32_t));
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -318,6 +324,11 @@ Error_Handler();
      Stack 1024 words.  Priority below normal: display updates are not time-critical. */
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1024u, NULL,
               osPriorityBelowNormal, NULL);
+  /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
+  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  1024u, xVoiceQueue, 6u, &voiceRecTaskHandle);
+  xTaskCreate(SDWriteTask,   "SDWriteTask",   1024u, xVoiceQueue, 3u, NULL);
+  xTaskCreate(RTTLogTask,    "RTTLogTask",     256u, NULL,        1u, NULL);
+  xTaskCreate(HealthMonTask, "HealthMonTask", 1024u, NULL,        1u, NULL);
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);

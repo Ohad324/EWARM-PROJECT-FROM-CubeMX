@@ -350,6 +350,12 @@ void AudioSD_SDMMC_IRQHandler(void)
     HAL_SD_IRQHandler(&s_hsd1);
 }
 
+/* ── AudioSD_GetErrorCode ─────────────────────────────────────────────────── */
+uint32_t AudioSD_GetErrorCode(void)
+{
+    return s_hsd1.ErrorCode;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  Private helpers                                                             */
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -465,24 +471,29 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
 {
     if (pdrv != 0) return RES_PARERR;
 
-    /* SDMMC IDMA requires 4-byte aligned buffer in DMA-accessible RAM.
-     * If caller's buffer is unaligned, use the sector bounce buffer. */
-    if (((uint32_t)buff & 0x3u) != 0u)
+    /* Wait for card to reach TRANSFER state before issuing a new command.
+     * After DFSDM recording stops, SDMMC may still be finishing a previous
+     * operation. HAL_SD_ReadBlocks returns HAL_ERROR if card is not READY. */
+    uint32_t t0 = HAL_GetTick();
+    while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER)
     {
-        for (UINT i = 0; i < count; i++)
-        {
-            if (HAL_SD_ReadBlocks(&s_hsd1, s_sectorBuf,
-                                  (uint32_t)(sector + i), 1, 1000) != HAL_OK)
-                return RES_ERROR;
-            while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
-            memcpy(buff + i * 512u, s_sectorBuf, 512u);
-        }
-        return RES_OK;
+        if ((HAL_GetTick() - t0) > 500u) return RES_ERROR;
     }
 
-    if (HAL_SD_ReadBlocks(&s_hsd1, buff, (uint32_t)sector,
-                          count, 5000) != HAL_OK) return RES_ERROR;
-    while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
+    /* Always use 32-byte aligned bounce buffer — never DMA directly to caller's buff.
+     * B-005/B-006: post-DMA SCB_InvalidateDCache_by_Addr rounds addr down to 32-byte
+     * boundary, hitting adjacent FATFS struct fields (winsect before win[]) and
+     * discarding their dirty cache lines → FR_INT_ERR / directory corruption.
+     * s_sectorBuf is static + 32-byte aligned: no adjacent fields at risk. */
+    for (UINT i = 0; i < count; i++)
+    {
+        if (HAL_SD_ReadBlocks(&s_hsd1, s_sectorBuf,
+                              (uint32_t)(sector + i), 1, 1000) != HAL_OK)
+            return RES_ERROR;
+        while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
+        SCB_InvalidateDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
+        memcpy(buff + i * 512u, s_sectorBuf, 512u);
+    }
     return RES_OK;
 }
 
@@ -490,22 +501,23 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
 {
     if (pdrv != 0) return RES_PARERR;
 
-    if (((uint32_t)buff & 0x3u) != 0u)
+    /* Wait for card TRANSFER state before writing */
+    uint32_t t0 = HAL_GetTick();
+    while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER)
     {
-        for (UINT i = 0; i < count; i++)
-        {
-            memcpy(s_sectorBuf, buff + i * 512u, 512u);
-            if (HAL_SD_WriteBlocks(&s_hsd1, s_sectorBuf,
-                                   (uint32_t)(sector + i), 1, 1000) != HAL_OK)
-                return RES_ERROR;
-            while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
-        }
-        return RES_OK;
+        if ((HAL_GetTick() - t0) > 500u) return RES_ERROR;
     }
 
-    if (HAL_SD_WriteBlocks(&s_hsd1, (uint8_t *)buff, (uint32_t)sector,
-                           count, 5000) != HAL_OK) return RES_ERROR;
-    while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
+    /* Always use bounce buffer — same reasoning as disk_read above. */
+    for (UINT i = 0; i < count; i++)
+    {
+        memcpy(s_sectorBuf, buff + i * 512u, 512u);
+        SCB_CleanDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
+        if (HAL_SD_WriteBlocks(&s_hsd1, s_sectorBuf,
+                               (uint32_t)(sector + i), 1, 1000) != HAL_OK)
+            return RES_ERROR;
+        while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
+    }
     return RES_OK;
 }
 

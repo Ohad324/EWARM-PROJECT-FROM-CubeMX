@@ -69,4 +69,10 @@ bool AudioSD_SendFileToUART(const char *filename);
  */
 void AudioSD_SDMMC_IRQHandler(void);
 
+/*
+ * AudioSD_GetErrorCode — returns s_hsd1.ErrorCode for health monitoring.
+ * 0 = no error since last reset.
+ */
+uint32_t AudioSD_GetErrorCode(void);
+
 #endif /* AUDIO_SD_H */
