@@ -1,0 +1,49 @@
+/*
+ * debug_sd_bp.mac — C-SPY hardware breakpoints for diagnosing FR_DISK_ERR
+ *
+ * Load in IAR: Project → Options → Debugger → Setup → Setup macro file → browse here.
+ * All 5 use HW breakpoints (Cortex-M7 FPB) — never software BKPTs that patch flash.
+ *
+ * WHAT TO WATCH AT EACH STOP:
+ *
+ * BP1  audio_sd.c:460  disk_status entry
+ *      Watch: HAL_SD_GetCardState(&s_hsd1)
+ *      Expect: returns HAL_SD_CARD_TRANSFER (6) → status = 0 (OK)
+ *              If returns anything else → FatFS never starts reading → f_open fails
+ *
+ * BP2  audio_sd.c:464  disk_read entry
+ *      Watch: sector, count, buff, (uint32_t)buff & 0x3u
+ *      Expect: pdrv=0, sector=small FAT sector number, buff 4-byte aligned → direct path
+ *
+ * BP3  audio_sd.c:476  bounce path — HAL_SD_ReadBlocks (unaligned buff)
+ *      Watch: s_hsd1.State (should be 1=READY), s_hsd1.ErrorCode (should be 0)
+ *      If fired: buff was NOT 4-byte aligned → using bounce buffer
+ *
+ * BP4  audio_sd.c:493  direct path — HAL_SD_ReadBlocks (aligned buff)
+ *      Watch: s_hsd1.State (should be 1=READY), s_hsd1.ErrorCode (should be 0)
+ *      KEY: step over the HAL_SD_ReadBlocks call → does s_hsd1.ErrorCode change?
+ *           Non-zero ErrorCode = SDMMC hardware error (timeout, CRC, bus fault)
+ *           State = 2 (BUSY) before call → previous op not finished
+ *
+ * BP5  voice_recorder.c:347  inside "if (fr != FR_OK)" after f_open fails
+ *      Watch: fr (should be 1=FR_DISK_ERR), filename, dbg (the snprintf buffer)
+ *      This confirms the full failure path completed.
+ */
+
+execUserSetup()
+{
+    /* BP1 — disk_status: does FatFS see the card as ready? */
+    __setHWCodeBreak("audio_sd.c", 460, 0, "");
+
+    /* BP2 — disk_read entry: which sector? is buff aligned? */
+    __setHWCodeBreak("audio_sd.c", 464, 0, "");
+
+    /* BP3 — bounce path (unaligned buff): HAL_SD_ReadBlocks about to be called */
+    __setHWCodeBreak("audio_sd.c", 476, 0, "");
+
+    /* BP4 — direct path (aligned buff): HAL_SD_ReadBlocks about to be called */
+    __setHWCodeBreak("audio_sd.c", 493, 0, "");
+
+    /* BP5 — f_open failed: inspect fr and filename */
+    __setHWCodeBreak("voice_recorder.c", 347, 0, "");
+}

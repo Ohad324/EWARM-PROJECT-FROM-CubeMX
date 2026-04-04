@@ -1,6 +1,6 @@
 "C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm\bin\armproc.dll"
 
- "C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm\bin\armstlink.dll"
+ "C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm\bin\armjlink.dll"
 
  C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM4\Exe\STM32H747I-DISCO_CM4.out
 

@@ -1,0 +1,18 @@
+{
+  "workspace": {
+    "path": "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\Project.eww"
+  },
+  "workspaces": {
+    "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\Project.eww": {
+      "configs": {
+        "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\STM32H747I-DISCO.ewp": "STM32H747I-DISCO_CM7"
+      },
+      "selected": {
+        "path": "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\STM32H747I-DISCO.ewp"
+      }
+    }
+  },
+  "workbench": {
+    "path": "c:\\TouchGFXProjects\\IAR 9.70.2\\ewarm-9.70.2"
+  }
+}

@@ -84,7 +84,7 @@
                 </option>
                 <option>
                     <name>OCDynDriverList</name>
-                    <state>STLINK_ID</state>
+                    <state>JLINK_ID</state>
                 </option>
                 <option>
                     <name>OCLastSavedByProductVersion</name>
@@ -1696,7 +1696,7 @@
                 </option>
                 <option>
                     <name>MacFile</name>
-                    <state>C:\TouchGFXProjects\MyApplication\debug_pipeline.mac</state>
+                    <state>C:\TouchGFXProjects\MyApplication\EWARM\debug_sd_bp.mac</state>
                 </option>
                 <option>
                     <name>MemOverride</name>

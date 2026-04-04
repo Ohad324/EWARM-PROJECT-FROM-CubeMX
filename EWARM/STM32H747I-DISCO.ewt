@@ -3624,9 +3624,6 @@
                         </file>
                     </group>
                     <file>
-                        <name>$PROJ_DIR$\..\CM7\Core\Src\audio_rec.c</name>
-                    </file>
-                    <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\audio_sd.c</name>
                     </file>
                     <file>
@@ -3661,6 +3658,9 @@
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\stm32h7xx_it.c</name>
+                    </file>
+                    <file>
+                        <name>$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c</name>
                     </file>
                 </group>
                 <group>
