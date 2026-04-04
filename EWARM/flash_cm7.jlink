@@ -1,5 +1,4 @@
 r
-loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.hex"
+loadfile STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.hex
 r
-go
-exit
+q

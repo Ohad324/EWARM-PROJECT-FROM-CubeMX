@@ -15,6 +15,7 @@
 
 /* SEGGER RTT */
 #include "SEGGER_RTT.h"
+#include "stm32h7xx_hal.h"  /* HAL_GetTick() for timestamps */
 
 /* CMSIS (DWT, CoreDebug) */
 #include "stm32h7xx.h"
@@ -209,7 +210,8 @@ static void emit_run_counts(void)
 
     {
         int len = snprintf(line, sizeof(line),
-            "[RUNS] -- switches per %u ms --\n", WATERMARK_PERIOD_MS);
+            "[T+%7lu] [RUNS] -- switches per %u ms --\n",
+            (unsigned long)HAL_GetTick(), WATERMARK_PERIOD_MS);
         if (len > 0)
             SEGGER_RTT_Write(0u, line, (unsigned)len);
     }
@@ -218,7 +220,8 @@ static void emit_run_counts(void)
         uint32_t cnt          = s_run_counts[i].count;
         s_run_counts[i].count = 0u;   /* reset: next report shows delta only */
         int len = snprintf(line, sizeof(line),
-            "[RUNS] %-20s  %lu\n",
+            "[T+%7lu] [RUNS] %-20s  %lu\n",
+            (unsigned long)HAL_GetTick(),
             s_run_counts[i].name ? s_run_counts[i].name : "?",
             (unsigned long)cnt);
         if (len > 0)
@@ -237,7 +240,8 @@ static void emit_stack_watermarks(void)
 
     {
         int len = snprintf(line, sizeof(line),
-            "[STACK] -- HWM (words free)  heap_free=%lu B --\n",
+            "[T+%7lu] [STACK] -- HWM heap_free=%lu B --\n",
+            (unsigned long)HAL_GetTick(),
             (unsigned long)xPortGetFreeHeapSize());
         if (len > 0)
             SEGGER_RTT_Write(0u, line, (unsigned)len);
@@ -245,9 +249,9 @@ static void emit_stack_watermarks(void)
 
     for (UBaseType_t i = 0u; i < n; i++) {
         int len = snprintf(line, sizeof(line),
-            "[STACK] %-20s  base=0x%08lX  hwm=%4u words\n",
+            "[T+%7lu] [STACK] %-20s  hwm=%4u words\n",
+            (unsigned long)HAL_GetTick(),
             info[i].pcTaskName,
-            (unsigned long)info[i].pxStackBase,
             (unsigned)info[i].usStackHighWaterMark);
         if (len > 0)
             SEGGER_RTT_Write(0u, line, (unsigned)len);

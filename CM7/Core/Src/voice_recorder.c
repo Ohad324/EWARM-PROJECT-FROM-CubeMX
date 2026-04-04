@@ -32,7 +32,7 @@
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
 #include "audio_sd.h"       /* AudioSD_GetErrorCode() — HealthMonTask */
-#include "SEGGER_RTT.h"         /* RTTLogTask uses SEGGER_RTT_Write */
+#include "log_mutex.h"      /* RTT_TS() — timestamped RTT log lines  */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
 #include <limits.h>      /* ULONG_MAX */
@@ -397,7 +397,7 @@ void SDWriteTask(void *arg)
 done:
         if (xQueueSend(xLogQueue, &logMsg, pdMS_TO_TICKS(100u)) != pdTRUE)
         {
-            SEGGER_RTT_WriteString(0, "[REC] xLogQueue full - log dropped\r\n");
+            RTT_TS("[REC] xLogQueue full - log dropped\r\n");
         }
 
         g_State = REC_IDLE;
@@ -413,11 +413,11 @@ void RTTLogTask(void *arg)
     (void)arg;
 
     /* Print living bug log to RTT at every boot — visible in RTT Viewer */
-    SEGGER_RTT_WriteString(0, "\r\n=== BUG LOG ===\r\n");
-    SEGGER_RTT_WriteString(0, "B-001 BUILD  .sdram section missing in .icf    FIXED\r\n");
-    SEGGER_RTT_WriteString(0, "B-002 DMA    vTaskDelay used instead of drain  FIXED\r\n");
-    SEGGER_RTT_WriteString(0, "B-003 SD     f_mount called after xTaskCreate  FIXED\r\n");
-    SEGGER_RTT_WriteString(0, "=== END BUG LOG ===\r\n\r\n");
+    RTT_TS("\r\n=== BUG LOG ===\r\n");
+    RTT_TS("B-001 BUILD  .sdram section missing in .icf    FIXED\r\n");
+    RTT_TS("B-002 DMA    vTaskDelay used instead of drain  FIXED\r\n");
+    RTT_TS("B-003 SD     f_mount called after xTaskCreate  FIXED\r\n");
+    RTT_TS("=== END BUG LOG ===\r\n\r\n");
 
     char rttBuf[96];
     LogMsg_t msg;
@@ -449,7 +449,7 @@ void RTTLogTask(void *arg)
                 (int)msg.result,
                 (unsigned long)msg.timestamp);
         }
-        SEGGER_RTT_WriteString(0, rttBuf);
+        RTT_TS(rttBuf);
     }
 }
 
@@ -481,14 +481,14 @@ void HealthMonTask(void *arg)
         GPIO_PinState det = HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8);
         if (det != GPIO_PIN_RESET)
         {
-            SEGGER_RTT_WriteString(0, "[HEALTH] card=ABSENT\r\n");
+            RTT_TS("[HEALTH] card=ABSENT\r\n");
             continue;
         }
 
         /* Only query FatFS when FatFS owns the card */
         if (g_SysMode != SYS_MODE_RECORD)
         {
-            SEGGER_RTT_WriteString(0, "[HEALTH] card=PRESENT  mode=USB-MSC\r\n");
+            RTT_TS("[HEALTH] card=PRESENT  mode=USB-MSC\r\n");
             continue;
         }
 
@@ -514,7 +514,7 @@ void HealthMonTask(void *arg)
             snprintf(buf, sizeof(buf),
                 "[HEALTH] f_getfree fail: fr=%d\r\n", (int)fr);
         }
-        SEGGER_RTT_WriteString(0, buf);
+        RTT_TS(buf);
     }
 }
 
