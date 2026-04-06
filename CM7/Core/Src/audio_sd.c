@@ -42,8 +42,21 @@
 #include "diskio.h"         /* DRESULT, DSTATUS — FatFS disk I/O */
 #include "FreeRTOS.h"
 #include "task.h"           /* vTaskDelay                        */
+#include "log_mutex.h"      /* SEGGER_RTT_printf, RTT_TS         */
 #include <string.h>         /* memcpy, strlen                    */
 #include <stdio.h>          /* snprintf                          */
+
+/* Timestamped RTT log line for this module — avoids SendUartStr on UART8.
+ * Uses SEGGER_RTT_Write (always linked) rather than SEGGER_RTT_printf
+ * (only in SEGGER_RTT_printf.c, not compiled in this project). */
+#define SD_LOG(fmt, ...) do { \
+    char _sd_buf[80]; \
+    int  _sd_n = snprintf(_sd_buf, sizeof(_sd_buf), \
+                          "[T+%7lu] [SD] " fmt "\r\n", \
+                          (unsigned long)HAL_GetTick(), ##__VA_ARGS__); \
+    if (_sd_n > 0) SEGGER_RTT_Write(0, _sd_buf, (unsigned)_sd_n); \
+    if (_sd_n > 0) { printf("%s", _sd_buf); } \
+} while (0)
 
 /* ── Configuration ───────────────────────────────────────────────────────────
  * AUDIO_SD_SAMPLES_PER_FRAME : must match AUDIO_BUF_SAMPLES in audio_rec.c
@@ -87,6 +100,7 @@ static uint32_t  s_dataBytesWritten = 0;   /* PCM bytes written so far          
 static char      s_currentFilename[16];    /* e.g. "REC_001.wav\0"               */
 static bool      s_sdReady          = false;
 static bool      s_fileOpen         = false;
+static volatile bool s_sdBusy       = false;  /* true while writing or streaming — HealthMonTask skips f_getfree */
 
 /* ── PCM conversion scratch buffer ────────────────────────────────────────────
  * Placed in AXI SRAM (.sram_bss) so SDMMC IDMA can access it.
@@ -102,11 +116,14 @@ static uint8_t s_sectorBuf[512u] __attribute__((aligned(32)));
 /* huart8 owned by main.c / ble_uart.c */
 extern UART_HandleTypeDef huart8;
 
+/* Set by AudioSD_NotifyReady() (called from routeAsciiMessage) when NORA
+ * sends "AUDIO:READY". Polled by AudioSD_SendFileToUART(). */
+static volatile bool s_audioReady = false;
+
 /* ── Forward declarations ─────────────────────────────────────────────────── */
 static void     SDMMC1_GPIO_Init(void);
 static void     SDMMC1_Peripheral_Init(void);
 static void     BuildWavHeader(WavHeader_t *hdr, uint32_t dataBytes);
-static void     SendUartStr(const char *str);
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /*  Public API                                                                  */
@@ -128,24 +145,39 @@ bool AudioSD_Init(void)
      * fails and calls Error_Handler() — crashing the entire system. */
     if (HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8) == GPIO_PIN_SET)
     {
-        SendUartStr("SD:ABSENT\n");
+        SD_LOG("ABSENT");
         return false;
     }
 
     SDMMC1_Peripheral_Init();
 
-    /* Mount the FatFS volume — FA_OPEN_ALWAYS ensures the volume is formatted */
+    /* Mount the FatFS volume */
     FRESULT res = f_mount(&s_fatfs, "0:", 1 /* mount now */);
     if (res != FR_OK)
     {
-        char msg[32];
-        snprintf(msg, sizeof(msg), "SD:MOUNT_FAIL:%d\n", (int)res);
-        SendUartStr(msg);
-        return false;
+        SD_LOG("MOUNT_FAIL:%d — attempting f_mkfs format...", (int)res);
+        /* FAT is corrupted — format the card in place.
+         * work[] is the scratch buffer f_mkfs needs (at least 512 bytes).
+         * FM_FAT32=0x08, au=0 (auto cluster size). */
+        static uint8_t work[4096];
+        res = f_mkfs("0:", FM_FAT32, 0, work, sizeof(work));
+        if (res != FR_OK)
+        {
+            SD_LOG("FORMAT_FAIL:%d", (int)res);
+            return false;
+        }
+        SD_LOG("FORMAT_OK — remounting...");
+        res = f_mount(&s_fatfs, "0:", 1);
+        if (res != FR_OK)
+        {
+            SD_LOG("REMOUNT_FAIL:%d", (int)res);
+            return false;
+        }
+        SD_LOG("FORMAT+MOUNT OK");
     }
 
     s_sdReady = true;
-    SendUartStr("SD:OK\n");
+    SD_LOG("OK");
     return true;
 }
 
@@ -157,7 +189,7 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
 {
     if (!s_sdReady)
     {
-        SendUartStr("SD:NOT_READY\n");
+        SD_LOG("NOT_READY");
         return false;
     }
 
@@ -176,7 +208,7 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
 
     if (res != FR_NO_FILE)
     {
-        SendUartStr("SD:NO_FREE_NAME\n");
+        SD_LOG("NO_FREE_NAME");
         return false;
     }
 
@@ -184,9 +216,7 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
     res = f_open(&s_wavFile, s_currentFilename, FA_WRITE | FA_CREATE_NEW);
     if (res != FR_OK)
     {
-        char msg[32];
-        snprintf(msg, sizeof(msg), "SD:OPEN_FAIL:%d\n", (int)res);
-        SendUartStr(msg);
+        SD_LOG("OPEN_FAIL:%d", (int)res);
         return false;
     }
 
@@ -204,9 +234,7 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
         snprintf(filename_out, maxLen, "%s", s_currentFilename);
     }
 
-    char msg[32];
-    snprintf(msg, sizeof(msg), "SD:REC_START:%s\n", s_currentFilename);
-    SendUartStr(msg);
+    SD_LOG("REC_START:%s", s_currentFilename);
     return true;
 }
 
@@ -238,7 +266,7 @@ void AudioSD_WriteFrame(const int32_t *src32, uint32_t nSamples)
     else
     {
         /* Disk full or write error — log but don't abort; next frame will retry */
-        SendUartStr("SD:WRITE_ERR\n");
+        SD_LOG("WRITE_ERR");
     }
 }
 
@@ -249,7 +277,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
 {
     if (!s_fileOpen)
     {
-        SendUartStr("SD:NO_FILE_OPEN\n");
+        SD_LOG("NO_FILE_OPEN");
         return false;
     }
 
@@ -257,7 +285,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
     FRESULT res = f_lseek(&s_wavFile, 0);
     if (res != FR_OK)
     {
-        SendUartStr("SD:SEEK_FAIL\n");
+        SD_LOG("SEEK_FAIL");
         f_close(&s_wavFile);
         s_fileOpen = false;
         return false;
@@ -277,10 +305,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
         snprintf(filename_out, maxLen, "%s", s_currentFilename);
     }
 
-    char msg[48];
-    snprintf(msg, sizeof(msg), "SD:REC_STOP:%s:%lu\n",
-             s_currentFilename, (unsigned long)s_dataBytesWritten);
-    SendUartStr(msg);
+    SD_LOG("REC_STOP:%s %lu bytes", s_currentFilename, (unsigned long)s_dataBytesWritten);
     return true;
 }
 
@@ -296,51 +321,120 @@ bool AudioSD_SendFileToUART(const char *filename)
 {
     if (!s_sdReady)
     {
-        SendUartStr("SD:NOT_READY\n");
+        SD_LOG("NOT_READY");
         return false;
     }
 
-    FIL   file;
-    FRESULT res = f_open(&file, filename, FA_READ);
-    if (res != FR_OK)
+    s_sdBusy = true;
+
+    /* Remount before reading — the write session leaves the SDMMC DPSM in a
+     * degraded state (RX overrun) that causes FR_DISK_ERR mid-read without this. */
+    AudioSD_Remount();
+
+    /* Get file size before opening for reading — need it for the UART header */
+    FILINFO fno;
+    if (f_stat(filename, &fno) != FR_OK)
     {
-        char msg[40];
-        snprintf(msg, sizeof(msg), "SD:FILE_OPEN_FAIL:%d\n", (int)res);
-        SendUartStr(msg);
+        SD_LOG("FSTAT_FAIL:%s", filename);
+        s_sdBusy = false;
         return false;
     }
+    FSIZE_t fileSize = fno.fsize;
 
-    /* Total file size = header (44) + PCM data bytes */
-    FSIZE_t fileSize = f_size(&file);
+    /* Flush NORA's line buffer before sending the header.
+     * STM32 UART TX glitches during reset leave garbage bytes in NORA's
+     * line[] accumulation buffer (pos > 0).  Two bare newlines reset pos=0
+     * so the AUDIO:FILE: line is matched at position 0 (B-007). */
+    const uint8_t flush[] = "\n\n";
+    HAL_UART_Transmit(&huart8, (uint8_t *)flush, 2, 100);
+    vTaskDelay(pdMS_TO_TICKS(50));   /* give NORA time to process the flushes */
 
-    /* Send ASCII header so NORA knows what is coming */
+    /* Send ASCII header so NORA knows filename and exact byte count */
     char hdrMsg[48];
     int  hdrLen = snprintf(hdrMsg, sizeof(hdrMsg),
                            "AUDIO:FILE:%s:%lu\n",
                            filename, (unsigned long)fileSize);
     HAL_UART_Transmit(&huart8, (uint8_t *)hdrMsg, (uint16_t)hdrLen, 200);
 
+    /* Clear any stale AUDIO:READY from a previous session before sending
+     * the header — prevents a leftover flag from triggering an early stream. */
+    s_audioReady = false;
+
+    /* Wait for NORA to send "AUDIO:READY" — signals TLS done + GCS HTTP PUT open.
+     * Replaces the old fixed 1 s delay: the flag is set by AudioSD_NotifyReady()
+     * which routeAsciiMessage() calls the moment AUDIO:READY arrives on UART8.
+     * Timeout: 10 s (TLS typically < 1 s; 10 s covers slow WiFi). */
+    SD_LOG("Waiting for AUDIO:READY from NORA...");
+    uint32_t t0 = HAL_GetTick();
+    while (!s_audioReady)
+    {
+        if ((HAL_GetTick() - t0) >= 10000u)
+        {
+            SD_LOG("AUDIO:READY timeout — NORA not ready");
+            s_sdBusy = false;
+            return false;
+        }
+        vTaskDelay(pdMS_TO_TICKS(10));
+    }
+    SD_LOG("AUDIO:READY received — streaming now");
+
+    /* Open file AFTER the 2s delay — keeps f_open fresh immediately before
+     * reading.  Holding the file open during vTaskDelay allows other tasks
+     * to disturb the FatFS win[] sector cache → FR_DISK_ERR mid-read. */
+    static FIL file __attribute__((aligned(32)));
+    FRESULT res = f_open(&file, filename, FA_READ);
+    if (res != FR_OK)
+    {
+        SD_LOG("FILE_OPEN_FAIL:%d", (int)res);
+        s_sdBusy = false;
+        return false;
+    }
+
     /* Stream file in chunks */
     static uint8_t s_txChunk[AUDIO_SD_UART_CHUNK] __attribute__((aligned(32)));
-    UINT    br;
-    bool    ok = true;
+    UINT     br;
+    bool     ok       = true;
+    uint32_t sentTotal = 0;
 
     while (1)
     {
         res = f_read(&file, s_txChunk, sizeof(s_txChunk), &br);
-        if (res != FR_OK || br == 0) break;
+        if (res != FR_OK)
+        {
+            SD_LOG("FREAD_ERR:%d at %lu sdErr=0x%08lX", (int)res, sentTotal,
+                   (unsigned long)s_hsd1.ErrorCode);
+            ok = false;
+            break;
+        }
+        if (br == 0) break;   /* clean EOF */
 
         HAL_StatusTypeDef txRes =
             HAL_UART_Transmit(&huart8, s_txChunk, (uint16_t)br, 500);
         if (txRes != HAL_OK)
         {
-            SendUartStr("SD:UART_TX_ERR\n");
+            SD_LOG("UART_TX_ERR:%d at %lu", (int)txRes, sentTotal);
             ok = false;
             break;
         }
+        sentTotal += br;
+
+        /* Pace TX: NORA's UART buffer is 16 KB; STM32 sends 96 KB at ~115 KB/s.
+         * Without a delay the buffer overflows after ~140 ms and bytes are
+         * silently dropped by the ESP32 UART driver.
+         * 10 ms per 1 KB chunk = ~10 KB/s effective rate — well within NORA's
+         * ability to drain (reads 1 KB, writes to GCS HTTP, loops). */
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
+    SD_LOG("Stream done: %lu/%lu bytes ok=%d", sentTotal, (unsigned long)fileSize, (int)ok);
 
     f_close(&file);
+
+    /* After reading back the file, the SDMMC peripheral may have accumulated
+     * an error (e.g. RX overrun from write→read transition).  Recover now so
+     * the next recording starts from a clean state. */
+    AudioSD_Remount();
+
+    s_sdBusy = false;
     return ok;
 }
 
@@ -354,6 +448,59 @@ void AudioSD_SDMMC_IRQHandler(void)
 uint32_t AudioSD_GetErrorCode(void)
 {
     return s_hsd1.ErrorCode;
+}
+
+/* ── AudioSD_IsBusy ───────────────────────────────────────────────────────── */
+bool AudioSD_IsBusy(void)
+{
+    return s_sdBusy;
+}
+
+/* ── AudioSD_NotifyReady ──────────────────────────────────────────────────────
+ * Called by routeAsciiMessage() in main.c when "AUDIO:READY" arrives from NORA.
+ * Sets the flag that AudioSD_SendFileToUART() polls while waiting for the ACK.
+ * ─────────────────────────────────────────────────────────────────────────── */
+void AudioSD_NotifyReady(void)
+{
+    s_audioReady = true;
+}
+
+/* ── AudioSD_Remount ──────────────────────────────────────────────────────────
+ * Recover the SDMMC peripheral and re-mount FatFS.
+ *
+ * After a write→read transition the SDMMC DPSM can accumulate an RX overrun
+ * error (SDMMC_ERROR_RX_OVERRUN = 0x20) that prevents HAL_SD_GetCardState()
+ * from returning HAL_SD_CARD_TRANSFER.  disk_status() then returns STA_NOINIT
+ * and every subsequent FatFS call fails with FR_NOT_READY.
+ *
+ * Recovery sequence:
+ *   1. HAL_SD_Abort  — abort any pending SDMMC transfer, reset DPSM
+ *   2. Clear ErrorCode — erase accumulated error flags
+ *   3. f_mount(NULL) — force FatFS to release the volume
+ *   4. f_mount(1)    — re-mount; calls disk_initialize which polls GetCardState
+ *
+ * Returns true if the volume is usable again.
+ * ─────────────────────────────────────────────────────────────────────────── */
+bool AudioSD_Remount(void)
+{
+    /* Soft abort first — clears SDMMC interrupt flags and HAL state */
+    HAL_SD_Abort(&s_hsd1);
+    s_hsd1.ErrorCode = HAL_SD_ERROR_NONE;
+
+    /* Full peripheral de-init + re-init.
+     * HAL_SD_Abort alone resets the HAL state machine but does NOT reset the
+     * SDMMC IDMA or the hardware data-path state machine (DPSM).  After an
+     * RX overrun the DPSM stays stuck and HAL_SD_ReadBlocks keeps failing.
+     * HAL_SD_DeInit powers off SDMMC1; SDMMC1_Peripheral_Init re-runs the
+     * full card-detect handshake (CMD0/CMD8/ACMD41) so ReadBlocks works again. */
+    HAL_SD_DeInit(&s_hsd1);
+    vTaskDelay(pdMS_TO_TICKS(20u));   /* let card power-cycle settle */
+    SDMMC1_Peripheral_Init();         /* full re-init: HAL_SD_Init + 4-bit bus */
+
+    f_mount(NULL, "0:", 0);                        /* force unmount */
+    FRESULT fr = f_mount(&s_fatfs, "0:", 1);       /* re-mount now */
+    s_sdReady = (fr == FR_OK);
+    return s_sdReady;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -379,12 +526,6 @@ static void BuildWavHeader(WavHeader_t *hdr, uint32_t dataBytes)
     hdr->bitsPerSample = AUDIO_SD_BITS_PER_SAMPLE;
     memcpy(hdr->data,  "data", 4);
     hdr->subchunk2Size = dataBytes;
-}
-
-/* ── SendUartStr ─────────────────────────────────────────────────────────── */
-static void SendUartStr(const char *str)
-{
-    HAL_UART_Transmit(&huart8, (uint8_t *)str, (uint16_t)strlen(str), 100);
 }
 
 /* ── SDMMC1_GPIO_Init ────────────────────────────────────────────────────── */
@@ -423,17 +564,20 @@ static void SDMMC1_Peripheral_Init(void)
     __HAL_RCC_SDMMC1_CLK_ENABLE();
 
     s_hsd1.Instance = SDMMC1;
-    /* ClockDiv=2: SDMMC clock = 200 MHz / (2*(2+1)) = ~25 MHz — safe for most cards */
+    /* ClockDiv=4: SDMMC clock = 200 MHz / (2*4) = 25 MHz.
+     * ClockDiv=2 gives 50 MHz which causes RXOVERR (0x20) under LTDC AXI load —
+     * LTDC DMA bursts starve the SDMMC IDMA, FIFO overflows mid-read.
+     * 25 MHz doubles the FIFO fill time, eliminating contention. */
     s_hsd1.Init.ClockEdge           = SDMMC_CLOCK_EDGE_RISING;
     s_hsd1.Init.ClockPowerSave      = SDMMC_CLOCK_POWER_SAVE_DISABLE;
     s_hsd1.Init.BusWide             = SDMMC_BUS_WIDE_1B;   /* 1-bit during init */
     s_hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
-    s_hsd1.Init.ClockDiv            = 2;
+    s_hsd1.Init.ClockDiv            = 4;
 
     if (HAL_SD_Init(&s_hsd1) != HAL_OK)
     {
         /* Non-fatal — SD recording unavailable but system keeps running */
-        SendUartStr("SD:INIT_FAIL\n");
+        SD_LOG("INIT_FAIL");
         return;
     }
 
@@ -441,7 +585,7 @@ static void SDMMC1_Peripheral_Init(void)
     if (HAL_SD_ConfigWideBusOperation(&s_hsd1, SDMMC_BUS_WIDE_4B) != HAL_OK)
     {
         /* Some cards don't support 4-bit; continue with 1-bit */
-        SendUartStr("SD:1BIT_MODE\n");
+        SD_LOG("1BIT_MODE");
     }
 
     HAL_NVIC_SetPriority(SDMMC1_IRQn, 5, 0);
@@ -487,10 +631,73 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
      * s_sectorBuf is static + 32-byte aligned: no adjacent fields at risk. */
     for (UINT i = 0; i < count; i++)
     {
-        if (HAL_SD_ReadBlocks(&s_hsd1, s_sectorBuf,
-                              (uint32_t)(sector + i), 1, 1000) != HAL_OK)
-            return RES_ERROR;
-        while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
+        /* Disable task preemption during SD read — prevents SDMMC IDMA FIFO
+         * overrun caused by other tasks accessing AHB3 (SDRAM FMC refresh)
+         * mid-transfer. vTaskSuspendAll/ResumeAll keeps interrupts active
+         * (UART DMA, SysTick still work) but prevents task switches. */
+        vTaskSuspendAll();
+        HAL_StatusTypeDef rdResult = HAL_SD_ReadBlocks(&s_hsd1, s_sectorBuf,
+                              (uint32_t)(sector + i), 1, 1000);
+        xTaskResumeAll();
+
+        if (rdResult != HAL_OK)
+        {
+            /* RXOVERR (0x20) / TX_UNDERRUN (0x10): host-side FIFO error.
+             * The SD card is fine and returns to TRANSFER state on its own.
+             * DO NOT DeInit + re-init — HAL_SD_Init re-runs CMD0/ACMD41 which
+             * takes 2–5 s on this card and causes a streaming timeout at NORA.
+             *
+             * Lightweight host-only reset:
+             *   1. HAL_SD_Abort  — stops IDMA, clears HAL state machine
+             *   2. SDMMC1->DCTRL = 0 — disable DPSM (data path state machine)
+             *   3. SDMMC1->ICR   = 0x1FE007FF — clear all status flags
+             *   4. Clear ErrorCode — erase accumulated flags
+             *   5. Poll card back to TRANSFER — typically < 5 ms
+             *   6. Retry the read once.
+             */
+            SD_LOG("disk_read FAIL sec=%lu sdErr=0x%08lX — DPSM reset+retry",
+                   (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+            HAL_SD_Abort(&s_hsd1);
+            SDMMC1->DCTRL = 0;
+            SDMMC1->ICR   = 0x1FE007FFu;
+            s_hsd1.ErrorCode = HAL_SD_ERROR_NONE;
+            /* Wait for card to return to TRANSFER state — usually immediate */
+            {
+                uint32_t _tr = HAL_GetTick();
+                while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER)
+                {
+                    if ((HAL_GetTick() - _tr) > 500u)
+                    {
+                        SD_LOG("disk_read card-state timeout after reset sec=%lu",
+                               (unsigned long)(sector + i));
+                        return RES_ERROR;
+                    }
+                }
+            }
+            SD_LOG("disk_read retry sec=%lu", (unsigned long)(sector + i));
+            vTaskSuspendAll();
+            HAL_StatusTypeDef retryResult = HAL_SD_ReadBlocks(&s_hsd1, s_sectorBuf,
+                                  (uint32_t)(sector + i), 1, 1000);
+            xTaskResumeAll();
+            if (retryResult != HAL_OK)
+            {
+                SD_LOG("disk_read retry FAIL sec=%lu sdErr=0x%08lX",
+                       (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                return RES_ERROR;
+            }
+        }
+        {
+            uint32_t _t0 = HAL_GetTick();
+            while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER)
+            {
+                if (HAL_GetTick() - _t0 > 500u)
+                {
+                    SD_LOG("disk_read card state timeout sec=%lu",
+                           (unsigned long)(sector + i));
+                    return RES_ERROR;
+                }
+            }
+        }
         SCB_InvalidateDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
         memcpy(buff + i * 512u, s_sectorBuf, 512u);
     }
@@ -513,10 +720,63 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
     {
         memcpy(s_sectorBuf, buff + i * 512u, 512u);
         SCB_CleanDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
-        if (HAL_SD_WriteBlocks(&s_hsd1, s_sectorBuf,
-                               (uint32_t)(sector + i), 1, 1000) != HAL_OK)
-            return RES_ERROR;
-        while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER) {}
+
+        /* Disable task preemption during SD write — same AHB3 bus contention
+         * hazard as disk_read: SDRAM FMC refresh can stall SDMMC IDMA FIFO.
+         * Interrupts remain active (UART DMA, SysTick unaffected). */
+        vTaskSuspendAll();
+        HAL_StatusTypeDef wrResult = HAL_SD_WriteBlocks(&s_hsd1, s_sectorBuf,
+                                         (uint32_t)(sector + i), 1, 1000);
+        xTaskResumeAll();
+
+        if (wrResult != HAL_OK)
+        {
+            /* TX_UNDERRUN (0x10) / RXOVERR (0x20): host-side FIFO error.
+             * Same lightweight reset as disk_read — no DeInit to avoid 2–5 s hang. */
+            SD_LOG("disk_write FAIL sec=%lu sdErr=0x%08lX — DPSM reset+retry",
+                   (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+            HAL_SD_Abort(&s_hsd1);
+            SDMMC1->DCTRL = 0;
+            SDMMC1->ICR   = 0x1FE007FFu;
+            s_hsd1.ErrorCode = HAL_SD_ERROR_NONE;
+            {
+                uint32_t _tr = HAL_GetTick();
+                while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER)
+                {
+                    if ((HAL_GetTick() - _tr) > 500u)
+                    {
+                        SD_LOG("disk_write card-state timeout after reset sec=%lu",
+                               (unsigned long)(sector + i));
+                        return RES_ERROR;
+                    }
+                }
+            }
+            /* Re-clean cache line before retry — the bounce buffer is still valid */
+            SCB_CleanDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
+            SD_LOG("disk_write retry sec=%lu", (unsigned long)(sector + i));
+            vTaskSuspendAll();
+            HAL_StatusTypeDef retryResult = HAL_SD_WriteBlocks(&s_hsd1, s_sectorBuf,
+                                                 (uint32_t)(sector + i), 1, 1000);
+            xTaskResumeAll();
+            if (retryResult != HAL_OK)
+            {
+                SD_LOG("disk_write retry FAIL sec=%lu sdErr=0x%08lX",
+                       (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                return RES_ERROR;
+            }
+        }
+        {
+            uint32_t _t0 = HAL_GetTick();
+            while (HAL_SD_GetCardState(&s_hsd1) != HAL_SD_CARD_TRANSFER)
+            {
+                if (HAL_GetTick() - _t0 > 500u)
+                {
+                    SD_LOG("disk_write card state timeout sec=%lu",
+                           (unsigned long)(sector + i));
+                    return RES_ERROR;
+                }
+            }
+        }
     }
     return RES_OK;
 }
