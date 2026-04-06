@@ -28,11 +28,14 @@
 
 #include "cloud_upload.h"
 #include "esp_http_client.h"
+#include "esp_crt_bundle.h"
 #include "esp_log.h"
 #include "cJSON.h"
 #include "driver/uart.h"
 #include <string.h>
 #include <stdio.h>
+
+#define STREAM_CHUNK_SIZE  1024u   /* UART read + HTTP write chunk size */
 
 static const char *TAG = "cloud_upload";
 
@@ -75,14 +78,16 @@ static esp_err_t HttpEventHandler(esp_http_client_event_t *evt)
             break;
 
         case HTTP_EVENT_ON_DATA:
-            if (!esp_http_client_is_chunked_response(evt->client))
+        {
+            int avail = (int)sizeof(s_responseBuf) - s_responseLen - 1;
+            int copy  = (evt->data_len < avail) ? evt->data_len : avail;
+            if (copy > 0)
             {
-                int avail = (int)sizeof(s_responseBuf) - s_responseLen - 1;
-                int copy  = (evt->data_len < avail) ? evt->data_len : avail;
                 memcpy(s_responseBuf + s_responseLen, evt->data, copy);
                 s_responseLen += copy;
             }
             break;
+        }
 
         default:
             break;
@@ -127,8 +132,7 @@ bool CloudUpload_UploadWav(const char *filename, const uint8_t *data, size_t len
         .timeout_ms       = 30000,   /* 30 s: large WAV files may take several seconds */
         .buffer_size      = 4096,
         .buffer_size_tx   = 4096,
-        .skip_cert_common_name_check = false,
-        /* For production: set .crt_bundle_attach = esp_crt_bundle_attach */
+        .crt_bundle_attach    = esp_crt_bundle_attach,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&cfg);
@@ -212,15 +216,16 @@ bool CloudUpload_Transcribe(const char *filename,
                 "\"uri\":\"%s\""
             "}"
         "}",
-        (unsigned)31250,
+        (unsigned)16000,    /* tell Google STT 16000 Hz; actual DFSDM ~16666 Hz — STT resamples */
         audioUri);
 
     esp_http_client_config_t cfg = {
-        .url           = STT_API_URL,
-        .method        = HTTP_METHOD_POST,
-        .event_handler = HttpEventHandler,
-        .timeout_ms    = 15000,   /* 15 s: synchronous STT is usually < 5 s */
-        .buffer_size   = 4096,
+        .url               = STT_API_URL,
+        .method            = HTTP_METHOD_POST,
+        .event_handler     = HttpEventHandler,
+        .timeout_ms        = 15000,   /* 15 s: synchronous STT is usually < 5 s */
+        .buffer_size       = 4096,
+        .crt_bundle_attach = esp_crt_bundle_attach,
     };
 
     esp_http_client_handle_t client = esp_http_client_init(&cfg);
@@ -285,4 +290,118 @@ bool CloudUpload_Transcribe(const char *filename,
     }
 
     return ok;
+}
+
+/* ── CloudUpload_StreamWav ───────────────────────────────────────────────────
+ * Stream WAV directly from UART to GCS — no large buffer needed.
+ * Reads UART in 1 KB chunks and writes each chunk straight into the HTTP PUT
+ * body. Peak memory: STREAM_CHUNK_SIZE bytes on stack only.
+ *
+ *   filename : GCS object name (e.g. "REC_001.wav")
+ *   uart_port: UART port receiving WAV bytes from STM32
+ *   fileSize : exact byte count declared in AUDIO:FILE: header
+ *
+ * Returns true on HTTP 200/201, false on any error.
+ * ─────────────────────────────────────────────────────────────────────────── */
+bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSize)
+{
+    char url[256];
+    snprintf(url, sizeof(url), GCS_UPLOAD_URL_FMT, CLOUD_GCS_BUCKET, filename);
+
+    esp_http_client_config_t cfg = {
+        .url                  = url,
+        .method               = HTTP_METHOD_PUT,
+        .timeout_ms           = 60000,
+        .buffer_size          = 4096,
+        .buffer_size_tx       = 4096,
+        .crt_bundle_attach    = esp_crt_bundle_attach,
+    };
+
+    esp_http_client_handle_t client = esp_http_client_init(&cfg);
+    if (!client)
+    {
+        ESP_LOGE(TAG, "StreamWav: http_client_init failed");
+        SendUart("UPLOAD:FAIL:");
+        SendUart(filename);
+        SendUart("\n");
+        return false;
+    }
+
+    esp_http_client_set_header(client, "Content-Type", "audio/wav");
+
+    /* Open connection — tell GCS the exact content length upfront */
+    esp_err_t err = esp_http_client_open(client, (int)fileSize);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "StreamWav: open failed: %s", esp_err_to_name(err));
+        esp_http_client_cleanup(client);
+        SendUart("UPLOAD:FAIL:");
+        SendUart(filename);
+        SendUart("\n");
+        return false;
+    }
+
+    /* ACK: tell STM32 to start sending WAV bytes now.
+     * STM32 waits for this before streaming — avoids UART buffer overflow
+     * during the TLS handshake (which can take 3-5 s). */
+    SendUart("AUDIO:READY\n");
+    ESP_LOGI(TAG, "StreamWav: HTTP open OK — sent AUDIO:READY to STM32");
+
+    /* Stream: receive UART chunk → write to HTTP body */
+    uint8_t  chunk[STREAM_CHUNK_SIZE];
+    uint32_t sent = 0;
+    bool     ok   = true;
+
+    while (sent < fileSize)
+    {
+        uint32_t toRead = fileSize - sent;
+        if (toRead > STREAM_CHUNK_SIZE) toRead = STREAM_CHUNK_SIZE;
+
+        int got = uart_read_bytes(uart_port, chunk, (size_t)toRead,
+                                  pdMS_TO_TICKS(30000));  /* 30 s — SD reinit can stall ~10 s */
+        if (got <= 0)
+        {
+            ESP_LOGE(TAG, "StreamWav: UART timeout at %lu/%lu", (unsigned long)sent, (unsigned long)fileSize);
+            ok = false;
+            break;
+        }
+
+        int written = esp_http_client_write(client, (const char *)chunk, got);
+        if (written < 0)
+        {
+            ESP_LOGE(TAG, "StreamWav: HTTP write failed at %lu/%lu", (unsigned long)sent, (unsigned long)fileSize);
+            ok = false;
+            break;
+        }
+
+        sent += (uint32_t)got;
+    }
+
+    /* Fetch response */
+    int status = 0;
+    if (ok)
+    {
+        esp_http_client_fetch_headers(client);
+        status = esp_http_client_get_status_code(client);
+        ok = (status >= 200 && status < 300);
+    }
+
+    esp_http_client_cleanup(client);
+
+    if (!ok)
+    {
+        ESP_LOGE(TAG, "StreamWav: failed — sent=%lu/%lu HTTP=%d",
+                 (unsigned long)sent, (unsigned long)fileSize, status);
+        SendUart("UPLOAD:FAIL:");
+        SendUart(filename);
+        SendUart("\n");
+        return false;
+    }
+
+    ESP_LOGI(TAG, "StreamWav: OK — %lu bytes streamed to GCS, HTTP %d",
+             (unsigned long)sent, status);
+    SendUart("UPLOAD:OK:");
+    SendUart(filename);
+    SendUart("\n");
+    return true;
 }

@@ -402,3 +402,32 @@ void HAL_DMA_ErrorCallback(DMA_HandleTypeDef *hdma)
         "[DMA] ERROR: DMA transfer error! ErrorCode=0x%08lX\n",
         hdma->ErrorCode);
 }
+
+/**
+ * HAL_UART_ErrorCallback — called by HAL on UART framing/overrun/noise errors.
+ * Overrides the __weak default.
+ *
+ * When NORA reboots its UART TX line glitches (framing error on UART8).
+ * Without this callback, HAL leaves UART8 in error state and DMA stops.
+ * Here we clear the error flags and restart DMA so reception resumes.
+ */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance != UART8) return;
+
+    RTT_LOG("[UART] ErrorCallback: err=0x%08lX — clearing + re-arming DMA\n",
+            (unsigned long)huart->ErrorCode);
+
+    __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF  |
+                                  UART_CLEAR_FEF   |
+                                  UART_CLEAR_NEF   |
+                                  UART_CLEAR_IDLEF);
+    huart->ErrorCode = HAL_UART_ERROR_NONE;
+    huart->RxState   = HAL_UART_STATE_READY;
+
+    if (HAL_UARTEx_ReceiveToIdle_DMA(huart, s_dma_rx_buf, BLE_DMA_BUF_SIZE) != HAL_OK)
+    {
+        RTT_LOG("[UART] ErrorCallback: re-arm failed\n");
+    }
+    __HAL_DMA_DISABLE_IT(&s_hdma_uart8_rx, DMA_IT_HT);
+}

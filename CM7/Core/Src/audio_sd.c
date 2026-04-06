@@ -681,9 +681,23 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
             xTaskResumeAll();
             if (retryResult != HAL_OK)
             {
-                SD_LOG("disk_read retry FAIL sec=%lu sdErr=0x%08lX",
+                SD_LOG("disk_read retry FAIL sec=%lu sdErr=0x%08lX — full remount",
                        (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
-                return RES_ERROR;
+                if (!AudioSD_Remount())
+                {
+                    SD_LOG("disk_read remount FAIL — SD unrecoverable");
+                    return RES_ERROR;
+                }
+                vTaskSuspendAll();
+                HAL_StatusTypeDef finalResult = HAL_SD_ReadBlocks(&s_hsd1, s_sectorBuf,
+                                      (uint32_t)(sector + i), 1, 1000);
+                xTaskResumeAll();
+                if (finalResult != HAL_OK)
+                {
+                    SD_LOG("disk_read final FAIL sec=%lu sdErr=0x%08lX",
+                           (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                    return RES_ERROR;
+                }
             }
         }
         {
@@ -760,9 +774,27 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
             xTaskResumeAll();
             if (retryResult != HAL_OK)
             {
-                SD_LOG("disk_write retry FAIL sec=%lu sdErr=0x%08lX",
+                SD_LOG("disk_write retry FAIL sec=%lu sdErr=0x%08lX — full remount",
                        (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
-                return RES_ERROR;
+                /* Lightweight DPSM reset insufficient — HAL state machine still stuck.
+                 * Full DeInit+reinit as last resort (costs ~200ms but recovers correctly). */
+                if (!AudioSD_Remount())
+                {
+                    SD_LOG("disk_write remount FAIL — SD unrecoverable");
+                    return RES_ERROR;
+                }
+                /* Retry once more after full remount */
+                SCB_CleanDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
+                vTaskSuspendAll();
+                HAL_StatusTypeDef finalResult = HAL_SD_WriteBlocks(&s_hsd1, s_sectorBuf,
+                                                     (uint32_t)(sector + i), 1, 1000);
+                xTaskResumeAll();
+                if (finalResult != HAL_OK)
+                {
+                    SD_LOG("disk_write final FAIL sec=%lu sdErr=0x%08lX",
+                           (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                    return RES_ERROR;
+                }
             }
         }
         {

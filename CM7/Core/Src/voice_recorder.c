@@ -152,11 +152,38 @@ volatile SysMode_t   g_SysMode     = SYS_MODE_RECORD;
 TaskHandle_t       voiceRecTaskHandle = NULL;
 QueueHandle_t      xLogQueue          = NULL;
 
-/* Queue of buffer pointers from DMA callbacks → VoiceRecTask.
- * Each callback posts a pointer to the ready half; the drain loop pops it.
- * Depth 4: absorbs bursts where both callbacks fire before the task wakes.
- * Element = const uint16_t * (pointer into g_PdmBuf). */
+/* ── DMA sync measurement ────────────────────────────────────────────────────
+ * Each queue entry carries the buffer pointer AND the DWT cycle count at the
+ * moment the ISR posted it.  The drain loop measures how long the entry sat in
+ * the queue (latency = pop_cycles - post_cycles).  This is the software
+ * equivalent of the oscilloscope pin-toggle test described in the sync article:
+ *
+ *   ISR posts  → DWT stamp = "pin HIGH"
+ *   Task pops  → delta     = "pin LOW"  (= CPU latency to service this half)
+ *
+ * If latency > 1 ms (480,000 cycles at 480 MHz) the DMA is lapping the CPU.
+ * ─────────────────────────────────────────────────────────────────────────── */
+typedef struct {
+    const uint16_t *ptr;       /* buffer pointer (&g_PdmBuf[0] or [PDM_BUF_HALF]) */
+    uint32_t        stamp_cy;  /* DWT->CYCCNT at ISR post time */
+} DmaEntry_t;
+
 static QueueHandle_t s_dmaQueue = NULL;
+static volatile uint32_t s_dmaQueueOverflow = 0u;  /* ISR drop counter */
+
+/* Sync statistics — reset each recording, reported in quality log */
+static uint32_t s_latency_max_cy  = 0u;  /* worst-case ISR→task latency (cycles) */
+static uint32_t s_latency_max_us  = 0u;  /* same, in microseconds                */
+static UBaseType_t s_qDepth_max   = 0u;  /* highest queue depth seen mid-drain   */
+static uint32_t s_desync_count    = 0u;  /* halves where latency > 1 ms deadline */
+
+/* Audio quality results — static so IAR Watch window can see them after recording */
+static uint32_t s_noise_rms   = 0u;
+static uint32_t s_speech_rms  = 0u;
+static int32_t  s_snr_db      = 0;
+static int32_t  s_peak        = 0;
+static int32_t  s_dc_offset   = 0;
+static uint32_t s_clip_cnt    = 0u;
 
 /* ── LED helpers ─────────────────────────────────────────────────────────── */
 #define LED_ON()     HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET)
@@ -194,7 +221,7 @@ void VoiceRec_ButtonInit(void)
 void VoiceRec_Init(void)
 {
     /* Create FreeRTOS objects before enabling any IRQs */
-    s_dmaQueue = xQueueCreate(4u, sizeof(const uint16_t *));
+    s_dmaQueue = xQueueCreate(32u, sizeof(DmaEntry_t));
     xLogQueue  = xQueueCreate(4u, sizeof(LogMsg_t));
     configASSERT(s_dmaQueue);
     configASSERT(xLogQueue);
@@ -207,13 +234,13 @@ void VoiceRec_Init(void)
     s_pdmHandler.bit_order        = PDM_FILTER_BIT_ORDER_MSB;  /* BSP reference: MSB with SAI_FIRSTBIT_LSB */
     s_pdmHandler.endianness       = PDM_FILTER_ENDIANNESS_LE;
     s_pdmHandler.high_pass_tap    = 2122358088u;  /* standard HP filter coefficient */
-    s_pdmHandler.in_ptr_channels  = 1u;   /* 1: stride-1, reads all bytes. 64 words × 2 bytes = 128 bytes = 1024 PDM bits → 16 PCM samples. BSP ChnlNbrIn=1 for one mic. */
+    s_pdmHandler.in_ptr_channels  = 1u;   /* 1: stride-1. SAI4 MONO: both bytes of each 16-bit word are identical (confirmed: D5D5 3838...). D0=D1 in MONO mode. */
     s_pdmHandler.out_ptr_channels = 1u;   /* 1: mono PCM output */
     if (PDM_Filter_Init(&s_pdmHandler) != 0u) { Error_Handler(); }
 
     s_pdmConfig.decimation_factor     = PDM_FILTER_DEC_FACTOR_64;
     s_pdmConfig.output_samples_number = PDM_FILTER_CALL_SAMPLES;  /* 16: BSP formula AudioFreq/1000 */
-    s_pdmConfig.mic_gain              = 24;  /* 24 dB — BSP default; measured speech_rms=427 at 0dB which is too quiet for STT */
+    s_pdmConfig.mic_gain              = 6;   /* 6 dB — 12dB clip=1064 when shouting; normal speech at 6dB should give speech_rms~3000-5000, peak<20000, clip=0 */
     {
         uint32_t rc = PDM_Filter_setConfig(&s_pdmHandler, &s_pdmConfig);
         RLOG("[REC] PDM_Filter_setConfig rc=0x%lX (0=OK, 0x80=samples_err)", (unsigned long)rc);
@@ -257,13 +284,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 }
 
 /* SAI4 BDMA half-complete — g_PdmBuf[0..PDM_BUF_HALF-1] ready.
- * Post buffer pointer to queue so drain loop reads the correct half. */
+ * Stamp DWT cycle counter at ISR entry — this is "pin HIGH" in the article. */
 void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
 {
     if (hsai->Instance != SAI4_Block_A) return;
-    const uint16_t *ptr = &g_PdmBuf[0];
+    DmaEntry_t e = { &g_PdmBuf[0], DWT->CYCCNT };
     BaseType_t higher = pdFALSE;
-    xQueueSendFromISR(s_dmaQueue, &ptr, &higher);
+    if (xQueueSendFromISR(s_dmaQueue, &e, &higher) != pdTRUE)
+        s_dmaQueueOverflow++;
     portYIELD_FROM_ISR(higher);
 }
 
@@ -271,9 +299,10 @@ void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
 void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)
 {
     if (hsai->Instance != SAI4_Block_A) return;
-    const uint16_t *ptr = &g_PdmBuf[PDM_BUF_HALF];
+    DmaEntry_t e = { &g_PdmBuf[PDM_BUF_HALF], DWT->CYCCNT };
     BaseType_t higher = pdFALSE;
-    xQueueSendFromISR(s_dmaQueue, &ptr, &higher);
+    if (xQueueSendFromISR(s_dmaQueue, &e, &higher) != pdTRUE)
+        s_dmaQueueOverflow++;
     portYIELD_FROM_ISR(higher);
 }
 
@@ -299,9 +328,14 @@ void VoiceRecTask(void *arg)
         /* Ignore spurious notifications if not idle */
         if (g_State != REC_IDLE) continue;
 
-        g_SampleCount   = 0u;
-        g_DmaCallCount  = 0u;
-        g_State         = REC_RECORDING;
+        g_SampleCount        = 0u;
+        g_DmaCallCount       = 0u;
+        s_dmaQueueOverflow   = 0u;
+        s_latency_max_cy     = 0u;
+        s_latency_max_us     = 0u;
+        s_qDepth_max         = 0u;
+        s_desync_count       = 0u;
+        g_State              = REC_RECORDING;
         __DSB();
         RLOG("[REC] --- Stage 0: recording 3s ---\r\n");
 
@@ -336,9 +370,18 @@ void VoiceRecTask(void *arg)
         /* Always fill the complete buffer (48000 samples = 3 s).           */
         /* Button is a start trigger only — file size is always fixed.      */
 
-        /* Queue-based drain: each DMA callback posts its buffer pointer.
-         * The drain loop pops in FIFO order — always the correct half, in order. */
+        /* Queue-based drain: each DMA callback posts its buffer pointer + DWT stamp.
+         * The drain loop pops in FIFO order — always the correct half, in order.
+         *
+         * Sync measurement (software oscilloscope):
+         *   ISR stamps DWT at post  = "pin HIGH"
+         *   Task reads DWT at pop   = "pin LOW"
+         *   delta = latency = time the half sat waiting for the CPU
+         *   If delta > 480,000 cycles (1 ms @ 480 MHz) → desync */
         TickType_t ledToggle = xTaskGetTickCount() + pdMS_TO_TICKS(500u);
+
+#define CYCLES_PER_MS  480000u   /* 480 MHz */
+#define CYCLES_PER_US  480u
 
         while (g_SampleCount < AUDIO_BUFFER_SAMPLES)
         {
@@ -348,10 +391,27 @@ void VoiceRecTask(void *arg)
                 ledToggle += pdMS_TO_TICKS(500u);
             }
 
-            const uint16_t *pdmPtr = NULL;
-            if (xQueueReceive(s_dmaQueue, &pdmPtr, pdMS_TO_TICKS(10u)) == pdTRUE)
+            DmaEntry_t e = { NULL, 0u };
+            if (xQueueReceive(s_dmaQueue, &e, pdMS_TO_TICKS(10u)) == pdTRUE)
             {
-                StoreDmaChunk(pdmPtr);
+                /* "pin LOW" — measure how long this half waited */
+                uint32_t now     = DWT->CYCCNT;
+                uint32_t latency = now - e.stamp_cy;   /* wraps correctly */
+
+                if (latency > s_latency_max_cy)
+                {
+                    s_latency_max_cy = latency;
+                    s_latency_max_us = latency / CYCLES_PER_US;
+                }
+                if (latency > CYCLES_PER_MS)
+                    s_desync_count++;
+
+                /* Queue depth at this moment = backlog of unprocessed halves */
+                UBaseType_t depth = uxQueueMessagesWaiting(s_dmaQueue);
+                if (depth > s_qDepth_max)
+                    s_qDepth_max = depth;
+
+                StoreDmaChunk(e.ptr);
             }
         }
 
@@ -360,9 +420,14 @@ void VoiceRecTask(void *arg)
 
         /* Drain any stale queue entries from callbacks that fired after stop */
         {
-            const uint16_t *discard = NULL;
+            DmaEntry_t discard = { NULL, 0u };
             while (xQueueReceive(s_dmaQueue, &discard, 0) == pdTRUE) {}
         }
+
+        /* Flush SINC3 filter state accumulated over the 3s recording.
+         * pInternalMemory holds 3s of history — must be cleared now so the
+         * next recording starts with a clean filter, not stale history. */
+        PDM_Filter_Init(&s_pdmHandler);
 
         /* Audio quality report — Terminal I/O only (IAR debugger window) */
         AudioQuality_Report();
@@ -715,9 +780,9 @@ void HealthMonTask(void *arg)
  * if semaphore tokens accumulated, causing both calls to read the same half
  * and producing a periodic 500 Hz tonal artifact.
  *
- * PDM_Filter: 128 words → 16 PCM samples (in_ptr_channels=2, output_samples_number=16).
- * SAI4 byte layout: each byte duplicated in both bytes of 16-bit word (9393 6363...).
- * Library stride-2 reads bytes [0,2,4...] = 128 unique bytes = 1024 PDM bits → 16 samples. ✓
+ * PDM_Filter: 64 words (128 bytes) → 16 PCM samples (in_ptr_channels=1, stride-1).
+ * SAI4 MONO mode: all 128 bytes are D1 mic data (no interleaving in MONO mode).
+ * Library reads all 128 bytes = 1024 PDM bits → 16 PCM samples. ✓
  */
 static void StoreDmaChunk(const uint16_t *pdmSrc)
 {
@@ -726,7 +791,8 @@ static void StoreDmaChunk(const uint16_t *pdmSrc)
     g_DmaCallCount++;
 
     /* PDM → PCM: AN5027 §3.1 + BSP_AUDIO_IN_PDMToPCM pattern.
-     * Cast to uint8_t* — library reads with byte stride = in_ptr_channels = 2. */
+     * SAI4 MONO mode: both bytes of each 16-bit word are identical (e.g. D5D5 3838).
+     * in_ptr_channels=1 (stride-1) reads all 128 bytes = 1024 PDM bits → 16 PCM samples. */
     static int16_t s_pcmHalf[DMA_HALF_SIZE];
     PDM_Filter((uint8_t *)pdmSrc, (void *)s_pcmHalf, &s_pdmHandler);
 
@@ -936,6 +1002,31 @@ static void AudioQuality_Report(void)
         (density_mic < 5u)  ? "DEAD/stuck-LOW" :
         (density_mic > 95u) ? "DEAD/stuck-HIGH" :
         (density_mic < 40u || density_mic > 60u) ? "WARN: off-centre" : "OK ~50%");
+    RLOG("[DMA]  callbacks=%lu  warmup=%u  stored=%lu  overflow=%lu%s",
+        (unsigned long)g_DmaCallCount, (unsigned)WARMUP_CALLS,
+        (unsigned long)g_SampleCount / DMA_HALF_SIZE,
+        (unsigned long)s_dmaQueueOverflow,
+        (s_dmaQueueOverflow > 0u) ? " <-- QUEUE OVERFLOW: audio gaps!" : " OK");
+    /* ── Sync report (software oscilloscope) ────────────────────────────────
+     * latency_max = worst-case time from ISR post to task pop  ("pin HIGH" time)
+     * deadline    = 1 ms = 480,000 cycles  (DMA fires every 1 ms)
+     * headroom    = deadline - latency_max  (positive = safe)
+     * desync      = halves where latency > 1 ms  (should be 0)
+     * ─────────────────────────────────────────────────────────────────────── */
+    {
+        int32_t headroom_us = (int32_t)(1000u) - (int32_t)(s_latency_max_us);
+        const char *sync_status =
+            (s_desync_count == 0u && s_latency_max_us < 500u)  ? "IN SYNC  (>50% headroom)" :
+            (s_desync_count == 0u && s_latency_max_us < 800u)  ? "SLIGHT DRIFT (SD slow?)" :
+            (s_desync_count == 0u && s_latency_max_us < 1000u) ? "NEAR LIMIT   (beep risk)" :
+                                                                  "DESYNC!      (beep likely)";
+        RLOG("[SYNC] latency_max=%lu us  headroom=%ld us  qDepth_max=%u  desync=%lu  → %s",
+            (unsigned long)s_latency_max_us,
+            (long)headroom_us,
+            (unsigned)s_qDepth_max,
+            (unsigned long)s_desync_count,
+            sync_status);
+    }
 
     /* ── [2] PCM statistics ──────────────────────────────────────────────── */
     /* Show samples from settled region (skip first 4 halves = 64 samples to avoid residual transient) */
@@ -974,46 +1065,47 @@ static void AudioQuality_Report(void)
     uint32_t sp_n = (sp_end > sp_start) ? (sp_end - sp_start) : 1u;
 
     /* Integer square root (Newton–Raphson, converges in < 20 iterations) */
-    uint32_t noise_rms = 0u;
     if (noise_n > 0u)
     {
         uint64_t v = (uint64_t)(noise_ss / (int64_t)noise_n);
         uint64_t x = v;
         uint64_t y = (v > 0u) ? (v / 2u + 1u) : 0u;
         while (y < x) { x = y; y = (y + v / y) / 2u; }
-        noise_rms = (uint32_t)x;
+        s_noise_rms = (uint32_t)x;
     }
-    uint32_t sp_rms = 0u;
     {
         uint64_t v = (uint64_t)(sp_ss / (int64_t)sp_n);
         uint64_t x = v;
         uint64_t y = (v > 0u) ? (v / 2u + 1u) : 0u;
         while (y < x) { x = y; y = (y + v / y) / 2u; }
-        sp_rms = (uint32_t)x;
+        s_speech_rms = (uint32_t)x;
     }
-    int32_t dc_offset = (int32_t)(dc_sum / (int64_t)sp_n);
+    s_dc_offset = (int32_t)(dc_sum / (int64_t)sp_n);
+    s_peak      = sp_peak;
+    s_clip_cnt  = clip_cnt;
 
     /* SNR ≈ 6 dB per bit of log2 ratio (±3 dB accuracy — sufficient for diagnostics) */
-    int32_t snr_db = 0;
-    if (noise_rms > 0u && sp_rms > 0u)
+    s_snr_db = 0;
+    if (s_noise_rms > 0u && s_speech_rms > 0u)
     {
         uint32_t b_sp = 0u, b_ns = 0u, tmp;
-        tmp = sp_rms;    while (tmp > 1u) { tmp >>= 1u; b_sp++; }
-        tmp = noise_rms; while (tmp > 1u) { tmp >>= 1u; b_ns++; }
-        snr_db = (int32_t)(b_sp - b_ns) * 6;
+        tmp = s_speech_rms; while (tmp > 1u) { tmp >>= 1u; b_sp++; }
+        tmp = s_noise_rms;  while (tmp > 1u) { tmp >>= 1u; b_ns++; }
+        s_snr_db = (int32_t)(b_sp - b_ns) * 6;
     }
 
     RLOG("[PCM]  noise_rms=%-6lu  speech_rms=%-6lu  snr~%+d dB",
-        (unsigned long)noise_rms, (unsigned long)sp_rms, (int)snr_db);
+        (unsigned long)s_noise_rms, (unsigned long)s_speech_rms, (int)s_snr_db);
     RLOG("[PCM]  peak=%-6d  dc_offset=%-6d  clip=%lu",
-        (int)sp_peak, (int)dc_offset, (unsigned long)clip_cnt);
+        (int)s_peak, (int)s_dc_offset, (unsigned long)s_clip_cnt);
     RLOG("[PCM]  target : noise<300  speech>2000  snr>20dB  clip=0");
     RLOG("[PCM]  %s",
-        (snr_db >= 20 && sp_rms >= 2000u && clip_cnt == 0u) ? "PASS" :
-        (sp_rms < 500u)   ? "FAIL: speech too quiet — increase mic_gain or speak closer" :
-        (noise_rms > 2000u) ? "FAIL: noise floor too high — hardware/layout issue" :
-        (snr_db < 10)     ? "FAIL: poor SNR — check PDM filter config" :
-                            "WARN: marginal — may work, tune gain");
+        (s_snr_db >= 20 && s_speech_rms >= 2000u && s_clip_cnt == 0u) ? "PASS" :
+        (s_speech_rms < 500u)    ? "FAIL: speech too quiet — increase mic_gain or speak closer" :
+        (s_noise_rms > 2000u)    ? "FAIL: noise floor too high — hardware/layout issue" :
+        (s_clip_cnt > 0u)        ? "FAIL: clipping — reduce mic_gain" :
+        (s_snr_db < 10)          ? "FAIL: poor SNR — check PDM filter config" :
+                                   "WARN: marginal — may work, tune gain");
 
     /* ── [3] SAI4 + BDMA registers ──────────────────────────────────────── */
     RLOG("[REG]  SAI4_Block_A->CR1   = 0x%08lX  (mode/clk/mono/firstbit)",  (unsigned long)SAI4_Block_A->CR1);

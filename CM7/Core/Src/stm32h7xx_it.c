@@ -326,12 +326,13 @@ void EXTI15_10_IRQHandler(void)
 }
 
 /**
- * DMA1_Stream1_IRQHandler — handles DMA transfer events for DFSDM Filter0.
- * Fires on half-complete (512 samples ready) and complete (1024 samples ready).
+ * BDMA_Channel1_IRQHandler — handles BDMA transfer events for SAI4_Block_A.
+ * Fires on half-complete and complete (PDM data from onboard mic ready).
  * Routed through VoiceRec_DMA_IRQHandler() to keep the DMA handle private
  * to voice_recorder.c — same pattern used by BLE UART on DMA1_Stream0.
+ * Note: SAI4 uses BDMA (Basic DMA), which can only access D3 SRAM.
  */
-void DMA1_Stream1_IRQHandler(void)
+void BDMA_Channel1_IRQHandler(void)
 {
     VoiceRec_DMA_IRQHandler(); /* delegate to voice_recorder.c private handler */
 }

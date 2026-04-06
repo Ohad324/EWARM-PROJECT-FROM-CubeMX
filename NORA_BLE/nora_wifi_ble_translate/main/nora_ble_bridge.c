@@ -35,9 +35,8 @@
 #include "music_task.h"
 #include "cloud_upload.h"
 #include "command_router.h"
-#include "esp_heap_caps.h"  /* heap_caps_malloc / heap_caps_free for PSRAM */
 
-/* Maximum WAV file size NORA will buffer from STM32 (4 MB = ~64 s at 31250 Hz) */
+/* Maximum WAV file size accepted from STM32 — sanity check only */
 #define AUDIO_FILE_MAX_BYTES  (4u * 1024u * 1024u)
 
 /* ── Configuration ──────────────────────────────────────────────────────── */
@@ -50,7 +49,7 @@
 #define UART_TX_PIN      17
 #define UART_RX_PIN      18
 #define UART_BAUD        921600
-#define UART_BUF_SIZE    1024
+#define UART_BUF_SIZE    (64 * 1024)   /* 64 KB — STM32 paces TX at 10ms/chunk so buffer never overflows */
 
 /* Command parser */
 #define CMD_BUF_SIZE     256
@@ -673,66 +672,23 @@ static void uart_cmd_task(void *param)
             memcpy(filename, rest, fnLen);
             filename[fnLen] = '\0';
 
-            ESP_LOGI(TAG, "AUDIO:FILE '%s' %lu bytes — allocating PSRAM",
+            ESP_LOGI(TAG, "AUDIO:FILE '%s' %lu bytes — streaming to GCS",
                      filename, (unsigned long)fileSize);
 
-            /* Allocate from PSRAM (8 MB available on ESP32-S3) */
-            uint8_t *wavBuf = heap_caps_malloc(fileSize, MALLOC_CAP_SPIRAM);
-            if (!wavBuf)
-            {
-                uart_write_safe("UPLOAD:FAIL:no_mem\n", 19);
-                ESP_LOGE(TAG, "PSRAM alloc failed for %lu bytes", (unsigned long)fileSize);
-                continue;
-            }
-
-            /* Receive raw WAV bytes from STM32 in 1-KB chunks.
-             * 5-second timeout per chunk: STM32 reads from SD so allow for
-             * occasional SD read latency spikes. */
-            uint32_t received = 0;
-            bool     rxOk     = true;
-            while (received < fileSize)
-            {
-                uint32_t toRead = fileSize - received;
-                if (toRead > 1024u) toRead = 1024u;
-
-                int got = uart_read_bytes(UART_PORT,
-                                          wavBuf + received,
-                                          (size_t)toRead,
-                                          pdMS_TO_TICKS(5000));
-                if (got <= 0)
-                {
-                    ESP_LOGE(TAG, "UART rx timeout at byte %lu/%lu",
-                             (unsigned long)received, (unsigned long)fileSize);
-                    rxOk = false;
-                    break;
-                }
-                received += (uint32_t)got;
-            }
-
-            if (!rxOk || received != fileSize)
-            {
-                heap_caps_free(wavBuf);
-                uart_write_safe("UPLOAD:FAIL:rx_error\n", 21);
-                continue;
-            }
-
-            ESP_LOGI(TAG, "WAV received: %lu bytes — waiting for WiFi", (unsigned long)fileSize);
-
-            /* Wait up to 5 s for WiFi before attempting upload */
+            /* Wait up to 5 s for WiFi before streaming */
             EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
                                                    WIFI_CONNECTED_BIT,
                                                    pdFALSE, pdTRUE,
                                                    pdMS_TO_TICKS(5000));
             if (!(bits & WIFI_CONNECTED_BIT))
             {
-                heap_caps_free(wavBuf);
                 uart_write_safe("UPLOAD:FAIL:no_wifi\n", 20);
                 ESP_LOGW(TAG, "Upload skipped: WiFi not connected");
                 continue;
             }
 
-            /* Upload → Transcribe → Route */
-            if (CloudUpload_UploadWav(filename, wavBuf, (size_t)fileSize))
+            /* Stream UART → GCS → Transcribe → Route (no large buffer needed) */
+            if (CloudUpload_StreamWav(filename, UART_PORT, fileSize))
             {
                 char transcript[CLOUD_TRANSCRIPT_MAX];
                 if (CloudUpload_Transcribe(filename, transcript, sizeof(transcript)))
@@ -740,8 +696,6 @@ static void uart_cmd_task(void *param)
                     CommandRouter_Route(transcript);
                 }
             }
-
-            heap_caps_free(wavBuf);
 
         } else {
             char reply[CMD_BUF_SIZE];

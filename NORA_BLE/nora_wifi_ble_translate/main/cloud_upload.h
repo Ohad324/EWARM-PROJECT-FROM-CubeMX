@@ -61,4 +61,16 @@ bool CloudUpload_Transcribe(const char *filename,
                             char       *out_transcript,
                             size_t      maxLen);
 
+/*
+ * CloudUpload_StreamWav — stream WAV from UART directly to GCS, no buffer.
+ * Reads uart_port in 1 KB chunks, writes each chunk into the HTTP PUT body.
+ *
+ *   filename  : GCS object name (e.g. "REC_001.wav")
+ *   uart_port : UART_NUM_x receiving WAV bytes from STM32
+ *   fileSize  : exact byte count from AUDIO:FILE: header
+ *
+ * Returns true on HTTP 200/201. Sends UPLOAD:OK/FAIL to STM32.
+ */
+bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSize);
+
 #endif /* CLOUD_UPLOAD_H */

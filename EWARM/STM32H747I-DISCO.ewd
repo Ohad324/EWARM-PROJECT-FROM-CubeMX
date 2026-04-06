@@ -1696,7 +1696,7 @@
                 </option>
                 <option>
                     <name>MacFile</name>
-                    <state>C:\TouchGFXProjects\MyApplication\EWARM\debug_sd_bp.mac</state>
+                    <state>C:\TouchGFXProjects\MyApplication\EWARM\debug_breakpoints.mac</state>
                 </option>
                 <option>
                     <name>MemOverride</name>

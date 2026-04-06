@@ -325,8 +325,8 @@ Error_Handler();
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1024u, NULL,
               osPriorityBelowNormal, NULL);
   /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
-  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  1024u, xVoiceQueue, 6u, &voiceRecTaskHandle);
-  xTaskCreate(SDWriteTask,   "SDWriteTask",   1024u, xVoiceQueue, 3u, NULL);
+  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  2048u, xVoiceQueue, 6u, &voiceRecTaskHandle);
+  xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 3u, NULL);
   xTaskCreate(RTTLogTask,    "RTTLogTask",     256u, NULL,        1u, NULL);
   xTaskCreate(HealthMonTask, "HealthMonTask", 1024u, NULL,        1u, NULL);
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
@@ -927,7 +927,7 @@ static void MX_UART8_Init(void)
  * ──────────────────────────────────────────────────────────────────────── */
 static void routeAsciiMessage(const char *msg, uint16_t len)
 {
-    LOG("[ROUTE] line: \"%s\" (%u bytes)\n", msg, (unsigned)len);
+    RLOG("[ROUTE] line: \"%s\" (%u bytes)", msg, (unsigned)len);
     BLE_UART_HistPush(msg);
 
     if (strncmp(msg, "RESULT:", 7) == 0)
@@ -937,7 +937,7 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         strncpy(bleMsg, msg, BLE_MSG_LEN - 1u);
         bleMsg[BLE_MSG_LEN - 1u] = '\0';
         if (xQueueSend(xBleQueue, bleMsg, 0) != pdTRUE)
-            LOG("[WARN] xBleQueue full -- RESULT dropped!\n");
+            RLOG("[WARN] xBleQueue full -- RESULT dropped!");
     }
     else if (strncmp(msg, "TRACK:", 6) == 0)
     {
@@ -972,12 +972,12 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         }
 
         g_t_track = DWT_SNAP();
-        LOG("[1] YouTube track received: \"%s\" | \"%s\" | videoId=%s\n",
+        RLOG("[1] YouTube track received: \"%s\" | \"%s\" | videoId=%s",
             m.track.title, m.track.artist, m.track.videoId);
-        LOG("[2] PC player notified (NORA HTTP POST)\n");
+        RLOG("[2] PC player notified (NORA HTTP POST)");
 
         if (xQueueSend(xMusicQueue, &m, 0) != pdTRUE)
-            LOG("[WARN] xMusicQueue full -- TRACK dropped\n");
+            RLOG("[WARN] xMusicQueue full -- TRACK dropped");
     }
     else if (strncmp(msg, "THUMB:", 6) == 0)
     {
@@ -987,21 +987,27 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
     }
     else if (strncmp(msg, "ERROR:", 6) == 0)
     {
-        LOG("[ERROR] NORA error: \"%s\"\n", msg + 6);
+        RLOG("[ERROR] NORA error: \"%s\"", msg + 6);
         music_msg_t m;
         memset(&m, 0, sizeof(m));
         m.type = MSG_ERROR;
         strncpy(m.error.reason, msg + 6, sizeof(m.error.reason) - 1u);
         if (xQueueSend(xMusicQueue, &m, 0) != pdTRUE)
-            LOG("[WARN] xMusicQueue full -- ERROR dropped\n");
+            RLOG("[WARN] xMusicQueue full -- ERROR dropped");
     }
     else if (strncmp(msg, "CMD:", 4) == 0)
     {
         /* Voice command routed back from NORA (Rule B / Rule C).
          * Hand off to CommandHandler task — non-blocking; drop if queue full. */
-        LOG("[CMD] routing to CommandHandler: \"%s\"\n", msg);
+        RLOG("[CMD] routing to CommandHandler: \"%s\"", msg);
         if (CommandHandler_Post(msg) == 0)
-            LOG("[WARN] CMD queue full -- dropped: \"%s\"\n", msg);
+            RLOG("[WARN] CMD queue full -- dropped: \"%s\"", msg);
+    }
+    else if (strncmp(msg, "AUDIO:READY", 11) == 0)
+    {
+        /* NORA has opened the GCS HTTP PUT and is ready to receive WAV bytes.
+         * Signal AudioSD_SendFileToUART() to start streaming. */
+        AudioSD_NotifyReady();
     }
 }
 
@@ -1065,13 +1071,13 @@ static void UARTReceiveTask(void *argument)
             }
             else
             {
-                LOG("[UART] heartbeat -- idle (ISR count=%lu)\n", g_uartIsrCount);
+                RLOG("[UART] heartbeat -- idle (ISR count=%lu)", g_uartIsrCount);
             }
             continue;
         }
 
         TLOG("3 xRawBleQueue_recv len=%u  t=%lu us", raw.len, T_US());
-        LOG("[UART] burst: %u bytes  [%02X %02X %02X %02X]\n",
+        RLOG("[UART] burst: %u bytes  [%02X %02X %02X %02X]",
             raw.len,
             raw.len > 0u ? raw.data[0] : 0u,
             raw.len > 1u ? raw.data[1] : 0u,
@@ -1135,6 +1141,7 @@ static void UARTReceiveTask(void *argument)
                 uint8_t b = raw.data[i++];
 
                 if (b == (uint8_t)'\r') continue;
+                if (b == 0x00u)        continue;  /* skip null bytes (NORA boot framing artifact) */
 
                 if (b == (uint8_t)'\n')
                 {

@@ -65,6 +65,14 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen);
 bool AudioSD_SendFileToUART(const char *filename);
 
 /*
+ * AudioSD_Remount — recover SDMMC peripheral and re-mount FatFS.
+ * Call after AudioSD_SendFileToUART() or after any SDMMC error to restore
+ * the SD card to a usable state for the next recording.
+ * Returns true if the volume was re-mounted successfully.
+ */
+bool AudioSD_Remount(void);
+
+/*
  * AudioSD_SDMMC_IRQHandler — trampoline; call from SDMMC1_IRQHandler in stm32h7xx_it.c.
  */
 void AudioSD_SDMMC_IRQHandler(void);
@@ -74,5 +82,20 @@ void AudioSD_SDMMC_IRQHandler(void);
  * 0 = no error since last reset.
  */
 uint32_t AudioSD_GetErrorCode(void);
+
+/*
+ * AudioSD_IsBusy — returns true while AudioSD_SendFileToUART() is active.
+ * HealthMonTask calls this to skip f_getfree() during streaming — concurrent
+ * FatFS access corrupts win[] and causes FR_DISK_ERR mid-read (B-008).
+ */
+bool AudioSD_IsBusy(void);
+
+/*
+ * AudioSD_NotifyReady — called by routeAsciiMessage() in main.c when
+ * "AUDIO:READY" is received from NORA over UART8.
+ * Signals AudioSD_SendFileToUART() to start streaming WAV bytes.
+ * Must be safe to call from any task context.
+ */
+void AudioSD_NotifyReady(void);
 
 #endif /* AUDIO_SD_H */

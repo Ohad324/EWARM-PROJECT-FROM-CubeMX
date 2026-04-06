@@ -4,8 +4,9 @@
  * Receives a transcript string from CloudUpload_Transcribe() and applies
  * three routing rules in order:
  *
- *   Rule A — MEDIA keywords: play, stop, pause, next, previous, volume
- *             → HTTP POST {"command":"<transcript>"} to PC server
+ *   Rule A1 — "play": music_request() → YouTube search via music_task (voice path)
+ *   Rule A2 — stop, pause, next, previous, volume
+ *              → HTTP POST {"command":"<transcript>"} to PC server
  *
  *   Rule B — DISPLAY keywords: show, display, screen, clear, update
  *             → UART "CMD:<transcript>\n" to STM32
@@ -21,6 +22,7 @@
 
 #include "command_router.h"
 #include "cloud_upload.h"
+#include "music_task.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include "driver/uart.h"
@@ -42,8 +44,9 @@ static const char *TAG = "cmd_router";
 
 /* ── Keyword tables ──────────────────────────────────────────────────────── */
 
-static const char *MEDIA_KEYWORDS[] = {
-    "play", "stop", "pause", "next", "previous", "volume", NULL
+/* "play" routes to music_request() (YouTube search path) — kept separate */
+static const char *PLAYBACK_CONTROL_KEYWORDS[] = {
+    "stop", "pause", "next", "previous", "volume", NULL
 };
 
 static const char *DISPLAY_KEYWORDS[] = {
@@ -167,9 +170,15 @@ void CommandRouter_Route(const char *transcript)
 
     ESP_LOGI(TAG, "routing: \"%s\"", transcript);
 
-    if (MatchesAny(transcript, MEDIA_KEYWORDS))
+    if (ContainsKeyword(transcript, "play"))
     {
-        RouteToPC(transcript);          /* Rule A */
+        /* Rule A1 — "play X": YouTube search via music_task (voice path) */
+        ESP_LOGI(TAG, "Rule A1 → music_request: %s", transcript);
+        music_request(transcript);
+    }
+    else if (MatchesAny(transcript, PLAYBACK_CONTROL_KEYWORDS))
+    {
+        RouteToPC(transcript);          /* Rule A2 — stop/pause/next/prev/volume → PC */
     }
     else if (MatchesAny(transcript, DISPLAY_KEYWORDS))
     {
