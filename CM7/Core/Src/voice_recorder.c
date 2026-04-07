@@ -60,6 +60,7 @@
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
 #include "audio_sd.h"       /* AudioSD_GetErrorCode() — HealthMonTask */
+#include "usb_msc.h"        /* USB_MSC_Activate() — joystick CENTER trigger */
 #include "log_mutex.h"      /* RTT_TS() — timestamped RTT log lines  */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
@@ -93,12 +94,14 @@
  * accumulate 4 halves (64 samples) and call once with output_samples_number=64.
  * Log line "[REC] PDM reset:" will show rc to decide.
  */
-#define PDM_DEC_FACTOR           64u
+#define PDM_DEC_FACTOR           128u  /* MP34DT05-A spec: 1.2–3.25 MHz clock required.
+                                        * 64→1.024 MHz (below spec min) caused noise/hiss.
+                                        * 128→2.047 MHz (within spec, tested at 2.4 MHz). */
 #define PDM_FILTER_CALL_SAMPLES  (SAMPLE_RATE / 1000u)              /* 16 */
-#define PDM_BUF_HALF             (PDM_FILTER_CALL_SAMPLES * PDM_DEC_FACTOR / 16u)       /* 64: words per half — in_ptr_channels=1, stride-1: 64 words × 2 bytes = 128 bytes = 1024 PDM bits → 16 PCM samples */
-#define PDM_BUF_TOTAL            (PDM_BUF_HALF * 2u)                /* 128: full DMA circular buffer */
+#define PDM_BUF_HALF             (PDM_FILTER_CALL_SAMPLES * PDM_DEC_FACTOR / 16u)       /* 128: words per half */
+#define PDM_BUF_TOTAL            (PDM_BUF_HALF * 2u)                /* 256: full DMA circular buffer */
 #define DMA_HALF_SIZE            PDM_FILTER_CALL_SAMPLES             /* 16: PCM samples per DMA half */
-#define WARMUP_CALLS             300u                                /* discard first 300 DMA halves (300 ms) — SINC3 settling measured at 161ms; 2× margin */
+#define WARMUP_CALLS             300u                                /* discard first 300 DMA halves (300 ms) */
 
 /* ── WAV header (44 bytes, little-endian, packed) ───────────────────────── */
 typedef struct {
@@ -238,9 +241,9 @@ void VoiceRec_Init(void)
     s_pdmHandler.out_ptr_channels = 1u;   /* 1: mono PCM output */
     if (PDM_Filter_Init(&s_pdmHandler) != 0u) { Error_Handler(); }
 
-    s_pdmConfig.decimation_factor     = PDM_FILTER_DEC_FACTOR_64;
+    s_pdmConfig.decimation_factor     = PDM_FILTER_DEC_FACTOR_128;
     s_pdmConfig.output_samples_number = PDM_FILTER_CALL_SAMPLES;  /* 16: BSP formula AudioFreq/1000 */
-    s_pdmConfig.mic_gain              = 6;   /* 6 dB — 12dB clip=1064 when shouting; normal speech at 6dB should give speech_rms~3000-5000, peak<20000, clip=0 */
+    s_pdmConfig.mic_gain              = 24;  /* 24 dB — per AN5027 + CLAUDE.md spec */
     {
         uint32_t rc = PDM_Filter_setConfig(&s_pdmHandler, &s_pdmConfig);
         RLOG("[REC] PDM_Filter_setConfig rc=0x%lX (0=OK, 0x80=samples_err)", (unsigned long)rc);
@@ -322,8 +325,20 @@ void VoiceRecTask(void *arg)
 
     for (;;)
     {
-        /* Block until button ISR (Phase 1) or WakeWordTask (Phase 2) notifies */
-        xTaskNotifyWait(0u, ULONG_MAX, &notif, portMAX_DELAY);
+        /* Block until button ISR (Phase 1) or WakeWordTask (Phase 2) notifies.
+         * Use 200 ms timeout to poll joystick CENTER (PK2) for USB MSC activation. */
+        BaseType_t notified = xTaskNotifyWait(0u, ULONG_MAX, &notif, pdMS_TO_TICKS(200u));
+
+        /* Joystick CENTER (PK2) — active-low, 47K pull-up.
+         * Activates USB MSC mode (one-way — board reset required to exit). */
+        if (HAL_GPIO_ReadPin(GPIOK, GPIO_PIN_2) == GPIO_PIN_RESET) {
+            RLOG("[REC] Joystick CENTER pressed — activating USB MSC");
+            USB_MSC_Activate();
+            vTaskSuspend(NULL);
+        }
+
+        /* No notification received — timeout, just continue polling */
+        if (notified != pdTRUE) continue;
 
         /* Ignore spurious notifications if not idle */
         if (g_State != REC_IDLE) continue;
@@ -520,20 +535,27 @@ void SDWriteTask(void *arg)
         UINT     bw;
         WavHdr_t hdr;
 
-        /* Remount before f_open — DFSDM DMA→SDMMC transition leaves SDMMC DPSM
-         * dirty (RX_OVERRUN 0x20); without this f_open fails with FR_DISK_ERR.
-         * B-009: second occurrence 2026-04-04 → fix applied. */
         RLOG("[REC] --- Stage 1: writing WAV to SD ---");
         RLOG("[REC] file=%s  samples=%lu",
             filename, (unsigned long)samplesSnapshot);
-        AudioSD_Remount();
 
         FRESULT fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
         if (fr != FR_OK)
         {
-            RLOG("[REC] FAIL f_open: fr=%d\r\n", (int)fr);
-            logMsg.result = REC_ERR_SD_OPEN;
-            goto done;
+            /* First attempt failed — try remount once as recovery */
+            RLOG("[REC] FAIL f_open: fr=%d — remounting", (int)fr);
+            if (!AudioSD_Remount())
+            {
+                logMsg.result = REC_ERR_SD_OPEN;
+                goto done;
+            }
+            fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
+            if (fr != FR_OK)
+            {
+                RLOG("[REC] FAIL f_open after remount: fr=%d\r\n", (int)fr);
+                logMsg.result = REC_ERR_SD_OPEN;
+                goto done;
+            }
         }
         RLOG("[REC] f_open OK\r\n");
 
@@ -839,6 +861,14 @@ static void Button_GPIO_Init(void)
 
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5u, 0u);  /* FreeRTOS-safe prio */
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+    /* Joystick CENTER = PK2, active-low (47K pull-up to +3V3, schematic Sheet 10).
+     * Polled in VoiceRecTask idle loop — no EXTI needed. */
+    __HAL_RCC_GPIOK_CLK_ENABLE();
+    gpio.Pin  = GPIO_PIN_2;
+    gpio.Mode = GPIO_MODE_INPUT;
+    gpio.Pull = GPIO_PULLUP;           /* belt-and-suspenders: board already has 47K */
+    HAL_GPIO_Init(GPIOK, &gpio);
 }
 
 static void SAI4_HW_Init(void)
@@ -909,7 +939,7 @@ static void SAI4_HW_Init(void)
     s_hsai.Init.OutputDrive       = SAI_OUTPUTDRIVE_DISABLE;
     s_hsai.Init.NoDivider         = SAI_MASTERDIVIDER_DISABLE;
     s_hsai.Init.FIFOThreshold     = SAI_FIFOTHRESHOLD_1QF;
-    s_hsai.Init.AudioFrequency    = (uint32_t)(SAMPLE_RATE * 8u);  /* 128000 */
+    s_hsai.Init.AudioFrequency    = (uint32_t)(SAMPLE_RATE * 16u); /* 256000 → MCKDIV=12 → PDM clock=2.047 MHz (within MP34DT05-A spec 1.2–3.25 MHz) */
     s_hsai.Init.Mckdiv            = 0u;
     s_hsai.Init.MonoStereoMode    = SAI_STEREOMODE;
     s_hsai.Init.CompandingMode    = SAI_NOCOMPANDING;

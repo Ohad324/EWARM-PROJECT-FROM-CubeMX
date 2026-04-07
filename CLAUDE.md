@@ -7,6 +7,21 @@
 - IAR project: `EWARM/STM32H747I-DISCO.ewp`
 - Active target: `STM32H747I-DISCO_CM7`
 
+## Documentation Rule — MANDATORY, NO EXCEPTIONS
+
+Before proposing or implementing ANY fix (trivial or not), you MUST read all 3 of these sources in order:
+
+1. **User Manual / Application Note** — ST UM or AN relevant to the peripheral (e.g. UM2411, AN5027)
+2. **Component Datasheet** — the exact part number on the board (e.g. MP34DT05-A, not a generic)
+3. **Community** — ST Community forum, or a colleague/Gemini cross-check for known issues
+
+**Do not write a single line of code until all 3 have been consulted.**
+
+Reason: ST has thousands of developers, excellent docs, and an active community. The answer almost always exists. Guessing wastes hours. Reading saves them.
+
+- Always check `docs/` folder first before asking the user to find a document.
+- If a document is missing from `docs/`, tell the user which specific document is needed and why.
+
 ## Main Goal
 Preserve the existing working system and make the smallest safe fix possible.
 
@@ -161,14 +176,14 @@ Reset the filter with `PDM_Filter_Init()` + `PDM_Filter_setConfig()` before **ev
 | Parameter | Value |
 |-----------|-------|
 | **Target PCM rate** | 16,000 Hz |
-| **PDM decimation setting** | `PDM_FILTER_DEC_FACTOR_64` (OSR = 64) |
-| **Required PDM clock** | 16,000 × 64 = 1.024 MHz |
-| **Actual SAI4 mic clock** | PLL2P (49.14 MHz) / (MCKDIV=24 × 2) = **1.02381 MHz** (0.02% error — negligible) |
+| **PDM decimation setting** | `PDM_FILTER_DEC_FACTOR_128` (OSR = 128) |
+| **Required PDM clock** | 16,000 × 128 = 2.048 MHz |
+| **Actual SAI4 mic clock** | PLL2P (49.14 MHz) / (MCKDIV=12 × 2) = **2.04750 MHz** (within MP34DT05-A spec 1.2–3.25 MHz) |
 
 PLL2 config used in this project:
 - HSE=25 MHz / PLL2M=25 → VCO_in=1 MHz × PLL2N=344 / PLL2P=7 → **49.14 MHz** (SAI4A kernel clock)
 - HAL computes MCKDIV=24 → PDM clock = 49.14 MHz / 48 ≈ **1.02381 MHz**
-- `AudioFrequency = SAMPLE_RATE × 8 = 128000` (HAL uses this to derive MCKDIV)
+- `AudioFrequency = SAMPLE_RATE × 16 = 256000` (HAL uses this to derive MCKDIV=12)
 
 ### 5b. SAI4 PDM Mode — Follow the BSP Exactly (AN5027 Law)
 

@@ -151,25 +151,41 @@ bool AudioSD_Init(void)
 
     SDMMC1_Peripheral_Init();
 
+    /* Always unmount before mounting — forces FatFs to call disk_initialize()
+     * on the subsequent mount, regardless of any stale state left by USB MSC
+     * raw block access. Per UM1721: f_mount(NULL) is the correct way to
+     * invalidate the filesystem object before a fresh mount. */
+    f_mount(NULL, "0:", 0);
+
     /* Mount the FatFS volume */
     FRESULT res = f_mount(&s_fatfs, "0:", 1 /* mount now */);
+    /* Verify root directory is accessible even if mount succeeded.
+     * After USB MSC raw access, f_mount returns FR_OK but the directory
+     * structure may be corrupted — f_stat on root detects this. */
+    FILINFO fno;
+    if (res == FR_OK)
+    {
+        FRESULT rstat = f_stat(".", &fno);
+        if (rstat != FR_OK)
+        {
+            SD_LOG("ROOT_CORRUPT:%d — forcing reformat", (int)rstat);
+            res = FR_NO_FILESYSTEM; /* fall through to format path */
+        }
+    }
+
     if (res != FR_OK)
     {
-        SD_LOG("MOUNT_FAIL:%d — attempting f_mkfs format...", (int)res);
-        /* FAT is corrupted — format the card in place.
-         * work[] is the scratch buffer f_mkfs needs (at least 512 bytes).
-         * FM_FAT32=0x08, au=0 (auto cluster size). */
+        SD_LOG("MOUNT_FAIL:%d — formatting as exFAT...", (int)res);
         static uint8_t work[4096];
-        res = f_mkfs("0:", FM_FAT32, 0, work, sizeof(work));
-        if (res != FR_OK)
-        {
+        static const MKFS_PARM opt = { FM_EXFAT, 0, 0, 0, 0x20000 }; /* 128KB clusters */
+        res = f_mkfs("0:", &opt, work, sizeof(work));
+        if (res != FR_OK) {
             SD_LOG("FORMAT_FAIL:%d", (int)res);
             return false;
         }
         SD_LOG("FORMAT_OK — remounting...");
         res = f_mount(&s_fatfs, "0:", 1);
-        if (res != FR_OK)
-        {
+        if (res != FR_OK) {
             SD_LOG("REMOUNT_FAIL:%d", (int)res);
             return false;
         }
@@ -216,8 +232,25 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
     res = f_open(&s_wavFile, s_currentFilename, FA_WRITE | FA_CREATE_NEW);
     if (res != FR_OK)
     {
-        SD_LOG("OPEN_FAIL:%d", (int)res);
-        return false;
+        SD_LOG("OPEN_FAIL:%d — attempting remount", (int)res);
+        /* FatFS internal state may be stale after USB MSC raw access.
+         * Force unmount + remount to recover the volume. */
+        f_mount(NULL, "0:", 0);
+        FRESULT fr2 = f_mount(&s_fatfs, "0:", 1);
+        if (fr2 != FR_OK)
+        {
+            SD_LOG("REMOUNT_FAIL:%d", (int)fr2);
+            s_sdReady = false;
+            return false;
+        }
+        SD_LOG("REMOUNT_OK — retrying f_open");
+        res = f_open(&s_wavFile, s_currentFilename, FA_WRITE | FA_CREATE_NEW);
+        if (res != FR_OK)
+        {
+            SD_LOG("OPEN_FAIL_AFTER_REMOUNT:%d", (int)res);
+            s_sdReady = false;
+            return false;
+        }
     }
 
     /* Write placeholder header — will be overwritten on stop with real sizes */
@@ -465,6 +498,17 @@ void AudioSD_NotifyReady(void)
     s_audioReady = true;
 }
 
+/* ── AudioSD_DeInit ───────────────────────────────────────────────────────────
+ * Release SDMMC1 so USB MSC can init its own handle on the same peripheral.
+ * ─────────────────────────────────────────────────────────────────────────── */
+void AudioSD_DeInit(void)
+{
+    f_mount(NULL, "0:", 0);          /* unmount FatFS volume */
+    HAL_SD_DeInit(&s_hsd1);
+    s_sdReady = false;
+    SD_LOG("[SD] DeInit — SDMMC1 released for USB MSC");
+}
+
 /* ── AudioSD_Remount ──────────────────────────────────────────────────────────
  * Recover the SDMMC peripheral and re-mount FatFS.
  *
@@ -500,6 +544,7 @@ bool AudioSD_Remount(void)
     f_mount(NULL, "0:", 0);                        /* force unmount */
     FRESULT fr = f_mount(&s_fatfs, "0:", 1);       /* re-mount now */
     s_sdReady = (fr == FR_OK);
+    SD_LOG("Remount result: fr=%d sdReady=%d", (int)fr, (int)s_sdReady);
     return s_sdReady;
 }
 
@@ -571,7 +616,7 @@ static void SDMMC1_Peripheral_Init(void)
     s_hsd1.Init.ClockEdge           = SDMMC_CLOCK_EDGE_RISING;
     s_hsd1.Init.ClockPowerSave      = SDMMC_CLOCK_POWER_SAVE_DISABLE;
     s_hsd1.Init.BusWide             = SDMMC_BUS_WIDE_1B;   /* 1-bit during init */
-    s_hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_DISABLE;
+    s_hsd1.Init.HardwareFlowControl = SDMMC_HARDWARE_FLOW_CONTROL_ENABLE;
     s_hsd1.Init.ClockDiv            = 4;
 
     if (HAL_SD_Init(&s_hsd1) != HAL_OK)
@@ -842,3 +887,4 @@ DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void *buff)
             return RES_PARERR;
     }
 }
+
