@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"/c/Program Files/SEGGER/JLink_V930a/JLink.exe\" -NoGui 1 -CommandFile \"jlink_check_exti.jlink\")",
+      "Read(//c/Users/Ohad/STM32Cube/Repository/STM32Cube_FW_H7_V1.12.1/Drivers/BSP/STM32H747I-DISCO//**)",
+      "Bash(\"C:/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" \"STM32H747I-DISCO.ewp\" -make \"STM32H747I-DISCO_CM7\" -log errors)",
+      "Bash(cmd.exe /c \"taskkill /F /IM JLink.exe >nul 2>&1 & taskkill /F /IM JLinkRTTViewer.exe >nul 2>&1 & taskkill /F /IM JLinkRTTLogger.exe >nul 2>&1\")",
+      "Bash(cmd.exe /c \"\\\\\"C:\\\\\\\\Program Files\\\\\\\\SEGGER\\\\\\\\JLink_V930a\\\\\\\\JLink.exe\\\\\" -NoGui 1 -device STM32H747II_M7 -if SWD -speed 4000 -autoconnect 1 -CommandFile \\\\\"C:\\\\\\\\TouchGFXProjects\\\\\\\\MyApplication\\\\\\\\EWARM\\\\\\\\_flash.jlink\\\\\" 2>&1\")",
+      "Bash(cmd.exe /c \"C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\auto_build_flash.bat\")",
+      "Bash(\"/c/TouchGFXProjects/IAR 9.70.2/common/bin/iarbuild.exe\" EWARM/STM32H747I-DISCO.ewp -build STM32H747I-DISCO_CM7 -log errors)",
+      "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\' -Directory | Select-Object Name\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\iar' -Recurse -Filter 'iarbuild.exe' | Select-Object FullName\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\RTOS-IAR' -Recurse -Filter 'iarbuild.exe' -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\Program Files\\\\IAR Systems' -Recurse -Filter 'iarbuild.exe' -ErrorAction SilentlyContinue | Select-Object FullName; Get-ChildItem 'C:\\\\Program Files \\(x86\\)\\\\IAR Systems' -Recurse -Filter 'iarbuild.exe' -ErrorAction SilentlyContinue | Select-Object FullName\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\TouchGFXProjects' -Directory | Select Name\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\common\\\\bin' -Filter 'iarbuild*' | Select Name\")",
+      "Bash(powershell.exe -Command \"Get-ChildItem 'C:\\\\TouchGFXProjects\\\\IAR 9.70.2' -Recurse -Filter 'iarbuild*' | Select FullName\")",
+      "Bash(cmd.exe /c \"\\\\\"C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\ewarm-9.70.2\\\\common\\\\bin\\\\iarbuild.exe\\\\\" \\\\\"C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\STM32H747I-DISCO.ewp\\\\\" -build STM32H747I-DISCO_CM7 -log all > C:\\\\Temp\\\\build_out.txt 2>&1\")",
+      "Bash(powershell.exe -Command \"Get-Content C:\\\\Temp\\\\build_out.txt | Select-Object -Last 30\")",
+      "Bash(powershell.exe -Command \"& 'C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\ewarm-9.70.2\\\\common\\\\bin\\\\iarbuild.exe' 'C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\STM32H747I-DISCO.ewp' -build STM32H747I-DISCO_CM7 -log all 2>&1 | Out-File C:\\\\Temp\\\\build_out.txt; Get-Content C:\\\\Temp\\\\build_out.txt | Select-Object -Last 30\")",
+      "Read(//tmp/**)"
+    ]
+  }
+}

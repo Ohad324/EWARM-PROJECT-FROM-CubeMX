@@ -1,0 +1,11 @@
+SEGGER J-Link RTT Logger
+Compiled Mar 30 2026 10:58:20
+(c) 2016-2017 SEGGER Microcontroller GmbH, www.segger.com
+         Solutions for real time microcontroller applications
+
+Default logfile path: C:\Users\Ohad\AppData\Roaming\SEGGER
+
+------------------------------------------------------------ 
+
+Device name. Default: STM32H747XI_M7 > 
+Shutting down... Done.

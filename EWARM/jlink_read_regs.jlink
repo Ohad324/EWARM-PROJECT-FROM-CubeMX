@@ -1,0 +1,32 @@
+// J-Link Commander script — read DFSDM + GPIO registers
+// Connects to STM32H747I-DISCO CM7, reads memory, exits
+
+si SWD
+speed 4000
+device STM32H747XI
+
+// Halt the core briefly (safe — config registers don't change)
+halt
+
+// GPIOD
+mem32 0x58020C00 1
+mem32 0x58020C20 1
+
+// GPIOE
+mem32 0x58021000 1
+mem32 0x58021020 1
+
+// DFSDM1 Channel0 (CKOUT owner)
+mem32 0x40017000 1
+
+// DFSDM1 Channel1
+mem32 0x40017020 1
+
+// DFSDM1 Filter0: FLTCR1, FLTFCR, FLTRDATAR
+mem32 0x40017100 1
+mem32 0x40017114 1
+mem32 0x4001711C 1
+
+// Resume and exit
+go
+exit

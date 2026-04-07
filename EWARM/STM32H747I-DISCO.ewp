@@ -1518,6 +1518,7 @@
                     <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\App</state>
                     <state>C:\TouchGFXProjects\MyApplication\CM7\LIBJPEG\Target</state>
                     <state>C:\TouchGFXProjects\MyApplication\EWARM</state>
+
                 </option>
                 <option>
                     <name>CCStdIncCheck</name>
@@ -2914,6 +2915,12 @@
     </group>
     <file>
         <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ff.c</name>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ffunicode.c</name>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ffsystem.c</name>
     </file>
     <projectSettings>
         <general>

@@ -1,0 +1,30 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+// Attach to running system - NO reset, NO loadfile
+go
+
+// Check system is alive
+mem32 0x24056E24 1
+mem8 0x24056E68 1
+
+// Trigger EXTI13 via EXTI1 SWIER1 (M7 domain: 0x40013C08)
+w4 0x40013C08 0x00002000
+sleep 500
+
+// Check state changed
+mem8 0x24056E68 1
+mem32 0x24056E24 1
+
+// Wait for full recording cycle
+sleep 6000
+
+// Read results
+mem8 0x24056E68 1
+mem32 0x24056E18 1
+mem16 0x24018DC0 32
+
+SaveBin "C:\TouchGFXProjects\MyApplication\EWARM\SystemView\audio_buf.bin" 0x24018DC0 0x17700
+
+exit

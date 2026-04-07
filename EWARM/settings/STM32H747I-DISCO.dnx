@@ -3,7 +3,7 @@
     <TerminalIO>
         <InputSource>2</InputSource>
         <InputMode2>6</InputMode2>
-        <Filename>$PROJ_DIR$\TERMINAL.txt</Filename>
+        <Filename>$PROJ_DIR$\TerminalIO.txt</Filename>
         <InputEcho>2</InputEcho>
         <ShowReset>1</ShowReset>
         <InputEncodingICU>2</InputEncodingICU>
@@ -40,7 +40,7 @@
         <MultiCoreRunAll>0</MultiCoreRunAll>
     </JLinkDriver>
     <DebugChecksum>
-        <Checksum>2139892806</Checksum>
+        <Checksum>2933265037</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -84,13 +84,6 @@
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
         <CStepIntDis>_ 0</CStepIntDis>
     </StLinkDriver>
-    <DriverProfiling>
-        <Enabled>0</Enabled>
-        <Mode>3</Mode>
-        <Graph>0</Graph>
-        <Symbiont>0</Symbiont>
-        <Exclusions />
-    </DriverProfiling>
     <Trace2>
         <Enabled>0</Enabled>
         <ShowSource>0</ShowSource>
@@ -155,6 +148,13 @@
     <Breakpoints2>
         <Count>0</Count>
     </Breakpoints2>
+    <DriverProfiling>
+        <Enabled>0</Enabled>
+        <Mode>3</Mode>
+        <Graph>0</Graph>
+        <Symbiont>0</Symbiont>
+        <Exclusions />
+    </DriverProfiling>
     <PowerProbe>
         <Frequency>10000</Frequency>
         <Probe0>I0</Probe0>

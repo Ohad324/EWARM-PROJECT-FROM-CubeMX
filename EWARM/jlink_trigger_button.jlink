@@ -1,0 +1,27 @@
+// J-Link script — simulate blue button press on PC13
+// Triggers EXTI line 13 via SWIER1 software interrupt register
+// STM32H747XI, CM7 core
+
+si SWD
+speed 4000
+device STM32H747XI
+
+// Connect without resetting
+connect
+
+// Read current EXTI pending register first (PR1 = EXTI_BASE + 0x88)
+mem32 0x58000088 1
+
+// Write bit 13 to EXTI_SWIER1 (EXTI_BASE + 0x08) to fire EXTI13 interrupt
+// This mimics a rising edge on PC13 (blue button)
+w4 0x58000008 0x00002000
+
+// Small delay — let the ISR fire before we verify
+sleep 200
+
+// Read PR1 again — bit 13 should have cleared (ISR handled it)
+mem32 0x58000088 1
+
+// Resume target and disconnect
+go
+exit

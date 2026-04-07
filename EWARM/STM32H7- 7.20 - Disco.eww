@@ -3,5 +3,8 @@
     <project>
         <path>$WS_DIR$\STM32H747I-DISCO.ewp</path>
     </project>
+    <project>
+        <path>$WS_DIR$\..\..\..\RTOS-ST\USBD\USBD\EWARM\USBD.ewp</path>
+    </project>
     <batchBuild />
 </workspace>

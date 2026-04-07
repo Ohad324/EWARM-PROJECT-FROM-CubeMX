@@ -1,11 +1,20 @@
 {
   "workspace": {
-    "path": "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\Project.eww"
+    "path": "${workspaceFolder}\\EWARM\\STM32H7- 7.20 - Disco.eww"
   },
   "workspaces": {
+    "${workspaceFolder}\\EWARM\\STM32H7- 7.20 - Disco.eww": {
+      "configs": {
+        "${workspaceFolder}\\EWARM\\STM32H747I-DISCO.ewp": "STM32H747I-DISCO_CM7",
+        "C:\\RTOS-ST\\USBD\\USBD\\EWARM\\USBD.ewp": "USBD_CM4"
+      },
+      "selected": {
+        "path": "${workspaceFolder}\\EWARM\\STM32H747I-DISCO.ewp"
+      }
+    },
     "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\Project.eww": {
       "configs": {
-        "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\STM32H747I-DISCO.ewp": "STM32H747I-DISCO_CM7"
+        "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\STM32H747I-DISCO.ewp": "STM32H747I-DISCO_CM4"
       },
       "selected": {
         "path": "${workspaceFolder}\\.claude\\worktrees\\practical-perlman\\EWARM\\STM32H747I-DISCO.ewp"

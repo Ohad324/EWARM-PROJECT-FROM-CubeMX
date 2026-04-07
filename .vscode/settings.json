@@ -1,0 +1,14 @@
+{
+    "taskButtons.tasks": [
+        {
+            "label": "⚡ Rebuild_Flash (Jlink+stm32)",
+            "task": "Flash STM32 (JLink + ST-Link)",
+            "tooltip": "iarbuild CM7 → JLink programs Flash → cspybat ST-Link starts app"
+        },
+        {
+            "label": "🐛 Debug Run (Rebuild+Flash+Log)",
+            "task": "Debug Run (Rebuild + Flash + Log BPs)",
+            "tooltip": "Rebuild → Flash → cspybat headless → saves debug_session.log"
+        }
+    ]
+}

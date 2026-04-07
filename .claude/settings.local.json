@@ -31,7 +31,14 @@
       "Bash(\"/c/Program Files/SEGGER/JLink_V930/JLink.exe\" -commandfile \"C:/TouchGFXProjects/MyApplication/flash_cm7.jlink\" 2>&1)",
       "Bash('C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\ewarm-9.70.2\\\\common\\\\bin\\\\cspybat' -f 'C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\settings\\\\STM32H747I-DISCO.STM32H747I-DISCO_CM7.general.xcl' --download_only --backend -f /tmp/driver_rst.xcl)",
       "Bash('C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\ewarm-9.70.2\\\\common\\\\bin\\\\cspybat' -f 'C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\settings\\\\STM32H747I-DISCO.STM32H747I-DISCO_CM7.general.xcl' --download_only --backend -f /tmp/driver_hwrst.xcl)",
-      "Bash(\"C:/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" STM32H747I-DISCO.ewp -build STM32H747I-DISCO_CM7)"
+      "Bash(\"C:/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" STM32H747I-DISCO.ewp -build STM32H747I-DISCO_CM7)",
+      "Bash(cmd /c \"\\\\\"C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\ewarm-9.70.2\\\\common\\\\bin\\\\cspybat.exe\\\\\" --version\")",
+      "Bash(powershell -Command \"& 'C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\ewarm-9.70.2\\\\common\\\\bin\\\\cspybat.exe' '--version' 2>&1\")",
+      "Bash(\"C:\\\\Program Files\\\\SEGGER\\\\JLink_V930a\\\\JLink.exe\" -Device STM32H747XIHx -if SWD -Speed 4000 -autoconnect 1)",
+      "Bash(\"C:\\\\TouchGFXProjects\\\\IAR 9.70.2\\\\ewarm-9.70.2\\\\common\\\\bin\\\\cspybat.exe\" --download_only --silent -f \"C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\settings\\\\STM32H747I-DISCO.STM32H747I-DISCO_CM7.general.xcl\" --backend -f \"C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\settings\\\\STM32H747I-DISCO.STM32H747I-DISCO_CM7.driver.xcl\")",
+      "Bash(cmd /c \"C:\\\\TouchGFXProjects\\\\MyApplication\\\\EWARM\\\\flash_only.bat\")",
+      "Bash(pip list:*)",
+      "Bash(pip3 list:*)"
     ]
   }
 }

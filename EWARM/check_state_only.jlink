@@ -1,0 +1,11 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+sleep 10000
+
+mem8 0x24056E68 1
+
+exit

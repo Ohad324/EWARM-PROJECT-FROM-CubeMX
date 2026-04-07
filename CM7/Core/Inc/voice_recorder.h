@@ -40,12 +40,6 @@ typedef enum {
     REC_SAVING    = 2,
 } RecState_t;
 
-/* ── SD card ownership mode ──────────────────────────────────────────────── */
-typedef enum {
-    SYS_MODE_RECORD  = 0,   /* FatFS owned by STM32 — recording active  */
-    SYS_MODE_USB_MSC = 1,   /* FatFS handed to USB-MSC — PC can read    */
-} SysMode_t;
-
 /* ── Result message posted by SDWriteTask → RTTLogTask ──────────────────── */
 typedef struct {
     char         filename[32];
@@ -79,7 +73,6 @@ void VoiceRec_DMA_IRQHandler(void);
 /* ── Globals shared with main.c ──────────────────────────────────────────── */
 extern TaskHandle_t       voiceRecTaskHandle;   /* used by button ISR       */
 extern QueueHandle_t      xLogQueue;            /* SDWriteTask → RTTLogTask */
-extern volatile SysMode_t g_SysMode;            /* SD card ownership flag   */
 
 #ifdef __cplusplus
 }

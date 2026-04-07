@@ -1,0 +1,17 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+sleep 1000
+// Read SysTick current value and HAL tick (uwTick)
+// HAL tick is at a known global -- find from map
+// Read voiceRecTaskHandle
+mem32 0x24056E24 1
+// Read xTaskGetTickCount equivalent -- RTOS tick is at 0x24056Exx area
+// Read 64 bytes around handle area
+mem32 0x24056E00 16
+sleep 2000
+mem32 0x24056E24 1
+mem32 0x24056E00 16
+exit

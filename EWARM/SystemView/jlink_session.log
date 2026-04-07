@@ -1,0 +1,162 @@
+TD600 000:092.516   SEGGER J-Link V9.30a Log File
+TD600 000:093.619   DLL Compiled: Mar 30 2026 10:56:50
+TD600 000:093.634   Logging started @ 2026-04-06 11:51
+TD600 000:093.647   Process: C:\Program Files\SEGGER\JLink_V930a\JLink.exe
+TD600 000:094.209 - 93.662ms 
+TD600 000:094.247 JLINK_Reset()
+TD600 000:094.394   JLINK_GetResetTypeDesc
+TD600 000:094.413   - 0.020ms 
+TD600 000:094.446   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TD600 000:094.466   CPU is running
+TD600 000:094.489   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TD600 000:097.354   CPU is running
+TD600 000:097.388   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TD600 000:097.806   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TD600 000:098.186   Reset: Reset device via AIRCR.SYSRESETREQ.
+TD600 000:098.195   CPU is running
+TD600 000:098.203   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TD600 000:152.044   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TD600 000:152.437   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TD600 000:155.290   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TD600 000:162.301   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TD600 000:165.128   CPU_WriteMem(4 bytes @ 0xE0002000)
+TD600 000:165.638   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TD600 000:166.021   CPU_ReadMem(4 bytes @ 0xE0001000)
+TD600 000:166.415 - 72.168ms 
+TD600 000:166.448 JLINK_Halt()
+TD600 000:166.456 - 0.007ms returns 0x00
+TD600 000:166.930 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+TD600 000:166.942 - 0.474ms returns 0x00
+TD600 000:166.956 JLINK_DownloadFile(sFile = C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out)
+TD600 000:169.289   Data:  08 90 05 24 21 59 05 08 F5 FC 04 08 CD 5D 05 08 ...
+TD600 000:169.620   completely In flash
+TD600 000:169.647   Data:  88 47 9D F8 50 10 9D F8 54 20 08 90 09 92 BD F8 ...
+TD600 000:169.734   completely In flash
+TD600 000:170.271   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TD600 000:170.560   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TD600 000:170.916    -- --------------------------------------
+TD600 000:170.933    -- Start of determining flash info (Bank @ 0x08000000)
+TD600 000:170.943    -- End of determining flash info
+TD600 000:170.950    -- Start of determining dirty areas in flash cache
+TD600 000:170.958    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x08000000 if necessary
+TD600 000:170.966    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x08020000 if necessary
+TD600 000:170.975    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x08040000 if necessary
+TD600 000:171.075    -- End of determining dirty areas
+TD600 000:171.082    -- Start of preparing flash programming
+TD600 000:171.092    -- Preparing RAMCode
+TD600 000:171.099    -- Calculating RAM usage
+TD600 000:171.120    -- RAM usage = 19216 Bytes
+TD600 000:171.128    -- Preserving CPU registers
+TD600 000:171.149    -- Preparing memory
+TD600 000:171.156    -- Preparing target
+TD600 000:171.163    -- Preserving target RAM temporarily used for programming
+TD600 000:229.186    -- Downloading RAMCode
+TD600 000:243.385    -- Initializing RAMCode (InitType: 3 = Verify)
+TD600 000:243.414    -- Executing SEGGER_FL_Prepare(3)
+TD600 000:246.936    -- SEGGER_FL_Prepare() changed clock speed to 120000000Hz
+TD600 000:246.953    -- End of preparing flash programming
+TD600 000:250.256    -- CPU is running at 120000 kHz.
+TD600 000:250.303    -- Start of comparing flash
+TD600 000:250.321    -- CRC check was estimated as fastest method
+TD600 000:285.623    -- Comparing range 0x8000000 - 0x801FFFF (1 Sector, 128 KB), using single-block CRC calculation
+TD600 000:331.030    -- CRC matches
+TD600 000:331.340    -- Comparing range 0x8020000 - 0x803FFFF (1 Sector, 128 KB), using single-block CRC calculation
+TD600 000:375.035    -- CRC matches
+TD600 000:375.257    -- Comparing range 0x8040000 - 0x805FFFF (1 Sector, 128 KB), using single-block CRC calculation
+TD600 000:418.985    -- CRC matches
+TD600 000:419.282    -- Comparing range 0x8000000 - 0x801FFFF (1 Sector, 128 KB), using alternative single-block CRC calculation
+TD600 000:463.171    -- CRC matches
+TD600 000:463.397    -- Comparing range 0x8020000 - 0x803FFFF (1 Sector, 128 KB), using alternative single-block CRC calculation
+TD600 000:507.206    -- CRC matches
+TD600 000:507.550    -- Comparing range 0x8040000 - 0x805FFFF (1 Sector, 128 KB), using alternative single-block CRC calculation
+TD600 000:551.815    -- CRC matches
+TD600 000:551.874    -- End of comparing flash
+TD600 000:551.892    -- Start of erasing sectors
+TD600 000:551.907    -- End of erasing sectors
+TD600 000:551.921    -- Start of flash programming
+TD600 000:551.936    -- End of flash programming
+TD600 000:551.950    -- Start of verifying flash
+TD600 000:551.964    -- End of verifying flash
+TD600 000:551.978    -- Start of restoring
+TD600 000:551.994    -- Executing SEGGER_FL_Restore()
+TD600 000:554.965    -- Restoring target memory
+TD600 000:613.359    -- Restoring CPU registers
+TD600 000:613.398    -- End of restoring
+TD600 000:613.411    -- Bank 0 @ 0x08000000: Skipped. Contents already match
+TD600 000:613.424    -- Bank 0 @ 0x08000000: Skipped. Contents already match
+TD600 000:667.252 - 500.295ms returns 0x00
+TD600 000:667.337 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+TD600 000:667.350 - 0.013ms returns 0x01
+TD600 000:667.375 JLINK_SetResetDelay(0)
+TD600 000:667.383 - 0.007ms 
+TD600 000:667.391 JLINK_Reset()
+TD600 000:667.775   JLINK_GetResetTypeDesc
+TD600 000:667.801   - 0.025ms 
+TD600 000:667.853   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TD600 000:667.871   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TD600 000:668.212   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TD600 000:668.564   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TD600 000:669.105   Reset: Reset device via AIRCR.SYSRESETREQ.
+TD600 000:669.127   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TD600 000:723.911   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TD600 000:724.286   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TD600 000:725.131   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TD600 000:731.546   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TD600 000:734.714   CPU_WriteMem(4 bytes @ 0xE0002000)
+TD600 000:735.074   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TD600 000:735.547   CPU_ReadMem(4 bytes @ 0xE0001000)
+TD600 000:735.939 - 68.546ms 
+TD600 000:736.034 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+TD600 000:736.069   CPU_ReadMem(4 bytes @ 0xE0001000)
+TD600 000:736.775   CPU_WriteMem(4 bytes @ 0xE0001004)
+TD600 000:737.642   Memory map 'after startup completion point' is active
+TD600 000:737.663 - 1.629ms 
+TD600 003:738.429 JLINK_WriteU32_64(0x58000008, 0x00002000)
+TD600 003:738.775   CPU is running
+TD600 003:738.795   CPU_WriteMem(4 bytes @ 0x58000008)
+TD600 003:739.324 - 0.894ms returns 0 (0x00000000)
+TD600 003:939.543 JLINK_ReadMemU32_64(0x58000088, 0x1 Items)
+TD600 003:939.584   CPU_ReadMem(4 bytes @ 0x58000088)
+TD600 003:940.206   Data:  00 00 00 00
+TD600 003:940.234 - 0.691ms returns 1 (0x1)
+TD600 003:940.289 JLINK_HasError()
+TD600 008:940.430 JLINK_ReadMemU8_64(0x24056E68, 0x1 Items)
+TD600 008:940.476   CPU_ReadMem(1 bytes @ 0x24056E68)
+TD600 008:941.020   Data:  00
+TD600 008:941.042 - 0.612ms returns 1 (0x1)
+TD600 008:941.089 JLINK_HasError()
+TD600 008:941.117 JLINK_ReadMemU32_64(0x24056E18, 0x1 Items)
+TD600 008:941.126   CPU_ReadMem(4 bytes @ 0x24056E18)
+TD600 008:941.506   Data:  00 00 00 00
+TD600 008:941.526 - 0.409ms returns 1 (0x1)
+TD600 008:941.574 JLINK_HasError()
+TD600 008:941.989 JLINK_ReadMemEx_64(0x24018DC0, 0x17700 Bytes, ...)
+TD600 008:942.006   CPU_ReadMem(96000 bytes @ 0x24018DC0)
+TD600 009:229.469   Data:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ...
+TD600 009:229.524 - 287.534ms returns 96000 (0x17700)
+TD600 009:231.088 JLINK_ReadMemU16_64(0x24018DC0, 0x20 Items)
+TD600 009:231.142   CPU_ReadMem(64 bytes @ 0x24018DC0)
+TD600 009:232.374   Data:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ...
+TD600 009:232.413 - 1.326ms returns 32 (0x20)
+TD600 009:232.491 JLINK_HasError()
+TD600 009:232.525 JLINK_ReadMemU32_64(0x38000000, 0x8 Items)
+TD600 009:232.618   CPU_ReadMem(32 bytes @ 0x38000000)
+TD600 009:233.295   Data:  66 66 9A 9A 99 99 71 71 95 95 71 71 E6 E6 70 70 ...
+TD600 009:233.332 - 0.806ms returns 8 (0x8)
+TD600 009:233.410 JLINK_HasError()
+TD600 009:233.440 JLINK_ReadMemU32_64(0x58005004, 0x1 Items)
+TD600 009:233.459   CPU_ReadMem(4 bytes @ 0x58005004)
+TD600 009:234.050   Data:  00 00 00 00
+TD600 009:234.075 - 0.635ms returns 1 (0x1)
+TD600 009:234.126 JLINK_HasError()
+TD600 009:234.148 JLINK_IsOpen()
+TD600 009:234.155 - 0.007ms returns 0x01
+TD600 009:237.318 JLINK_Close()
+TD600 009:240.118   OnDisconnectTarget() start
+TD600 009:240.139    J-Link Script File: Executing OnDisconnectTarget()
+TD600 009:240.146   Resetting used DBGMCU registers.
+TD600 009:243.694   OnDisconnectTarget() end - Took 3.55ms
+TD600 009:243.714   CPU_ReadMem(4 bytes @ 0xE0001000)
+TD600 009:252.483 - 15.606ms
+TD600 009:252.982   
+TD600 009:253.004   Closed

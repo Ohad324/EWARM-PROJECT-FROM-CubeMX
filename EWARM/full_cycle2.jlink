@@ -1,0 +1,38 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Load and run firmware
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+
+// Wait for full boot
+sleep 3000
+
+// Verify g_State = IDLE before trigger
+mem8 0x24056E68 1
+
+// Trigger EXTI13 via EXTI1 (CPU1/M7 domain) SWIER1 = 0x40013C08
+// EXTI1 base = 0x40013C00, SWIER1 offset = 0x08
+w4 0x40013C08 0x00002000
+sleep 200
+
+// Read EXTI1 PR1 (0x40013C88) — bit 13 set = interrupt fired
+mem32 0x40013C88 1
+
+// Also try: directly notify VoiceRecTask via g_State check
+mem8 0x24056E68 1
+
+// Wait for full recording + save
+sleep 7000
+
+// Final state
+mem8 0x24056E68 1
+mem32 0x24056E18 1
+
+// Read first 32 int16 samples
+mem16 0x24018DC0 32
+
+exit

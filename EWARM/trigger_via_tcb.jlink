@@ -1,0 +1,22 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// Wait for boot
+sleep 3500
+
+// Read voiceRecTaskHandle (0x24056E24) to get TCB pointer
+mem32 0x24056E24 1
+
+// FreeRTOS TCB layout (roughly):
+//   offset 0x00: pxTopOfStack
+//   offset 0x58: ulNotifiedValue[0]  (FreeRTOS v10 with configTASK_NOTIFICATION_ARRAY_ENTRIES=1)
+// But exact offset depends on FreeRTOS config — let's read the TCB region to find it
+// TCB pointer will be non-null if task created, then we can inspect
+
+// Also check g_State
+mem8 0x24056E68 1
+
+exit

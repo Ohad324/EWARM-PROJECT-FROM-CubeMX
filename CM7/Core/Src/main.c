@@ -188,6 +188,7 @@ static void UARTReceiveTask(void *argument);
   * @brief  The application entry point.
   * @retval int
   */
+
 int main(void)
 {
 
@@ -332,6 +333,7 @@ Error_Handler();
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);
+
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

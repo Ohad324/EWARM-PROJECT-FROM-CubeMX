@@ -1,0 +1,20 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// Trigger recording
+w4 0x58000008 0x00002000
+sleep 1000
+
+// Read BOTH halves of g_PdmBuf during live recording
+mem16 0x38000000 16
+mem16 0x38000100 16
+
+// Wait 1 more second, read again
+sleep 1000
+mem16 0x38000000 16
+mem16 0x38000100 16
+
+exit

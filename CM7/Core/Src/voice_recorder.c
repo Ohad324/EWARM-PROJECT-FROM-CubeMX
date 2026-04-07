@@ -60,7 +60,6 @@
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
 #include "audio_sd.h"       /* AudioSD_GetErrorCode() — HealthMonTask */
-#include "usb_msc.h"        /* USB_MSC_Activate() — joystick CENTER trigger */
 #include "log_mutex.h"      /* RTT_TS() — timestamped RTT log lines  */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
@@ -149,7 +148,6 @@ volatile RecState_t  g_State       = REC_IDLE;
 volatile uint32_t    g_SampleCount = 0u;
 static   uint32_t    g_DmaCallCount = 0u;  /* total DMA halves consumed — used for ping-pong halfIdx */
 static   uint32_t    g_FileIndex   = 0u;
-volatile SysMode_t   g_SysMode     = SYS_MODE_RECORD;
 
 /* ── FreeRTOS objects ────────────────────────────────────────────────────── */
 TaskHandle_t       voiceRecTaskHandle = NULL;
@@ -216,7 +214,6 @@ RecState_t VoiceRec_GetState(void)
 void VoiceRec_ButtonInit(void)
 {
     g_State   = REC_IDLE;
-    g_SysMode = SYS_MODE_RECORD;
     __DSB();
     Button_GPIO_Init();
 }
@@ -252,7 +249,6 @@ void VoiceRec_Init(void)
 
     g_State       = REC_IDLE;
     g_SampleCount = 0u;
-    g_SysMode     = SYS_MODE_RECORD;
 
     g_FileIndex = 0u;  /* SDWriteTask will scan SD on first use */
 
@@ -277,7 +273,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);  /* visual confirmation */
 
     /* Only notify task if it has been created */
-    if (g_SysMode == SYS_MODE_RECORD && g_State == REC_IDLE
+    if (g_State == REC_IDLE
         && voiceRecTaskHandle != NULL)
     {
         BaseType_t higher = pdFALSE;
@@ -325,20 +321,8 @@ void VoiceRecTask(void *arg)
 
     for (;;)
     {
-        /* Block until button ISR (Phase 1) or WakeWordTask (Phase 2) notifies.
-         * Use 200 ms timeout to poll joystick CENTER (PK2) for USB MSC activation. */
-        BaseType_t notified = xTaskNotifyWait(0u, ULONG_MAX, &notif, pdMS_TO_TICKS(200u));
-
-        /* Joystick CENTER (PK2) — active-low, 47K pull-up.
-         * Activates USB MSC mode (one-way — board reset required to exit). */
-        if (HAL_GPIO_ReadPin(GPIOK, GPIO_PIN_2) == GPIO_PIN_RESET) {
-            RLOG("[REC] Joystick CENTER pressed — activating USB MSC");
-            USB_MSC_Activate();
-            vTaskSuspend(NULL);
-        }
-
-        /* No notification received — timeout, just continue polling */
-        if (notified != pdTRUE) continue;
+        /* Block until button ISR (Phase 1) or WakeWordTask (Phase 2) notifies */
+        xTaskNotifyWait(0u, ULONG_MAX, &notif, portMAX_DELAY);
 
         /* Ignore spurious notifications if not idle */
         if (g_State != REC_IDLE) continue;
@@ -475,21 +459,7 @@ void SDWriteTask(void *arg)
 
     for (;;)
     {
-        /* If USB-MSC owns the SD card, sleep and check again */
-        if (g_SysMode != SYS_MODE_RECORD)
-        {
-            vTaskDelay(pdMS_TO_TICKS(100u));
-            continue;
-        }
-
         xQueueReceive(q, &msg, portMAX_DELAY);
-
-        /* Re-check mode after waking — mode may have changed while blocked */
-        if (g_SysMode != SYS_MODE_RECORD)
-        {
-            g_State = REC_IDLE; __DSB();
-            continue;
-        }
 
         /* Scan SD once per boot to find the next available file index.
          * Done here (not in VoiceRec_Init) because SD is mounted by now. */
@@ -542,17 +512,30 @@ void SDWriteTask(void *arg)
         FRESULT fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
         if (fr != FR_OK)
         {
-            /* First attempt failed — try remount once as recovery */
-            RLOG("[REC] FAIL f_open: fr=%d — remounting", (int)fr);
-            if (!AudioSD_Remount())
+            /* Blank / unrecognised card — format first, then retry */
+            if (fr == FR_NO_FILESYSTEM)
             {
-                logMsg.result = REC_ERR_SD_OPEN;
-                goto done;
+                RLOG("[REC] FAIL f_open: no filesystem — formatting card");
+                if (!AudioSD_Format())
+                {
+                    logMsg.result = REC_ERR_SD_OPEN;
+                    goto done;
+                }
+            }
+            else
+            {
+                /* SDMMC peripheral error — remount once as recovery */
+                RLOG("[REC] FAIL f_open: fr=%d — remounting", (int)fr);
+                if (!AudioSD_Remount())
+                {
+                    logMsg.result = REC_ERR_SD_OPEN;
+                    goto done;
+                }
             }
             fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
             if (fr != FR_OK)
             {
-                RLOG("[REC] FAIL f_open after remount: fr=%d\r\n", (int)fr);
+                RLOG("[REC] FAIL f_open after recovery: fr=%d", (int)fr);
                 logMsg.result = REC_ERR_SD_OPEN;
                 goto done;
             }
@@ -717,8 +700,7 @@ void RTTLogTask(void *arg)
  *
  *  Checks:
  *    - SD_DETECT pin PI8 (active-low: RESET = card present)
- *    - f_getfree("0:") for free/used cluster count (only when card present
- *      and SYS_MODE_RECORD — never touches FatFS when USB-MSC owns the card)
+ *    - f_getfree("0:") for free/used cluster count (only when card present)
  *    - s_hsd1.ErrorCode from audio_sd.c (exposed via AudioSD_GetErrorCode())
  *
  *  Priority 1 (lowest) — must not interfere with recording pipeline.
@@ -737,13 +719,6 @@ void HealthMonTask(void *arg)
         if (det != GPIO_PIN_RESET)
         {
             RLOG("[HEALTH] card=ABSENT");
-            continue;
-        }
-
-        /* Only query FatFS when FatFS owns the card */
-        if (g_SysMode != SYS_MODE_RECORD)
-        {
-            RLOG("[HEALTH] card=PRESENT  mode=USB-MSC");
             continue;
         }
 

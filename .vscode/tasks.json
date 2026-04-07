@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Debug Run (Rebuild + Flash + Log BPs)",
+            "type": "shell",
+            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\debug_run.bat\"",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/c"]
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Flash STM32 (JLink + ST-Link)",
+            "type": "shell",
+            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\FlashSTM32 (Jlink+stlink).bat\"",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/c"]
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

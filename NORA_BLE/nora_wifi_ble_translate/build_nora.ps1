@@ -1,7 +1,7 @@
 # Build NORA via a fresh Windows process (no Cygwin/MSYS env variables)
 $IDF_PATH   = 'C:\Espressif\frameworks\esp-idf-v5.5.3'
 $PYTHON     = 'C:\Espressif\python_env\idf5.5_py3.11_env\Scripts\python.exe'
-$PROJECT    = 'C:\NORA_BLE\nora_wifi_ble_translate'
+$PROJECT    = 'C:\TouchGFXProjects\MyApplication\NORA_BLE\nora_wifi_ble_translate'
 
 # Build a clean environment
 $cleanEnv = @{

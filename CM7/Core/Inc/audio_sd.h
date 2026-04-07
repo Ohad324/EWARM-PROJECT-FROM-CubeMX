@@ -73,6 +73,13 @@ bool AudioSD_SendFileToUART(const char *filename);
 bool AudioSD_Remount(void);
 
 /*
+ * AudioSD_Format — format the SD card as exFAT and mount the new volume.
+ * Call when f_open returns FR_NO_FILESYSTEM (blank or unrecognised card).
+ * Returns true if the volume is mounted and ready.
+ */
+bool AudioSD_Format(void);
+
+/*
  * AudioSD_SDMMC_IRQHandler — trampoline; call from SDMMC1_IRQHandler in stm32h7xx_it.c.
  */
 void AudioSD_SDMMC_IRQHandler(void);
@@ -82,6 +89,7 @@ void AudioSD_SDMMC_IRQHandler(void);
  * 0 = no error since last reset.
  */
 uint32_t AudioSD_GetErrorCode(void);
+
 
 /*
  * AudioSD_IsBusy — returns true while AudioSD_SendFileToUART() is active.

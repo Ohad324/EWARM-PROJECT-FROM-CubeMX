@@ -1,0 +1,26 @@
+// Check EXTI configuration and attempt button trigger
+si SWD
+speed 4000
+device STM32H747XI
+connect
+
+// EXTI_D1IMR1 (CM7 interrupt mask for lines 0-31) = EXTI_D1_BASE + 0x00 = 0x58000080
+mem32 0x58000080 1
+
+// EXTI_RTSR1 (rising trigger select) = EXTI_BASE + 0x00 = 0x58000000
+mem32 0x58000000 1
+
+// EXTI_FTSR1 (falling trigger select) = EXTI_BASE + 0x04 = 0x58000004
+mem32 0x58000004 1
+
+// SWIER1 current value = 0x58000008
+mem32 0x58000008 1
+
+// D1PR1 current pending = 0x58000088
+mem32 0x58000088 1
+
+// NVIC ISER1 (enables for IRQs 32-63, EXTI15_10 = IRQ40 = bit 8 of ISER1)
+mem32 0xE000E104 1
+
+go
+exit

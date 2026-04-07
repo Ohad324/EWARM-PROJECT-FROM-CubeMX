@@ -1,0 +1,87 @@
+SEGGER J-Link Commander V9.30a (Compiled Mar 30 2026 10:57:54)
+DLL version V9.30a, compiled Mar 30 2026 10:56:50
+
+
+J-Link Command File read successfully.
+Processing script file...
+J-Link>h
+J-Link connection not established yet but required for command.
+Connecting to J-Link via USB...O.K.
+Firmware: J-Link Ultra V7 compiled Mar 19 2026 15:48:03
+Hardware version: V7.00
+J-Link uptime (since boot): 0d 00h 04m 04s
+S/N: 507000552
+License(s): RDI, FlashBP, FlashDL, JFlash, GDB
+USB speed mode: High speed (480 MBit/s)
+VTref=3.285V
+Target connection not established yet but required for command.
+Device "STM32H747XI_M7" selected.
+
+
+Connecting to target via SWD
+ConfigTargetSettings() start
+ConfigTargetSettings() end - Took 22us
+InitTarget() start
+SWD selected. Executing JTAG -> SWD switching sequence.
+DAP initialized successfully.
+InitTarget() end - Took 14.5ms
+Found SW-DP with ID 0x6BA02477
+DPIDR: 0x6BA02477
+CoreSight SoC-400 or earlier
+AP map detection skipped. Manually configured AP map found.
+AP[0]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+AP[1]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+AP[2]: APB-AP (IDR: Not set, ADDR: 0x00000000)
+AP[3]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+AP[0]: Skipped ROMBASE read. CoreBaseAddr manually set by user
+AP[0]: Core found
+CPUID register: 0x411FC271. Implementer code: 0x41 (ARM)
+Cache: L1 I/D-cache present
+Found Cortex-M7 r1p1, Little endian.
+FPUnit: 8 code (BP) slots and 0 literal slots
+ROM table scan skipped. CoreBaseAddr manually set by user: 0xE00FE000
+I-Cache L1: 16 KB, 256 Sets, 32 Bytes/Line, 2-Way
+D-Cache L1: 16 KB, 128 Sets, 32 Bytes/Line, 4-Way
+Memory zones:
+  Zone: "Default" Description: Default access mode
+Cortex-M7 identified.
+PC = 2400017A, CycleCnt = 5749509B
+R0 = 50003000, R1 = 0000007F, R2 = 0000007F, R3 = 24000169
+R4 = 24001AD8, R5 = 24000628, R6 = 08000000, R7 = 24001AC8
+R8 = 00000000, R9 = 480006C4, R10= 00000000, R11= 00000000
+R12= 0000007F
+SP(R13)= 24000A70, MSP= 24000A70, PSP= 24059AE8, R14(LR) = 2400055F
+XPSR = 21000000: APSR = nzCvq, EPSR = 01000000, IPSR = 000 (NoException)
+CFBP = 04005000, CONTROL = 04, FAULTMASK = 00, BASEPRI = 50, PRIMASK = 00
+
+FPS0 = 00000002, FPS1 = 00000000, FPS2 = 00000000, FPS3 = 4E3EBC20
+FPS4 = 17D78400, FPS5 = 43200000, FPS6 = 3F800000, FPS7 = 00000000
+FPS8 = 00000000, FPS9 = 00000000, FPS10= 00000000, FPS11= 00000000
+FPS12= 00000000, FPS13= 00000000, FPS14= 00000000, FPS15= FFFFFFFF
+FPS16= 00000000, FPS17= 00000000, FPS18= 00000000, FPS19= 00000000
+FPS20= 00000000, FPS21= 00000000, FPS22= 00000000, FPS23= 00000000
+FPS24= 00000000, FPS25= 00000000, FPS26= 00000000, FPS27= 00000000
+FPS28= 00000000, FPS29= 00000000, FPS30= 00000000, FPS31= FFFFFFFF
+FPSCR= 02000000
+J-Link>loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+'loadfile': Performing implicit reset & halt of MCU.
+Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+Reset: Halt core after reset via DEMCR.VC_CORERESET.
+Reset: Reset device via AIRCR.SYSRESETREQ.
+Downloading file [C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out]...
+J-Link: Flash download: Bank 0 @ 0x08000000: Skipped. Contents already match
+O.K.
+J-Link>r
+Reset delay: 0 ms
+Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+Reset: Halt core after reset via DEMCR.VC_CORERESET.
+Reset: Reset device via AIRCR.SYSRESETREQ.
+J-Link>g
+Memory map 'after startup completion point' is active
+J-Link>exit
+
+Script processing completed.
+
+OnDisconnectTarget() start
+Resetting used DBGMCU registers.
+OnDisconnectTarget() end - Took 3.93ms

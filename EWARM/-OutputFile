@@ -1,0 +1,2943 @@
+[T+  67054] [STACK] -- HWM heap_free=25240 B --
+[T+  67054] [STACK] rtos_trace            hwm= 347 words
+[T+  67054] [STACK] IDLE                  hwm= 101 words
+[T+  67054] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  67054] [STACK] HealthMonTask         hwm= 772 words
+[T+  67054] [STACK] RTTLogTask            hwm= 182 words
+[T+  67054] [STACK] Tmr Svc               hwm= 227 words
+[T+  67054] [STACK] music_disp            hwm=3884 words
+[T+  67055] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  67055] [STACK] TouchGFXTask          hwm=3792 words
+[T+  67055] [STACK] videoTask             hwm= 950 words
+[T+  67055] [STACK] VoiceRecTask          hwm=1863 words
+[T+  67055] [STACK] SDWriteTask           hwm=1381 words
+[T+  67055] [RUNS] -- switches per 200 ms --
+[T+  67055] [RUNS] UARTReceiveTask       0
+[T+  67055] [RUNS] TouchGFXTask          12
+[T+  67055] [RUNS] music_disp            0
+[T+  67055] [RUNS] VoiceCMDhandler       0
+[T+  67055] [RUNS] videoTask             12
+[T+  67055] [RUNS] VoiceRecTask          0
+[T+  67055] [RUNS] SDWriteTask           0
+[T+  67055] [RUNS] Tmr Svc               0
+[T+  67055] [RUNS] RTTLogTask            1
+[T+  67055] [RUNS] HealthMonTask         0
+[T+  67055] [RUNS] rtos_trace            40
+[T+  67055] [RUNS] IDLE                  52
+[T+  67255] [STACK] -- HWM heap_free=25240 B --
+[T+  67255] [STACK] rtos_trace            hwm= 347 words
+[T+  67255] [STACK] IDLE                  hwm= 101 words
+[T+  67255] [STACK] RTTLogTask            hwm= 182 words
+[T+  67255] [STACK] HealthMonTask         hwm= 772 words
+[T+  67255] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  67255] [STACK] music_disp            hwm=3884 words
+[T+  67255] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  67256] [STACK] VoiceRecTask          hwm=1863 words
+[T+  67256] [STACK] TouchGFXTask          hwm=3792 words
+[T+  67256] [STACK] videoTask             hwm= 950 words
+[T+  67256] [STACK] SDWriteTask           hwm=1381 words
+[T+  67256] [STACK] Tmr Svc               hwm= 227 words
+[T+  67256] [RUNS] -- switches per 200 ms --
+[T+  67256] [RUNS] UARTReceiveTask       0
+[T+  67256] [RUNS] TouchGFXTask          12
+[T+  67256] [RUNS] music_disp            0
+[T+  67256] [RUNS] VoiceCMDhandler       0
+[T+  67256] [RUNS] videoTask             12
+[T+  67256] [RUNS] VoiceRecTask          0
+[T+  67256] [RUNS] SDWriteTask           0
+[T+  67256] [RUNS] Tmr Svc               0
+[T+  67256] [RUNS] RTTLogTask            1
+[T+  67256] [RUNS] HealthMonTask         0
+[T+  67256] [RUNS] rtos_trace            40
+[T+  67256] [RUNS] IDLE                  53
+[T+  67262] [UART] heartbeat -- idle (ISR count=0)
+[T+  67457] [STACK] -- HWM heap_free=25240 B --
+[T+  67457] [STACK] rtos_trace            hwm= 347 words
+[T+  67457] [STACK] IDLE                  hwm= 101 words
+[T+  67457] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  67457] [STACK] HealthMonTask         hwm= 772 words
+[T+  67457] [STACK] RTTLogTask            hwm= 182 words
+[T+  67457] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  67457] [STACK] VoiceRecTask          hwm=1863 words
+[T+  67457] [STACK] SDWriteTask           hwm=1381 words
+[T+  67457] [STACK] TouchGFXTask          hwm=3792 words
+[T+  67457] [STACK] videoTask             hwm= 950 words
+[T+  67457] [STACK] Tmr Svc               hwm= 227 words
+[T+  67457] [STACK] music_disp            hwm=3884 words
+[T+  67457] [RUNS] -- switches per 200 ms --
+[T+  67457] [RUNS] UARTReceiveTask       1
+[T+  67457] [RUNS] TouchGFXTask          12
+[T+  67457] [RUNS] music_disp            0
+[T+  67457] [RUNS] VoiceCMDhandler       0
+[T+  67457] [RUNS] videoTask             12
+[T+  67457] [RUNS] VoiceRecTask          0
+[T+  67457] [RUNS] SDWriteTask           0
+[T+  67457] [RUNS] Tmr Svc               0
+[T+  67457] [RUNS] RTTLogTask            1
+[T+  67457] [RUNS] HealthMonTask         0
+[T+  67457] [RUNS] rtos_trace            41
+[T+  67457] [RUNS] IDLE                  52
+[T+  67657] [STACK] -- HWM heap_free=25240 B --
+[T+  67657] [STACK] rtos_trace            hwm= 347 words
+[T+  67657] [STACK] IDLE                  hwm= 101 words
+[T+  67657] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  67657] [STACK] HealthMonTask         hwm= 772 words
+[T+  67657] [STACK] RTTLogTask            hwm= 182 words
+[T+  67657] [STACK] VoiceRecTask          hwm=1863 words
+[T+  67657] [STACK] SDWriteTask           hwm=1381 words
+[T+  67658] [STACK] Tmr Svc               hwm= 227 words
+[T+  67658] [STACK] TouchGFXTask          hwm=3792 words
+[T+  67658] [STACK] videoTask             hwm= 950 words
+[T+  67658] [STACK] music_disp            hwm=3884 words
+[T+  67658] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  67658] [RUNS] -- switches per 200 ms --
+[T+  67658] [RUNS] UARTReceiveTask       0
+[T+  67658] [RUNS] TouchGFXTask          11
+[T+  67658] [RUNS] music_disp            0
+[T+  67658] [RUNS] VoiceCMDhandler       0
+[T+  67658] [RUNS] videoTask             11
+[T+  67658] [RUNS] VoiceRecTask          0
+[T+  67658] [RUNS] SDWriteTask           0
+[T+  67658] [RUNS] Tmr Svc               0
+[T+  67658] [RUNS] RTTLogTask            1
+[T+  67658] [RUNS] HealthMonTask         0
+[T+  67658] [RUNS] rtos_trace            40
+[T+  67658] [RUNS] IDLE                  51
+[T+  67762] [UART] heartbeat -- idle (ISR count=0)
+[T+  67857] [STACK] -- HWM heap_free=25240 B --
+[T+  67857] [STACK] rtos_trace            hwm= 347 words
+[T+  67857] [STACK] IDLE                  hwm= 101 words
+[T+  67857] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  67857] [STACK] HealthMonTask         hwm= 772 words
+[T+  67857] [STACK] RTTLogTask            hwm= 182 words
+[T+  67857] [STACK] SDWriteTask           hwm=1381 words
+[T+  67857] [STACK] Tmr Svc               hwm= 227 words
+[T+  67858] [STACK] music_disp            hwm=3884 words
+[T+  67858] [STACK] TouchGFXTask          hwm=3792 words
+[T+  67858] [STACK] videoTask             hwm= 950 words
+[T+  67858] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  67858] [STACK] VoiceRecTask          hwm=1863 words
+[T+  67858] [RUNS] -- switches per 200 ms --
+[T+  67858] [RUNS] UARTReceiveTask       1
+[T+  67858] [RUNS] TouchGFXTask          12
+[T+  67858] [RUNS] music_disp            0
+[T+  67858] [RUNS] VoiceCMDhandler       0
+[T+  67858] [RUNS] videoTask             12
+[T+  67858] [RUNS] VoiceRecTask          0
+[T+  67858] [RUNS] SDWriteTask           0
+[T+  67858] [RUNS] Tmr Svc               0
+[T+  67858] [RUNS] RTTLogTask            1
+[T+  67858] [RUNS] HealthMonTask         0
+[T+  67858] [RUNS] rtos_trace            40
+[T+  67858] [RUNS] IDLE                  51
+[T+  68057] [STACK] -- HWM heap_free=25240 B --
+[T+  68057] [STACK] rtos_trace            hwm= 347 words
+[T+  68057] [STACK] IDLE                  hwm= 101 words
+[T+  68057] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  68057] [STACK] HealthMonTask         hwm= 772 words
+[T+  68057] [STACK] RTTLogTask            hwm= 182 words
+[T+  68057] [STACK] Tmr Svc               hwm= 227 words
+[T+  68057] [STACK] music_disp            hwm=3884 words
+[T+  68058] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  68058] [STACK] TouchGFXTask          hwm=3792 words
+[T+  68058] [STACK] videoTask             hwm= 950 words
+[T+  68058] [STACK] VoiceRecTask          hwm=1863 words
+[T+  68058] [STACK] SDWriteTask           hwm=1381 words
+[T+  68058] [RUNS] -- switches per 200 ms --
+[T+  68058] [RUNS] UARTReceiveTask       0
+[T+  68058] [RUNS] TouchGFXTask          12
+[T+  68058] [RUNS] music_disp            0
+[T+  68058] [RUNS] VoiceCMDhandler       0
+[T+  68058] [RUNS] videoTask             12
+[T+  68058] [RUNS] VoiceRecTask          0
+[T+  68058] [RUNS] SDWriteTask           0
+[T+  68058] [RUNS] Tmr Svc               0
+[T+  68058] [RUNS] RTTLogTask            1
+[T+  68058] [RUNS] HealthMonTask         0
+[T+  68058] [RUNS] rtos_trace            41
+[T+  68058] [RUNS] IDLE                  51
+[T+  68257] [STACK] -- HWM heap_free=25240 B --
+[T+  68257] [STACK] rtos_trace            hwm= 347 words
+[T+  68257] [STACK] IDLE                  hwm= 101 words
+[T+  68257] [STACK] RTTLogTask            hwm= 182 words
+[T+  68257] [STACK] HealthMonTask         hwm= 772 words
+[T+  68257] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  68257] [STACK] music_disp            hwm=3884 words
+[T+  68257] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  68258] [STACK] VoiceRecTask          hwm=1863 words
+[T+  68258] [STACK] TouchGFXTask          hwm=3792 words
+[T+  68258] [STACK] videoTask             hwm= 950 words
+[T+  68258] [STACK] SDWriteTask           hwm=1381 words
+[T+  68258] [STACK] Tmr Svc               hwm= 227 words
+[T+  68258] [RUNS] -- switches per 200 ms --
+[T+  68258] [RUNS] UARTReceiveTask       0
+[T+  68258] [RUNS] TouchGFXTask          12
+[T+  68258] [RUNS] music_disp            0
+[T+  68258] [RUNS] VoiceCMDhandler       0
+[T+  68258] [RUNS] videoTask             12
+[T+  68258] [RUNS] VoiceRecTask          0
+[T+  68258] [RUNS] SDWriteTask           0
+[T+  68258] [RUNS] Tmr Svc               0
+[T+  68258] [RUNS] RTTLogTask            1
+[T+  68258] [RUNS] HealthMonTask         0
+[T+  68258] [RUNS] rtos_trace            40
+[T+  68258] [RUNS] IDLE                  50
+[T+  68262] [UART] heartbeat -- idle (ISR count=0)
+[T+  68457] [STACK] -- HWM heap_free=25240 B --
+[T+  68457] [STACK] rtos_trace            hwm= 347 words
+[T+  68457] [STACK] IDLE                  hwm= 101 words
+[T+  68457] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  68457] [STACK] HealthMonTask         hwm= 772 words
+[T+  68457] [STACK] RTTLogTask            hwm= 182 words
+[T+  68457] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  68457] [STACK] VoiceRecTask          hwm=1863 words
+[T+  68458] [STACK] SDWriteTask           hwm=1381 words
+[T+  68458] [STACK] TouchGFXTask          hwm=3792 words
+[T+  68458] [STACK] videoTask             hwm= 950 words
+[T+  68458] [STACK] Tmr Svc               hwm= 227 words
+[T+  68458] [STACK] music_disp            hwm=3884 words
+[T+  68458] [RUNS] -- switches per 200 ms --
+[T+  68458] [RUNS] UARTReceiveTask       1
+[T+  68458] [RUNS] TouchGFXTask          12
+[T+  68458] [RUNS] music_disp            0
+[T+  68458] [RUNS] VoiceCMDhandler       0
+[T+  68458] [RUNS] videoTask             12
+[T+  68458] [RUNS] VoiceRecTask          0
+[T+  68458] [RUNS] SDWriteTask           0
+[T+  68458] [RUNS] Tmr Svc               0
+[T+  68458] [RUNS] RTTLogTask            1
+[T+  68458] [RUNS] HealthMonTask         0
+[T+  68458] [RUNS] rtos_trace            40
+[T+  68458] [RUNS] IDLE                  51
+[T+  68658] [STACK] -- HWM heap_free=25240 B --
+[T+  68658] [STACK] rtos_trace            hwm= 347 words
+[T+  68658] [STACK] IDLE                  hwm= 101 words
+[T+  68658] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  68658] [STACK] HealthMonTask         hwm= 772 words
+[T+  68658] [STACK] RTTLogTask            hwm= 182 words
+[T+  68658] [STACK] VoiceRecTask          hwm=1863 words
+[T+  68658] [STACK] SDWriteTask           hwm=1381 words
+[T+  68659] [STACK] Tmr Svc               hwm= 227 words
+[T+  68659] [STACK] TouchGFXTask          hwm=3792 words
+[T+  68659] [STACK] videoTask             hwm= 950 words
+[T+  68659] [STACK] music_disp            hwm=3884 words
+[T+  68659] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  68659] [RUNS] -- switches per 200 ms --
+[T+  68659] [RUNS] UARTReceiveTask       0
+[T+  68659] [RUNS] TouchGFXTask          12
+[T+  68659] [RUNS] music_disp            0
+[T+  68659] [RUNS] VoiceCMDhandler       0
+[T+  68659] [RUNS] videoTask             12
+[T+  68659] [RUNS] VoiceRecTask          0
+[T+  68659] [RUNS] SDWriteTask           0
+[T+  68659] [RUNS] Tmr Svc               0
+[T+  68659] [RUNS] RTTLogTask            1
+[T+  68659] [RUNS] HealthMonTask         0
+[T+  68659] [RUNS] rtos_trace            40
+[T+  68659] [RUNS] IDLE                  53
+[T+  68762] [UART] heartbeat -- idle (ISR count=0)
+[T+  68860] [STACK] -- HWM heap_free=25240 B --
+[T+  68860] [STACK] rtos_trace            hwm= 347 words
+[T+  68860] [STACK] IDLE                  hwm= 101 words
+[T+  68860] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  68860] [STACK] HealthMonTask         hwm= 772 words
+[T+  68860] [STACK] RTTLogTask            hwm= 182 words
+[T+  68860] [STACK] SDWriteTask           hwm=1381 words
+[T+  68860] [STACK] Tmr Svc               hwm= 227 words
+[T+  68860] [STACK] music_disp            hwm=3884 words
+[T+  68860] [STACK] TouchGFXTask          hwm=3792 words
+[T+  68860] [STACK] videoTask             hwm= 950 words
+[T+  68860] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  68860] [STACK] VoiceRecTask          hwm=1863 words
+[T+  68860] [RUNS] -- switches per 200 ms --
+[T+  68860] [RUNS] UARTReceiveTask       1
+[T+  68860] [RUNS] TouchGFXTask          12
+[T+  68860] [RUNS] music_disp            0
+[T+  68860] [RUNS] VoiceCMDhandler       0
+[T+  68860] [RUNS] videoTask             12
+[T+  68860] [RUNS] VoiceRecTask          0
+[T+  68860] [RUNS] SDWriteTask           0
+[T+  68860] [RUNS] Tmr Svc               0
+[T+  68860] [RUNS] RTTLogTask            1
+[T+  68860] [RUNS] HealthMonTask         0
+[T+  68860] [RUNS] rtos_trace            41
+[T+  68860] [RUNS] IDLE                  53
+[T+  69060] [STACK] -- HWM heap_free=25240 B --
+[T+  69060] [STACK] rtos_trace            hwm= 347 words
+[T+  69060] [STACK] IDLE                  hwm= 101 words
+[T+  69060] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  69060] [STACK] HealthMonTask         hwm= 772 words
+[T+  69060] [STACK] RTTLogTask            hwm= 182 words
+[T+  69060] [STACK] Tmr Svc               hwm= 227 words
+[T+  69060] [STACK] music_disp            hwm=3884 words
+[T+  69061] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  69061] [STACK] TouchGFXTask          hwm=3792 words
+[T+  69061] [STACK] videoTask             hwm= 950 words
+[T+  69061] [STACK] VoiceRecTask          hwm=1863 words
+[T+  69061] [STACK] SDWriteTask           hwm=1381 words
+[T+  69061] [RUNS] -- switches per 200 ms --
+[T+  69061] [RUNS] UARTReceiveTask       0
+[T+  69061] [RUNS] TouchGFXTask          11
+[T+  69061] [RUNS] music_disp            0
+[T+  69061] [RUNS] VoiceCMDhandler       0
+[T+  69061] [RUNS] videoTask             11
+[T+  69061] [RUNS] VoiceRecTask          0
+[T+  69061] [RUNS] SDWriteTask           0
+[T+  69061] [RUNS] Tmr Svc               0
+[T+  69061] [RUNS] RTTLogTask            1
+[T+  69061] [RUNS] HealthMonTask         0
+[T+  69061] [RUNS] rtos_trace            40
+[T+  69061] [RUNS] IDLE                  52
+[T+  69260] [STACK] -- HWM heap_free=25240 B --
+[T+  69260] [STACK] rtos_trace            hwm= 347 words
+[T+  69260] [STACK] IDLE                  hwm= 101 words
+[T+  69260] [STACK] RTTLogTask            hwm= 182 words
+[T+  69260] [STACK] HealthMonTask         hwm= 772 words
+[T+  69260] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  69260] [STACK] music_disp            hwm=3884 words
+[T+  69260] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  69261] [STACK] VoiceRecTask          hwm=1863 words
+[T+  69261] [STACK] TouchGFXTask          hwm=3792 words
+[T+  69261] [STACK] videoTask             hwm= 950 words
+[T+  69261] [STACK] SDWriteTask           hwm=1381 words
+[T+  69261] [STACK] Tmr Svc               hwm= 227 words
+[T+  69261] [RUNS] -- switches per 200 ms --
+[T+  69261] [RUNS] UARTReceiveTask       0
+[T+  69261] [RUNS] TouchGFXTask          12
+[T+  69261] [RUNS] music_disp            0
+[T+  69261] [RUNS] VoiceCMDhandler       0
+[T+  69261] [RUNS] videoTask             12
+[T+  69261] [RUNS] VoiceRecTask          0
+[T+  69261] [RUNS] SDWriteTask           0
+[T+  69261] [RUNS] Tmr Svc               0
+[T+  69261] [RUNS] RTTLogTask            1
+[T+  69261] [RUNS] HealthMonTask         0
+[T+  69261] [RUNS] rtos_trace            40
+[T+  69261] [RUNS] IDLE                  52
+[T+  69262] [UART] heartbeat -- idle (ISR count=0)
+[T+  69460] [STACK] -- HWM heap_free=25240 B --
+[T+  69460] [STACK] rtos_trace            hwm= 347 words
+[T+  69460] [STACK] IDLE                  hwm= 101 words
+[T+  69460] [STACK] UARTReceiveTask       hwm= 610 words
+[T+  69460] [STACK] HealthMonTask         hwm= 772 words
+[T+  69460] [STACK] RTTLogTask            hwm= 182 words
+[T+  69460] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+  69460] [STACK] VoiceRecTask          hwm=1863 words
+[T+  69461] [STACK] SDWriteTask           hwm=1381 words
+[T+  69461] [RUNS] -- switches per 200 ms --
+[T+ 239026] [STACK] -- HWM heap_free=25240 B --
+[T+ 239026] [STACK] rtos_trace            hwm= 347 words
+[T+ 239026] [STACK] IDLE                  hwm= 101 words
+[T+ 239026] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 239026] [STACK] HealthMonTask         hwm= 772 words
+[T+ 239026] [STACK] RTTLogTask            hwm= 182 words
+[T+ 239026] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 239026] [STACK] SDWriteTask           hwm=1381 words
+[T+ 239026] [STACK] Tmr Svc               hwm= 227 words
+[T+ 239026] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 239026] [STACK] videoTask             hwm= 950 words
+[T+ 239026] [STACK] music_disp            hwm=3884 words
+[T+ 239026] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 239026] [RUNS] -- switches per 200 ms --
+[T+ 239026] [RUNS] UARTReceiveTask       0
+[T+ 239026] [RUNS] TouchGFXTask          12
+[T+ 239026] [RUNS] music_disp            0
+[T+ 239026] [RUNS] VoiceCMDhandler       0
+[T+ 239026] [RUNS] videoTask             12
+[T+ 239026] [RUNS] VoiceRecTask          0
+[T+ 239026] [RUNS] SDWriteTask           0
+[T+ 239026] [RUNS] Tmr Svc               0
+[T+ 239026] [RUNS] RTTLogTask            1
+[T+ 239026] [RUNS] HealthMonTask         0
+[T+ 239026] [RUNS] rtos_trace            40
+[T+ 239026] [RUNS] IDLE                  52
+[T+ 239226] [STACK] -- HWM heap_free=25240 B --
+[T+ 239226] [STACK] rtos_trace            hwm= 347 words
+[T+ 239226] [STACK] IDLE                  hwm= 101 words
+[T+ 239226] [STACK] RTTLogTask            hwm= 182 words
+[T+ 239226] [STACK] HealthMonTask         hwm= 772 words
+[T+ 239226] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 239226] [STACK] SDWriteTask           hwm=1381 words
+[T+ 239226] [STACK] Tmr Svc               hwm= 227 words
+[T+ 239226] [STACK] music_disp            hwm=3884 words
+[T+ 239226] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 239226] [STACK] videoTask             hwm= 950 words
+[T+ 239226] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 239226] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 239226] [RUNS] -- switches per 200 ms --
+[T+ 239226] [RUNS] UARTReceiveTask       0
+[T+ 239226] [RUNS] TouchGFXTask          12
+[T+ 239226] [RUNS] music_disp            0
+[T+ 239226] [RUNS] VoiceCMDhandler       0
+[T+ 239226] [RUNS] videoTask             12
+[T+ 239226] [RUNS] VoiceRecTask          0
+[T+ 239226] [RUNS] SDWriteTask           0
+[T+ 239226] [RUNS] Tmr Svc               0
+[T+ 239226] [RUNS] RTTLogTask            1
+[T+ 239226] [RUNS] HealthMonTask         0
+[T+ 239226] [RUNS] rtos_trace            40
+[T+ 239226] [RUNS] IDLE                  52
+[T+ 239263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 239427] [STACK] -- HWM heap_free=25240 B --
+[T+ 239427] [STACK] rtos_trace            hwm= 347 words
+[T+ 239427] [STACK] IDLE                  hwm= 101 words
+[T+ 239427] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 239427] [STACK] HealthMonTask         hwm= 772 words
+[T+ 239427] [STACK] RTTLogTask            hwm= 182 words
+[T+ 239427] [STACK] Tmr Svc               hwm= 227 words
+[T+ 239427] [STACK] music_disp            hwm=3884 words
+[T+ 239427] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 239427] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 239427] [STACK] videoTask             hwm= 950 words
+[T+ 239427] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 239427] [STACK] SDWriteTask           hwm=1381 words
+[T+ 239427] [RUNS] -- switches per 200 ms --
+[T+ 239427] [RUNS] UARTReceiveTask       1
+[T+ 239427] [RUNS] TouchGFXTask          12
+[T+ 239427] [RUNS] music_disp            0
+[T+ 239427] [RUNS] VoiceCMDhandler       0
+[T+ 239427] [RUNS] videoTask             12
+[T+ 239427] [RUNS] VoiceRecTask          0
+[T+ 239427] [RUNS] SDWriteTask           0
+[T+ 239427] [RUNS] Tmr Svc               0
+[T+ 239427] [RUNS] RTTLogTask            1
+[T+ 239427] [RUNS] HealthMonTask         0
+[T+ 239427] [RUNS] rtos_trace            40
+[T+ 239427] [RUNS] IDLE                  53
+[T+ 239628] [STACK] -- HWM heap_free=25240 B --
+[T+ 239628] [STACK] rtos_trace            hwm= 347 words
+[T+ 239628] [STACK] IDLE                  hwm= 101 words
+[T+ 239628] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 239628] [STACK] HealthMonTask         hwm= 772 words
+[T+ 239628] [STACK] RTTLogTask            hwm= 182 words
+[T+ 239628] [STACK] music_disp            hwm=3884 words
+[T+ 239628] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 239628] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 239628] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 239628] [STACK] videoTask             hwm= 950 words
+[T+ 239628] [STACK] SDWriteTask           hwm=1381 words
+[T+ 239628] [STACK] Tmr Svc               hwm= 227 words
+[T+ 239628] [RUNS] -- switches per 200 ms --
+[T+ 239628] [RUNS] UARTReceiveTask       0
+[T+ 239628] [RUNS] TouchGFXTask          11
+[T+ 239628] [RUNS] music_disp            0
+[T+ 239628] [RUNS] VoiceCMDhandler       0
+[T+ 239628] [RUNS] videoTask             11
+[T+ 239628] [RUNS] VoiceRecTask          0
+[T+ 239628] [RUNS] SDWriteTask           0
+[T+ 239628] [RUNS] Tmr Svc               0
+[T+ 239628] [RUNS] RTTLogTask            1
+[T+ 239628] [RUNS] HealthMonTask         0
+[T+ 239628] [RUNS] rtos_trace            40
+[T+ 239628] [RUNS] IDLE                  52
+[T+ 239763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 239828] [STACK] -- HWM heap_free=25240 B --
+[T+ 239828] [STACK] rtos_trace            hwm= 347 words
+[T+ 239828] [STACK] IDLE                  hwm= 101 words
+[T+ 239828] [STACK] HealthMonTask         hwm= 772 words
+[T+ 239828] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 239828] [STACK] RTTLogTask            hwm= 182 words
+[T+ 239828] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 239828] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 239828] [STACK] SDWriteTask           hwm=1381 words
+[T+ 239828] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 239828] [STACK] videoTask             hwm= 950 words
+[T+ 239828] [STACK] Tmr Svc               hwm= 227 words
+[T+ 239828] [STACK] music_disp            hwm=3884 words
+[T+ 239828] [RUNS] -- switches per 200 ms --
+[T+ 239828] [RUNS] UARTReceiveTask       1
+[T+ 239828] [RUNS] TouchGFXTask          12
+[T+ 239828] [RUNS] music_disp            0
+[T+ 239828] [RUNS] VoiceCMDhandler       0
+[T+ 239828] [RUNS] videoTask             12
+[T+ 239828] [RUNS] VoiceRecTask          0
+[T+ 239828] [RUNS] SDWriteTask           0
+[T+ 239828] [RUNS] Tmr Svc               0
+[T+ 239828] [RUNS] RTTLogTask            1
+[T+ 239828] [RUNS] HealthMonTask         0
+[T+ 239828] [RUNS] rtos_trace            40
+[T+ 239828] [RUNS] IDLE                  52
+[T+ 240028] [STACK] -- HWM heap_free=25240 B --
+[T+ 240028] [STACK] rtos_trace            hwm= 347 words
+[T+ 240028] [STACK] IDLE                  hwm= 101 words
+[T+ 240028] [STACK] HealthMonTask         hwm= 772 words
+[T+ 240028] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 240028] [STACK] RTTLogTask            hwm= 182 words
+[T+ 240028] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 240028] [STACK] SDWriteTask           hwm=1381 words
+[T+ 240028] [STACK] Tmr Svc               hwm= 227 words
+[T+ 240028] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 240028] [STACK] videoTask             hwm= 950 words
+[T+ 240028] [STACK] music_disp            hwm=3884 words
+[T+ 240028] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 240028] [RUNS] -- switches per 200 ms --
+[T+ 240028] [RUNS] UARTReceiveTask       0
+[T+ 240028] [RUNS] TouchGFXTask          12
+[T+ 240028] [RUNS] music_disp            0
+[T+ 240028] [RUNS] VoiceCMDhandler       0
+[T+ 240028] [RUNS] videoTask             12
+[T+ 240028] [RUNS] VoiceRecTask          0
+[T+ 240028] [RUNS] SDWriteTask           0
+[T+ 240028] [RUNS] Tmr Svc               0
+[T+ 240028] [RUNS] RTTLogTask            1
+[T+ 240028] [RUNS] HealthMonTask         0
+[T+ 240028] [RUNS] rtos_trace            40
+[T+ 240028] [RUNS] IDLE                  53
+[T+ 240228] [STACK] -- HWM heap_free=25240 B --
+[T+ 240228] [STACK] rtos_trace            hwm= 347 words
+[T+ 240228] [STACK] IDLE                  hwm= 101 words
+[T+ 240228] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 240228] [STACK] RTTLogTask            hwm= 182 words
+[T+ 240228] [STACK] HealthMonTask         hwm= 772 words
+[T+ 240228] [STACK] SDWriteTask           hwm=1381 words
+[T+ 240228] [STACK] Tmr Svc               hwm= 227 words
+[T+ 240228] [STACK] music_disp            hwm=3884 words
+[T+ 240228] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 240228] [STACK] videoTask             hwm= 950 words
+[T+ 240228] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 240228] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 240228] [RUNS] -- switches per 200 ms --
+[T+ 240228] [RUNS] UARTReceiveTask       0
+[T+ 240228] [RUNS] TouchGFXTask          12
+[T+ 240228] [RUNS] music_disp            0
+[T+ 240228] [RUNS] VoiceCMDhandler       0
+[T+ 240228] [RUNS] videoTask             12
+[T+ 240228] [RUNS] VoiceRecTask          0
+[T+ 240228] [RUNS] SDWriteTask           0
+[T+ 240228] [RUNS] Tmr Svc               0
+[T+ 240228] [RUNS] RTTLogTask            1
+[T+ 240228] [RUNS] HealthMonTask         0
+[T+ 240228] [RUNS] rtos_trace            40
+[T+ 240228] [RUNS] IDLE                  52
+[T+ 240263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 240263] [HEALTH] card=PRESENT  free=1922576 KB  used=8160 KB  sdErr=0x00000000
+[T+ 240428] [STACK] -- HWM heap_free=25240 B --
+[T+ 240428] [STACK] rtos_trace            hwm= 347 words
+[T+ 240428] [STACK] IDLE                  hwm= 101 words
+[T+ 240428] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 240428] [STACK] HealthMonTask         hwm= 772 words
+[T+ 240428] [STACK] RTTLogTask            hwm= 182 words
+[T+ 240428] [STACK] Tmr Svc               hwm= 227 words
+[T+ 240428] [STACK] music_disp            hwm=3884 words
+[T+ 240428] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 240428] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 240428] [STACK] videoTask             hwm= 950 words
+[T+ 240428] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 240428] [STACK] SDWriteTask           hwm=1381 words
+[T+ 240428] [RUNS] -- switches per 200 ms --
+[T+ 240428] [RUNS] UARTReceiveTask       1
+[T+ 240428] [RUNS] TouchGFXTask          12
+[T+ 240428] [RUNS] music_disp            0
+[T+ 240428] [RUNS] VoiceCMDhandler       0
+[T+ 240428] [RUNS] videoTask             12
+[T+ 240428] [RUNS] VoiceRecTask          0
+[T+ 240428] [RUNS] SDWriteTask           0
+[T+ 240428] [RUNS] Tmr Svc               0
+[T+ 240428] [RUNS] RTTLogTask            1
+[T+ 240428] [RUNS] HealthMonTask         1
+[T+ 240428] [RUNS] rtos_trace            40
+[T+ 240428] [RUNS] IDLE                  53
+[T+ 240629] [STACK] -- HWM heap_free=25240 B --
+[T+ 240629] [STACK] rtos_trace            hwm= 347 words
+[T+ 240629] [STACK] IDLE                  hwm= 101 words
+[T+ 240629] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 240629] [STACK] HealthMonTask         hwm= 772 words
+[T+ 240629] [STACK] RTTLogTask            hwm= 182 words
+[T+ 240629] [STACK] music_disp            hwm=3884 words
+[T+ 240629] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 240629] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 240629] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 240629] [STACK] videoTask             hwm= 950 words
+[T+ 240629] [STACK] SDWriteTask           hwm=1381 words
+[T+ 240629] [STACK] Tmr Svc               hwm= 227 words
+[T+ 240629] [RUNS] -- switches per 200 ms --
+[T+ 240629] [RUNS] UARTReceiveTask       0
+[T+ 240629] [RUNS] TouchGFXTask          12
+[T+ 240629] [RUNS] music_disp            0
+[T+ 240629] [RUNS] VoiceCMDhandler       0
+[T+ 240629] [RUNS] videoTask             12
+[T+ 240629] [RUNS] VoiceRecTask          0
+[T+ 240629] [RUNS] SDWriteTask           0
+[T+ 240629] [RUNS] Tmr Svc               0
+[T+ 240629] [RUNS] RTTLogTask            1
+[T+ 240629] [RUNS] HealthMonTask         0
+[T+ 240629] [RUNS] rtos_trace            40
+[T+ 240629] [RUNS] IDLE                  52
+[T+ 240763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 240830] [STACK] -- HWM heap_free=25240 B --
+[T+ 240830] [STACK] rtos_trace            hwm= 347 words
+[T+ 240830] [STACK] IDLE                  hwm= 101 words
+[T+ 240830] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 240830] [STACK] HealthMonTask         hwm= 772 words
+[T+ 240830] [STACK] RTTLogTask            hwm= 182 words
+[T+ 240830] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 240830] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 240830] [STACK] SDWriteTask           hwm=1381 words
+[T+ 240830] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 240830] [STACK] videoTask             hwm= 950 words
+[T+ 240830] [STACK] Tmr Svc               hwm= 227 words
+[T+ 240830] [STACK] music_disp            hwm=3884 words
+[T+ 240830] [RUNS] -- switches per 200 ms --
+[T+ 240830] [RUNS] UARTReceiveTask       1
+[T+ 240830] [RUNS] TouchGFXTask          12
+[T+ 240830] [RUNS] music_disp            0
+[T+ 240830] [RUNS] VoiceCMDhandler       0
+[T+ 240830] [RUNS] videoTask             12
+[T+ 240830] [RUNS] VoiceRecTask          0
+[T+ 240830] [RUNS] SDWriteTask           0
+[T+ 240830] [RUNS] Tmr Svc               0
+[T+ 240830] [RUNS] RTTLogTask            1
+[T+ 240830] [RUNS] HealthMonTask         0
+[T+ 240830] [RUNS] rtos_trace            40
+[T+ 240830] [RUNS] IDLE                  53
+[T+ 241031] [STACK] -- HWM heap_free=25240 B --
+[T+ 241031] [STACK] rtos_trace            hwm= 347 words
+[T+ 241031] [STACK] IDLE                  hwm= 101 words
+[T+ 241031] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 241031] [STACK] HealthMonTask         hwm= 772 words
+[T+ 241031] [STACK] RTTLogTask            hwm= 182 words
+[T+ 241031] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 241031] [STACK] SDWriteTask           hwm=1381 words
+[T+ 241031] [STACK] Tmr Svc               hwm= 227 words
+[T+ 241031] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 241031] [STACK] videoTask             hwm= 950 words
+[T+ 241031] [STACK] music_disp            hwm=3884 words
+[T+ 241031] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 241031] [RUNS] -- switches per 200 ms --
+[T+ 241031] [RUNS] UARTReceiveTask       0
+[T+ 241031] [RUNS] TouchGFXTask          12
+[T+ 241031] [RUNS] music_disp            0
+[T+ 241031] [RUNS] VoiceCMDhandler       0
+[T+ 241031] [RUNS] videoTask             12
+[T+ 241031] [RUNS] VoiceRecTask          0
+[T+ 241031] [RUNS] SDWriteTask           0
+[T+ 241031] [RUNS] Tmr Svc               0
+[T+ 241031] [RUNS] RTTLogTask            1
+[T+ 241031] [RUNS] HealthMonTask         0
+[T+ 241031] [RUNS] rtos_trace            41
+[T+ 241031] [RUNS] IDLE                  51
+[T+ 241232] [STACK] -- HWM heap_free=25240 B --
+[T+ 241232] [STACK] rtos_trace            hwm= 347 words
+[T+ 241232] [STACK] IDLE                  hwm= 101 words
+[T+ 241232] [STACK] RTTLogTask            hwm= 182 words
+[T+ 241232] [STACK] HealthMonTask         hwm= 772 words
+[T+ 241232] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 241232] [STACK] SDWriteTask           hwm=1381 words
+[T+ 241232] [STACK] Tmr Svc               hwm= 227 words
+[T+ 241232] [STACK] music_disp            hwm=3884 words
+[T+ 241232] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 241232] [STACK] videoTask             hwm= 950 words
+[T+ 241232] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 241232] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 241232] [RUNS] -- switches per 200 ms --
+[T+ 241232] [RUNS] UARTReceiveTask       0
+[T+ 241232] [RUNS] TouchGFXTask          11
+[T+ 241232] [RUNS] music_disp            0
+[T+ 241232] [RUNS] VoiceCMDhandler       0
+[T+ 241232] [RUNS] videoTask             11
+[T+ 241232] [RUNS] VoiceRecTask          0
+[T+ 241232] [RUNS] SDWriteTask           0
+[T+ 241232] [RUNS] Tmr Svc               0
+[T+ 241232] [RUNS] RTTLogTask            1
+[T+ 241232] [RUNS] HealthMonTask         0
+[T+ 241232] [RUNS] rtos_trace            40
+[T+ 241232] [RUNS] IDLE                  51
+[T+ 241263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 241432] [STACK] -- HWM heap_free=25240 B --
+[T+ 241432] [STACK] rtos_trace            hwm= 347 words
+[T+ 241432] [STACK] IDLE                  hwm= 101 words
+[T+ 241432] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 241432] [STACK] HealthMonTask         hwm= 772 words
+[T+ 241432] [STACK] RTTLogTask            hwm= 182 words
+[T+ 241432] [STACK] Tmr Svc               hwm= 227 words
+[T+ 241432] [STACK] music_disp            hwm=3884 words
+[T+ 241432] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 241432] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 241432] [STACK] videoTask             hwm= 950 words
+[T+ 241432] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 241432] [STACK] SDWriteTask           hwm=1381 words
+[T+ 241432] [RUNS] -- switches per 200 ms --
+[T+ 241432] [RUNS] UARTReceiveTask       1
+[T+ 241432] [RUNS] TouchGFXTask          12
+[T+ 241432] [RUNS] music_disp            0
+[T+ 241432] [RUNS] VoiceCMDhandler       0
+[T+ 241432] [RUNS] videoTask             12
+[T+ 241432] [RUNS] VoiceRecTask          0
+[T+ 241432] [RUNS] SDWriteTask           0
+[T+ 241432] [RUNS] Tmr Svc               0
+[T+ 241432] [RUNS] RTTLogTask            1
+[T+ 241432] [RUNS] HealthMonTask         0
+[T+ 241432] [RUNS] rtos_trace            40
+[T+ 241432] [RUNS] IDLE                  53
+[T+ 241632] [STACK] -- HWM heap_free=25240 B --
+[T+ 241632] [STACK] rtos_trace            hwm= 347 words
+[T+ 241632] [STACK] IDLE                  hwm= 101 words
+[T+ 241632] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 241632] [STACK] HealthMonTask         hwm= 772 words
+[T+ 241632] [STACK] RTTLogTask            hwm= 182 words
+[T+ 241632] [STACK] music_disp            hwm=3884 words
+[T+ 241632] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 241632] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 241632] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 241632] [STACK] videoTask             hwm= 950 words
+[T+ 241632] [STACK] SDWriteTask           hwm=1381 words
+[T+ 241632] [STACK] Tmr Svc               hwm= 227 words
+[T+ 241632] [RUNS] -- switches per 200 ms --
+[T+ 241632] [RUNS] UARTReceiveTask       0
+[T+ 241632] [RUNS] TouchGFXTask          12
+[T+ 241632] [RUNS] music_disp            0
+[T+ 241632] [RUNS] VoiceCMDhandler       0
+[T+ 241632] [RUNS] videoTask             12
+[T+ 241632] [RUNS] VoiceRecTask          0
+[T+ 241632] [RUNS] SDWriteTask           0
+[T+ 241632] [RUNS] Tmr Svc               0
+[T+ 241632] [RUNS] RTTLogTask            1
+[T+ 241632] [RUNS] HealthMonTask         0
+[T+ 241632] [RUNS] rtos_trace            40
+[T+ 241632] [RUNS] IDLE                  52
+[T+ 241763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 241832] [STACK] -- HWM heap_free=25240 B --
+[T+ 241832] [STACK] rtos_trace            hwm= 347 words
+[T+ 241832] [STACK] IDLE                  hwm= 101 words
+[T+ 241832] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 241832] [STACK] HealthMonTask         hwm= 772 words
+[T+ 241832] [STACK] RTTLogTask            hwm= 182 words
+[T+ 241832] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 241832] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 241832] [STACK] SDWriteTask           hwm=1381 words
+[T+ 241832] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 241832] [STACK] videoTask             hwm= 950 words
+[T+ 241832] [STACK] Tmr Svc               hwm= 227 words
+[T+ 241832] [STACK] music_disp            hwm=3884 words
+[T+ 241832] [RUNS] -- switches per 200 ms --
+[T+ 241832] [RUNS] UARTReceiveTask       1
+[T+ 241832] [RUNS] TouchGFXTask          12
+[T+ 241832] [RUNS] music_disp            0
+[T+ 241832] [RUNS] VoiceCMDhandler       0
+[T+ 241832] [RUNS] videoTask             12
+[T+ 241832] [RUNS] VoiceRecTask          0
+[T+ 241832] [RUNS] SDWriteTask           0
+[T+ 241832] [RUNS] Tmr Svc               0
+[T+ 241832] [RUNS] RTTLogTask            1
+[T+ 241832] [RUNS] HealthMonTask         0
+[T+ 241832] [RUNS] rtos_trace            40
+[T+ 241832] [RUNS] IDLE                  54
+[T+ 242032] [STACK] -- HWM heap_free=25240 B --
+[T+ 242032] [STACK] rtos_trace            hwm= 347 words
+[T+ 242032] [STACK] IDLE                  hwm= 101 words
+[T+ 242032] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 242032] [STACK] HealthMonTask         hwm= 772 words
+[T+ 242032] [STACK] RTTLogTask            hwm= 182 words
+[T+ 242032] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 242032] [STACK] SDWriteTask           hwm=1381 words
+[T+ 242032] [STACK] Tmr Svc               hwm= 227 words
+[T+ 242032] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 242032] [STACK] videoTask             hwm= 950 words
+[T+ 242032] [STACK] music_disp            hwm=3884 words
+[T+ 242032] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 242032] [RUNS] -- switches per 200 ms --
+[T+ 242032] [RUNS] UARTReceiveTask       0
+[T+ 242032] [RUNS] TouchGFXTask          12
+[T+ 242032] [RUNS] music_disp            0
+[T+ 242032] [RUNS] VoiceCMDhandler       0
+[T+ 242032] [RUNS] videoTask             12
+[T+ 242032] [RUNS] VoiceRecTask          0
+[T+ 242032] [RUNS] SDWriteTask           0
+[T+ 242032] [RUNS] Tmr Svc               0
+[T+ 242032] [RUNS] RTTLogTask            1
+[T+ 242032] [RUNS] HealthMonTask         0
+[T+ 242032] [RUNS] rtos_trace            40
+[T+ 242032] [RUNS] IDLE                  51
+[T+ 242233] [STACK] -- HWM heap_free=25240 B --
+[T+ 242233] [STACK] rtos_trace            hwm= 347 words
+[T+ 242233] [STACK] IDLE                  hwm= 101 words
+[T+ 242233] [STACK] RTTLogTask            hwm= 182 words
+[T+ 242233] [STACK] HealthMonTask         hwm= 772 words
+[T+ 242233] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 242233] [STACK] SDWriteTask           hwm=1381 words
+[T+ 242233] [STACK] Tmr Svc               hwm= 227 words
+[T+ 242233] [STACK] music_disp            hwm=3884 words
+[T+ 242233] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 242233] [STACK] videoTask             hwm= 950 words
+[T+ 242233] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 242233] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 242233] [RUNS] -- switches per 200 ms --
+[T+ 242233] [RUNS] UARTReceiveTask       0
+[T+ 242233] [RUNS] TouchGFXTask          12
+[T+ 242233] [RUNS] music_disp            0
+[T+ 242233] [RUNS] VoiceCMDhandler       0
+[T+ 242233] [RUNS] videoTask             12
+[T+ 242233] [RUNS] VoiceRecTask          0
+[T+ 242233] [RUNS] SDWriteTask           0
+[T+ 242233] [RUNS] Tmr Svc               0
+[T+ 242233] [RUNS] RTTLogTask            1
+[T+ 242233] [RUNS] HealthMonTask         0
+[T+ 242233] [RUNS] rtos_trace            40
+[T+ 242233] [RUNS] IDLE                  52
+[T+ 242263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 242434] [STACK] -- HWM heap_free=25240 B --
+[T+ 242434] [STACK] rtos_trace            hwm= 347 words
+[T+ 242434] [STACK] IDLE                  hwm= 101 words
+[T+ 242434] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 242434] [STACK] HealthMonTask         hwm= 772 words
+[T+ 242434] [STACK] RTTLogTask            hwm= 182 words
+[T+ 242434] [STACK] Tmr Svc               hwm= 227 words
+[T+ 242434] [STACK] music_disp            hwm=3884 words
+[T+ 242434] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 242434] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 242434] [STACK] videoTask             hwm= 950 words
+[T+ 242434] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 242434] [STACK] SDWriteTask           hwm=1381 words
+[T+ 242434] [RUNS] -- switches per 200 ms --
+[T+ 242434] [RUNS] UARTReceiveTask       1
+[T+ 242434] [RUNS] TouchGFXTask          12
+[T+ 242434] [RUNS] music_disp            0
+[T+ 242434] [RUNS] VoiceCMDhandler       0
+[T+ 242434] [RUNS] videoTask             12
+[T+ 242434] [RUNS] VoiceRecTask          0
+[T+ 242434] [RUNS] SDWriteTask           0
+[T+ 242434] [RUNS] Tmr Svc               0
+[T+ 242434] [RUNS] RTTLogTask            1
+[T+ 242434] [RUNS] HealthMonTask         0
+[T+ 242434] [RUNS] rtos_trace            41
+[T+ 242434] [RUNS] IDLE                  50
+[T+ 242635] [STACK] -- HWM heap_free=25240 B --
+[T+ 242635] [STACK] rtos_trace            hwm= 347 words
+[T+ 242635] [STACK] IDLE                  hwm= 101 words
+[T+ 242635] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 242635] [STACK] HealthMonTask         hwm= 772 words
+[T+ 242635] [STACK] RTTLogTask            hwm= 182 words
+[T+ 242635] [STACK] music_disp            hwm=3884 words
+[T+ 242635] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 242635] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 242635] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 242635] [STACK] videoTask             hwm= 950 words
+[T+ 242635] [STACK] SDWriteTask           hwm=1381 words
+[T+ 242635] [STACK] Tmr Svc               hwm= 227 words
+[T+ 242635] [RUNS] -- switches per 200 ms --
+[T+ 242635] [RUNS] UARTReceiveTask       0
+[T+ 242635] [RUNS] TouchGFXTask          11
+[T+ 242635] [RUNS] music_disp            0
+[T+ 242635] [RUNS] VoiceCMDhandler       0
+[T+ 242635] [RUNS] videoTask             11
+[T+ 242635] [RUNS] VoiceRecTask          0
+[T+ 242635] [RUNS] SDWriteTask           0
+[T+ 242635] [RUNS] Tmr Svc               0
+[T+ 242635] [RUNS] RTTLogTask            1
+[T+ 242635] [RUNS] HealthMonTask         0
+[T+ 242635] [RUNS] rtos_trace            40
+[T+ 242635] [RUNS] IDLE                  51
+[T+ 242763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 242835] [STACK] -- HWM heap_free=25240 B --
+[T+ 242835] [STACK] rtos_trace            hwm= 347 words
+[T+ 242835] [STACK] IDLE                  hwm= 101 words
+[T+ 242835] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 242835] [STACK] HealthMonTask         hwm= 772 words
+[T+ 242835] [STACK] RTTLogTask            hwm= 182 words
+[T+ 242835] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 242835] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 242835] [STACK] SDWriteTask           hwm=1381 words
+[T+ 242835] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 242835] [STACK] videoTask             hwm= 950 words
+[T+ 242835] [STACK] Tmr Svc               hwm= 227 words
+[T+ 242835] [STACK] music_disp            hwm=3884 words
+[T+ 242835] [RUNS] -- switches per 200 ms --
+[T+ 242835] [RUNS] UARTReceiveTask       1
+[T+ 242835] [RUNS] TouchGFXTask          12
+[T+ 242835] [RUNS] music_disp            0
+[T+ 242835] [RUNS] VoiceCMDhandler       0
+[T+ 242835] [RUNS] videoTask             12
+[T+ 242835] [RUNS] VoiceRecTask          0
+[T+ 242835] [RUNS] SDWriteTask           0
+[T+ 242835] [RUNS] Tmr Svc               0
+[T+ 242835] [RUNS] RTTLogTask            1
+[T+ 242835] [RUNS] HealthMonTask         0
+[T+ 242835] [RUNS] rtos_trace            40
+[T+ 242835] [RUNS] IDLE                  53
+[T+ 243035] [STACK] -- HWM heap_free=25240 B --
+[T+ 243035] [STACK] rtos_trace            hwm= 347 words
+[T+ 243035] [STACK] IDLE                  hwm= 101 words
+[T+ 243035] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 243035] [STACK] HealthMonTask         hwm= 772 words
+[T+ 243035] [STACK] RTTLogTask            hwm= 182 words
+[T+ 243035] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 243035] [STACK] SDWriteTask           hwm=1381 words
+[T+ 243035] [STACK] Tmr Svc               hwm= 227 words
+[T+ 243035] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 243035] [STACK] videoTask             hwm= 950 words
+[T+ 243035] [STACK] music_disp            hwm=3884 words
+[T+ 243035] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 243035] [RUNS] -- switches per 200 ms --
+[T+ 243035] [RUNS] UARTReceiveTask       0
+[T+ 243035] [RUNS] TouchGFXTask          12
+[T+ 243035] [RUNS] music_disp            0
+[T+ 243035] [RUNS] VoiceCMDhandler       0
+[T+ 243035] [RUNS] videoTask             12
+[T+ 243035] [RUNS] VoiceRecTask          0
+[T+ 243035] [RUNS] SDWriteTask           0
+[T+ 243035] [RUNS] Tmr Svc               0
+[T+ 243035] [RUNS] RTTLogTask            1
+[T+ 243035] [RUNS] HealthMonTask         0
+[T+ 243035] [RUNS] rtos_trace            40
+[T+ 243035] [RUNS] IDLE                  53
+[T+ 243235] [STACK] -- HWM heap_free=25240 B --
+[T+ 243235] [STACK] rtos_trace            hwm= 347 words
+[T+ 243235] [STACK] IDLE                  hwm= 101 words
+[T+ 243235] [STACK] RTTLogTask            hwm= 182 words
+[T+ 243235] [STACK] HealthMonTask         hwm= 772 words
+[T+ 243235] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 243235] [STACK] SDWriteTask           hwm=1381 words
+[T+ 243235] [STACK] Tmr Svc               hwm= 227 words
+[T+ 243235] [STACK] music_disp            hwm=3884 words
+[T+ 243235] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 243235] [STACK] videoTask             hwm= 950 words
+[T+ 243235] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 243235] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 243235] [RUNS] -- switches per 200 ms --
+[T+ 243235] [RUNS] UARTReceiveTask       0
+[T+ 243235] [RUNS] TouchGFXTask          12
+[T+ 243235] [RUNS] music_disp            0
+[T+ 243235] [RUNS] VoiceCMDhandler       0
+[T+ 243235] [RUNS] videoTask             12
+[T+ 243235] [RUNS] VoiceRecTask          0
+[T+ 243235] [RUNS] SDWriteTask           0
+[T+ 243235] [RUNS] Tmr Svc               0
+[T+ 243235] [RUNS] RTTLogTask            1
+[T+ 243235] [RUNS] HealthMonTask         0
+[T+ 243235] [RUNS] rtos_trace            40
+[T+ 243235] [RUNS] IDLE                  52
+[T+ 243263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 243435] [STACK] -- HWM heap_free=25240 B --
+[T+ 243435] [STACK] rtos_trace            hwm= 347 words
+[T+ 243435] [STACK] IDLE                  hwm= 101 words
+[T+ 243435] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 243435] [STACK] HealthMonTask         hwm= 772 words
+[T+ 243435] [STACK] RTTLogTask            hwm= 182 words
+[T+ 243435] [STACK] Tmr Svc               hwm= 227 words
+[T+ 243435] [STACK] music_disp            hwm=3884 words
+[T+ 243435] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 243435] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 243435] [STACK] videoTask             hwm= 950 words
+[T+ 243435] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 243435] [STACK] SDWriteTask           hwm=1381 words
+[T+ 243435] [RUNS] -- switches per 200 ms --
+[T+ 243435] [RUNS] UARTReceiveTask       1
+[T+ 243435] [RUNS] TouchGFXTask          12
+[T+ 243435] [RUNS] music_disp            0
+[T+ 243435] [RUNS] VoiceCMDhandler       0
+[T+ 243435] [RUNS] videoTask             12
+[T+ 243435] [RUNS] VoiceRecTask          0
+[T+ 243435] [RUNS] SDWriteTask           0
+[T+ 243435] [RUNS] Tmr Svc               0
+[T+ 243435] [RUNS] RTTLogTask            1
+[T+ 243435] [RUNS] HealthMonTask         0
+[T+ 243435] [RUNS] rtos_trace            40
+[T+ 243435] [RUNS] IDLE                  52
+[T+ 243636] [STACK] -- HWM heap_free=25240 B --
+[T+ 243636] [STACK] rtos_trace            hwm= 347 words
+[T+ 243636] [STACK] IDLE                  hwm= 101 words
+[T+ 243636] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 243636] [STACK] HealthMonTask         hwm= 772 words
+[T+ 243636] [STACK] RTTLogTask            hwm= 182 words
+[T+ 243636] [STACK] music_disp            hwm=3884 words
+[T+ 243636] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 243636] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 243636] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 243636] [STACK] videoTask             hwm= 950 words
+[T+ 243636] [STACK] SDWriteTask           hwm=1381 words
+[T+ 243636] [STACK] Tmr Svc               hwm= 227 words
+[T+ 243636] [RUNS] -- switches per 200 ms --
+[T+ 243636] [RUNS] UARTReceiveTask       0
+[T+ 243636] [RUNS] TouchGFXTask          12
+[T+ 243636] [RUNS] music_disp            0
+[T+ 243636] [RUNS] VoiceCMDhandler       0
+[T+ 243636] [RUNS] videoTask             12
+[T+ 243636] [RUNS] VoiceRecTask          0
+[T+ 243636] [RUNS] SDWriteTask           0
+[T+ 243636] [RUNS] Tmr Svc               0
+[T+ 243636] [RUNS] RTTLogTask            1
+[T+ 243636] [RUNS] HealthMonTask         0
+[T+ 243636] [RUNS] rtos_trace            40
+[T+ 243636] [RUNS] IDLE                  53
+[T+ 243763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 243837] [STACK] -- HWM heap_free=25240 B --
+[T+ 243837] [STACK] rtos_trace            hwm= 347 words
+[T+ 243837] [STACK] IDLE                  hwm= 101 words
+[T+ 243837] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 243837] [STACK] HealthMonTask         hwm= 772 words
+[T+ 243837] [STACK] RTTLogTask            hwm= 182 words
+[T+ 243837] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 243837] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 243837] [STACK] SDWriteTask           hwm=1381 words
+[T+ 243837] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 243837] [STACK] videoTask             hwm= 950 words
+[T+ 243837] [STACK] Tmr Svc               hwm= 227 words
+[T+ 243837] [STACK] music_disp            hwm=3884 words
+[T+ 243837] [RUNS] -- switches per 200 ms --
+[T+ 243837] [RUNS] UARTReceiveTask       1
+[T+ 243837] [RUNS] TouchGFXTask          12
+[T+ 243837] [RUNS] music_disp            0
+[T+ 243837] [RUNS] VoiceCMDhandler       0
+[T+ 243837] [RUNS] videoTask             12
+[T+ 243837] [RUNS] VoiceRecTask          0
+[T+ 243837] [RUNS] SDWriteTask           0
+[T+ 243837] [RUNS] Tmr Svc               0
+[T+ 243837] [RUNS] RTTLogTask            1
+[T+ 243837] [RUNS] HealthMonTask         0
+[T+ 243837] [RUNS] rtos_trace            41
+[T+ 243837] [RUNS] IDLE                  53
+[T+ 244038] [STACK] -- HWM heap_free=25240 B --
+[T+ 244038] [STACK] rtos_trace            hwm= 347 words
+[T+ 244038] [STACK] IDLE                  hwm= 101 words
+[T+ 244038] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 244038] [STACK] HealthMonTask         hwm= 772 words
+[T+ 244038] [STACK] RTTLogTask            hwm= 182 words
+[T+ 244038] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 244038] [STACK] SDWriteTask           hwm=1381 words
+[T+ 244038] [STACK] Tmr Svc               hwm= 227 words
+[T+ 244038] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 244038] [STACK] videoTask             hwm= 950 words
+[T+ 244038] [STACK] music_disp            hwm=3884 words
+[T+ 244038] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 244038] [RUNS] -- switches per 200 ms --
+[T+ 244038] [RUNS] UARTReceiveTask       0
+[T+ 244038] [RUNS] TouchGFXTask          11
+[T+ 244038] [RUNS] music_disp            0
+[T+ 244038] [RUNS] VoiceCMDhandler       0
+[T+ 244038] [RUNS] videoTask             11
+[T+ 244038] [RUNS] VoiceRecTask          0
+[T+ 244038] [RUNS] SDWriteTask           0
+[T+ 244038] [RUNS] Tmr Svc               0
+[T+ 244038] [RUNS] RTTLogTask            1
+[T+ 244038] [RUNS] HealthMonTask         0
+[T+ 244038] [RUNS] rtos_trace            40
+[T+ 244038] [RUNS] IDLE                  51
+[T+ 244238] [STACK] -- HWM heap_free=25240 B --
+[T+ 244238] [STACK] rtos_trace            hwm= 347 words
+[T+ 244238] [STACK] IDLE                  hwm= 101 words
+[T+ 244238] [STACK] RTTLogTask            hwm= 182 words
+[T+ 244238] [STACK] HealthMonTask         hwm= 772 words
+[T+ 244238] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 244238] [STACK] SDWriteTask           hwm=1381 words
+[T+ 244238] [STACK] Tmr Svc               hwm= 227 words
+[T+ 244238] [STACK] music_disp            hwm=3884 words
+[T+ 244238] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 244238] [STACK] videoTask             hwm= 950 words
+[T+ 244238] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 244238] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 244238] [RUNS] -- switches per 200 ms --
+[T+ 244238] [RUNS] UARTReceiveTask       0
+[T+ 244238] [RUNS] TouchGFXTask          12
+[T+ 244238] [RUNS] music_disp            0
+[T+ 244238] [RUNS] VoiceCMDhandler       0
+[T+ 244238] [RUNS] videoTask             12
+[T+ 244238] [RUNS] VoiceRecTask          0
+[T+ 244238] [RUNS] SDWriteTask           0
+[T+ 244238] [RUNS] Tmr Svc               0
+[T+ 244238] [RUNS] RTTLogTask            1
+[T+ 244238] [RUNS] HealthMonTask         0
+[T+ 244238] [RUNS] rtos_trace            40
+[T+ 244238] [RUNS] IDLE                  53
+[T+ 244263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 244438] [STACK] -- HWM heap_free=25240 B --
+[T+ 244438] [STACK] rtos_trace            hwm= 347 words
+[T+ 244438] [STACK] IDLE                  hwm= 101 words
+[T+ 244438] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 244438] [STACK] HealthMonTask         hwm= 772 words
+[T+ 244438] [STACK] RTTLogTask            hwm= 182 words
+[T+ 244438] [STACK] Tmr Svc               hwm= 227 words
+[T+ 244438] [STACK] music_disp            hwm=3884 words
+[T+ 244438] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 244438] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 244438] [STACK] videoTask             hwm= 950 words
+[T+ 244438] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 244438] [STACK] SDWriteTask           hwm=1381 words
+[T+ 244438] [RUNS] -- switches per 200 ms --
+[T+ 244438] [RUNS] UARTReceiveTask       1
+[T+ 244438] [RUNS] TouchGFXTask          12
+[T+ 244438] [RUNS] music_disp            0
+[T+ 244438] [RUNS] VoiceCMDhandler       0
+[T+ 244438] [RUNS] videoTask             12
+[T+ 244438] [RUNS] VoiceRecTask          0
+[T+ 244438] [RUNS] SDWriteTask           0
+[T+ 244438] [RUNS] Tmr Svc               0
+[T+ 244438] [RUNS] RTTLogTask            1
+[T+ 244438] [RUNS] HealthMonTask         0
+[T+ 244438] [RUNS] rtos_trace            40
+[T+ 244438] [RUNS] IDLE                  52
+[T+ 244638] [STACK] -- HWM heap_free=25240 B --
+[T+ 244638] [STACK] rtos_trace            hwm= 347 words
+[T+ 244638] [STACK] IDLE                  hwm= 101 words
+[T+ 244638] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 244638] [STACK] HealthMonTask         hwm= 772 words
+[T+ 244638] [STACK] RTTLogTask            hwm= 182 words
+[T+ 244638] [STACK] music_disp            hwm=3884 words
+[T+ 244638] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 244638] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 244638] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 244638] [STACK] videoTask             hwm= 950 words
+[T+ 244638] [STACK] SDWriteTask           hwm=1381 words
+[T+ 244638] [STACK] Tmr Svc               hwm= 227 words
+[T+ 244638] [RUNS] -- switches per 200 ms --
+[T+ 244638] [RUNS] UARTReceiveTask       0
+[T+ 244638] [RUNS] TouchGFXTask          12
+[T+ 244638] [RUNS] music_disp            0
+[T+ 244638] [RUNS] VoiceCMDhandler       0
+[T+ 244638] [RUNS] videoTask             12
+[T+ 244638] [RUNS] VoiceRecTask          0
+[T+ 244638] [RUNS] SDWriteTask           0
+[T+ 244638] [RUNS] Tmr Svc               0
+[T+ 244638] [RUNS] RTTLogTask            1
+[T+ 244638] [RUNS] HealthMonTask         0
+[T+ 244638] [RUNS] rtos_trace            40
+[T+ 244638] [RUNS] IDLE                  52
+[T+ 244763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 244838] [STACK] -- HWM heap_free=25240 B --
+[T+ 244838] [STACK] rtos_trace            hwm= 347 words
+[T+ 244838] [STACK] IDLE                  hwm= 101 words
+[T+ 244838] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 244838] [STACK] HealthMonTask         hwm= 772 words
+[T+ 244838] [STACK] RTTLogTask            hwm= 182 words
+[T+ 244838] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 244838] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 244838] [STACK] SDWriteTask           hwm=1381 words
+[T+ 244838] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 244838] [STACK] videoTask             hwm= 950 words
+[T+ 244838] [STACK] Tmr Svc               hwm= 227 words
+[T+ 244838] [STACK] music_disp            hwm=3884 words
+[T+ 244838] [RUNS] -- switches per 200 ms --
+[T+ 244838] [RUNS] UARTReceiveTask       1
+[T+ 244838] [RUNS] TouchGFXTask          12
+[T+ 244838] [RUNS] music_disp            0
+[T+ 244838] [RUNS] VoiceCMDhandler       0
+[T+ 244838] [RUNS] videoTask             12
+[T+ 244838] [RUNS] VoiceRecTask          0
+[T+ 244838] [RUNS] SDWriteTask           0
+[T+ 244838] [RUNS] Tmr Svc               0
+[T+ 244838] [RUNS] RTTLogTask            1
+[T+ 244838] [RUNS] HealthMonTask         0
+[T+ 244838] [RUNS] rtos_trace            40
+[T+ 244838] [RUNS] IDLE                  53
+[T+ 245039] [STACK] -- HWM heap_free=25240 B --
+[T+ 245039] [STACK] rtos_trace            hwm= 347 words
+[T+ 245039] [STACK] IDLE                  hwm= 101 words
+[T+ 245039] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 245039] [STACK] HealthMonTask         hwm= 772 words
+[T+ 245039] [STACK] RTTLogTask            hwm= 182 words
+[T+ 245039] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 245039] [STACK] SDWriteTask           hwm=1381 words
+[T+ 245039] [STACK] Tmr Svc               hwm= 227 words
+[T+ 245039] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 245039] [STACK] videoTask             hwm= 950 words
+[T+ 245039] [STACK] music_disp            hwm=3884 words
+[T+ 245039] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 245039] [RUNS] -- switches per 200 ms --
+[T+ 245039] [RUNS] UARTReceiveTask       0
+[T+ 245039] [RUNS] TouchGFXTask          12
+[T+ 245039] [RUNS] music_disp            0
+[T+ 245039] [RUNS] VoiceCMDhandler       0
+[T+ 245039] [RUNS] videoTask             12
+[T+ 245039] [RUNS] VoiceRecTask          0
+[T+ 245039] [RUNS] SDWriteTask           0
+[T+ 245039] [RUNS] Tmr Svc               0
+[T+ 245039] [RUNS] RTTLogTask            1
+[T+ 245039] [RUNS] HealthMonTask         0
+[T+ 245039] [RUNS] rtos_trace            40
+[T+ 245039] [RUNS] IDLE                  51
+[T+ 245240] [STACK] -- HWM heap_free=25240 B --
+[T+ 245240] [STACK] rtos_trace            hwm= 347 words
+[T+ 245240] [STACK] IDLE                  hwm= 101 words
+[T+ 245240] [STACK] RTTLogTask            hwm= 182 words
+[T+ 245240] [STACK] HealthMonTask         hwm= 772 words
+[T+ 245240] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 245240] [STACK] SDWriteTask           hwm=1381 words
+[T+ 245240] [STACK] Tmr Svc               hwm= 227 words
+[T+ 245240] [STACK] music_disp            hwm=3884 words
+[T+ 245240] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 245240] [STACK] videoTask             hwm= 950 words
+[T+ 245240] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 245240] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 245240] [RUNS] -- switches per 200 ms --
+[T+ 245240] [RUNS] UARTReceiveTask       0
+[T+ 245240] [RUNS] TouchGFXTask          12
+[T+ 245240] [RUNS] music_disp            0
+[T+ 245240] [RUNS] VoiceCMDhandler       0
+[T+ 245240] [RUNS] videoTask             12
+[T+ 245240] [RUNS] VoiceRecTask          0
+[T+ 245240] [RUNS] SDWriteTask           0
+[T+ 245240] [RUNS] Tmr Svc               0
+[T+ 245240] [RUNS] RTTLogTask            1
+[T+ 245240] [RUNS] HealthMonTask         0
+[T+ 245240] [RUNS] rtos_trace            41
+[T+ 245240] [RUNS] IDLE                  51
+[T+ 245263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 245441] [STACK] -- HWM heap_free=25240 B --
+[T+ 245441] [STACK] rtos_trace            hwm= 347 words
+[T+ 245441] [STACK] IDLE                  hwm= 101 words
+[T+ 245441] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 245441] [STACK] HealthMonTask         hwm= 772 words
+[T+ 245441] [STACK] RTTLogTask            hwm= 182 words
+[T+ 245441] [STACK] Tmr Svc               hwm= 227 words
+[T+ 245441] [STACK] music_disp            hwm=3884 words
+[T+ 245441] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 245441] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 245441] [STACK] videoTask             hwm= 950 words
+[T+ 245441] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 245441] [STACK] SDWriteTask           hwm=1381 words
+[T+ 245441] [RUNS] -- switches per 200 ms --
+[T+ 245441] [RUNS] UARTReceiveTask       1
+[T+ 245441] [RUNS] TouchGFXTask          11
+[T+ 245441] [RUNS] music_disp            0
+[T+ 245441] [RUNS] VoiceCMDhandler       0
+[T+ 245441] [RUNS] videoTask             11
+[T+ 245441] [RUNS] VoiceRecTask          0
+[T+ 245441] [RUNS] SDWriteTask           0
+[T+ 245441] [RUNS] Tmr Svc               0
+[T+ 245441] [RUNS] RTTLogTask            1
+[T+ 245441] [RUNS] HealthMonTask         0
+[T+ 245441] [RUNS] rtos_trace            40
+[T+ 245441] [RUNS] IDLE                  50
+[T+ 245641] [STACK] -- HWM heap_free=25240 B --
+[T+ 245641] [STACK] rtos_trace            hwm= 347 words
+[T+ 245641] [STACK] IDLE                  hwm= 101 words
+[T+ 245641] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 245641] [STACK] HealthMonTask         hwm= 772 words
+[T+ 245641] [STACK] RTTLogTask            hwm= 182 words
+[T+ 245641] [STACK] music_disp            hwm=3884 words
+[T+ 245641] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 245641] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 245641] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 245641] [STACK] videoTask             hwm= 950 words
+[T+ 245641] [STACK] SDWriteTask           hwm=1381 words
+[T+ 245641] [STACK] Tmr Svc               hwm= 227 words
+[T+ 245641] [RUNS] -- switches per 200 ms --
+[T+ 245641] [RUNS] UARTReceiveTask       0
+[T+ 245641] [RUNS] TouchGFXTask          12
+[T+ 245641] [RUNS] music_disp            0
+[T+ 245641] [RUNS] VoiceCMDhandler       0
+[T+ 245641] [RUNS] videoTask             12
+[T+ 245641] [RUNS] VoiceRecTask          0
+[T+ 245641] [RUNS] SDWriteTask           0
+[T+ 245641] [RUNS] Tmr Svc               0
+[T+ 245641] [RUNS] RTTLogTask            1
+[T+ 245641] [RUNS] HealthMonTask         0
+[T+ 245641] [RUNS] rtos_trace            40
+[T+ 245641] [RUNS] IDLE                  53
+[T+ 245763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 245841] [STACK] -- HWM heap_free=25240 B --
+[T+ 245841] [STACK] rtos_trace            hwm= 347 words
+[T+ 245841] [STACK] IDLE                  hwm= 101 words
+[T+ 245841] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 245841] [STACK] HealthMonTask         hwm= 772 words
+[T+ 245841] [STACK] RTTLogTask            hwm= 182 words
+[T+ 245841] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 245841] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 245841] [STACK] SDWriteTask           hwm=1381 words
+[T+ 245841] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 245841] [STACK] videoTask             hwm= 950 words
+[T+ 245841] [STACK] Tmr Svc               hwm= 227 words
+[T+ 245841] [STACK] music_disp            hwm=3884 words
+[T+ 245841] [RUNS] -- switches per 200 ms --
+[T+ 245841] [RUNS] UARTReceiveTask       1
+[T+ 245841] [RUNS] TouchGFXTask          13
+[T+ 245841] [RUNS] music_disp            0
+[T+ 245841] [RUNS] VoiceCMDhandler       0
+[T+ 245841] [RUNS] videoTask             12
+[T+ 245841] [RUNS] VoiceRecTask          0
+[T+ 245841] [RUNS] SDWriteTask           0
+[T+ 245841] [RUNS] Tmr Svc               0
+[T+ 245841] [RUNS] RTTLogTask            1
+[T+ 245841] [RUNS] HealthMonTask         0
+[T+ 245841] [RUNS] rtos_trace            40
+[T+ 245841] [RUNS] IDLE                  52
+[T+ 246041] [STACK] -- HWM heap_free=25240 B --
+[T+ 246041] [STACK] rtos_trace            hwm= 347 words
+[T+ 246041] [STACK] IDLE                  hwm= 101 words
+[T+ 246041] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 246041] [STACK] HealthMonTask         hwm= 772 words
+[T+ 246041] [STACK] RTTLogTask            hwm= 182 words
+[T+ 246041] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 246041] [STACK] SDWriteTask           hwm=1381 words
+[T+ 246041] [STACK] Tmr Svc               hwm= 227 words
+[T+ 246041] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 246041] [STACK] videoTask             hwm= 950 words
+[T+ 246041] [STACK] music_disp            hwm=3884 words
+[T+ 246041] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 246041] [RUNS] -- switches per 200 ms --
+[T+ 246041] [RUNS] UARTReceiveTask       0
+[T+ 246041] [RUNS] TouchGFXTask          12
+[T+ 246041] [RUNS] music_disp            0
+[T+ 246041] [RUNS] VoiceCMDhandler       0
+[T+ 246041] [RUNS] videoTask             12
+[T+ 246041] [RUNS] VoiceRecTask          0
+[T+ 246041] [RUNS] SDWriteTask           0
+[T+ 246041] [RUNS] Tmr Svc               0
+[T+ 246041] [RUNS] RTTLogTask            1
+[T+ 246041] [RUNS] HealthMonTask         0
+[T+ 246041] [RUNS] rtos_trace            40
+[T+ 246041] [RUNS] IDLE                  53
+[T+ 246241] [STACK] -- HWM heap_free=25240 B --
+[T+ 246241] [STACK] rtos_trace            hwm= 347 words
+[T+ 246241] [STACK] IDLE                  hwm= 101 words
+[T+ 246241] [STACK] RTTLogTask            hwm= 182 words
+[T+ 246241] [STACK] HealthMonTask         hwm= 772 words
+[T+ 246241] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 246241] [STACK] SDWriteTask           hwm=1381 words
+[T+ 246241] [STACK] Tmr Svc               hwm= 227 words
+[T+ 246241] [STACK] music_disp            hwm=3884 words
+[T+ 246241] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 246241] [STACK] videoTask             hwm= 950 words
+[T+ 246241] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 246241] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 246241] [RUNS] -- switches per 200 ms --
+[T+ 246241] [RUNS] UARTReceiveTask       0
+[T+ 246241] [RUNS] TouchGFXTask          12
+[T+ 246241] [RUNS] music_disp            0
+[T+ 246241] [RUNS] VoiceCMDhandler       0
+[T+ 246241] [RUNS] videoTask             12
+[T+ 246241] [RUNS] VoiceRecTask          0
+[T+ 246241] [RUNS] SDWriteTask           0
+[T+ 246241] [RUNS] Tmr Svc               0
+[T+ 246241] [RUNS] RTTLogTask            1
+[T+ 246241] [RUNS] HealthMonTask         0
+[T+ 246241] [RUNS] rtos_trace            40
+[T+ 246241] [RUNS] IDLE                  52
+[T+ 246263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 246442] [STACK] -- HWM heap_free=25240 B --
+[T+ 246442] [STACK] rtos_trace            hwm= 347 words
+[T+ 246442] [STACK] IDLE                  hwm= 101 words
+[T+ 246442] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 246442] [STACK] HealthMonTask         hwm= 772 words
+[T+ 246442] [STACK] RTTLogTask            hwm= 182 words
+[T+ 246442] [STACK] Tmr Svc               hwm= 227 words
+[T+ 246442] [STACK] music_disp            hwm=3884 words
+[T+ 246442] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 246442] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 246442] [STACK] videoTask             hwm= 950 words
+[T+ 246442] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 246442] [STACK] SDWriteTask           hwm=1381 words
+[T+ 246442] [RUNS] -- switches per 200 ms --
+[T+ 246442] [RUNS] UARTReceiveTask       1
+[T+ 246442] [RUNS] TouchGFXTask          12
+[T+ 246442] [RUNS] music_disp            0
+[T+ 246442] [RUNS] VoiceCMDhandler       0
+[T+ 246442] [RUNS] videoTask             12
+[T+ 246442] [RUNS] VoiceRecTask          0
+[T+ 246442] [RUNS] SDWriteTask           0
+[T+ 246442] [RUNS] Tmr Svc               0
+[T+ 246442] [RUNS] RTTLogTask            1
+[T+ 246442] [RUNS] HealthMonTask         0
+[T+ 246442] [RUNS] rtos_trace            40
+[T+ 246442] [RUNS] IDLE                  53
+[T+ 246643] [STACK] -- HWM heap_free=25240 B --
+[T+ 246643] [STACK] rtos_trace            hwm= 347 words
+[T+ 246643] [STACK] IDLE                  hwm= 101 words
+[T+ 246643] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 246643] [STACK] HealthMonTask         hwm= 772 words
+[T+ 246643] [STACK] RTTLogTask            hwm= 182 words
+[T+ 246643] [STACK] music_disp            hwm=3884 words
+[T+ 246643] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 246643] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 246643] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 246643] [STACK] videoTask             hwm= 950 words
+[T+ 246643] [STACK] SDWriteTask           hwm=1381 words
+[T+ 246643] [STACK] Tmr Svc               hwm= 227 words
+[T+ 246643] [RUNS] -- switches per 200 ms --
+[T+ 246643] [RUNS] UARTReceiveTask       0
+[T+ 246643] [RUNS] TouchGFXTask          12
+[T+ 246643] [RUNS] music_disp            0
+[T+ 246643] [RUNS] VoiceCMDhandler       0
+[T+ 246643] [RUNS] videoTask             12
+[T+ 246643] [RUNS] VoiceRecTask          0
+[T+ 246643] [RUNS] SDWriteTask           0
+[T+ 246643] [RUNS] Tmr Svc               0
+[T+ 246643] [RUNS] RTTLogTask            1
+[T+ 246643] [RUNS] HealthMonTask         0
+[T+ 246643] [RUNS] rtos_trace            40
+[T+ 246643] [RUNS] IDLE                  52
+[T+ 246763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 246844] [STACK] -- HWM heap_free=25240 B --
+[T+ 246844] [STACK] rtos_trace            hwm= 347 words
+[T+ 246844] [STACK] IDLE                  hwm= 101 words
+[T+ 246844] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 246844] [STACK] HealthMonTask         hwm= 772 words
+[T+ 246844] [STACK] RTTLogTask            hwm= 182 words
+[T+ 246844] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 246844] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 246844] [STACK] SDWriteTask           hwm=1381 words
+[T+ 246844] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 246844] [STACK] videoTask             hwm= 950 words
+[T+ 246844] [STACK] Tmr Svc               hwm= 227 words
+[T+ 246844] [STACK] music_disp            hwm=3884 words
+[T+ 246844] [RUNS] -- switches per 200 ms --
+[T+ 246844] [RUNS] UARTReceiveTask       1
+[T+ 246844] [RUNS] TouchGFXTask          11
+[T+ 246844] [RUNS] music_disp            0
+[T+ 246844] [RUNS] VoiceCMDhandler       0
+[T+ 246844] [RUNS] videoTask             11
+[T+ 246844] [RUNS] VoiceRecTask          0
+[T+ 246844] [RUNS] SDWriteTask           0
+[T+ 246844] [RUNS] Tmr Svc               0
+[T+ 246844] [RUNS] RTTLogTask            1
+[T+ 246844] [RUNS] HealthMonTask         0
+[T+ 246844] [RUNS] rtos_trace            40
+[T+ 246844] [RUNS] IDLE                  50
+[T+ 247044] [STACK] -- HWM heap_free=25240 B --
+[T+ 247044] [STACK] rtos_trace            hwm= 347 words
+[T+ 247044] [STACK] IDLE                  hwm= 101 words
+[T+ 247044] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 247044] [STACK] HealthMonTask         hwm= 772 words
+[T+ 247044] [STACK] RTTLogTask            hwm= 182 words
+[T+ 247044] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 247044] [STACK] SDWriteTask           hwm=1381 words
+[T+ 247044] [STACK] Tmr Svc               hwm= 227 words
+[T+ 247044] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 247044] [STACK] videoTask             hwm= 950 words
+[T+ 247044] [STACK] music_disp            hwm=3884 words
+[T+ 247044] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 247044] [RUNS] -- switches per 200 ms --
+[T+ 247044] [RUNS] UARTReceiveTask       0
+[T+ 247044] [RUNS] TouchGFXTask          12
+[T+ 247044] [RUNS] music_disp            0
+[T+ 247044] [RUNS] VoiceCMDhandler       0
+[T+ 247044] [RUNS] videoTask             12
+[T+ 247044] [RUNS] VoiceRecTask          0
+[T+ 247044] [RUNS] SDWriteTask           0
+[T+ 247044] [RUNS] Tmr Svc               0
+[T+ 247044] [RUNS] RTTLogTask            1
+[T+ 247044] [RUNS] HealthMonTask         0
+[T+ 247044] [RUNS] rtos_trace            40
+[T+ 247044] [RUNS] IDLE                  51
+[T+ 247244] [STACK] -- HWM heap_free=25240 B --
+[T+ 247244] [STACK] rtos_trace            hwm= 347 words
+[T+ 247244] [STACK] IDLE                  hwm= 101 words
+[T+ 247244] [STACK] RTTLogTask            hwm= 182 words
+[T+ 247244] [STACK] HealthMonTask         hwm= 772 words
+[T+ 247244] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 247244] [STACK] SDWriteTask           hwm=1381 words
+[T+ 247244] [STACK] Tmr Svc               hwm= 227 words
+[T+ 247244] [STACK] music_disp            hwm=3884 words
+[T+ 247244] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 247244] [STACK] videoTask             hwm= 950 words
+[T+ 247244] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 247244] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 247244] [RUNS] -- switches per 200 ms --
+[T+ 247244] [RUNS] UARTReceiveTask       0
+[T+ 247244] [RUNS] TouchGFXTask          12
+[T+ 247244] [RUNS] music_disp            0
+[T+ 247244] [RUNS] VoiceCMDhandler       0
+[T+ 247244] [RUNS] videoTask             12
+[T+ 247244] [RUNS] VoiceRecTask          0
+[T+ 247244] [RUNS] SDWriteTask           0
+[T+ 247244] [RUNS] Tmr Svc               0
+[T+ 247244] [RUNS] RTTLogTask            1
+[T+ 247244] [RUNS] HealthMonTask         0
+[T+ 247244] [RUNS] rtos_trace            40
+[T+ 247244] [RUNS] IDLE                  52
+[T+ 247263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 247444] [STACK] -- HWM heap_free=25240 B --
+[T+ 247444] [STACK] rtos_trace            hwm= 347 words
+[T+ 247444] [STACK] IDLE                  hwm= 101 words
+[T+ 247444] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 247444] [STACK] HealthMonTask         hwm= 772 words
+[T+ 247444] [STACK] RTTLogTask            hwm= 182 words
+[T+ 247444] [STACK] Tmr Svc               hwm= 227 words
+[T+ 247444] [STACK] music_disp            hwm=3884 words
+[T+ 247444] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 247444] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 247444] [STACK] videoTask             hwm= 950 words
+[T+ 247444] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 247444] [STACK] SDWriteTask           hwm=1381 words
+[T+ 247444] [RUNS] -- switches per 200 ms --
+[T+ 247444] [RUNS] UARTReceiveTask       1
+[T+ 247444] [RUNS] TouchGFXTask          12
+[T+ 247444] [RUNS] music_disp            0
+[T+ 247444] [RUNS] VoiceCMDhandler       0
+[T+ 247444] [RUNS] videoTask             12
+[T+ 247444] [RUNS] VoiceRecTask          0
+[T+ 247444] [RUNS] SDWriteTask           0
+[T+ 247444] [RUNS] Tmr Svc               0
+[T+ 247444] [RUNS] RTTLogTask            1
+[T+ 247444] [RUNS] HealthMonTask         0
+[T+ 247444] [RUNS] rtos_trace            40
+[T+ 247444] [RUNS] IDLE                  51
+[T+ 247644] [STACK] -- HWM heap_free=25240 B --
+[T+ 247644] [STACK] rtos_trace            hwm= 347 words
+[T+ 247644] [STACK] IDLE                  hwm= 101 words
+[T+ 247644] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 247644] [STACK] HealthMonTask         hwm= 772 words
+[T+ 247644] [STACK] RTTLogTask            hwm= 182 words
+[T+ 247644] [STACK] music_disp            hwm=3884 words
+[T+ 247644] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 247644] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 247644] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 247644] [STACK] videoTask             hwm= 950 words
+[T+ 247644] [STACK] SDWriteTask           hwm=1381 words
+[T+ 247644] [STACK] Tmr Svc               hwm= 227 words
+[T+ 247644] [RUNS] -- switches per 200 ms --
+[T+ 247644] [RUNS] UARTReceiveTask       0
+[T+ 247644] [RUNS] TouchGFXTask          12
+[T+ 247644] [RUNS] music_disp            0
+[T+ 247644] [RUNS] VoiceCMDhandler       0
+[T+ 247644] [RUNS] videoTask             12
+[T+ 247644] [RUNS] VoiceRecTask          0
+[T+ 247644] [RUNS] SDWriteTask           0
+[T+ 247644] [RUNS] Tmr Svc               0
+[T+ 247644] [RUNS] RTTLogTask            1
+[T+ 247644] [RUNS] HealthMonTask         0
+[T+ 247644] [RUNS] rtos_trace            40
+[T+ 247644] [RUNS] IDLE                  52
+[T+ 247763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 247845] [STACK] -- HWM heap_free=25240 B --
+[T+ 247845] [STACK] rtos_trace            hwm= 347 words
+[T+ 247845] [STACK] IDLE                  hwm= 101 words
+[T+ 247845] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 247845] [STACK] HealthMonTask         hwm= 772 words
+[T+ 247845] [STACK] RTTLogTask            hwm= 182 words
+[T+ 247845] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 247845] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 247845] [STACK] SDWriteTask           hwm=1381 words
+[T+ 247845] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 247845] [STACK] videoTask             hwm= 950 words
+[T+ 247845] [STACK] Tmr Svc               hwm= 227 words
+[T+ 247845] [STACK] music_disp            hwm=3884 words
+[T+ 247845] [RUNS] -- switches per 200 ms --
+[T+ 247845] [RUNS] UARTReceiveTask       1
+[T+ 247845] [RUNS] TouchGFXTask          12
+[T+ 247845] [RUNS] music_disp            0
+[T+ 247845] [RUNS] VoiceCMDhandler       0
+[T+ 247845] [RUNS] videoTask             12
+[T+ 247845] [RUNS] VoiceRecTask          0
+[T+ 247845] [RUNS] SDWriteTask           0
+[T+ 247845] [RUNS] Tmr Svc               0
+[T+ 247845] [RUNS] RTTLogTask            1
+[T+ 247845] [RUNS] HealthMonTask         0
+[T+ 247845] [RUNS] rtos_trace            40
+[T+ 247845] [RUNS] IDLE                  54
+[T+ 248046] [STACK] -- HWM heap_free=25240 B --
+[T+ 248046] [STACK] rtos_trace            hwm= 347 words
+[T+ 248046] [STACK] IDLE                  hwm= 101 words
+[T+ 248046] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 248046] [STACK] HealthMonTask         hwm= 772 words
+[T+ 248046] [STACK] RTTLogTask            hwm= 182 words
+[T+ 248046] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 248046] [STACK] SDWriteTask           hwm=1381 words
+[T+ 248046] [STACK] Tmr Svc               hwm= 227 words
+[T+ 248046] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 248046] [STACK] videoTask             hwm= 950 words
+[T+ 248046] [STACK] music_disp            hwm=3884 words
+[T+ 248046] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 248046] [RUNS] -- switches per 200 ms --
+[T+ 248046] [RUNS] UARTReceiveTask       0
+[T+ 248046] [RUNS] TouchGFXTask          12
+[T+ 248046] [RUNS] music_disp            0
+[T+ 248046] [RUNS] VoiceCMDhandler       0
+[T+ 248046] [RUNS] videoTask             12
+[T+ 248046] [RUNS] VoiceRecTask          0
+[T+ 248046] [RUNS] SDWriteTask           0
+[T+ 248046] [RUNS] Tmr Svc               0
+[T+ 248046] [RUNS] RTTLogTask            1
+[T+ 248046] [RUNS] HealthMonTask         0
+[T+ 248046] [RUNS] rtos_trace            40
+[T+ 248046] [RUNS] IDLE                  53
+[T+ 248247] [STACK] -- HWM heap_free=25240 B --
+[T+ 248247] [STACK] rtos_trace            hwm= 347 words
+[T+ 248247] [STACK] IDLE                  hwm= 101 words
+[T+ 248247] [STACK] RTTLogTask            hwm= 182 words
+[T+ 248247] [STACK] HealthMonTask         hwm= 772 words
+[T+ 248247] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 248247] [STACK] SDWriteTask           hwm=1381 words
+[T+ 248247] [STACK] Tmr Svc               hwm= 227 words
+[T+ 248247] [STACK] music_disp            hwm=3884 words
+[T+ 248247] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 248247] [STACK] videoTask             hwm= 950 words
+[T+ 248247] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 248247] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 248247] [RUNS] -- switches per 200 ms --
+[T+ 248247] [RUNS] UARTReceiveTask       0
+[T+ 248247] [RUNS] TouchGFXTask          11
+[T+ 248247] [RUNS] music_disp            0
+[T+ 248247] [RUNS] VoiceCMDhandler       0
+[T+ 248247] [RUNS] videoTask             11
+[T+ 248247] [RUNS] VoiceRecTask          0
+[T+ 248247] [RUNS] SDWriteTask           0
+[T+ 248247] [RUNS] Tmr Svc               0
+[T+ 248247] [RUNS] RTTLogTask            1
+[T+ 248247] [RUNS] HealthMonTask         0
+[T+ 248247] [RUNS] rtos_trace            40
+[T+ 248247] [RUNS] IDLE                  52
+[T+ 248263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 248447] [STACK] -- HWM heap_free=25240 B --
+[T+ 248447] [STACK] rtos_trace            hwm= 347 words
+[T+ 248447] [STACK] IDLE                  hwm= 101 words
+[T+ 248447] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 248447] [STACK] HealthMonTask         hwm= 772 words
+[T+ 248447] [STACK] RTTLogTask            hwm= 182 words
+[T+ 248447] [STACK] Tmr Svc               hwm= 227 words
+[T+ 248447] [STACK] music_disp            hwm=3884 words
+[T+ 248447] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 248447] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 248447] [STACK] videoTask             hwm= 950 words
+[T+ 248447] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 248447] [STACK] SDWriteTask           hwm=1381 words
+[T+ 248447] [RUNS] -- switches per 200 ms --
+[T+ 248447] [RUNS] UARTReceiveTask       1
+[T+ 248447] [RUNS] TouchGFXTask          12
+[T+ 248447] [RUNS] music_disp            0
+[T+ 248447] [RUNS] VoiceCMDhandler       0
+[T+ 248447] [RUNS] videoTask             12
+[T+ 248447] [RUNS] VoiceRecTask          0
+[T+ 248447] [RUNS] SDWriteTask           0
+[T+ 248447] [RUNS] Tmr Svc               0
+[T+ 248447] [RUNS] RTTLogTask            1
+[T+ 248447] [RUNS] HealthMonTask         0
+[T+ 248447] [RUNS] rtos_trace            40
+[T+ 248447] [RUNS] IDLE                  52
+[T+ 248647] [STACK] -- HWM heap_free=25240 B --
+[T+ 248647] [STACK] rtos_trace            hwm= 347 words
+[T+ 248647] [STACK] IDLE                  hwm= 101 words
+[T+ 248647] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 248647] [STACK] HealthMonTask         hwm= 772 words
+[T+ 248647] [STACK] RTTLogTask            hwm= 182 words
+[T+ 248647] [STACK] music_disp            hwm=3884 words
+[T+ 248647] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 248647] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 248647] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 248647] [STACK] videoTask             hwm= 950 words
+[T+ 248647] [STACK] SDWriteTask           hwm=1381 words
+[T+ 248647] [STACK] Tmr Svc               hwm= 227 words
+[T+ 248647] [RUNS] -- switches per 200 ms --
+[T+ 248647] [RUNS] UARTReceiveTask       0
+[T+ 248647] [RUNS] TouchGFXTask          12
+[T+ 248647] [RUNS] music_disp            0
+[T+ 248647] [RUNS] VoiceCMDhandler       0
+[T+ 248647] [RUNS] videoTask             12
+[T+ 248647] [RUNS] VoiceRecTask          0
+[T+ 248647] [RUNS] SDWriteTask           0
+[T+ 248647] [RUNS] Tmr Svc               0
+[T+ 248647] [RUNS] RTTLogTask            1
+[T+ 248647] [RUNS] HealthMonTask         0
+[T+ 248647] [RUNS] rtos_trace            40
+[T+ 248647] [RUNS] IDLE                  53
+[T+ 248763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 248847] [STACK] -- HWM heap_free=25240 B --
+[T+ 248847] [STACK] rtos_trace            hwm= 347 words
+[T+ 248847] [STACK] IDLE                  hwm= 101 words
+[T+ 248847] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 248847] [STACK] HealthMonTask         hwm= 772 words
+[T+ 248847] [STACK] RTTLogTask            hwm= 182 words
+[T+ 248847] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 248847] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 248847] [STACK] SDWriteTask           hwm=1381 words
+[T+ 248847] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 248847] [STACK] videoTask             hwm= 950 words
+[T+ 248847] [STACK] Tmr Svc               hwm= 227 words
+[T+ 248847] [STACK] music_disp            hwm=3884 words
+[T+ 248847] [RUNS] -- switches per 200 ms --
+[T+ 248847] [RUNS] UARTReceiveTask       1
+[T+ 248847] [RUNS] TouchGFXTask          12
+[T+ 248847] [RUNS] music_disp            0
+[T+ 248847] [RUNS] VoiceCMDhandler       0
+[T+ 248847] [RUNS] videoTask             12
+[T+ 248847] [RUNS] VoiceRecTask          0
+[T+ 248847] [RUNS] SDWriteTask           0
+[T+ 248847] [RUNS] Tmr Svc               0
+[T+ 248847] [RUNS] RTTLogTask            1
+[T+ 248847] [RUNS] HealthMonTask         0
+[T+ 248847] [RUNS] rtos_trace            40
+[T+ 248847] [RUNS] IDLE                  53
+[T+ 249047] [STACK] -- HWM heap_free=25240 B --
+[T+ 249047] [STACK] rtos_trace            hwm= 347 words
+[T+ 249047] [STACK] IDLE                  hwm= 101 words
+[T+ 249047] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 249047] [STACK] HealthMonTask         hwm= 772 words
+[T+ 249047] [STACK] RTTLogTask            hwm= 182 words
+[T+ 249047] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 249047] [STACK] SDWriteTask           hwm=1381 words
+[T+ 249047] [STACK] Tmr Svc               hwm= 227 words
+[T+ 249047] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 249047] [STACK] videoTask             hwm= 950 words
+[T+ 249047] [STACK] music_disp            hwm=3884 words
+[T+ 249047] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 249047] [RUNS] -- switches per 200 ms --
+[T+ 249047] [RUNS] UARTReceiveTask       0
+[T+ 249047] [RUNS] TouchGFXTask          12
+[T+ 249047] [RUNS] music_disp            0
+[T+ 249047] [RUNS] VoiceCMDhandler       0
+[T+ 249047] [RUNS] videoTask             12
+[T+ 249047] [RUNS] VoiceRecTask          0
+[T+ 249047] [RUNS] SDWriteTask           0
+[T+ 249047] [RUNS] Tmr Svc               0
+[T+ 249047] [RUNS] RTTLogTask            1
+[T+ 249047] [RUNS] HealthMonTask         0
+[T+ 249047] [RUNS] rtos_trace            40
+[T+ 249047] [RUNS] IDLE                  53
+[T+ 249248] [STACK] -- HWM heap_free=25240 B --
+[T+ 249248] [STACK] rtos_trace            hwm= 347 words
+[T+ 249248] [STACK] IDLE                  hwm= 101 words
+[T+ 249248] [STACK] RTTLogTask            hwm= 182 words
+[T+ 249248] [STACK] HealthMonTask         hwm= 772 words
+[T+ 249248] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 249248] [STACK] SDWriteTask           hwm=1381 words
+[T+ 249248] [STACK] Tmr Svc               hwm= 227 words
+[T+ 249248] [STACK] music_disp            hwm=3884 words
+[T+ 249248] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 249248] [STACK] videoTask             hwm= 950 words
+[T+ 249248] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 249248] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 249248] [RUNS] -- switches per 200 ms --
+[T+ 249248] [RUNS] UARTReceiveTask       0
+[T+ 249248] [RUNS] TouchGFXTask          12
+[T+ 249248] [RUNS] music_disp            0
+[T+ 249248] [RUNS] VoiceCMDhandler       0
+[T+ 249248] [RUNS] videoTask             12
+[T+ 249248] [RUNS] VoiceRecTask          0
+[T+ 249248] [RUNS] SDWriteTask           0
+[T+ 249248] [RUNS] Tmr Svc               0
+[T+ 249248] [RUNS] RTTLogTask            1
+[T+ 249248] [RUNS] HealthMonTask         0
+[T+ 249248] [RUNS] rtos_trace            40
+[T+ 249248] [RUNS] IDLE                  53
+[T+ 249263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 249449] [STACK] -- HWM heap_free=25240 B --
+[T+ 249449] [STACK] rtos_trace            hwm= 347 words
+[T+ 249449] [STACK] IDLE                  hwm= 101 words
+[T+ 249449] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 249449] [STACK] HealthMonTask         hwm= 772 words
+[T+ 249449] [STACK] RTTLogTask            hwm= 182 words
+[T+ 249449] [STACK] Tmr Svc               hwm= 227 words
+[T+ 249449] [STACK] music_disp            hwm=3884 words
+[T+ 249449] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 249449] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 249449] [STACK] videoTask             hwm= 950 words
+[T+ 249449] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 249449] [STACK] SDWriteTask           hwm=1381 words
+[T+ 249449] [RUNS] -- switches per 200 ms --
+[T+ 249449] [RUNS] UARTReceiveTask       1
+[T+ 249449] [RUNS] TouchGFXTask          12
+[T+ 249449] [RUNS] music_disp            0
+[T+ 249449] [RUNS] VoiceCMDhandler       0
+[T+ 249449] [RUNS] videoTask             12
+[T+ 249449] [RUNS] VoiceRecTask          0
+[T+ 249449] [RUNS] SDWriteTask           0
+[T+ 249449] [RUNS] Tmr Svc               0
+[T+ 249449] [RUNS] RTTLogTask            1
+[T+ 249449] [RUNS] HealthMonTask         0
+[T+ 249449] [RUNS] rtos_trace            40
+[T+ 249449] [RUNS] IDLE                  51
+[T+ 249650] [STACK] -- HWM heap_free=25240 B --
+[T+ 249650] [STACK] rtos_trace            hwm= 347 words
+[T+ 249650] [STACK] IDLE                  hwm= 101 words
+[T+ 249650] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 249650] [STACK] HealthMonTask         hwm= 772 words
+[T+ 249650] [STACK] RTTLogTask            hwm= 182 words
+[T+ 249650] [STACK] music_disp            hwm=3884 words
+[T+ 249650] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 249650] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 249650] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 249650] [STACK] videoTask             hwm= 950 words
+[T+ 249650] [STACK] SDWriteTask           hwm=1381 words
+[T+ 249650] [STACK] Tmr Svc               hwm= 227 words
+[T+ 249650] [RUNS] -- switches per 200 ms --
+[T+ 249650] [RUNS] UARTReceiveTask       0
+[T+ 249650] [RUNS] TouchGFXTask          11
+[T+ 249650] [RUNS] music_disp            0
+[T+ 249650] [RUNS] VoiceCMDhandler       0
+[T+ 249650] [RUNS] videoTask             11
+[T+ 249650] [RUNS] VoiceRecTask          0
+[T+ 249650] [RUNS] SDWriteTask           0
+[T+ 249650] [RUNS] Tmr Svc               0
+[T+ 249650] [RUNS] RTTLogTask            1
+[T+ 249650] [RUNS] HealthMonTask         0
+[T+ 249650] [RUNS] rtos_trace            40
+[T+ 249650] [RUNS] IDLE                  52
+[T+ 249763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 249850] [STACK] -- HWM heap_free=25240 B --
+[T+ 249850] [STACK] rtos_trace            hwm= 347 words
+[T+ 249850] [STACK] IDLE                  hwm= 101 words
+[T+ 249850] [STACK] HealthMonTask         hwm= 772 words
+[T+ 249850] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 249850] [STACK] RTTLogTask            hwm= 182 words
+[T+ 249850] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 249850] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 249850] [STACK] SDWriteTask           hwm=1381 words
+[T+ 249850] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 249850] [STACK] videoTask             hwm= 950 words
+[T+ 249850] [STACK] Tmr Svc               hwm= 227 words
+[T+ 249850] [STACK] music_disp            hwm=3884 words
+[T+ 249850] [RUNS] -- switches per 200 ms --
+[T+ 249850] [RUNS] UARTReceiveTask       1
+[T+ 249850] [RUNS] TouchGFXTask          12
+[T+ 249850] [RUNS] music_disp            0
+[T+ 249850] [RUNS] VoiceCMDhandler       0
+[T+ 249850] [RUNS] videoTask             12
+[T+ 249850] [RUNS] VoiceRecTask          0
+[T+ 249850] [RUNS] SDWriteTask           0
+[T+ 249850] [RUNS] Tmr Svc               0
+[T+ 249850] [RUNS] RTTLogTask            1
+[T+ 249850] [RUNS] HealthMonTask         0
+[T+ 249850] [RUNS] rtos_trace            40
+[T+ 249850] [RUNS] IDLE                  53
+[T+ 250050] [STACK] -- HWM heap_free=25240 B --
+[T+ 250050] [STACK] rtos_trace            hwm= 347 words
+[T+ 250050] [STACK] IDLE                  hwm= 101 words
+[T+ 250050] [STACK] HealthMonTask         hwm= 772 words
+[T+ 250050] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 250050] [STACK] RTTLogTask            hwm= 182 words
+[T+ 250050] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 250050] [STACK] SDWriteTask           hwm=1381 words
+[T+ 250050] [STACK] Tmr Svc               hwm= 227 words
+[T+ 250050] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 250050] [STACK] videoTask             hwm= 950 words
+[T+ 250050] [STACK] music_disp            hwm=3884 words
+[T+ 250050] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 250050] [RUNS] -- switches per 200 ms --
+[T+ 250050] [RUNS] UARTReceiveTask       0
+[T+ 250050] [RUNS] TouchGFXTask          12
+[T+ 250050] [RUNS] music_disp            0
+[T+ 250050] [RUNS] VoiceCMDhandler       0
+[T+ 250050] [RUNS] videoTask             12
+[T+ 250050] [RUNS] VoiceRecTask          0
+[T+ 250050] [RUNS] SDWriteTask           0
+[T+ 250050] [RUNS] Tmr Svc               0
+[T+ 250050] [RUNS] RTTLogTask            1
+[T+ 250050] [RUNS] HealthMonTask         0
+[T+ 250050] [RUNS] rtos_trace            40
+[T+ 250050] [RUNS] IDLE                  53
+[T+ 250250] [STACK] -- HWM heap_free=25240 B --
+[T+ 250250] [STACK] rtos_trace            hwm= 347 words
+[T+ 250250] [STACK] IDLE                  hwm= 101 words
+[T+ 250250] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 250250] [STACK] RTTLogTask            hwm= 182 words
+[T+ 250250] [STACK] HealthMonTask         hwm= 772 words
+[T+ 250250] [STACK] SDWriteTask           hwm=1381 words
+[T+ 250250] [STACK] Tmr Svc               hwm= 227 words
+[T+ 250250] [STACK] music_disp            hwm=3884 words
+[T+ 250250] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 250250] [STACK] videoTask             hwm= 950 words
+[T+ 250250] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 250250] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 250250] [RUNS] -- switches per 200 ms --
+[T+ 250250] [RUNS] UARTReceiveTask       0
+[T+ 250250] [RUNS] TouchGFXTask          12
+[T+ 250250] [RUNS] music_disp            0
+[T+ 250250] [RUNS] VoiceCMDhandler       0
+[T+ 250250] [RUNS] videoTask             12
+[T+ 250250] [RUNS] VoiceRecTask          0
+[T+ 250250] [RUNS] SDWriteTask           0
+[T+ 250250] [RUNS] Tmr Svc               0
+[T+ 250250] [RUNS] RTTLogTask            1
+[T+ 250250] [RUNS] HealthMonTask         0
+[T+ 250250] [RUNS] rtos_trace            40
+[T+ 250250] [RUNS] IDLE                  52
+[T+ 250263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 250263] [HEALTH] card=PRESENT  free=1922576 KB  used=8160 KB  sdErr=0x00000000
+[T+ 250450] [STACK] -- HWM heap_free=25240 B --
+[T+ 250450] [STACK] rtos_trace            hwm= 347 words
+[T+ 250450] [STACK] IDLE                  hwm= 101 words
+[T+ 250450] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 250450] [STACK] HealthMonTask         hwm= 772 words
+[T+ 250450] [STACK] RTTLogTask            hwm= 182 words
+[T+ 250450] [STACK] Tmr Svc               hwm= 227 words
+[T+ 250450] [STACK] music_disp            hwm=3884 words
+[T+ 250450] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 250450] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 250450] [STACK] videoTask             hwm= 950 words
+[T+ 250450] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 250450] [STACK] SDWriteTask           hwm=1381 words
+[T+ 250450] [RUNS] -- switches per 200 ms --
+[T+ 250450] [RUNS] UARTReceiveTask       1
+[T+ 250450] [RUNS] TouchGFXTask          12
+[T+ 250450] [RUNS] music_disp            0
+[T+ 250450] [RUNS] VoiceCMDhandler       0
+[T+ 250450] [RUNS] videoTask             12
+[T+ 250450] [RUNS] VoiceRecTask          0
+[T+ 250450] [RUNS] SDWriteTask           0
+[T+ 250450] [RUNS] Tmr Svc               0
+[T+ 250450] [RUNS] RTTLogTask            1
+[T+ 250450] [RUNS] HealthMonTask         1
+[T+ 250450] [RUNS] rtos_trace            40
+[T+ 250450] [RUNS] IDLE                  52
+[T+ 250651] [STACK] -- HWM heap_free=25240 B --
+[T+ 250651] [STACK] rtos_trace            hwm= 347 words
+[T+ 250651] [STACK] IDLE                  hwm= 101 words
+[T+ 250651] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 250651] [STACK] HealthMonTask         hwm= 772 words
+[T+ 250651] [STACK] RTTLogTask            hwm= 182 words
+[T+ 250651] [STACK] music_disp            hwm=3884 words
+[T+ 250651] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 250651] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 250651] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 250651] [STACK] videoTask             hwm= 950 words
+[T+ 250651] [STACK] SDWriteTask           hwm=1381 words
+[T+ 250651] [STACK] Tmr Svc               hwm= 227 words
+[T+ 250651] [RUNS] -- switches per 200 ms --
+[T+ 250651] [RUNS] UARTReceiveTask       0
+[T+ 250651] [RUNS] TouchGFXTask          12
+[T+ 250651] [RUNS] music_disp            0
+[T+ 250651] [RUNS] VoiceCMDhandler       0
+[T+ 250651] [RUNS] videoTask             12
+[T+ 250651] [RUNS] VoiceRecTask          0
+[T+ 250651] [RUNS] SDWriteTask           0
+[T+ 250651] [RUNS] Tmr Svc               0
+[T+ 250651] [RUNS] RTTLogTask            1
+[T+ 250651] [RUNS] HealthMonTask         0
+[T+ 250651] [RUNS] rtos_trace            40
+[T+ 250651] [RUNS] IDLE                  53
+[T+ 250763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 250852] [STACK] -- HWM heap_free=25240 B --
+[T+ 250852] [STACK] rtos_trace            hwm= 347 words
+[T+ 250852] [STACK] IDLE                  hwm= 101 words
+[T+ 250852] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 250852] [STACK] HealthMonTask         hwm= 772 words
+[T+ 250852] [STACK] RTTLogTask            hwm= 182 words
+[T+ 250852] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 250852] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 250852] [STACK] SDWriteTask           hwm=1381 words
+[T+ 250852] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 250852] [STACK] videoTask             hwm= 950 words
+[T+ 250852] [STACK] Tmr Svc               hwm= 227 words
+[T+ 250852] [STACK] music_disp            hwm=3884 words
+[T+ 250852] [RUNS] -- switches per 200 ms --
+[T+ 250852] [RUNS] UARTReceiveTask       1
+[T+ 250852] [RUNS] TouchGFXTask          12
+[T+ 250852] [RUNS] music_disp            0
+[T+ 250852] [RUNS] VoiceCMDhandler       0
+[T+ 250852] [RUNS] videoTask             12
+[T+ 250852] [RUNS] VoiceRecTask          0
+[T+ 250852] [RUNS] SDWriteTask           0
+[T+ 250852] [RUNS] Tmr Svc               0
+[T+ 250852] [RUNS] RTTLogTask            1
+[T+ 250852] [RUNS] HealthMonTask         0
+[T+ 250852] [RUNS] rtos_trace            40
+[T+ 250852] [RUNS] IDLE                  53
+[T+ 251053] [STACK] -- HWM heap_free=25240 B --
+[T+ 251053] [STACK] rtos_trace            hwm= 347 words
+[T+ 251053] [STACK] IDLE                  hwm= 101 words
+[T+ 251053] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 251053] [STACK] HealthMonTask         hwm= 772 words
+[T+ 251053] [STACK] RTTLogTask            hwm= 182 words
+[T+ 251053] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 251053] [STACK] SDWriteTask           hwm=1381 words
+[T+ 251053] [STACK] Tmr Svc               hwm= 227 words
+[T+ 251053] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 251053] [STACK] videoTask             hwm= 950 words
+[T+ 251053] [STACK] music_disp            hwm=3884 words
+[T+ 251053] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 251053] [RUNS] -- switches per 200 ms --
+[T+ 251053] [RUNS] UARTReceiveTask       0
+[T+ 251053] [RUNS] TouchGFXTask          11
+[T+ 251053] [RUNS] music_disp            0
+[T+ 251053] [RUNS] VoiceCMDhandler       0
+[T+ 251053] [RUNS] videoTask             11
+[T+ 251053] [RUNS] VoiceRecTask          0
+[T+ 251053] [RUNS] SDWriteTask           0
+[T+ 251053] [RUNS] Tmr Svc               0
+[T+ 251053] [RUNS] RTTLogTask            1
+[T+ 251053] [RUNS] HealthMonTask         0
+[T+ 251053] [RUNS] rtos_trace            40
+[T+ 251053] [RUNS] IDLE                  51
+[T+ 251253] [STACK] -- HWM heap_free=25240 B --
+[T+ 251253] [STACK] rtos_trace            hwm= 347 words
+[T+ 251253] [STACK] IDLE                  hwm= 101 words
+[T+ 251253] [STACK] RTTLogTask            hwm= 182 words
+[T+ 251253] [STACK] HealthMonTask         hwm= 772 words
+[T+ 251253] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 251253] [STACK] SDWriteTask           hwm=1381 words
+[T+ 251253] [STACK] Tmr Svc               hwm= 227 words
+[T+ 251253] [STACK] music_disp            hwm=3884 words
+[T+ 251253] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 251253] [STACK] videoTask             hwm= 950 words
+[T+ 251253] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 251253] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 251253] [RUNS] -- switches per 200 ms --
+[T+ 251253] [RUNS] UARTReceiveTask       0
+[T+ 251253] [RUNS] TouchGFXTask          12
+[T+ 251253] [RUNS] music_disp            0
+[T+ 251253] [RUNS] VoiceCMDhandler       0
+[T+ 251253] [RUNS] videoTask             12
+[T+ 251253] [RUNS] VoiceRecTask          0
+[T+ 251253] [RUNS] SDWriteTask           0
+[T+ 251253] [RUNS] Tmr Svc               0
+[T+ 251253] [RUNS] RTTLogTask            1
+[T+ 251253] [RUNS] HealthMonTask         0
+[T+ 251253] [RUNS] rtos_trace            40
+[T+ 251253] [RUNS] IDLE                  53
+[T+ 251263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 251453] [STACK] -- HWM heap_free=25240 B --
+[T+ 251453] [STACK] rtos_trace            hwm= 347 words
+[T+ 251453] [STACK] IDLE                  hwm= 101 words
+[T+ 251453] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 251453] [STACK] HealthMonTask         hwm= 772 words
+[T+ 251453] [STACK] RTTLogTask            hwm= 182 words
+[T+ 251453] [STACK] Tmr Svc               hwm= 227 words
+[T+ 251453] [STACK] music_disp            hwm=3884 words
+[T+ 251453] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 251453] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 251453] [STACK] videoTask             hwm= 950 words
+[T+ 251453] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 251453] [STACK] SDWriteTask           hwm=1381 words
+[T+ 251453] [RUNS] -- switches per 200 ms --
+[T+ 251453] [RUNS] UARTReceiveTask       1
+[T+ 251453] [RUNS] TouchGFXTask          12
+[T+ 251453] [RUNS] music_disp            0
+[T+ 251453] [RUNS] VoiceCMDhandler       0
+[T+ 251453] [RUNS] videoTask             12
+[T+ 251453] [RUNS] VoiceRecTask          0
+[T+ 251453] [RUNS] SDWriteTask           0
+[T+ 251453] [RUNS] Tmr Svc               0
+[T+ 251453] [RUNS] RTTLogTask            1
+[T+ 251453] [RUNS] HealthMonTask         0
+[T+ 251453] [RUNS] rtos_trace            40
+[T+ 251453] [RUNS] IDLE                  52
+[T+ 251653] [STACK] -- HWM heap_free=25240 B --
+[T+ 251653] [STACK] rtos_trace            hwm= 347 words
+[T+ 251653] [STACK] IDLE                  hwm= 101 words
+[T+ 251653] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 251653] [STACK] HealthMonTask         hwm= 772 words
+[T+ 251653] [STACK] RTTLogTask            hwm= 182 words
+[T+ 251653] [STACK] music_disp            hwm=3884 words
+[T+ 251653] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 251653] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 251653] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 251653] [STACK] videoTask             hwm= 950 words
+[T+ 251653] [STACK] SDWriteTask           hwm=1381 words
+[T+ 251653] [STACK] Tmr Svc               hwm= 227 words
+[T+ 251653] [RUNS] -- switches per 200 ms --
+[T+ 251653] [RUNS] UARTReceiveTask       0
+[T+ 251653] [RUNS] TouchGFXTask          12
+[T+ 251653] [RUNS] music_disp            0
+[T+ 251653] [RUNS] VoiceCMDhandler       0
+[T+ 251653] [RUNS] videoTask             12
+[T+ 251653] [RUNS] VoiceRecTask          0
+[T+ 251653] [RUNS] SDWriteTask           0
+[T+ 251653] [RUNS] Tmr Svc               0
+[T+ 251653] [RUNS] RTTLogTask            1
+[T+ 251653] [RUNS] HealthMonTask         0
+[T+ 251653] [RUNS] rtos_trace            40
+[T+ 251653] [RUNS] IDLE                  53
+[T+ 251763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 251853] [STACK] -- HWM heap_free=25240 B --
+[T+ 251853] [STACK] rtos_trace            hwm= 347 words
+[T+ 251853] [STACK] IDLE                  hwm= 101 words
+[T+ 251853] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 251853] [STACK] HealthMonTask         hwm= 772 words
+[T+ 251853] [STACK] RTTLogTask            hwm= 182 words
+[T+ 251853] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 251853] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 251853] [STACK] SDWriteTask           hwm=1381 words
+[T+ 251853] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 251853] [STACK] videoTask             hwm= 950 words
+[T+ 251853] [STACK] Tmr Svc               hwm= 227 words
+[T+ 251853] [STACK] music_disp            hwm=3884 words
+[T+ 251853] [RUNS] -- switches per 200 ms --
+[T+ 251853] [RUNS] UARTReceiveTask       1
+[T+ 251853] [RUNS] TouchGFXTask          12
+[T+ 251853] [RUNS] music_disp            0
+[T+ 251853] [RUNS] VoiceCMDhandler       0
+[T+ 251853] [RUNS] videoTask             12
+[T+ 251853] [RUNS] VoiceRecTask          0
+[T+ 251853] [RUNS] SDWriteTask           0
+[T+ 251853] [RUNS] Tmr Svc               0
+[T+ 251853] [RUNS] RTTLogTask            1
+[T+ 251853] [RUNS] HealthMonTask         0
+[T+ 251853] [RUNS] rtos_trace            40
+[T+ 251853] [RUNS] IDLE                  53
+[T+ 252054] [STACK] -- HWM heap_free=25240 B --
+[T+ 252054] [STACK] rtos_trace            hwm= 347 words
+[T+ 252054] [STACK] IDLE                  hwm= 101 words
+[T+ 252054] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 252054] [STACK] HealthMonTask         hwm= 772 words
+[T+ 252054] [STACK] RTTLogTask            hwm= 182 words
+[T+ 252054] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 252054] [STACK] SDWriteTask           hwm=1381 words
+[T+ 252054] [STACK] Tmr Svc               hwm= 227 words
+[T+ 252054] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 252054] [STACK] videoTask             hwm= 950 words
+[T+ 252054] [STACK] music_disp            hwm=3884 words
+[T+ 252054] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 252054] [RUNS] -- switches per 200 ms --
+[T+ 252054] [RUNS] UARTReceiveTask       0
+[T+ 252054] [RUNS] TouchGFXTask          12
+[T+ 252054] [RUNS] music_disp            0
+[T+ 252054] [RUNS] VoiceCMDhandler       0
+[T+ 252054] [RUNS] videoTask             12
+[T+ 252054] [RUNS] VoiceRecTask          0
+[T+ 252054] [RUNS] SDWriteTask           0
+[T+ 252054] [RUNS] Tmr Svc               0
+[T+ 252054] [RUNS] RTTLogTask            1
+[T+ 252054] [RUNS] HealthMonTask         0
+[T+ 252054] [RUNS] rtos_trace            40
+[T+ 252054] [RUNS] IDLE                  51
+[T+ 252255] [STACK] -- HWM heap_free=25240 B --
+[T+ 252255] [STACK] rtos_trace            hwm= 347 words
+[T+ 252255] [STACK] IDLE                  hwm= 101 words
+[T+ 252255] [STACK] RTTLogTask            hwm= 182 words
+[T+ 252255] [STACK] HealthMonTask         hwm= 772 words
+[T+ 252255] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 252255] [STACK] SDWriteTask           hwm=1381 words
+[T+ 252255] [STACK] Tmr Svc               hwm= 227 words
+[T+ 252255] [STACK] music_disp            hwm=3884 words
+[T+ 252255] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 252255] [STACK] videoTask             hwm= 950 words
+[T+ 252255] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 252255] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 252255] [RUNS] -- switches per 200 ms --
+[T+ 252255] [RUNS] UARTReceiveTask       0
+[T+ 252255] [RUNS] TouchGFXTask          12
+[T+ 252255] [RUNS] music_disp            0
+[T+ 252255] [RUNS] VoiceCMDhandler       0
+[T+ 252255] [RUNS] videoTask             12
+[T+ 252255] [RUNS] VoiceRecTask          0
+[T+ 252255] [RUNS] SDWriteTask           0
+[T+ 252255] [RUNS] Tmr Svc               0
+[T+ 252255] [RUNS] RTTLogTask            1
+[T+ 252255] [RUNS] HealthMonTask         0
+[T+ 252255] [RUNS] rtos_trace            41
+[T+ 252255] [RUNS] IDLE                  51
+[T+ 252263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 252456] [STACK] -- HWM heap_free=25240 B --
+[T+ 252456] [STACK] rtos_trace            hwm= 347 words
+[T+ 252456] [STACK] IDLE                  hwm= 101 words
+[T+ 252456] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 252456] [STACK] HealthMonTask         hwm= 772 words
+[T+ 252456] [STACK] RTTLogTask            hwm= 182 words
+[T+ 252456] [STACK] Tmr Svc               hwm= 227 words
+[T+ 252456] [STACK] music_disp            hwm=3884 words
+[T+ 252456] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 252456] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 252456] [STACK] videoTask             hwm= 950 words
+[T+ 252456] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 252456] [STACK] SDWriteTask           hwm=1381 words
+[T+ 252456] [RUNS] -- switches per 200 ms --
+[T+ 252456] [RUNS] UARTReceiveTask       1
+[T+ 252456] [RUNS] TouchGFXTask          11
+[T+ 252456] [RUNS] music_disp            0
+[T+ 252456] [RUNS] VoiceCMDhandler       0
+[T+ 252456] [RUNS] videoTask             11
+[T+ 252456] [RUNS] VoiceRecTask          0
+[T+ 252456] [RUNS] SDWriteTask           0
+[T+ 252456] [RUNS] Tmr Svc               0
+[T+ 252456] [RUNS] RTTLogTask            1
+[T+ 252456] [RUNS] HealthMonTask         0
+[T+ 252456] [RUNS] rtos_trace            41
+[T+ 252456] [RUNS] IDLE                  50
+[T+ 252656] [STACK] -- HWM heap_free=25240 B --
+[T+ 252656] [STACK] rtos_trace            hwm= 347 words
+[T+ 252656] [STACK] IDLE                  hwm= 101 words
+[T+ 252656] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 252656] [STACK] HealthMonTask         hwm= 772 words
+[T+ 252656] [STACK] RTTLogTask            hwm= 182 words
+[T+ 252656] [STACK] music_disp            hwm=3884 words
+[T+ 252656] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 252656] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 252656] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 252656] [STACK] videoTask             hwm= 950 words
+[T+ 252656] [STACK] SDWriteTask           hwm=1381 words
+[T+ 252656] [STACK] Tmr Svc               hwm= 227 words
+[T+ 252656] [RUNS] -- switches per 200 ms --
+[T+ 252656] [RUNS] UARTReceiveTask       0
+[T+ 252656] [RUNS] TouchGFXTask          12
+[T+ 252656] [RUNS] music_disp            0
+[T+ 252656] [RUNS] VoiceCMDhandler       0
+[T+ 252656] [RUNS] videoTask             12
+[T+ 252656] [RUNS] VoiceRecTask          0
+[T+ 252656] [RUNS] SDWriteTask           0
+[T+ 252656] [RUNS] Tmr Svc               0
+[T+ 252656] [RUNS] RTTLogTask            1
+[T+ 252656] [RUNS] HealthMonTask         0
+[T+ 252656] [RUNS] rtos_trace            40
+[T+ 252656] [RUNS] IDLE                  53
+[T+ 252763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 252856] [STACK] -- HWM heap_free=25240 B --
+[T+ 252856] [STACK] rtos_trace            hwm= 347 words
+[T+ 252856] [STACK] IDLE                  hwm= 101 words
+[T+ 252856] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 252856] [STACK] HealthMonTask         hwm= 772 words
+[T+ 252856] [STACK] RTTLogTask            hwm= 182 words
+[T+ 252856] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 252856] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 252856] [STACK] SDWriteTask           hwm=1381 words
+[T+ 252856] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 252856] [STACK] videoTask             hwm= 950 words
+[T+ 252856] [STACK] Tmr Svc               hwm= 227 words
+[T+ 252856] [STACK] music_disp            hwm=3884 words
+[T+ 252856] [RUNS] -- switches per 200 ms --
+[T+ 252856] [RUNS] UARTReceiveTask       1
+[T+ 252856] [RUNS] TouchGFXTask          12
+[T+ 252856] [RUNS] music_disp            0
+[T+ 252856] [RUNS] VoiceCMDhandler       0
+[T+ 252856] [RUNS] videoTask             12
+[T+ 252856] [RUNS] VoiceRecTask          0
+[T+ 252856] [RUNS] SDWriteTask           0
+[T+ 252856] [RUNS] Tmr Svc               0
+[T+ 252856] [RUNS] RTTLogTask            1
+[T+ 252856] [RUNS] HealthMonTask         0
+[T+ 252856] [RUNS] rtos_trace            40
+[T+ 252856] [RUNS] IDLE                  53
+[T+ 253056] [STACK] -- HWM heap_free=25240 B --
+[T+ 253056] [STACK] rtos_trace            hwm= 347 words
+[T+ 253056] [STACK] IDLE                  hwm= 101 words
+[T+ 253056] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 253056] [STACK] HealthMonTask         hwm= 772 words
+[T+ 253056] [STACK] RTTLogTask            hwm= 182 words
+[T+ 253056] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 253056] [STACK] SDWriteTask           hwm=1381 words
+[T+ 253056] [STACK] Tmr Svc               hwm= 227 words
+[T+ 253056] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 253056] [STACK] videoTask             hwm= 950 words
+[T+ 253056] [STACK] music_disp            hwm=3884 words
+[T+ 253056] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 253056] [RUNS] -- switches per 200 ms --
+[T+ 253056] [RUNS] UARTReceiveTask       0
+[T+ 253056] [RUNS] TouchGFXTask          12
+[T+ 253056] [RUNS] music_disp            0
+[T+ 253056] [RUNS] VoiceCMDhandler       0
+[T+ 253056] [RUNS] videoTask             12
+[T+ 253056] [RUNS] VoiceRecTask          0
+[T+ 253056] [RUNS] SDWriteTask           0
+[T+ 253056] [RUNS] Tmr Svc               0
+[T+ 253056] [RUNS] RTTLogTask            1
+[T+ 253056] [RUNS] HealthMonTask         0
+[T+ 253056] [RUNS] rtos_trace            40
+[T+ 253056] [RUNS] IDLE                  52
+[T+ 253256] [STACK] -- HWM heap_free=25240 B --
+[T+ 253256] [STACK] rtos_trace            hwm= 347 words
+[T+ 253256] [STACK] IDLE                  hwm= 101 words
+[T+ 253256] [STACK] RTTLogTask            hwm= 182 words
+[T+ 253256] [STACK] HealthMonTask         hwm= 772 words
+[T+ 253256] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 253256] [STACK] SDWriteTask           hwm=1381 words
+[T+ 253256] [STACK] Tmr Svc               hwm= 227 words
+[T+ 253256] [STACK] music_disp            hwm=3884 words
+[T+ 253256] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 253256] [STACK] videoTask             hwm= 950 words
+[T+ 253256] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 253256] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 253256] [RUNS] -- switches per 200 ms --
+[T+ 253256] [RUNS] UARTReceiveTask       0
+[T+ 253256] [RUNS] TouchGFXTask          12
+[T+ 253256] [RUNS] music_disp            0
+[T+ 253256] [RUNS] VoiceCMDhandler       0
+[T+ 253256] [RUNS] videoTask             12
+[T+ 253256] [RUNS] VoiceRecTask          0
+[T+ 253256] [RUNS] SDWriteTask           0
+[T+ 253256] [RUNS] Tmr Svc               0
+[T+ 253256] [RUNS] RTTLogTask            1
+[T+ 253256] [RUNS] HealthMonTask         0
+[T+ 253256] [RUNS] rtos_trace            40
+[T+ 253256] [RUNS] IDLE                  53
+[T+ 253263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 253457] [STACK] -- HWM heap_free=25240 B --
+[T+ 253457] [STACK] rtos_trace            hwm= 347 words
+[T+ 253457] [STACK] IDLE                  hwm= 101 words
+[T+ 253457] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 253457] [STACK] HealthMonTask         hwm= 772 words
+[T+ 253457] [STACK] RTTLogTask            hwm= 182 words
+[T+ 253457] [STACK] Tmr Svc               hwm= 227 words
+[T+ 253457] [STACK] music_disp            hwm=3884 words
+[T+ 253457] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 253457] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 253457] [STACK] videoTask             hwm= 950 words
+[T+ 253457] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 253457] [STACK] SDWriteTask           hwm=1381 words
+[T+ 253457] [RUNS] -- switches per 200 ms --
+[T+ 253457] [RUNS] UARTReceiveTask       1
+[T+ 253457] [RUNS] TouchGFXTask          12
+[T+ 253457] [RUNS] music_disp            0
+[T+ 253457] [RUNS] VoiceCMDhandler       0
+[T+ 253457] [RUNS] videoTask             12
+[T+ 253457] [RUNS] VoiceRecTask          0
+[T+ 253457] [RUNS] SDWriteTask           0
+[T+ 253457] [RUNS] Tmr Svc               0
+[T+ 253457] [RUNS] RTTLogTask            1
+[T+ 253457] [RUNS] HealthMonTask         0
+[T+ 253457] [RUNS] rtos_trace            40
+[T+ 253457] [RUNS] IDLE                  53
+[T+ 253658] [STACK] -- HWM heap_free=25240 B --
+[T+ 253658] [STACK] rtos_trace            hwm= 347 words
+[T+ 253658] [STACK] IDLE                  hwm= 101 words
+[T+ 253658] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 253658] [STACK] HealthMonTask         hwm= 772 words
+[T+ 253658] [STACK] RTTLogTask            hwm= 182 words
+[T+ 253658] [STACK] music_disp            hwm=3884 words
+[T+ 253658] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 253658] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 253658] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 253658] [STACK] videoTask             hwm= 950 words
+[T+ 253658] [STACK] SDWriteTask           hwm=1381 words
+[T+ 253658] [STACK] Tmr Svc               hwm= 227 words
+[T+ 253658] [RUNS] -- switches per 200 ms --
+[T+ 253658] [RUNS] UARTReceiveTask       0
+[T+ 253658] [RUNS] TouchGFXTask          12
+[T+ 253658] [RUNS] music_disp            0
+[T+ 253658] [RUNS] VoiceCMDhandler       0
+[T+ 253658] [RUNS] videoTask             12
+[T+ 253658] [RUNS] VoiceRecTask          0
+[T+ 253658] [RUNS] SDWriteTask           0
+[T+ 253658] [RUNS] Tmr Svc               0
+[T+ 253658] [RUNS] RTTLogTask            1
+[T+ 253658] [RUNS] HealthMonTask         0
+[T+ 253658] [RUNS] rtos_trace            41
+[T+ 253658] [RUNS] IDLE                  51
+[T+ 253763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 253859] [STACK] -- HWM heap_free=25240 B --
+[T+ 253859] [STACK] rtos_trace            hwm= 347 words
+[T+ 253859] [STACK] IDLE                  hwm= 101 words
+[T+ 253859] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 253859] [STACK] HealthMonTask         hwm= 772 words
+[T+ 253859] [STACK] RTTLogTask            hwm= 182 words
+[T+ 253859] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 253859] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 253859] [STACK] SDWriteTask           hwm=1381 words
+[T+ 253859] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 253859] [STACK] videoTask             hwm= 950 words
+[T+ 253859] [STACK] Tmr Svc               hwm= 227 words
+[T+ 253859] [STACK] music_disp            hwm=3884 words
+[T+ 253859] [RUNS] -- switches per 200 ms --
+[T+ 253859] [RUNS] UARTReceiveTask       1
+[T+ 253859] [RUNS] TouchGFXTask          11
+[T+ 253859] [RUNS] music_disp            0
+[T+ 253859] [RUNS] VoiceCMDhandler       0
+[T+ 253859] [RUNS] videoTask             11
+[T+ 253859] [RUNS] VoiceRecTask          0
+[T+ 253859] [RUNS] SDWriteTask           0
+[T+ 253859] [RUNS] Tmr Svc               0
+[T+ 253859] [RUNS] RTTLogTask            1
+[T+ 253859] [RUNS] HealthMonTask         0
+[T+ 253859] [RUNS] rtos_trace            40
+[T+ 253859] [RUNS] IDLE                  50
+[T+ 254059] [STACK] -- HWM heap_free=25240 B --
+[T+ 254059] [STACK] rtos_trace            hwm= 347 words
+[T+ 254059] [STACK] IDLE                  hwm= 101 words
+[T+ 254059] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 254059] [STACK] HealthMonTask         hwm= 772 words
+[T+ 254059] [STACK] RTTLogTask            hwm= 182 words
+[T+ 254059] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 254059] [STACK] SDWriteTask           hwm=1381 words
+[T+ 254059] [STACK] Tmr Svc               hwm= 227 words
+[T+ 254059] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 254059] [STACK] videoTask             hwm= 950 words
+[T+ 254059] [STACK] music_disp            hwm=3884 words
+[T+ 254059] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 254059] [RUNS] -- switches per 200 ms --
+[T+ 254059] [RUNS] UARTReceiveTask       0
+[T+ 254059] [RUNS] TouchGFXTask          12
+[T+ 254059] [RUNS] music_disp            0
+[T+ 254059] [RUNS] VoiceCMDhandler       0
+[T+ 254059] [RUNS] videoTask             12
+[T+ 254059] [RUNS] VoiceRecTask          0
+[T+ 254059] [RUNS] SDWriteTask           0
+[T+ 254059] [RUNS] Tmr Svc               0
+[T+ 254059] [RUNS] RTTLogTask            1
+[T+ 254059] [RUNS] HealthMonTask         0
+[T+ 254059] [RUNS] rtos_trace            40
+[T+ 254059] [RUNS] IDLE                  52
+[T+ 254259] [STACK] -- HWM heap_free=25240 B --
+[T+ 254259] [STACK] rtos_trace            hwm= 347 words
+[T+ 254259] [STACK] IDLE                  hwm= 101 words
+[T+ 254259] [STACK] RTTLogTask            hwm= 182 words
+[T+ 254259] [STACK] HealthMonTask         hwm= 772 words
+[T+ 254259] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 254259] [STACK] SDWriteTask           hwm=1381 words
+[T+ 254259] [STACK] Tmr Svc               hwm= 227 words
+[T+ 254259] [STACK] music_disp            hwm=3884 words
+[T+ 254259] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 254259] [STACK] videoTask             hwm= 950 words
+[T+ 254259] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 254259] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 254259] [RUNS] -- switches per 200 ms --
+[T+ 254259] [RUNS] UARTReceiveTask       0
+[T+ 254259] [RUNS] TouchGFXTask          12
+[T+ 254259] [RUNS] music_disp            0
+[T+ 254259] [RUNS] VoiceCMDhandler       0
+[T+ 254259] [RUNS] videoTask             12
+[T+ 254259] [RUNS] VoiceRecTask          0
+[T+ 254259] [RUNS] SDWriteTask           0
+[T+ 254259] [RUNS] Tmr Svc               0
+[T+ 254259] [RUNS] RTTLogTask            1
+[T+ 254259] [RUNS] HealthMonTask         0
+[T+ 254259] [RUNS] rtos_trace            40
+[T+ 254259] [RUNS] IDLE                  51
+[T+ 254263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 254459] [STACK] -- HWM heap_free=25240 B --
+[T+ 254459] [STACK] rtos_trace            hwm= 347 words
+[T+ 254459] [STACK] IDLE                  hwm= 101 words
+[T+ 254459] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 254459] [STACK] HealthMonTask         hwm= 772 words
+[T+ 254459] [STACK] RTTLogTask            hwm= 182 words
+[T+ 254459] [STACK] Tmr Svc               hwm= 227 words
+[T+ 254459] [STACK] music_disp            hwm=3884 words
+[T+ 254459] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 254459] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 254459] [STACK] videoTask             hwm= 950 words
+[T+ 254459] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 254459] [STACK] SDWriteTask           hwm=1381 words
+[T+ 254459] [RUNS] -- switches per 200 ms --
+[T+ 254459] [RUNS] UARTReceiveTask       1
+[T+ 254459] [RUNS] TouchGFXTask          12
+[T+ 254459] [RUNS] music_disp            0
+[T+ 254459] [RUNS] VoiceCMDhandler       0
+[T+ 254459] [RUNS] videoTask             12
+[T+ 254459] [RUNS] VoiceRecTask          0
+[T+ 254459] [RUNS] SDWriteTask           0
+[T+ 254459] [RUNS] Tmr Svc               0
+[T+ 254459] [RUNS] RTTLogTask            1
+[T+ 254459] [RUNS] HealthMonTask         0
+[T+ 254459] [RUNS] rtos_trace            40
+[T+ 254459] [RUNS] IDLE                  51
+[T+ 254659] [STACK] -- HWM heap_free=25240 B --
+[T+ 254659] [STACK] rtos_trace            hwm= 347 words
+[T+ 254659] [STACK] IDLE                  hwm= 101 words
+[T+ 254659] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 254659] [STACK] HealthMonTask         hwm= 772 words
+[T+ 254659] [STACK] RTTLogTask            hwm= 182 words
+[T+ 254659] [STACK] music_disp            hwm=3884 words
+[T+ 254659] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 254659] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 254659] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 254659] [STACK] videoTask             hwm= 950 words
+[T+ 254659] [STACK] SDWriteTask           hwm=1381 words
+[T+ 254659] [STACK] Tmr Svc               hwm= 227 words
+[T+ 254659] [RUNS] -- switches per 200 ms --
+[T+ 254659] [RUNS] UARTReceiveTask       0
+[T+ 254659] [RUNS] TouchGFXTask          12
+[T+ 254659] [RUNS] music_disp            0
+[T+ 254659] [RUNS] VoiceCMDhandler       0
+[T+ 254659] [RUNS] videoTask             12
+[T+ 254659] [RUNS] VoiceRecTask          0
+[T+ 254659] [RUNS] SDWriteTask           0
+[T+ 254659] [RUNS] Tmr Svc               0
+[T+ 254659] [RUNS] RTTLogTask            1
+[T+ 254659] [RUNS] HealthMonTask         0
+[T+ 254659] [RUNS] rtos_trace            40
+[T+ 254659] [RUNS] IDLE                  52
+[T+ 254763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 254860] [STACK] -- HWM heap_free=25240 B --
+[T+ 254860] [STACK] rtos_trace            hwm= 347 words
+[T+ 254860] [STACK] IDLE                  hwm= 101 words
+[T+ 254860] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 254860] [STACK] HealthMonTask         hwm= 772 words
+[T+ 254860] [STACK] RTTLogTask            hwm= 182 words
+[T+ 254860] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 254860] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 254860] [STACK] SDWriteTask           hwm=1381 words
+[T+ 254860] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 254860] [STACK] videoTask             hwm= 950 words
+[T+ 254860] [STACK] Tmr Svc               hwm= 227 words
+[T+ 254860] [STACK] music_disp            hwm=3884 words
+[T+ 254860] [RUNS] -- switches per 200 ms --
+[T+ 254860] [RUNS] UARTReceiveTask       1
+[T+ 254860] [RUNS] TouchGFXTask          12
+[T+ 254860] [RUNS] music_disp            0
+[T+ 254860] [RUNS] VoiceCMDhandler       0
+[T+ 254860] [RUNS] videoTask             12
+[T+ 254860] [RUNS] VoiceRecTask          0
+[T+ 254860] [RUNS] SDWriteTask           0
+[T+ 254860] [RUNS] Tmr Svc               0
+[T+ 254860] [RUNS] RTTLogTask            1
+[T+ 254860] [RUNS] HealthMonTask         0
+[T+ 254860] [RUNS] rtos_trace            40
+[T+ 254860] [RUNS] IDLE                  54
+[T+ 255061] [STACK] -- HWM heap_free=25240 B --
+[T+ 255061] [STACK] rtos_trace            hwm= 347 words
+[T+ 255061] [STACK] IDLE                  hwm= 101 words
+[T+ 255061] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 255061] [STACK] HealthMonTask         hwm= 772 words
+[T+ 255061] [STACK] RTTLogTask            hwm= 182 words
+[T+ 255061] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 255061] [STACK] SDWriteTask           hwm=1381 words
+[T+ 255061] [STACK] Tmr Svc               hwm= 227 words
+[T+ 255061] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 255061] [STACK] videoTask             hwm= 950 words
+[T+ 255061] [STACK] music_disp            hwm=3884 words
+[T+ 255061] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 255061] [RUNS] -- switches per 200 ms --
+[T+ 255061] [RUNS] UARTReceiveTask       0
+[T+ 255061] [RUNS] TouchGFXTask          12
+[T+ 255061] [RUNS] music_disp            0
+[T+ 255061] [RUNS] VoiceCMDhandler       0
+[T+ 255061] [RUNS] videoTask             12
+[T+ 255061] [RUNS] VoiceRecTask          0
+[T+ 255061] [RUNS] SDWriteTask           0
+[T+ 255061] [RUNS] Tmr Svc               0
+[T+ 255061] [RUNS] RTTLogTask            1
+[T+ 255061] [RUNS] HealthMonTask         0
+[T+ 255061] [RUNS] rtos_trace            41
+[T+ 255061] [RUNS] IDLE                  52
+[T+ 255262] [STACK] -- HWM heap_free=25240 B --
+[T+ 255262] [STACK] rtos_trace            hwm= 347 words
+[T+ 255262] [STACK] IDLE                  hwm= 101 words
+[T+ 255262] [STACK] RTTLogTask            hwm= 182 words
+[T+ 255262] [STACK] HealthMonTask         hwm= 772 words
+[T+ 255262] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 255262] [STACK] SDWriteTask           hwm=1381 words
+[T+ 255262] [STACK] Tmr Svc               hwm= 227 words
+[T+ 255262] [STACK] music_disp            hwm=3884 words
+[T+ 255262] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 255262] [STACK] videoTask             hwm= 950 words
+[T+ 255262] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 255262] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 255262] [RUNS] -- switches per 200 ms --
+[T+ 255262] [RUNS] UARTReceiveTask       0
+[T+ 255262] [RUNS] TouchGFXTask          11
+[T+ 255262] [RUNS] music_disp            0
+[T+ 255262] [RUNS] VoiceCMDhandler       0
+[T+ 255262] [RUNS] videoTask             11
+[T+ 255262] [RUNS] VoiceRecTask          0
+[T+ 255262] [RUNS] SDWriteTask           0
+[T+ 255262] [RUNS] Tmr Svc               0
+[T+ 255262] [RUNS] RTTLogTask            1
+[T+ 255262] [RUNS] HealthMonTask         0
+[T+ 255262] [RUNS] rtos_trace            40
+[T+ 255262] [RUNS] IDLE                  51
+[T+ 255263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 255462] [STACK] -- HWM heap_free=25240 B --
+[T+ 255462] [STACK] rtos_trace            hwm= 347 words
+[T+ 255462] [STACK] IDLE                  hwm= 101 words
+[T+ 255462] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 255462] [STACK] HealthMonTask         hwm= 772 words
+[T+ 255462] [STACK] RTTLogTask            hwm= 182 words
+[T+ 255462] [STACK] Tmr Svc               hwm= 227 words
+[T+ 255462] [STACK] music_disp            hwm=3884 words
+[T+ 255462] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 255462] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 255462] [STACK] videoTask             hwm= 950 words
+[T+ 255462] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 255462] [STACK] SDWriteTask           hwm=1381 words
+[T+ 255462] [RUNS] -- switches per 200 ms --
+[T+ 255462] [RUNS] UARTReceiveTask       1
+[T+ 255462] [RUNS] TouchGFXTask          12
+[T+ 255462] [RUNS] music_disp            0
+[T+ 255462] [RUNS] VoiceCMDhandler       0
+[T+ 255462] [RUNS] videoTask             12
+[T+ 255462] [RUNS] VoiceRecTask          0
+[T+ 255462] [RUNS] SDWriteTask           0
+[T+ 255462] [RUNS] Tmr Svc               0
+[T+ 255462] [RUNS] RTTLogTask            1
+[T+ 255462] [RUNS] HealthMonTask         0
+[T+ 255462] [RUNS] rtos_trace            40
+[T+ 255462] [RUNS] IDLE                  52
+[T+ 255662] [STACK] -- HWM heap_free=25240 B --
+[T+ 255662] [STACK] rtos_trace            hwm= 347 words
+[T+ 255662] [STACK] IDLE                  hwm= 101 words
+[T+ 255662] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 255662] [STACK] HealthMonTask         hwm= 772 words
+[T+ 255662] [STACK] RTTLogTask            hwm= 182 words
+[T+ 255662] [STACK] music_disp            hwm=3884 words
+[T+ 255662] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 255662] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 255662] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 255662] [STACK] videoTask             hwm= 950 words
+[T+ 255662] [STACK] SDWriteTask           hwm=1381 words
+[T+ 255662] [STACK] Tmr Svc               hwm= 227 words
+[T+ 255662] [RUNS] -- switches per 200 ms --
+[T+ 255662] [RUNS] UARTReceiveTask       0
+[T+ 255662] [RUNS] TouchGFXTask          12
+[T+ 255662] [RUNS] music_disp            0
+[T+ 255662] [RUNS] VoiceCMDhandler       0
+[T+ 255662] [RUNS] videoTask             12
+[T+ 255662] [RUNS] VoiceRecTask          0
+[T+ 255662] [RUNS] SDWriteTask           0
+[T+ 255662] [RUNS] Tmr Svc               0
+[T+ 255662] [RUNS] RTTLogTask            1
+[T+ 255662] [RUNS] HealthMonTask         0
+[T+ 255662] [RUNS] rtos_trace            40
+[T+ 255662] [RUNS] IDLE                  52
+[T+ 255763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 255862] [STACK] -- HWM heap_free=25240 B --
+[T+ 255862] [STACK] rtos_trace            hwm= 347 words
+[T+ 255862] [STACK] IDLE                  hwm= 101 words
+[T+ 255862] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 255862] [STACK] HealthMonTask         hwm= 772 words
+[T+ 255862] [STACK] RTTLogTask            hwm= 182 words
+[T+ 255862] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 255862] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 255862] [STACK] SDWriteTask           hwm=1381 words
+[T+ 255862] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 255862] [STACK] videoTask             hwm= 950 words
+[T+ 255862] [STACK] Tmr Svc               hwm= 227 words
+[T+ 255862] [STACK] music_disp            hwm=3884 words
+[T+ 255862] [RUNS] -- switches per 200 ms --
+[T+ 255862] [RUNS] UARTReceiveTask       1
+[T+ 255862] [RUNS] TouchGFXTask          12
+[T+ 255862] [RUNS] music_disp            0
+[T+ 255862] [RUNS] VoiceCMDhandler       0
+[T+ 255862] [RUNS] videoTask             12
+[T+ 255862] [RUNS] VoiceRecTask          0
+[T+ 255862] [RUNS] SDWriteTask           0
+[T+ 255862] [RUNS] Tmr Svc               0
+[T+ 255862] [RUNS] RTTLogTask            1
+[T+ 255862] [RUNS] HealthMonTask         0
+[T+ 255862] [RUNS] rtos_trace            40
+[T+ 255862] [RUNS] IDLE                  52
+[T+ 256062] [STACK] -- HWM heap_free=25240 B --
+[T+ 256062] [STACK] rtos_trace            hwm= 347 words
+[T+ 256062] [STACK] IDLE                  hwm= 101 words
+[T+ 256062] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 256062] [STACK] HealthMonTask         hwm= 772 words
+[T+ 256062] [STACK] RTTLogTask            hwm= 182 words
+[T+ 256062] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 256062] [STACK] SDWriteTask           hwm=1381 words
+[T+ 256062] [STACK] Tmr Svc               hwm= 227 words
+[T+ 256062] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 256062] [STACK] videoTask             hwm= 950 words
+[T+ 256062] [STACK] music_disp            hwm=3884 words
+[T+ 256062] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 256062] [RUNS] -- switches per 200 ms --
+[T+ 256062] [RUNS] UARTReceiveTask       0
+[T+ 256062] [RUNS] TouchGFXTask          12
+[T+ 256062] [RUNS] music_disp            0
+[T+ 256062] [RUNS] VoiceCMDhandler       0
+[T+ 256062] [RUNS] videoTask             12
+[T+ 256062] [RUNS] VoiceRecTask          0
+[T+ 256062] [RUNS] SDWriteTask           0
+[T+ 256062] [RUNS] Tmr Svc               0
+[T+ 256062] [RUNS] RTTLogTask            1
+[T+ 256062] [RUNS] HealthMonTask         0
+[T+ 256062] [RUNS] rtos_trace            40
+[T+ 256062] [RUNS] IDLE                  52
+[T+ 256263] [STACK] -- HWM heap_free=25240 B --
+[T+ 256263] [STACK] rtos_trace            hwm= 347 words
+[T+ 256263] [STACK] IDLE                  hwm= 101 words
+[T+ 256263] [STACK] RTTLogTask            hwm= 182 words
+[T+ 256263] [STACK] HealthMonTask         hwm= 772 words
+[T+ 256263] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 256263] [STACK] SDWriteTask           hwm=1381 words
+[T+ 256263] [STACK] Tmr Svc               hwm= 227 words
+[T+ 256263] [STACK] music_disp            hwm=3884 words
+[T+ 256263] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 256263] [STACK] videoTask             hwm= 950 words
+[T+ 256263] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 256263] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 256263] [RUNS] -- switches per 200 ms --
+[T+ 256263] [RUNS] UARTReceiveTask       0
+[T+ 256263] [RUNS] TouchGFXTask          12
+[T+ 256263] [RUNS] music_disp            0
+[T+ 256263] [RUNS] VoiceCMDhandler       0
+[T+ 256263] [RUNS] videoTask             12
+[T+ 256263] [RUNS] VoiceRecTask          0
+[T+ 256263] [RUNS] SDWriteTask           0
+[T+ 256263] [RUNS] Tmr Svc               0
+[T+ 256263] [RUNS] RTTLogTask            1
+[T+ 256263] [RUNS] HealthMonTask         0
+[T+ 256263] [RUNS] rtos_trace            40
+[T+ 256263] [RUNS] IDLE                  53
+[T+ 256263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 256464] [STACK] -- HWM heap_free=25240 B --
+[T+ 256464] [STACK] rtos_trace            hwm= 347 words
+[T+ 256464] [STACK] IDLE                  hwm= 101 words
+[T+ 256464] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 256464] [STACK] HealthMonTask         hwm= 772 words
+[T+ 256464] [STACK] RTTLogTask            hwm= 182 words
+[T+ 256464] [STACK] Tmr Svc               hwm= 227 words
+[T+ 256464] [STACK] music_disp            hwm=3884 words
+[T+ 256464] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 256464] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 256464] [STACK] videoTask             hwm= 950 words
+[T+ 256464] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 256464] [STACK] SDWriteTask           hwm=1381 words
+[T+ 256464] [RUNS] -- switches per 200 ms --
+[T+ 256464] [RUNS] UARTReceiveTask       1
+[T+ 256464] [RUNS] TouchGFXTask          12
+[T+ 256464] [RUNS] music_disp            0
+[T+ 256464] [RUNS] VoiceCMDhandler       0
+[T+ 256464] [RUNS] videoTask             12
+[T+ 256464] [RUNS] VoiceRecTask          0
+[T+ 256464] [RUNS] SDWriteTask           0
+[T+ 256464] [RUNS] Tmr Svc               0
+[T+ 256464] [RUNS] RTTLogTask            2
+[T+ 256464] [RUNS] HealthMonTask         0
+[T+ 256464] [RUNS] rtos_trace            42
+[T+ 256464] [RUNS] IDLE                  51
+[T+ 256665] [STACK] -- HWM heap_free=25240 B --
+[T+ 256665] [STACK] rtos_trace            hwm= 347 words
+[T+ 256665] [STACK] IDLE                  hwm= 101 words
+[T+ 256665] [STACK] RTTLogTask            hwm= 182 words
+[T+ 256665] [STACK] HealthMonTask         hwm= 772 words
+[T+ 256665] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 256665] [STACK] music_disp            hwm=3884 words
+[T+ 256665] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 256665] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 256665] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 256665] [STACK] videoTask             hwm= 950 words
+[T+ 256665] [STACK] SDWriteTask           hwm=1381 words
+[T+ 256665] [STACK] Tmr Svc               hwm= 227 words
+[T+ 256665] [RUNS] -- switches per 200 ms --
+[T+ 256665] [RUNS] UARTReceiveTask       0
+[T+ 256665] [RUNS] TouchGFXTask          11
+[T+ 256665] [RUNS] music_disp            0
+[T+ 256665] [RUNS] VoiceCMDhandler       0
+[T+ 256665] [RUNS] videoTask             11
+[T+ 256665] [RUNS] VoiceRecTask          0
+[T+ 256665] [RUNS] SDWriteTask           0
+[T+ 256665] [RUNS] Tmr Svc               0
+[T+ 256665] [RUNS] RTTLogTask            1
+[T+ 256665] [RUNS] HealthMonTask         0
+[T+ 256665] [RUNS] rtos_trace            40
+[T+ 256665] [RUNS] IDLE                  52
+[T+ 256763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 256865] [STACK] -- HWM heap_free=25240 B --
+[T+ 256865] [STACK] rtos_trace            hwm= 347 words
+[T+ 256865] [STACK] IDLE                  hwm= 101 words
+[T+ 256865] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 256865] [STACK] HealthMonTask         hwm= 772 words
+[T+ 256865] [STACK] RTTLogTask            hwm= 182 words
+[T+ 256865] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 256865] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 256865] [STACK] SDWriteTask           hwm=1381 words
+[T+ 256865] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 256865] [STACK] videoTask             hwm= 950 words
+[T+ 256865] [STACK] Tmr Svc               hwm= 227 words
+[T+ 256865] [STACK] music_disp            hwm=3884 words
+[T+ 256865] [RUNS] -- switches per 200 ms --
+[T+ 256865] [RUNS] UARTReceiveTask       1
+[T+ 256865] [RUNS] TouchGFXTask          12
+[T+ 256865] [RUNS] music_disp            0
+[T+ 256865] [RUNS] VoiceCMDhandler       0
+[T+ 256865] [RUNS] videoTask             12
+[T+ 256865] [RUNS] VoiceRecTask          0
+[T+ 256865] [RUNS] SDWriteTask           0
+[T+ 256865] [RUNS] Tmr Svc               0
+[T+ 256865] [RUNS] RTTLogTask            1
+[T+ 256865] [RUNS] HealthMonTask         0
+[T+ 256865] [RUNS] rtos_trace            40
+[T+ 256865] [RUNS] IDLE                  53
+[T+ 257065] [STACK] -- HWM heap_free=25240 B --
+[T+ 257065] [STACK] rtos_trace            hwm= 347 words
+[T+ 257065] [STACK] IDLE                  hwm= 101 words
+[T+ 257065] [STACK] RTTLogTask            hwm= 182 words
+[T+ 257065] [STACK] HealthMonTask         hwm= 772 words
+[T+ 257065] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 257065] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 257065] [STACK] SDWriteTask           hwm=1381 words
+[T+ 257065] [STACK] Tmr Svc               hwm= 227 words
+[T+ 257065] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 257065] [STACK] videoTask             hwm= 950 words
+[T+ 257065] [STACK] music_disp            hwm=3884 words
+[T+ 257065] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 257065] [RUNS] -- switches per 200 ms --
+[T+ 257065] [RUNS] UARTReceiveTask       0
+[T+ 257065] [RUNS] TouchGFXTask          12
+[T+ 257065] [RUNS] music_disp            0
+[T+ 257065] [RUNS] VoiceCMDhandler       0
+[T+ 257065] [RUNS] videoTask             12
+[T+ 257065] [RUNS] VoiceRecTask          0
+[T+ 257065] [RUNS] SDWriteTask           0
+[T+ 257065] [RUNS] Tmr Svc               0
+[T+ 257065] [RUNS] RTTLogTask            1
+[T+ 257065] [RUNS] HealthMonTask         0
+[T+ 257065] [RUNS] rtos_trace            40
+[T+ 257065] [RUNS] IDLE                  53
+[T+ 257263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 257265] [STACK] -- HWM heap_free=25240 B --
+[T+ 257265] [STACK] rtos_trace            hwm= 347 words
+[T+ 257265] [STACK] IDLE                  hwm= 101 words
+[T+ 257265] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 257265] [STACK] HealthMonTask         hwm= 772 words
+[T+ 257265] [STACK] RTTLogTask            hwm= 182 words
+[T+ 257265] [STACK] SDWriteTask           hwm=1381 words
+[T+ 257265] [STACK] Tmr Svc               hwm= 227 words
+[T+ 257265] [STACK] music_disp            hwm=3884 words
+[T+ 257265] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 257265] [STACK] videoTask             hwm= 950 words
+[T+ 257265] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 257265] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 257265] [RUNS] -- switches per 200 ms --
+[T+ 257265] [RUNS] UARTReceiveTask       1
+[T+ 257265] [RUNS] TouchGFXTask          12
+[T+ 257265] [RUNS] music_disp            0
+[T+ 257265] [RUNS] VoiceCMDhandler       0
+[T+ 257265] [RUNS] videoTask             12
+[T+ 257265] [RUNS] VoiceRecTask          0
+[T+ 257265] [RUNS] SDWriteTask           0
+[T+ 257265] [RUNS] Tmr Svc               0
+[T+ 257265] [RUNS] RTTLogTask            1
+[T+ 257265] [RUNS] HealthMonTask         0
+[T+ 257265] [RUNS] rtos_trace            40
+[T+ 257265] [RUNS] IDLE                  52
+[T+ 257465] [STACK] -- HWM heap_free=25240 B --
+[T+ 257465] [STACK] rtos_trace            hwm= 347 words
+[T+ 257465] [STACK] IDLE                  hwm= 101 words
+[T+ 257465] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 257465] [STACK] HealthMonTask         hwm= 772 words
+[T+ 257465] [STACK] RTTLogTask            hwm= 182 words
+[T+ 257465] [STACK] Tmr Svc               hwm= 227 words
+[T+ 257465] [STACK] music_disp            hwm=3884 words
+[T+ 257465] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 257465] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 257465] [STACK] videoTask             hwm= 950 words
+[T+ 257465] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 257465] [STACK] SDWriteTask           hwm=1381 words
+[T+ 257465] [RUNS] -- switches per 200 ms --
+[T+ 257465] [RUNS] UARTReceiveTask       0
+[T+ 257465] [RUNS] TouchGFXTask          12
+[T+ 257465] [RUNS] music_disp            0
+[T+ 257465] [RUNS] VoiceCMDhandler       0
+[T+ 257465] [RUNS] videoTask             12
+[T+ 257465] [RUNS] VoiceRecTask          0
+[T+ 257465] [RUNS] SDWriteTask           0
+[T+ 257465] [RUNS] Tmr Svc               0
+[T+ 257465] [RUNS] RTTLogTask            1
+[T+ 257465] [RUNS] HealthMonTask         0
+[T+ 257465] [RUNS] rtos_trace            40
+[T+ 257465] [RUNS] IDLE                  52
+[T+ 257666] [STACK] -- HWM heap_free=25240 B --
+[T+ 257666] [STACK] rtos_trace            hwm= 347 words
+[T+ 257666] [STACK] IDLE                  hwm= 101 words
+[T+ 257666] [STACK] RTTLogTask            hwm= 182 words
+[T+ 257666] [STACK] HealthMonTask         hwm= 772 words
+[T+ 257666] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 257666] [STACK] music_disp            hwm=3884 words
+[T+ 257666] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 257666] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 257666] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 257666] [STACK] videoTask             hwm= 950 words
+[T+ 257666] [STACK] SDWriteTask           hwm=1381 words
+[T+ 257666] [STACK] Tmr Svc               hwm= 227 words
+[T+ 257666] [RUNS] -- switches per 200 ms --
+[T+ 257666] [RUNS] UARTReceiveTask       0
+[T+ 257666] [RUNS] TouchGFXTask          12
+[T+ 257666] [RUNS] music_disp            0
+[T+ 257666] [RUNS] VoiceCMDhandler       0
+[T+ 257666] [RUNS] videoTask             12
+[T+ 257666] [RUNS] VoiceRecTask          0
+[T+ 257666] [RUNS] SDWriteTask           0
+[T+ 257666] [RUNS] Tmr Svc               0
+[T+ 257666] [RUNS] RTTLogTask            1
+[T+ 257666] [RUNS] HealthMonTask         0
+[T+ 257666] [RUNS] rtos_trace            40
+[T+ 257666] [RUNS] IDLE                  52
+[T+ 257763] [UART] heartbeat -- idle (ISR count=0)
+[T+ 257867] [STACK] -- HWM heap_free=25240 B --
+[T+ 257867] [STACK] rtos_trace            hwm= 347 words
+[T+ 257867] [STACK] IDLE                  hwm= 101 words
+[T+ 257867] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 257867] [STACK] HealthMonTask         hwm= 772 words
+[T+ 257867] [STACK] RTTLogTask            hwm= 182 words
+[T+ 257867] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 257867] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 257867] [STACK] SDWriteTask           hwm=1381 words
+[T+ 257867] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 257867] [STACK] videoTask             hwm= 950 words
+[T+ 257867] [STACK] Tmr Svc               hwm= 227 words
+[T+ 257867] [STACK] music_disp            hwm=3884 words
+[T+ 257867] [RUNS] -- switches per 200 ms --
+[T+ 257867] [RUNS] UARTReceiveTask       1
+[T+ 257867] [RUNS] TouchGFXTask          12
+[T+ 257867] [RUNS] music_disp            0
+[T+ 257867] [RUNS] VoiceCMDhandler       0
+[T+ 257867] [RUNS] videoTask             12
+[T+ 257867] [RUNS] VoiceRecTask          0
+[T+ 257867] [RUNS] SDWriteTask           0
+[T+ 257867] [RUNS] Tmr Svc               0
+[T+ 257867] [RUNS] RTTLogTask            1
+[T+ 257867] [RUNS] HealthMonTask         0
+[T+ 257867] [RUNS] rtos_trace            41
+[T+ 257867] [RUNS] IDLE                  53
+[T+ 258068] [STACK] -- HWM heap_free=25240 B --
+[T+ 258068] [STACK] rtos_trace            hwm= 347 words
+[T+ 258068] [STACK] IDLE                  hwm= 101 words
+[T+ 258068] [STACK] RTTLogTask            hwm= 182 words
+[T+ 258068] [STACK] HealthMonTask         hwm= 772 words
+[T+ 258068] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 258068] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 258068] [STACK] SDWriteTask           hwm=1381 words
+[T+ 258068] [STACK] Tmr Svc               hwm= 227 words
+[T+ 258068] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 258068] [STACK] videoTask             hwm= 950 words
+[T+ 258068] [STACK] music_disp            hwm=3884 words
+[T+ 258068] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 258068] [RUNS] -- switches per 200 ms --
+[T+ 258068] [RUNS] UARTReceiveTask       0
+[T+ 258068] [RUNS] TouchGFXTask          11
+[T+ 258068] [RUNS] music_disp            0
+[T+ 258068] [RUNS] VoiceCMDhandler       0
+[T+ 258068] [RUNS] videoTask             11
+[T+ 258068] [RUNS] VoiceRecTask          0
+[T+ 258068] [RUNS] SDWriteTask           0
+[T+ 258068] [RUNS] Tmr Svc               0
+[T+ 258068] [RUNS] RTTLogTask            1
+[T+ 258068] [RUNS] HealthMonTask         0
+[T+ 258068] [RUNS] rtos_trace            40
+[T+ 258068] [RUNS] IDLE                  52
+[T+ 258263] [UART] heartbeat -- idle (ISR count=0)
+[T+ 258268] [STACK] -- HWM heap_free=25240 B --
+[T+ 258268] [STACK] rtos_trace            hwm= 347 words
+[T+ 258268] [STACK] IDLE                  hwm= 101 words
+[T+ 258268] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 258268] [STACK] HealthMonTask         hwm= 772 words
+[T+ 258268] [STACK] RTTLogTask            hwm= 182 words
+[T+ 258268] [STACK] SDWriteTask           hwm=1381 words
+[T+ 258268] [STACK] Tmr Svc               hwm= 227 words
+[T+ 258268] [STACK] music_disp            hwm=3884 words
+[T+ 258268] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 258268] [STACK] videoTask             hwm= 950 words
+[T+ 258268] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 258268] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 258268] [RUNS] -- switches per 200 ms --
+[T+ 258268] [RUNS] UARTReceiveTask       1
+[T+ 258268] [RUNS] TouchGFXTask          12
+[T+ 258268] [RUNS] music_disp            0
+[T+ 258268] [RUNS] VoiceCMDhandler       0
+[T+ 258268] [RUNS] videoTask             12
+[T+ 258268] [RUNS] VoiceRecTask          0
+[T+ 258268] [RUNS] SDWriteTask           0
+[T+ 258268] [RUNS] Tmr Svc               0
+[T+ 258268] [RUNS] RTTLogTask            1
+[T+ 258268] [RUNS] HealthMonTask         0
+[T+ 258268] [RUNS] rtos_trace            40
+[T+ 258268] [RUNS] IDLE                  52
+[T+ 258468] [STACK] -- HWM heap_free=25240 B --
+[T+ 258468] [STACK] rtos_trace            hwm= 347 words
+[T+ 258468] [STACK] IDLE                  hwm= 101 words
+[T+ 258468] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 258468] [STACK] HealthMonTask         hwm= 772 words
+[T+ 258468] [STACK] RTTLogTask            hwm= 182 words
+[T+ 258468] [STACK] Tmr Svc               hwm= 227 words
+[T+ 258468] [STACK] music_disp            hwm=3884 words
+[T+ 258468] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 258468] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 258468] [STACK] videoTask             hwm= 950 words
+[T+ 258468] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 258468] [STACK] SDWriteTask           hwm=1381 words
+[T+ 258468] [RUNS] -- switches per 200 ms --
+[T+ 258468] [RUNS] UARTReceiveTask       0
+[T+ 258468] [RUNS] TouchGFXTask          12
+[T+ 258468] [RUNS] music_disp            0
+[T+ 258468] [RUNS] VoiceCMDhandler       0
+[T+ 258468] [RUNS] videoTask             12
+[T+ 258468] [RUNS] VoiceRecTask          0
+[T+ 258468] [RUNS] SDWriteTask           0
+[T+ 258468] [RUNS] Tmr Svc               0
+[T+ 258468] [RUNS] RTTLogTask            1
+[T+ 258468] [RUNS] HealthMonTask         0
+[T+ 258468] [RUNS] rtos_trace            40
+[T+ 258468] [RUNS] IDLE                  53
+[T+ 258668] [STACK] -- HWM heap_free=25240 B --
+[T+ 258668] [STACK] rtos_trace            hwm= 347 words
+[T+ 258668] [STACK] IDLE                  hwm= 101 words
+[T+ 258668] [STACK] RTTLogTask            hwm= 182 words
+[T+ 258668] [STACK] HealthMonTask         hwm= 772 words
+[T+ 258668] [STACK] UARTReceiveTask       hwm= 610 words
+[T+ 258668] [STACK] music_disp            hwm=3884 words
+[T+ 258668] [STACK] VoiceCMDhandler       hwm= 973 words
+[T+ 258668] [STACK] VoiceRecTask          hwm=1863 words
+[T+ 258668] [STACK] TouchGFXTask          hwm=3792 words
+[T+ 258668] [STACK] videoTask             hwm= 950 words
+[T+ 258668] [STACK] SDWriteTask           hwm=1381 words
+[T+ 258668] [STACK] Tmr Svc               hwm= 227 words
+[T+ 258668] [RUNS] -- switches per 200 ms --
+[T+ 258668] [RUNS] UARTReceiveTask       0
+[T+ 258668] [RUNS] TouchGFXTask          12
+[T+ 258668] [RUNS] music_disp            0
+[T+ 258668] [RUNS] VoiceCMDhandler       0
+[T+ 258668] [RUNS] videoTask             12
+[T+ 258668] [RUNS] VoiceRecTask          0
+[T+ 258668] [RUNS] SDWriteTask           0
+[T+ 258668] [RUNS] Tmr Svc               0
+[T+ 258668] [RUNS] RTTLogTask            1
+[T+ 258668] [RUNS] HealthMonTask         0
+[T+ 258668] [RUNS] rtos_trace            40
+[T+ 258668] [RUNS] IDLE                  52
+[T+ 258763] [UART] heartbeat -- idle (ISR count=0)

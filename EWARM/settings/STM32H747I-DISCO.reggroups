@@ -1,1 +1,2 @@
-﻿
+﻿group = "Unnamed1", "GPIOE_MODER", "GPIOE_AFRL"
+group = "dfsdm1"

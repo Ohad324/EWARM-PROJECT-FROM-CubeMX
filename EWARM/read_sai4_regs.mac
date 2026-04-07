@@ -1,0 +1,102 @@
+/* read_sai4_regs.mac
+ * Reads SAI4 PDM + GPIO + BDMA registers from running STM32H747I-DISCO (CM7 core).
+ * Connect via cspybat --attach_to_running_target, no halt needed.
+ *
+ * Register base addresses (D3 domain):
+ *   SAI4        : 0x58005400
+ *   SAI4_Block_A: 0x58005404
+ *   GPIOC       : 0x58020800
+ *   GPIOE       : 0x58021000
+ *   BDMA        : 0x58025400
+ *   BDMA_Ch1    : 0x5802541C
+ */
+
+execUserSetup()
+{
+    var cr1, cr2, frcr, slotr, sr, pdmcr;
+    var gpioe_moder, gpioe_afrl, gpioc_moder, gpioc_afrl;
+    var bdma_ccr, bdma_cndtr, bdma_cpar, bdma_cmar;
+
+    /* ── GPIO ──────────────────────────────────────────────────── */
+    gpioe_moder = __readMemory32(0x58021000, "Memory");
+    gpioe_afrl  = __readMemory32(0x58021020, "Memory");  /* pins 0-7 */
+    gpioc_moder = __readMemory32(0x58020800, "Memory");
+    gpioc_afrl  = __readMemory32(0x58020820, "Memory");  /* pins 0-7 */
+
+    __message "=== GPIO ===";
+    __message "GPIOE MODER=0x", gpioe_moder:%X, "  AFRL=0x", gpioe_afrl:%X;
+    __message "  PE2 mode=", ((gpioe_moder>>4)&3):%d,   " (want 2=AF)  AF=", ((gpioe_afrl>>8)&0xF):%d,  " (want 10)";
+    __message "  PE4 mode=", ((gpioe_moder>>8)&3):%d,   " (want 2=AF)  AF=", ((gpioe_afrl>>16)&0xF):%d, " (want 8)";
+    __message "  PE5 mode=", ((gpioe_moder>>10)&3):%d,  " (want 2=AF)  AF=", ((gpioe_afrl>>20)&0xF):%d, " (want 8)";
+
+    __message "GPIOC MODER=0x", gpioc_moder:%X, "  AFRL=0x", gpioc_afrl:%X;
+    __message "  PC1 mode=", ((gpioc_moder>>2)&3):%d,   " (want 2=AF)  AF=", ((gpioc_afrl>>4)&0xF):%d,  " (want 10)";
+
+    /* ── SAI4 Block A ───────────────────────────────────────────── */
+    cr1   = __readMemory32(0x58005404, "Memory");
+    cr2   = __readMemory32(0x58005408, "Memory");
+    frcr  = __readMemory32(0x5800540C, "Memory");
+    slotr = __readMemory32(0x58005410, "Memory");
+    sr    = __readMemory32(0x58005418, "Memory");
+    pdmcr = __readMemory32(0x58005444, "Memory");
+
+    __message "";
+    __message "=== SAI4_Block_A ===";
+    __message "CR1   = 0x", cr1:%X;
+    __message "  MODE    =", (cr1&3):%d,            " (want 1=master-RX)";
+    __message "  DS      =", ((cr1>>5)&7):%d,        " (want 4=16-bit)";
+    __message "  LSBFIRST=", ((cr1>>8)&1):%d,        " (want 1)";
+    __message "  CKSTR   =", ((cr1>>9)&1):%d,        " (want 0=falling)";
+    __message "  MONO    =", ((cr1>>12)&1):%d,       " (want 0=stereo)";
+    __message "  NODIV   =", ((cr1>>19)&1):%d,       " (want 1=no-divider)";
+    __message "  MCKDIV  =", ((cr1>>20)&0x1F):%d,    " (want 24)";
+
+    __message "CR2   = 0x", cr2:%X;
+    __message "  FTH     =", (cr2&7):%d,             " (FIFO threshold: 0=1/4 1=1/2 2=3/4 3=full)";
+    __message "  FFLUS   =", ((cr2>>3)&1):%d,        " (FIFO flush)";
+    __message "  FLVL    =", ((cr2>>16)&7):%d,       " (FIFO level: 0=empty 1=1/4 ... 5=full)";
+
+    __message "FRCR  = 0x", frcr:%X;
+    __message "  FRL     =", (frcr&0xFF):%d,         " (FrameLength-1, want 15)";
+    __message "  FSALL   =", ((frcr>>8)&0x7F):%d,    " (ActiveFrameLength-1, want 0)";
+    __message "  FSDEF   =", ((frcr>>16)&1):%d,      " (0=start-frame, 1=channel-ID)";
+    __message "  FSPOL   =", ((frcr>>17)&1):%d,      " (0=active-low, 1=active-high)";
+    __message "  FSOFF   =", ((frcr>>18)&1):%d,      " (0=first-bit, 1=one-before)";
+
+    __message "SLOTR = 0x", slotr:%X;
+    __message "  SLOTSZ  =", ((slotr>>6)&3):%d,      " (0=data-size, 1=16bit, 2=32bit)";
+    __message "  NBSLOT  =", ((slotr>>8)&0xF):%d,    " (slot count-1, want 0)";
+    __message "  SLOTEN  =", ((slotr>>16)&0xFFFF):%X," (active slots mask, want 0x0001)";
+
+    __message "SR    = 0x", sr:%X;
+    __message "  OVRUDR  =", (sr&1):%d,              " (overrun/underrun — want 0)";
+    __message "  MUTEDET =", ((sr>>1)&1):%d;
+    __message "  WCKCFG  =", ((sr>>2)&1):%d,         " (wrong clock config — want 0)";
+    __message "  FREQ    =", ((sr>>3)&1):%d,          " (FIFO request)";
+    __message "  LFSDET  =", ((sr>>6)&1):%d,         " (late FS detect — want 0)";
+    __message "  AFSDET  =", ((sr>>5)&1):%d,         " (anticipated FS detect — want 0)";
+    __message "  FLVL    =", ((sr>>16)&7):%d;
+
+    __message "PDMCR = 0x", pdmcr:%X;
+    __message "  PDMEN   =", (pdmcr&1):%d,            " (PDM enable — want 1)";
+    __message "  MICNBR  =", ((pdmcr>>4)&3):%d,      " (mic pairs-1: 0=1pair, want 0)";
+    __message "  CKEN1   =", ((pdmcr>>8)&1):%d,      " (clock1 enable — want 1)";
+
+    /* ── BDMA Channel 1 ─────────────────────────────────────────── */
+    bdma_ccr   = __readMemory32(0x5802541C, "Memory");
+    bdma_cndtr = __readMemory32(0x58025420, "Memory");
+    bdma_cpar  = __readMemory32(0x58025424, "Memory");
+    bdma_cmar  = __readMemory32(0x58025428, "Memory");
+
+    __message "";
+    __message "=== BDMA_Channel1 ===";
+    __message "CCR   = 0x", bdma_ccr:%X;
+    __message "  EN      =", (bdma_ccr&1):%d,         " (want 1 during recording)";
+    __message "  DIR     =", ((bdma_ccr>>4)&1):%d,    " (want 0=periph-to-mem)";
+    __message "  CIRC    =", ((bdma_ccr>>5)&1):%d,    " (want 1=circular)";
+    __message "  PSIZE   =", ((bdma_ccr>>8)&3):%d,    " (want 1=16-bit halfword)";
+    __message "  MSIZE   =", ((bdma_ccr>>10)&3):%d,   " (want 1=16-bit halfword)";
+    __message "CNDTR =", bdma_cndtr:%d,               " remaining transfers";
+    __message "CPAR  = 0x", bdma_cpar:%X,             "  (SAI4 DR: expect 0x58005420)";
+    __message "CMAR  = 0x", bdma_cmar:%X,             "  (g_PdmBuf: expect 0x38000000)";
+}

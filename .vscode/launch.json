@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "iar-cspy",
+            "request": "launch",
+            "name": "IAR Debug CM7 (RTOS Aware)",
+            "project": "${workspaceFolder}\\EWARM\\STM32H747I-DISCO.ewp",
+            "configuration": "STM32H747I-DISCO_CM7",
+            "workbenchPath": "c:\\TouchGFXProjects\\IAR 9.70.2\\ewarm-9.70.2",
+            "stopOnEntry": true,
+            "macro": "${workspaceFolder}\\EWARM\\debug_breakpoints.mac",
+            "driver": "JLink",
+            "driverOptions": [
+                "--endian=little",
+                "--cpu=Cortex-M7",
+                "--fpu=VFPv5_D16",
+                "--device=STM32H747XI_M7",
+                "--drv_communication=USB0",
+                "--drv_interface=SWD",
+                "--drv_interface_speed=auto",
+                "--jlink_initial_speed=1000",
+                "--jlink_reset_strategy=0,0",
+                "--drv_catch_exceptions=0x000",
+                "--drv_swo_clock_setup=400000000,1,2000000",
+                "--semihosting"
+            ],
+            "deviceMacros": [
+                "c:\\TouchGFXProjects\\IAR 9.70.2\\ewarm-9.70.2\\arm\\config\\debugger\\ST\\STM32H7xx.dmac",
+                "c:\\TouchGFXProjects\\IAR 9.70.2\\ewarm-9.70.2\\arm\\config\\debugger\\ST\\STM32H7x5_M7.dmac",
+                "c:\\TouchGFXProjects\\IAR 9.70.2\\ewarm-9.70.2\\arm\\config\\debugger\\ST\\STM32H7x5_DBG.dmac",
+                "c:\\TouchGFXProjects\\IAR 9.70.2\\ewarm-9.70.2\\arm\\config\\debugger\\ST\\STM32H7xx_OB.dmac",
+                "c:\\TouchGFXProjects\\IAR 9.70.2\\ewarm-9.70.2\\arm\\config\\debugger\\ST\\STM32H7xx_TRACE.dmac"
+            ]
+        }
+    ]
+}

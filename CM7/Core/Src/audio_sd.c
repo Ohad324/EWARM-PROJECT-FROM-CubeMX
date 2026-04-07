@@ -102,12 +102,23 @@ static bool      s_sdReady          = false;
 static bool      s_fileOpen         = false;
 static volatile bool s_sdBusy       = false;  /* true while writing or streaming — HealthMonTask skips f_getfree */
 
-/* ── PCM conversion scratch buffer ────────────────────────────────────────────
- * Placed in AXI SRAM (.sram_bss) so SDMMC IDMA can access it.
- * static = not on task stack; aligned(32) for D-Cache operations.
+/* ── Double-buffer write pool (Ping-Pong) ────────────────────────────────────
+ * Two 4 KB sector-aligned buffers.  AudioSD_WriteFrame() fills s_wbuf[s_wFill]
+ * sample-by-sample; when it reaches WBUF_BYTES it calls f_write on that buffer
+ * and switches to the other one.  Writing always happens in full 4 KB units →
+ * no SD-card Read-Modify-Write → no bus stall → no audio glitch.
+ *
+ * Placement: AXI SRAM (.sram_bss) — accessible by SDMMC IDMA.
+ * 32-byte alignment: required for D-Cache clean/invalidate on H7.
+ * WBUF_BYTES must be a multiple of (AUDIO_SD_SAMPLES_PER_FRAME × 2):
+ *   4096 / (512 × 2) = 4 frames per buffer — guaranteed no split.
  * ─────────────────────────────────────────────────────────────────────────── */
-static int16_t s_pcmScratch[AUDIO_SD_SAMPLES_PER_FRAME]
-    __attribute__((aligned(32)));
+#define WBUF_BYTES    4096u
+#define WBUF_SAMPLES  (WBUF_BYTES / sizeof(int16_t))   /* 2048 int16 per buffer */
+
+static int16_t  s_wbuf[2][WBUF_SAMPLES] __attribute__((aligned(32)));
+static uint32_t s_wbufFill    = 0u;   /* bytes used in s_wbuf[s_wFillIdx] */
+static uint8_t  s_wFillIdx    = 0u;   /* which buffer is being filled (0 or 1) */
 
 /* SDMMC IDMA sector buffer — must be 4-byte aligned, in DMA-accessible RAM.
  * Used by the diskio callbacks below. */
@@ -151,46 +162,10 @@ bool AudioSD_Init(void)
 
     SDMMC1_Peripheral_Init();
 
-    /* Always unmount before mounting — forces FatFs to call disk_initialize()
-     * on the subsequent mount, regardless of any stale state left by USB MSC
-     * raw block access. Per UM1721: f_mount(NULL) is the correct way to
-     * invalidate the filesystem object before a fresh mount. */
-    f_mount(NULL, "0:", 0);
-
-    /* Mount the FatFS volume */
-    FRESULT res = f_mount(&s_fatfs, "0:", 1 /* mount now */);
-    /* Verify root directory is accessible even if mount succeeded.
-     * After USB MSC raw access, f_mount returns FR_OK but the directory
-     * structure may be corrupted — f_stat on root detects this. */
-    FILINFO fno;
-    if (res == FR_OK)
-    {
-        FRESULT rstat = f_stat(".", &fno);
-        if (rstat != FR_OK)
-        {
-            SD_LOG("ROOT_CORRUPT:%d — forcing reformat", (int)rstat);
-            res = FR_NO_FILESYSTEM; /* fall through to format path */
-        }
-    }
-
-    if (res != FR_OK)
-    {
-        SD_LOG("MOUNT_FAIL:%d — formatting as exFAT...", (int)res);
-        static uint8_t work[4096];
-        static const MKFS_PARM opt = { FM_EXFAT, 0, 0, 0, 0x20000 }; /* 128KB clusters */
-        res = f_mkfs("0:", &opt, work, sizeof(work));
-        if (res != FR_OK) {
-            SD_LOG("FORMAT_FAIL:%d", (int)res);
-            return false;
-        }
-        SD_LOG("FORMAT_OK — remounting...");
-        res = f_mount(&s_fatfs, "0:", 1);
-        if (res != FR_OK) {
-            SD_LOG("REMOUNT_FAIL:%d", (int)res);
-            return false;
-        }
-        SD_LOG("FORMAT+MOUNT OK");
-    }
+    /* Register filesystem object — deferred mount (opt=0) per UM1722 / FatFS docs.
+     * disk_initialize + BPB read are deferred until the first file operation
+     * (f_open in SDWriteTask).  f_mount(opt=0) always returns FR_OK here. */
+    f_mount(&s_fatfs, "0:", 0);
 
     s_sdReady = true;
     SD_LOG("OK");
@@ -260,6 +235,8 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
     f_write(&s_wavFile, &hdr, sizeof(hdr), &bw);
 
     s_dataBytesWritten = 0;
+    s_wbufFill         = 0u;   /* reset ping-pong state for new recording */
+    s_wFillIdx         = 0u;
     s_fileOpen         = true;
 
     if (filename_out && maxLen > 0)
@@ -272,34 +249,37 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
 }
 
 /* ── AudioSD_WriteFrame ───────────────────────────────────────────────────────
- * Convert nSamples int32 DFSDM words to int16 PCM (right-shift by 8)
- * and append to the open WAV file.
+ * Convert nSamples int32 DFSDM words to int16 PCM and accumulate in the
+ * ping-pong write buffer.  f_write is only called when a full WBUF_BYTES (4 KB)
+ * sector is ready — eliminating SD card Read-Modify-Write and the bus stalls
+ * that caused audio glitches in the previous 1 KB per-frame write approach.
  *
- * The same right-shift-8 used in SendPCMFrame() is applied here, keeping
- * the SD and UART streams identical.
+ * WBUF_BYTES (4096) is a multiple of (AUDIO_SD_SAMPLES_PER_FRAME × 2 = 1024),
+ * so a frame will never split across buffer boundaries.
  * ─────────────────────────────────────────────────────────────────────────── */
 void AudioSD_WriteFrame(const int32_t *src32, uint32_t nSamples)
 {
     if (!s_fileOpen) return;
 
-    /* Convert int32 DFSDM samples to int16 PCM */
+    /* Convert int32 DFSDM → int16 PCM directly into the fill buffer */
+    int16_t *dst = &s_wbuf[s_wFillIdx][s_wbufFill / sizeof(int16_t)];
     for (uint32_t i = 0; i < nSamples; i++)
-    {
-        s_pcmScratch[i] = (int16_t)(src32[i] >> 8);
-    }
+        dst[i] = (int16_t)(src32[i] >> 8);
 
-    UINT bw;
-    uint16_t byteLen = (uint16_t)(nSamples * sizeof(int16_t));
-    FRESULT  res     = f_write(&s_wavFile, s_pcmScratch, byteLen, &bw);
+    s_wbufFill += nSamples * sizeof(int16_t);   /* += 1024 bytes */
 
-    if (res == FR_OK && bw == byteLen)
+    /* Full 4 KB sector ready — write it, then ping-pong to the other buffer */
+    if (s_wbufFill >= WBUF_BYTES)
     {
-        s_dataBytesWritten += byteLen;
-    }
-    else
-    {
-        /* Disk full or write error — log but don't abort; next frame will retry */
-        SD_LOG("WRITE_ERR");
+        UINT    bw;
+        FRESULT res = f_write(&s_wavFile, s_wbuf[s_wFillIdx], WBUF_BYTES, &bw);
+        if (res == FR_OK && bw == WBUF_BYTES)
+            s_dataBytesWritten += WBUF_BYTES;
+        else
+            SD_LOG("WRITE_ERR buf=%u", s_wFillIdx);
+
+        s_wFillIdx  ^= 1u;   /* 0 → 1 → 0 → ... */
+        s_wbufFill   = 0u;
     }
 }
 
@@ -312,6 +292,18 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
     {
         SD_LOG("NO_FILE_OPEN");
         return false;
+    }
+
+    /* Flush remaining PCM in write buffer (0..3 partial frames at stop time) */
+    if (s_wbufFill > 0u)
+    {
+        UINT bw;
+        FRESULT fres = f_write(&s_wavFile, s_wbuf[s_wFillIdx], s_wbufFill, &bw);
+        if (fres == FR_OK && bw == s_wbufFill)
+            s_dataBytesWritten += s_wbufFill;
+        else
+            SD_LOG("FLUSH_ERR remaining=%lu", (unsigned long)s_wbufFill);
+        s_wbufFill = 0u;
     }
 
     /* Seek back to byte 0 and overwrite the placeholder header */
@@ -329,8 +321,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
     UINT bw;
     f_write(&s_wavFile, &hdr, sizeof(hdr), &bw);
 
-    f_sync(&s_wavFile);  /* flush write-back cache to SD card */
-    f_close(&s_wavFile);
+    f_close(&s_wavFile);  /* f_close flushes + finalises directory entry — f_sync before close is redundant */
     s_fileOpen = false;
 
     if (filename_out && maxLen > 0)
@@ -498,17 +489,6 @@ void AudioSD_NotifyReady(void)
     s_audioReady = true;
 }
 
-/* ── AudioSD_DeInit ───────────────────────────────────────────────────────────
- * Release SDMMC1 so USB MSC can init its own handle on the same peripheral.
- * ─────────────────────────────────────────────────────────────────────────── */
-void AudioSD_DeInit(void)
-{
-    f_mount(NULL, "0:", 0);          /* unmount FatFS volume */
-    HAL_SD_DeInit(&s_hsd1);
-    s_sdReady = false;
-    SD_LOG("[SD] DeInit — SDMMC1 released for USB MSC");
-}
-
 /* ── AudioSD_Remount ──────────────────────────────────────────────────────────
  * Recover the SDMMC peripheral and re-mount FatFS.
  *
@@ -546,6 +526,33 @@ bool AudioSD_Remount(void)
     s_sdReady = (fr == FR_OK);
     SD_LOG("Remount result: fr=%d sdReady=%d", (int)fr, (int)s_sdReady);
     return s_sdReady;
+}
+
+/* ── AudioSD_Format ───────────────────────────────────────────────────────────
+ * Format the SD card as exFAT and immediately mount the new volume.
+ * Called from SDWriteTask when f_open returns FR_NO_FILESYSTEM — meaning the
+ * card is blank or has an unrecognised format.
+ * Returns true if the volume is mounted and ready for file operations.
+ * ─────────────────────────────────────────────────────────────────────────── */
+bool AudioSD_Format(void)
+{
+    SD_LOG("FORMAT — card has no filesystem, formatting as exFAT...");
+    static uint8_t work[4096];
+    static const MKFS_PARM opt = { FM_EXFAT, 0, 0, 0, 0x20000 }; /* 128 KB clusters */
+    FRESULT res = f_mkfs("0:", &opt, work, sizeof(work));
+    if (res != FR_OK) {
+        SD_LOG("FORMAT_FAIL:%d", (int)res);
+        return false;
+    }
+    /* Mount immediately after format — filesystem was just created, opt=1 is safe */
+    res = f_mount(&s_fatfs, "0:", 1);
+    if (res != FR_OK) {
+        SD_LOG("FORMAT_REMOUNT_FAIL:%d", (int)res);
+        return false;
+    }
+    s_sdReady = true;
+    SD_LOG("FORMAT+MOUNT OK");
+    return true;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

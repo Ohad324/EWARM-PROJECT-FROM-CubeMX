@@ -1,0 +1,15 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+// DO NOT reset — attach to running system
+go
+
+// Check system is alive — read memory twice to confirm it changes
+mem32 0x24056E24 1
+mem32 0x24056E00 4
+
+sleep 500
+mem32 0x24056E24 1
+
+exit

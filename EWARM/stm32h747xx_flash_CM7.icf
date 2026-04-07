@@ -10,6 +10,8 @@ define symbol __ICFEDIT_region_RAM_start__     = 0x24000000;
 define symbol __ICFEDIT_region_RAM_end__       = 0x2407FFFF;
 define symbol __ICFEDIT_region_ITCMRAM_start__ = 0x00000000;
 define symbol __ICFEDIT_region_ITCMRAM_end__   = 0x0000FFFF;
+define symbol __ICFEDIT_region_SRAM1_start__   = 0x30000000;
+define symbol __ICFEDIT_region_SRAM1_end__     = 0x3001FFFF;
 /*-Sizes-*/
 define symbol __ICFEDIT_size_cstack__ = 0x2000;  /* doubled: was 4K, IAR reported 96% used */
 define symbol __ICFEDIT_size_heap__   = 0x1000;
@@ -25,6 +27,7 @@ define memory mem with size = 4G;
 define region ROM_region      = mem:[from __ICFEDIT_region_ROM_start__   to __ICFEDIT_region_ROM_end__];
 define region RAM_region      = mem:[from __ICFEDIT_region_RAM_start__   to __ICFEDIT_region_RAM_end__];
 define region ITCMRAM_region  = mem:[from __ICFEDIT_region_ITCMRAM_start__ to __ICFEDIT_region_ITCMRAM_end__];
+define region SRAM1_region    = mem:[from __ICFEDIT_region_SRAM1_start__ to __ICFEDIT_region_SRAM1_end__];
 
 define region SDRAM_region    = mem:[from __ICFEDIT_region_SDRAM_start__      to __ICFEDIT_region_SDRAM_end__];
 define region QSPI_region     = mem:[from __ICFEDIT_region_QSPI_start__    to __ICFEDIT_region_QSPI_end__];
@@ -47,3 +50,4 @@ place in RAM_region   { readwrite,
 place in QSPI_region   { section ExtFlashSection };
 place in SDRAM_region  { first section TouchGFX_Framebuffer, section Video_RGB_Buffer,
                          section .sdram_bss };
+
