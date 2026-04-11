@@ -64,16 +64,8 @@ extern int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LCD_BL_Pin GPIO_PIN_12
-#define LCD_BL_GPIO_Port GPIOJ
 #define LCD_RESET_Pin GPIO_PIN_3
 #define LCD_RESET_GPIO_Port GPIOG
-#define MCU_ACTIVE_Pin GPIO_PIN_8
-#define MCU_ACTIVE_GPIO_Port GPIOF
-#define FRAME_RATE_Pin GPIO_PIN_9
-#define FRAME_RATE_GPIO_Port GPIOJ
-#define RENDER_TIME_Pin GPIO_PIN_8
-#define RENDER_TIME_GPIO_Port GPIOJ
 #define VSYNC_FREQ_Pin GPIO_PIN_3
 #define VSYNC_FREQ_GPIO_Port GPIOJ
 

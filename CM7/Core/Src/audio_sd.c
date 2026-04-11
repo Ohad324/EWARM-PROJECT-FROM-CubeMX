@@ -112,6 +112,13 @@ static volatile bool s_sdBusy       = false;  /* true while writing or streaming
  * 32-byte alignment: required for D-Cache clean/invalidate on H7.
  * WBUF_BYTES must be a multiple of (AUDIO_SD_SAMPLES_PER_FRAME × 2):
  *   4096 / (512 × 2) = 4 frames per buffer — guaranteed no split.
+ *
+ * D-Cache safety: s_wbuf is in AXI SRAM which is M7 D-Cache cacheable.
+ * s_wbuf is NEVER passed directly to SDMMC IDMA.  It flows:
+ *   s_wbuf → f_write() → FatFS → disk_write() → s_sectorBuf (with SCB_CleanDCache).
+ * The D-Cache flush is performed on s_sectorBuf in disk_write(), not here.
+ * If the data path ever changes to bypass FatFS, add SCB_CleanDCache_by_Addr()
+ * on s_wbuf before any direct DMA operation.
  * ─────────────────────────────────────────────────────────────────────────── */
 #define WBUF_BYTES    4096u
 #define WBUF_SAMPLES  (WBUF_BYTES / sizeof(int16_t))   /* 2048 int16 per buffer */

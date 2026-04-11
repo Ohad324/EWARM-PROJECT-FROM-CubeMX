@@ -365,9 +365,7 @@ void vPortEndScheduler( void )
 
 void vPortEnterCritical( void )
 {
-    
-  
-  portDISABLE_INTERRUPTS();
+    portDISABLE_INTERRUPTS();
     uxCriticalNesting++;
 
     /* This is not the interrupt safe version of the enter critical function so

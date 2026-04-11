@@ -14,7 +14,7 @@
 #define FF_USE_FIND      0
 #define FF_USE_MKFS      1   /* Enable f_mkfs() */
 #define FF_USE_FASTSEEK  1
-#define FF_USE_EXPAND    0
+#define FF_USE_EXPAND    1   /* Enable f_expand() — contiguous cluster pre-allocation (no-beep strategy) */
 #define FF_USE_CHMOD     0
 #define FF_USE_LABEL     0
 #define FF_USE_FORWARD   0

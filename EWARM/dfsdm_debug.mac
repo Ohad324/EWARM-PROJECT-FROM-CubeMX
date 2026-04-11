@@ -1,0 +1,89 @@
+/*
+ * dfsdm_debug.mac — 6 breakpoints tracing the DFSDM+DMA pipeline
+ *
+ * BP1  voice_recorder.c:242   DFSDM_HW_Init() called at boot
+ * BP2  voice_recorder.c:356   RDMAEN force-set, just before FilterRegularStart_DMA
+ * BP3  voice_recorder.c:285   Half-complete DMA callback fired
+ * BP4  voice_recorder.c:296   Full-complete DMA callback fired
+ * BP5  voice_recorder.c:315   Error/overrun callback fired
+ * BP6  voice_recorder.c:388   Drain loop entered — DMA started OK
+ *
+ * Focus: after BP6, check FLTCR1 bits RSWSTART(2) RDMAEN(1) DFEN(0).
+ *        If RSWSTART=0 → HAL_DFSDM_FilterRegularStart_DMA did not kick conversion.
+ *        If BP3/BP4 never fire → DFSDM produces no data despite DMA armed.
+ */
+
+execUserSetup()
+{
+    __var bp1, bp2, bp3, bp4, bp5, bp6;
+
+    /* BP1 — DFSDM_HW_Init() entry
+     * Fires once at boot. Confirms init path is reached. */
+    bp1 = __setCodeBreak("{voice_recorder.c}.242", 0, "1", "TRUE",
+        "__message \"\\n[BP1] DFSDM_HW_Init() entered\\n\"");
+
+    /* BP2 — RDMAEN force line, just before HAL_DFSDM_FilterRegularStart_DMA
+     * Read FLTCR1 BEFORE the force — shows what HAL left it as after FilterInit.
+     * Then the code sets RDMAEN, then calls FilterRegularStart_DMA. */
+    bp2 = __setCodeBreak("{voice_recorder.c}.356", 0, "1", "TRUE",
+        "__message \"\\n[BP2] About to force RDMAEN\\n\""
+        " __message \"  FLTCR1 BEFORE force = 0x\", __readMemory32(0x40017100,\"Memory\"):%X, \"\\n\""
+        " __message \"    DFEN(bit0)    = \", (__readMemory32(0x40017100,\"Memory\")&1):%d, \"\\n\""
+        " __message \"    RDMAEN(bit1)  = \", ((__readMemory32(0x40017100,\"Memory\")>>1)&1):%d, \" (expect 0 = HAL bug confirmed)\\n\""
+        " __message \"    RCONT(bit18)  = \", ((__readMemory32(0x40017100,\"Memory\")>>18)&1):%d, \"\\n\""
+        " __message \"    FAST(bit29)   = \", ((__readMemory32(0x40017100,\"Memory\")>>29)&1):%d, \"\\n\""
+        " __message \"  DMA1_St1 EN(before start) = \", (__readMemory32(0x40020028,\"Memory\")&1):%d, \"\\n\"");
+
+    /* BP3 — HalfCplt ISR callback
+     * If this fires → DFSDM + DMA are both working.
+     * Shows first 4 raw DFSDM output values — non-zero = mic data arriving. */
+    bp3 = __setCodeBreak("{voice_recorder.c}.285", 0, "1", "TRUE",
+        "__message \"\\n[BP3] *** HalfCplt callback fired *** g_DmaCallCount=\", g_DmaCallCount:%d, \"\\n\""
+        " __message \"  g_DfsdmBuf[0..3] = \", g_DfsdmBuf[0]:%d, \" \", g_DfsdmBuf[1]:%d, \" \", g_DfsdmBuf[2]:%d, \" \", g_DfsdmBuf[3]:%d, \"\\n\""
+        " __message \"  FLTISR=0x\", __readMemory32(0x40017118,\"Memory\"):%X, \"  ROVRF(bit3)=\", ((__readMemory32(0x40017118,\"Memory\")>>3)&1):%d, \"\\n\"");
+
+    /* BP4 — FullCplt ISR callback
+     * Should fire immediately after BP3 (other half). */
+    bp4 = __setCodeBreak("{voice_recorder.c}.296", 0, "1", "TRUE",
+        "__message \"\\n[BP4] *** FullCplt callback fired *** g_DmaCallCount=\", g_DmaCallCount:%d, \"  g_SampleCount=\", g_SampleCount:%d, \"\\n\""
+        " __message \"  g_DfsdmBuf[16..19] = \", g_DfsdmBuf[16]:%d, \" \", g_DfsdmBuf[17]:%d, \" \", g_DfsdmBuf[18]:%d, \" \", g_DfsdmBuf[19]:%d, \"\\n\"");
+
+    /* BP5 — DFSDM hardware overrun error callback
+     * Should NEVER fire. If it does → DMA too slow or OSR wrong. */
+    bp5 = __setCodeBreak("{voice_recorder.c}.315", 0, "1", "TRUE",
+        "__message \"\\n[BP5] *** DFSDM OVERRUN ERROR ***  dfsdm_overruns=\", g_AudioHealth.dfsdm_overruns:%d, \"\\n\""
+        " __message \"  FLTISR=0x\", __readMemory32(0x40017118,\"Memory\"):%X, \"\\n\""
+        " __message \"  DMA1_St1 NDTR=\", __readMemory32(0x4002002C,\"Memory\"):%d, \"\\n\"");
+
+    /* BP6 — Drain loop entered (line 388 = TickType_t ledToggle = ...)
+     * HAL_DFSDM_FilterRegularStart_DMA returned HAL_OK.
+     * Read FLTCR1 AFTER the start call — RSWSTART must be 1 for conversion to run.
+     * NDTR should be < 32 (DMA already moving) or still 32 (DMA stalled). */
+    bp6 = __setCodeBreak("{voice_recorder.c}.388", 0, "1", "TRUE",
+        "__message \"\\n[BP6] Drain loop entered\\n\""
+        " __message \"  FLTCR1 AFTER start = 0x\", __readMemory32(0x40017100,\"Memory\"):%X, \"\\n\""
+        " __message \"    DFEN(bit0)     = \", (__readMemory32(0x40017100,\"Memory\")&1):%d,          \" (want 1)\\n\""
+        " __message \"    RDMAEN(bit1)   = \", ((__readMemory32(0x40017100,\"Memory\")>>1)&1):%d,     \" (want 1)\\n\""
+        " __message \"    RSWSTART(bit2) = \", ((__readMemory32(0x40017100,\"Memory\")>>2)&1):%d,     \" (want 1 — conversion started)\\n\""
+        " __message \"    RCONT(bit18)   = \", ((__readMemory32(0x40017100,\"Memory\")>>18)&1):%d,    \" (want 1)\\n\""
+        " __message \"    FAST(bit29)    = \", ((__readMemory32(0x40017100,\"Memory\")>>29)&1):%d,    \" (want 1)\\n\""
+        " __message \"  FLTISR = 0x\",         __readMemory32(0x40017118,\"Memory\"):%X,              \"  REOCF(bit0)=\", (__readMemory32(0x40017118,\"Memory\")&1):%d, \"\\n\""
+        " __message \"  CHCFGR1= 0x\",         __readMemory32(0x40017000,\"Memory\"):%X,              \"  CHEN(bit7)=\", ((__readMemory32(0x40017000,\"Memory\")>>7)&1):%d, \"\\n\""
+        " __message \"  DMA1_St1 CR=0x\",       __readMemory32(0x40020028,\"Memory\"):%X,             \"  EN(bit0)=\", (__readMemory32(0x40020028,\"Memory\")&1):%d, \"\\n\""
+        " __message \"  DMA1_St1 NDTR=\",        __readMemory32(0x4002002C,\"Memory\"):%d,             \" (32=stalled, <32=DMA moving)\\n\""
+        " __message \"  DMA1_St1 M0AR=0x\",      __readMemory32(0x40020034,\"Memory\"):%X,            \" (want 0x30000000)\\n\""
+        " __message \"  DIAGNOSIS:\\n\""
+        " __message \"    RSWSTART=0 → FilterRegularStart_DMA silently returned HAL_ERROR\\n\""
+        " __message \"    RSWSTART=1 + NDTR=32 → DFSDM clock not reaching mic (GPIO/RCC issue)\\n\""
+        " __message \"    RSWSTART=1 + NDTR<32 → DMA moving, wait for BP3/BP4\\n\"");
+
+    __message "dfsdm_debug.mac loaded — 6 breakpoints armed:\n";
+    __message "  BP1 line 242  — DFSDM_HW_Init() entry (fires at boot)\n";
+    __message "  BP2 line 356  — RDMAEN force, reads FLTCR1 BEFORE start\n";
+    __message "  BP3 line 285  — HalfCplt callback (DFSDM+DMA working)\n";
+    __message "  BP4 line 296  — FullCplt callback\n";
+    __message "  BP5 line 315  — Error/overrun callback (should never fire)\n";
+    __message "  BP6 line 388  — Drain loop, reads FLTCR1+NDTR AFTER start\n";
+    __message "Press blue button. Watch for BP6 then BP3/BP4.\n";
+    __message "Key question: BP6 RSWSTART=? and NDTR=?\n";
+}

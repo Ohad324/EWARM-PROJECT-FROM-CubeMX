@@ -71,6 +71,9 @@
 
 CRC_HandleTypeDef hcrc;
 
+DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
+DFSDM_Channel_HandleTypeDef hdfsdm1_channel3;
+
 DMA2D_HandleTypeDef hdma2d;
 
 DSI_HandleTypeDef hdsi;
@@ -83,20 +86,22 @@ LTDC_HandleTypeDef hltdc;
 
 QSPI_HandleTypeDef hqspi;
 
-SDRAM_HandleTypeDef hsdram1;
+SAI_HandleTypeDef hsai_BlockA4;
+
+UART_HandleTypeDef huart8;
 
 /* Definitions for TouchGFXTask */
 osThreadId_t TouchGFXTaskHandle;
 const osThreadAttr_t TouchGFXTask_attributes = {
   .name = "TouchGFXTask",
-  .stack_size = 4096 * 4,    /* reverted: TouchGFXTask was not the culprit (crash = UARTReceiveTask) */
+  .stack_size = 3048 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for videoTask */
 osThreadId_t videoTaskHandle;
 const osThreadAttr_t videoTask_attributes = {
   .name = "videoTask",
-  .stack_size = 1000 * 4,    /* reverted: videoTask stays blocked on semaphore (no VideoWidget active) */
+  .stack_size = 1000 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* USER CODE BEGIN PV */
@@ -164,13 +169,15 @@ void SystemClock_Config(void);
 static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_MDMA_Init(void);
-static void MX_FMC_Init(void);
 static void MX_QUADSPI_Init(void);
 static void MX_DMA2D_Init(void);
 static void MX_DSIHOST_DSI_Init(void);
 static void MX_LTDC_Init(void);
 static void MX_CRC_Init(void);
 static void MX_JPEG_Init(void);
+static void MX_SAI4_Init(void);
+static void MX_UART8_Init(void);
+static void MX_DFSDM1_Init(void);
 void TouchGFX_Task(void *argument);
 extern void videoTaskFunc(void *argument);
 
@@ -188,7 +195,6 @@ static void UARTReceiveTask(void *argument);
   * @brief  The application entry point.
   * @retval int
   */
-
 int main(void)
 {
 
@@ -219,6 +225,9 @@ int main(void)
   (void)timeout;
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
+
+  /* Configure The Vector Table address */
+  SCB->VTOR = 0x08100000;
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
@@ -254,7 +263,6 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_MDMA_Init();
-  MX_FMC_Init();
   MX_QUADSPI_Init();
   MX_DMA2D_Init();
   MX_DSIHOST_DSI_Init();
@@ -262,6 +270,9 @@ Error_Handler();
   MX_CRC_Init();
   MX_JPEG_Init();
   MX_LIBJPEG_Init();
+  MX_SAI4_Init();
+  MX_UART8_Init();
+  MX_DFSDM1_Init();
   MX_TouchGFX_Init();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
@@ -384,13 +395,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 5;
-  RCC_OscInitStruct.PLL.PLLN = 160;
+  RCC_OscInitStruct.PLL.PLLM = 2;
+  RCC_OscInitStruct.PLL.PLLN = 12;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 1;
   RCC_OscInitStruct.PLL.PLLR = 2;
-  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
-  RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+  RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_3;
+  RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOMEDIUM;
   RCC_OscInitStruct.PLL.PLLFRACN = 0;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -404,13 +415,13 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
-  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV1;
+  RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -445,6 +456,59 @@ static void MX_CRC_Init(void)
   /* USER CODE BEGIN CRC_Init 2 */
 
   /* USER CODE END CRC_Init 2 */
+
+}
+
+/**
+  * @brief DFSDM1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_DFSDM1_Init(void)
+{
+
+  /* USER CODE BEGIN DFSDM1_Init 0 */
+
+  /* USER CODE END DFSDM1_Init 0 */
+
+  /* USER CODE BEGIN DFSDM1_Init 1 */
+
+  /* USER CODE END DFSDM1_Init 1 */
+  hdfsdm1_filter0.Instance = DFSDM1_Filter0;
+  hdfsdm1_filter0.Init.RegularParam.Trigger = DFSDM_FILTER_SW_TRIGGER;
+  hdfsdm1_filter0.Init.RegularParam.FastMode = DISABLE;
+  hdfsdm1_filter0.Init.RegularParam.DmaMode = DISABLE;
+  hdfsdm1_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_FASTSINC_ORDER;
+  hdfsdm1_filter0.Init.FilterParam.Oversampling = 128;
+  hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1;
+  if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  hdfsdm1_channel3.Instance = DFSDM1_Channel3;
+  hdfsdm1_channel3.Init.OutputClock.Activation = ENABLE;
+  hdfsdm1_channel3.Init.OutputClock.Selection = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
+  hdfsdm1_channel3.Init.OutputClock.Divider = 2;
+  hdfsdm1_channel3.Init.Input.Multiplexer = DFSDM_CHANNEL_EXTERNAL_INPUTS;
+  hdfsdm1_channel3.Init.Input.DataPacking = DFSDM_CHANNEL_STANDARD_MODE;
+  hdfsdm1_channel3.Init.Input.Pins = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
+  hdfsdm1_channel3.Init.SerialInterface.Type = DFSDM_CHANNEL_SPI_RISING;
+  hdfsdm1_channel3.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
+  hdfsdm1_channel3.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
+  hdfsdm1_channel3.Init.Awd.Oversampling = 1;
+  hdfsdm1_channel3.Init.Offset = 0;
+  hdfsdm1_channel3.Init.RightBitShift = 0x11;
+  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_3, DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN DFSDM1_Init 2 */
+
+  /* USER CODE END DFSDM1_Init 2 */
 
 }
 
@@ -755,6 +819,105 @@ static void MX_QUADSPI_Init(void)
 }
 
 /**
+  * @brief SAI4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SAI4_Init(void)
+{
+
+  /* USER CODE BEGIN SAI4_Init 0 */
+
+  /* USER CODE END SAI4_Init 0 */
+
+  /* USER CODE BEGIN SAI4_Init 1 */
+
+  /* USER CODE END SAI4_Init 1 */
+  hsai_BlockA4.Instance = SAI4_Block_A;
+  hsai_BlockA4.Init.Protocol = SAI_FREE_PROTOCOL;
+  hsai_BlockA4.Init.AudioMode = SAI_MODEMASTER_RX;
+  hsai_BlockA4.Init.DataSize = SAI_DATASIZE_8;
+  hsai_BlockA4.Init.FirstBit = SAI_FIRSTBIT_MSB;
+  hsai_BlockA4.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
+  hsai_BlockA4.Init.Synchro = SAI_ASYNCHRONOUS;
+  hsai_BlockA4.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
+  hsai_BlockA4.Init.NoDivider = SAI_MCK_OVERSAMPLING_DISABLE;
+  hsai_BlockA4.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
+  hsai_BlockA4.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
+  hsai_BlockA4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_192K;
+  hsai_BlockA4.Init.MonoStereoMode = SAI_STEREOMODE;
+  hsai_BlockA4.Init.CompandingMode = SAI_NOCOMPANDING;
+  hsai_BlockA4.Init.PdmInit.Activation = ENABLE;
+  hsai_BlockA4.Init.PdmInit.MicPairsNbr = 1;
+  hsai_BlockA4.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
+  hsai_BlockA4.FrameInit.FrameLength = 8;
+  hsai_BlockA4.FrameInit.ActiveFrameLength = 1;
+  hsai_BlockA4.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
+  hsai_BlockA4.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
+  hsai_BlockA4.FrameInit.FSOffset = SAI_FS_FIRSTBIT;
+  hsai_BlockA4.SlotInit.FirstBitOffset = 0;
+  hsai_BlockA4.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
+  hsai_BlockA4.SlotInit.SlotNumber = 1;
+  hsai_BlockA4.SlotInit.SlotActive = 0x00000000;
+  if (HAL_SAI_Init(&hsai_BlockA4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SAI4_Init 2 */
+
+  /* USER CODE END SAI4_Init 2 */
+
+}
+
+/**
+  * @brief UART8 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_UART8_Init(void)
+{
+
+  /* USER CODE BEGIN UART8_Init 0 */
+
+  /* USER CODE END UART8_Init 0 */
+
+  /* USER CODE BEGIN UART8_Init 1 */
+
+  /* USER CODE END UART8_Init 1 */
+  huart8.Instance = UART8;
+  huart8.Init.BaudRate = 921600;
+  huart8.Init.WordLength = UART_WORDLENGTH_8B;
+  huart8.Init.StopBits = UART_STOPBITS_1;
+  huart8.Init.Parity = UART_PARITY_NONE;
+  huart8.Init.Mode = UART_MODE_TX_RX;
+  huart8.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart8.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart8.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart8.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart8.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart8, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart8, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN UART8_Init 2 */
+
+  /* USER CODE END UART8_Init 2 */
+
+}
+
+/**
   * Enable MDMA controller clock
   */
 static void MX_MDMA_Init(void)
@@ -769,57 +932,6 @@ static void MX_MDMA_Init(void)
   HAL_NVIC_SetPriority(MDMA_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(MDMA_IRQn);
 
-}
-
-/* FMC initialization function */
-void MX_FMC_Init(void)
-{
-
-  /* USER CODE BEGIN FMC_Init 0 */
-
-  /* USER CODE END FMC_Init 0 */
-
-  FMC_SDRAM_TimingTypeDef SdramTiming = {0};
-
-  /* USER CODE BEGIN FMC_Init 1 */
-  FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
-  /* USER CODE END FMC_Init 1 */
-
-  /** Perform the SDRAM1 memory initialization sequence
-  */
-  hsdram1.Instance = FMC_SDRAM_DEVICE;
-  /* hsdram1.Init */
-  hsdram1.Init.SDBank = FMC_SDRAM_BANK2;
-  hsdram1.Init.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_9;
-  hsdram1.Init.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_12;
-  hsdram1.Init.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_32;
-  hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
-  hsdram1.Init.CASLatency = FMC_SDRAM_CAS_LATENCY_3;
-  hsdram1.Init.WriteProtection = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
-  hsdram1.Init.SDClockPeriod = FMC_SDRAM_CLOCK_PERIOD_2;
-  hsdram1.Init.ReadBurst = FMC_SDRAM_RBURST_ENABLE;
-  hsdram1.Init.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_0;
-  /* SdramTiming */
-  SdramTiming.LoadToActiveDelay = 2;
-  SdramTiming.ExitSelfRefreshDelay = 7;
-  SdramTiming.SelfRefreshTime = 4;
-  SdramTiming.RowCycleDelay = 7;
-  SdramTiming.WriteRecoveryTime = 3;
-  SdramTiming.RPDelay = 2;
-  SdramTiming.RCDDelay = 2;
-
-  if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK)
-  {
-    Error_Handler( );
-  }
-
-  /* USER CODE BEGIN FMC_Init 2 */
-  BSP_SDRAM_DeInit(0);
-  if(BSP_SDRAM_Init(0) != BSP_ERROR_NONE)
-  {
-    Error_Handler();
-  }
-  /* USER CODE END FMC_Init 2 */
 }
 
 /**
@@ -844,32 +956,21 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOI_CLK_ENABLE();   /* safe to call twice — idempotent */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOJ_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOJ, LCD_BL_Pin|FRAME_RATE_Pin|RENDER_TIME_Pin|VSYNC_FREQ_Pin, GPIO_PIN_RESET);
+  __HAL_RCC_GPIOJ_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LCD_RESET_GPIO_Port, LCD_RESET_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MCU_ACTIVE_GPIO_Port, MCU_ACTIVE_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : LCD_BL_Pin FRAME_RATE_Pin RENDER_TIME_Pin VSYNC_FREQ_Pin */
-  GPIO_InitStruct.Pin = LCD_BL_Pin|FRAME_RATE_Pin|RENDER_TIME_Pin|VSYNC_FREQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(GPIOJ, &GPIO_InitStruct);
+  HAL_GPIO_WritePin(VSYNC_FREQ_GPIO_Port, VSYNC_FREQ_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA8 */
   GPIO_InitStruct.Pin = GPIO_PIN_8;
@@ -886,12 +987,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(LCD_RESET_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MCU_ACTIVE_Pin */
-  GPIO_InitStruct.Pin = MCU_ACTIVE_Pin;
+  /*Configure GPIO pin : VSYNC_FREQ_Pin */
+  GPIO_InitStruct.Pin = VSYNC_FREQ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(MCU_ACTIVE_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(VSYNC_FREQ_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
@@ -1210,57 +1311,15 @@ void MPU_Config(void)
   */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress = 0x90000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_256MB;
+  MPU_InitStruct.BaseAddress = 0x08000000;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_1MB;
   MPU_InitStruct.SubRegionDisable = 0x0;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Number = MPU_REGION_NUMBER1;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_128MB;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Number = MPU_REGION_NUMBER2;
-  MPU_InitStruct.BaseAddress = 0xD0000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_32MB;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Number = MPU_REGION_NUMBER3;
-  MPU_InitStruct.BaseAddress = 0x24000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_512KB;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
+  MPU_InitStruct.AccessPermission = MPU_REGION_PRIV_RO;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Number = MPU_REGION_NUMBER4;
-  MPU_InitStruct.BaseAddress = 0x10000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_256KB;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Number = MPU_REGION_NUMBER5;
-  MPU_InitStruct.BaseAddress = 0x10040000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_32KB;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
   /* Enables the MPU */

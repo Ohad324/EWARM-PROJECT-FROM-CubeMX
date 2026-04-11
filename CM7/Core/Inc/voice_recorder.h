@@ -70,6 +70,16 @@ void HealthMonTask(void *arg);  /* arg = NULL — SD health, 10 s cadence */
 /* IRQ trampoline — called from DMA1_Stream1_IRQHandler in stm32h7xx_it.c */
 void VoiceRec_DMA_IRQHandler(void);
 
+/* ── Audio health monitor ────────────────────────────────────────────────── */
+typedef struct {
+    uint32_t dfsdm_overruns;      /* hardware overrun count — should always be 0 */
+    uint32_t sd_write_max_ms;     /* worst-case f_write duration in milliseconds  */
+    uint32_t buffer_misses;       /* f_write errors or short writes               */
+    uint32_t total_bytes_written; /* running total for progress tracking          */
+} AudioHealth_t;
+
+extern volatile AudioHealth_t g_AudioHealth;
+
 /* ── Globals shared with main.c ──────────────────────────────────────────── */
 extern TaskHandle_t       voiceRecTaskHandle;   /* used by button ISR       */
 extern QueueHandle_t      xLogQueue;            /* SDWriteTask → RTTLogTask */

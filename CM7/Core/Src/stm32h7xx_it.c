@@ -99,38 +99,19 @@ void NMI_Handler(void)
 }
 
 /**
-  * @brief Hard fault — C handler called by the assembly trampoline below.
-  *        sp points to the exception frame stacked by hardware:
-  *          sp[0]=R0, sp[1]=R1, sp[2]=R2, sp[3]=R3,
-  *          sp[4]=R12, sp[5]=LR, sp[6]=PC, sp[7]=xPSR
-  *        For INVPC: sp[5] = the invalid EXC_RETURN that caused the fault,
-  *                   sp[6] = address of the BX LR instruction in the bad ISR.
+  * @brief This function handles Hard fault interrupt.
   */
-/* USER CODE BEGIN HardFault_c_handler */
-void hard_fault_handler_c(uint32_t* sp)
+void HardFault_Handler(void)
 {
-    uint32_t stacked_pc  = sp[6];
-    uint32_t stacked_lr  = sp[5];   /* invalid EXC_RETURN when INVPC */
-    uint32_t stacked_psr = sp[7];
+  /* USER CODE BEGIN HardFault_IRQn 0 */
 
-    uint32_t cfsr  = SCB->CFSR;
-    uint32_t hfsr  = SCB->HFSR;
-    uint32_t mmfar = SCB->MMFAR;
-    uint32_t bfar  = SCB->BFAR;
-    const char* task = pcTaskGetName(NULL);
-    LOG("[FATAL] HardFault in task: %s\n", task ? task : "?");
-    LOG("[FATAL] CFSR=%08lX HFSR=%08lX MMFAR=%08lX BFAR=%08lX\n",
-        cfsr, hfsr, mmfar, bfar);
-    LOG("[FATAL] Stacked PC=%08lX  LR=%08lX  xPSR=%08lX  SP=%08lX\n",
-        stacked_pc, stacked_lr, stacked_psr, (uint32_t)sp);
-
-    while (1) {}
+  /* USER CODE END HardFault_IRQn 0 */
+  while (1)
+  {
+    /* USER CODE BEGIN W1_HardFault_IRQn 0 */
+    /* USER CODE END W1_HardFault_IRQn 0 */
+  }
 }
-/* USER CODE END HardFault_c_handler */
-
-/* HardFault_Handler itself is an assembly trampoline defined in
- * fault_handler_asm.s — it captures the faulting SP and calls
- * hard_fault_handler_c() above.  No C body here. */
 
 /**
   * @brief This function handles Memory management fault.
@@ -326,13 +307,13 @@ void EXTI15_10_IRQHandler(void)
 }
 
 /**
- * BDMA_Channel1_IRQHandler — handles BDMA transfer events for SAI4_Block_A.
- * Fires on half-complete and complete (PDM data from onboard mic ready).
+ * DMA1_Stream1_IRQHandler — handles DFSDM1 Filter0 DMA transfer events.
+ * Fires on half-complete and complete (PCM data from DFSDM hardware filter ready).
  * Routed through VoiceRec_DMA_IRQHandler() to keep the DMA handle private
  * to voice_recorder.c — same pattern used by BLE UART on DMA1_Stream0.
- * Note: SAI4 uses BDMA (Basic DMA), which can only access D3 SRAM.
+ * Note: DFSDM1 uses DMA1 (D2 domain), buffer in D2 SRAM (0x30000000).
  */
-void BDMA_Channel1_IRQHandler(void)
+void DMA1_Stream1_IRQHandler(void)
 {
     VoiceRec_DMA_IRQHandler(); /* delegate to voice_recorder.c private handler */
 }

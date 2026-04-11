@@ -53,7 +53,7 @@
 #include "voice_recorder.h"
 #include "main.h"           /* LED1_Pin, LED1_GPIO_Port, Error_Handler */
 #include "stm32h7xx_hal.h"
-#include "pdm2pcm_glo.h"    /* ST PDM-to-PCM filter library (SAI4 PDM → 16-bit PCM) */
+/* PDM2PCM software library removed — DFSDM hardware does decimation */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
@@ -72,76 +72,89 @@
 #define RECORD_MS             (RECORD_DURATION_S * 1000u)
 #define DEBOUNCE_MS           300u
 
-/* PDM buffer sizing — matched exactly to ST BSP example:
- *   Projects\STM32H747I-DISCO\Examples\BSP\CM7\Src\audio_record.c
- *
- *   PDM buffer sizing — ST BSP formula (matched to audio_record.c):
- *     SAI4 packs 8 PDM bits into each byte, with each byte duplicated across
- *     both halves of the 16-bit DMA word (confirmed: 9393 6363 E5E5 in memory).
- *     in_ptr_channels=2: library reads stride-2 bytes, skipping the duplicate.
- *     128 words × 2 bytes / stride-2 = 128 unique bytes = 1024 PDM bits → 16 PCM samples.
- *   → PDM_BUF_HALF = 128 words, PDM_BUF_TOTAL = 256 words
- *   → in_ptr_channels=2: stride-2 byte access extracts unique PDM bytes
- *   → output_samples_number = AudioFreq/1000 = 16 PCM samples per call
- *   → one PDM_Filter() call per DMA half: 128 words → 16 PCM samples
- *
- * DMA half produces 16 PCM samples per callback.
- * VoiceRecTask drain loop accumulates until AUDIO_BUFFER_SAMPLES=48000.
- * Callbacks fired per recording = 48000 / 16 = 3000.
- *
- * 0x80 risk: if PDM_Filter_setConfig rejects output_samples_number=16,
- * accumulate 4 halves (64 samples) and call once with output_samples_number=64.
- * Log line "[REC] PDM reset:" will show rc to decide.
+/* DFSDM buffer sizing:
+ *   APB2 = 100 MHz, CKOUTDIV=24 → CKOUT = 100 MHz / (2×25) = 2.0 MHz to mic (MP34DT05-A spec: 1.2–3.25 MHz ✓)
+ *   Filter: Sinc3, OSR=125 → PCM rate = 2.0 MHz / 125 = 16,000 Hz ✓
+ *   DFSDM outputs 16 PCM samples per DMA half (same rate as before).
+ *   DMA buffer is int32_t (DFSDM result is 24-bit sign-extended into 32-bit word).
  */
-#define PDM_DEC_FACTOR           128u  /* MP34DT05-A spec: 1.2–3.25 MHz clock required.
-                                        * 64→1.024 MHz (below spec min) caused noise/hiss.
-                                        * 128→2.047 MHz (within spec, tested at 2.4 MHz). */
-#define PDM_FILTER_CALL_SAMPLES  (SAMPLE_RATE / 1000u)              /* 16 */
-#define PDM_BUF_HALF             (PDM_FILTER_CALL_SAMPLES * PDM_DEC_FACTOR / 16u)       /* 128: words per half */
-#define PDM_BUF_TOTAL            (PDM_BUF_HALF * 2u)                /* 256: full DMA circular buffer */
-#define DMA_HALF_SIZE            PDM_FILTER_CALL_SAMPLES             /* 16: PCM samples per DMA half */
-#define WARMUP_CALLS             300u                                /* discard first 300 DMA halves (300 ms) */
+#define DFSDM_BUF_HALF   16u   /* PCM samples per DMA half  */
+#define DFSDM_BUF_TOTAL  32u   /* full circular DMA buffer  */
+#define DMA_HALF_SIZE    DFSDM_BUF_HALF   /* 16 PCM samples per callback */
+#define WARMUP_CALLS     32u   /* discard first 32 halves (~2 ms) — DFSDM SINC3 settling */
 
-/* ── WAV header (44 bytes, little-endian, packed) ───────────────────────── */
+/* ── WAV header — 512 bytes, sector-aligned (little-endian, packed) ─────────
+ * Standard 44-byte WAV header leaves PCM data at offset 44 — not sector-aligned.
+ * On exFAT + SDMMC 4-bit mode, writes not aligned to 512-byte sector boundaries
+ * trigger a Read-Modify-Write cycle (~30% extra latency per write).
+ *
+ * Fix: insert a JUNK chunk (460 bytes of zeros) between fmt and data chunks.
+ * This pads the total header to exactly 512 bytes so PCM data starts at
+ * offset 512 — the first byte of sector 1. All subsequent 4KB writes land on
+ * exact sector boundaries. No RMW, no latency penalty.
+ *
+ * Layout:
+ *   [  0.. 11]  RIFF header        12 bytes
+ *   [ 12.. 35]  fmt  chunk         24 bytes
+ *   [ 36..503]  JUNK chunk        468 bytes  ("JUNK" + 4-byte size + 460 zeros)
+ *   [504..511]  data chunk header   8 bytes
+ *   [512..   ]  PCM samples        sector-aligned ✓
+ */
+#pragma pack(push, 1)
 typedef struct {
-    char     riff[4];        /* "RIFF"                           */
-    uint32_t chunkSize;      /* total file size minus 8 bytes    */
-    char     wave[4];        /* "WAVE"                           */
-    char     fmt[4];         /* "fmt "                           */
-    uint32_t subchunk1Size;  /* 16 for PCM                       */
-    uint16_t audioFormat;    /* 1 = PCM (uncompressed)           */
-    uint16_t numChannels;    /* 1 = mono                         */
-    uint32_t sampleRate;     /* 16000                            */
-    uint32_t byteRate;       /* sampleRate × channels × bps/8    */
-    uint16_t blockAlign;     /* channels × bps/8 = 2             */
-    uint16_t bitsPerSample;  /* 16                               */
-    char     data[4];        /* "data"                           */
-    uint32_t subchunk2Size;  /* PCM data byte count              */
+    /* RIFF header */
+    char     riff[4];           /* "RIFF"                              */
+    uint32_t chunkSize;         /* file_size - 8  = 504 + PCM_bytes   */
+    char     wave[4];           /* "WAVE"                              */
+    /* fmt chunk */
+    char     fmt[4];            /* "fmt "                              */
+    uint32_t subchunk1Size;     /* 16 for PCM                          */
+    uint16_t audioFormat;       /* 1 = PCM                             */
+    uint16_t numChannels;       /* 1 = mono                            */
+    uint32_t sampleRate;        /* 16000                               */
+    uint32_t byteRate;          /* 32000                               */
+    uint16_t blockAlign;        /* 2                                   */
+    uint16_t bitsPerSample;     /* 16                                  */
+    /* JUNK chunk — 468 bytes, pads header to 512 */
+    char     junk[4];           /* "JUNK"                              */
+    uint32_t junkSize;          /* 460                                 */
+    uint8_t  junkData[460];     /* zeros                               */
+    /* data chunk header */
+    char     data[4];           /* "data"                              */
+    uint32_t subchunk2Size;     /* PCM data byte count                 */
 } WavHdr_t;
+#pragma pack(pop)
+
+/* Compile-time check: header must be exactly 512 bytes */
+typedef char _WavHdr512Check[(sizeof(WavHdr_t) == 512u) ? 1 : -1];
 
 /* ── Peripheral handles (private to this file) ──────────────────────────── */
-static SAI_HandleTypeDef    s_hsai;
-static DMA_HandleTypeDef    s_hdma;
-static PDM_Filter_Handler_t s_pdmHandler;
-static PDM_Filter_Config_t  s_pdmConfig;
+static DFSDM_Channel_HandleTypeDef s_hdfsdm_ch;
+static DFSDM_Filter_HandleTypeDef  s_hdfsdm_flt;
+static DMA_HandleTypeDef           s_hdma_dfsdm;
 
-/* ── PDM DMA buffer — MUST be in D3 SRAM (0x38000000, 64 KB).
- * SAI4 uses BDMA (Basic DMA) which can only access D3 SRAM.
- * Placed at absolute address via IAR pragma; __no_init suppresses
- * zero-init (linker cannot initialize a fixed-address static buffer). */
-#pragma location = 0x38000000
-static __no_init uint16_t g_PdmBuf[PDM_BUF_TOTAL];
+/* ── DFSDM DMA buffer — int32_t (DFSDM result is 24-bit sign-extended to 32 bits).
+ * Placed in D2 SRAM1 (0x30000000, 128 KB) — DMA1 can access this region AND
+ * it is outside the M7 D-Cache address space: SCB_InvalidateDCache is NOT needed.
+ * This also avoids AXI bus contention with SDMMC1 IDMA (which lives on D1 AXI).
+ * 32-byte aligned for future-proofing (consistent with other DMA buffers). */
+#pragma location = 0x30000000
+static __no_init int32_t g_DfsdmBuf[DFSDM_BUF_TOTAL]  __attribute__((aligned(32)));
 
 /* Audio accumulation buffer — 3 s × 16000 Hz × 2 bytes = 96 KB in AXI SRAM.
  * Previously in SDRAM (.sdram_bss) which shares AHB3 with SDMMC1 IDMA —
  * FMC auto-refresh every 7.8 µs caused SDMMC FIFO overrun (RXOVERR) during
- * disk_write. Moved to AXI SRAM (default .bss, 0x24xxxxxx) which is on the
- * AXI bus — no FMC contention, 254 KB free in this region. */
-int16_t g_AudioBuf[AUDIO_BUFFER_SAMPLES]
-    __attribute__((aligned(32)));
+ * disk_write. Now moved to D2 SRAM2 (0x30020000) — same domain as g_DfsdmBuf.
+ * StoreDmaChunk copies D2→D2 without crossing the AXI bus matrix.
+ * SDMMC IDMA reads via the s_pcmBounce AXI SRAM bounce buffer (unchanged). */
+#pragma location = 0x30020000
+__no_init int16_t g_AudioBuf[AUDIO_BUFFER_SAMPLES] __attribute__((aligned(32)));
 
 /* No staging buffer needed — in_ptr_channels=2, library reads stride-2 bytes to
  * extract the unique PDM byte from each duplicated 16-bit word. Feed g_PdmBuf directly. */
+
+/* ── Audio health monitor ────────────────────────────────────────────────── */
+volatile AudioHealth_t g_AudioHealth = {0};
 
 /* ── Recording state ─────────────────────────────────────────────────────── */
 volatile RecState_t  g_State       = REC_IDLE;
@@ -165,7 +178,7 @@ QueueHandle_t      xLogQueue          = NULL;
  * If latency > 1 ms (480,000 cycles at 480 MHz) the DMA is lapping the CPU.
  * ─────────────────────────────────────────────────────────────────────────── */
 typedef struct {
-    const uint16_t *ptr;       /* buffer pointer (&g_PdmBuf[0] or [PDM_BUF_HALF]) */
+    const int32_t  *ptr;       /* buffer pointer (&g_DfsdmBuf[0] or [DFSDM_BUF_HALF]) */
     uint32_t        stamp_cy;  /* DWT->CYCCNT at ISR post time */
 } DmaEntry_t;
 
@@ -193,9 +206,8 @@ static uint32_t s_clip_cnt    = 0u;
 
 /* ── Forward declarations ────────────────────────────────────────────────── */
 static void Button_GPIO_Init(void);
-static void SAI4_HW_Init(void);
-static void DMA_HW_Init(void);
-static void StoreDmaChunk(const uint16_t *pdmSrc);
+static void DFSDM_HW_Init(void);
+static void StoreDmaChunk(const int32_t *src32);
 static void BuildWavHdr(WavHdr_t *h, uint32_t nSamples);
 static void AudioQuality_Report(void);
 
@@ -227,25 +239,7 @@ void VoiceRec_Init(void)
     configASSERT(xLogQueue);
 
     Button_GPIO_Init();
-    SAI4_HW_Init();
-    DMA_HW_Init();
-
-    /* PDM filter library init — requires CRC peripheral (already enabled by MX_CRC_Init) */
-    s_pdmHandler.bit_order        = PDM_FILTER_BIT_ORDER_MSB;  /* BSP reference: MSB with SAI_FIRSTBIT_LSB */
-    s_pdmHandler.endianness       = PDM_FILTER_ENDIANNESS_LE;
-    s_pdmHandler.high_pass_tap    = 2122358088u;  /* standard HP filter coefficient */
-    s_pdmHandler.in_ptr_channels  = 1u;   /* 1: stride-1. SAI4 MONO: both bytes of each 16-bit word are identical (confirmed: D5D5 3838...). D0=D1 in MONO mode. */
-    s_pdmHandler.out_ptr_channels = 1u;   /* 1: mono PCM output */
-    if (PDM_Filter_Init(&s_pdmHandler) != 0u) { Error_Handler(); }
-
-    s_pdmConfig.decimation_factor     = PDM_FILTER_DEC_FACTOR_128;
-    s_pdmConfig.output_samples_number = PDM_FILTER_CALL_SAMPLES;  /* 16: BSP formula AudioFreq/1000 */
-    s_pdmConfig.mic_gain              = 24;  /* 24 dB — per AN5027 + CLAUDE.md spec */
-    {
-        uint32_t rc = PDM_Filter_setConfig(&s_pdmHandler, &s_pdmConfig);
-        RLOG("[REC] PDM_Filter_setConfig rc=0x%lX (0=OK, 0x80=samples_err)", (unsigned long)rc);
-        if (rc != 0u) { Error_Handler(); }
-    }
+    DFSDM_HW_Init();
 
     g_State       = REC_IDLE;
     g_SampleCount = 0u;
@@ -282,33 +276,43 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 }
 
-/* SAI4 BDMA half-complete — g_PdmBuf[0..PDM_BUF_HALF-1] ready.
- * Stamp DWT cycle counter at ISR entry — this is "pin HIGH" in the article. */
-void HAL_SAI_RxHalfCpltCallback(SAI_HandleTypeDef *hsai)
+/* DFSDM DMA half-complete — g_DfsdmBuf[0..DFSDM_BUF_HALF-1] ready.
+ * Buffer is in D2 SRAM (0x30000000) — not cached, no SCB_InvalidateDCache needed.
+ * Stamp DWT cycle counter at ISR entry — "pin HIGH" for latency measurement. */
+void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
 {
-    if (hsai->Instance != SAI4_Block_A) return;
-    DmaEntry_t e = { &g_PdmBuf[0], DWT->CYCCNT };
+    if (hdfsdm->Instance != DFSDM1_Filter0) return;
+    DmaEntry_t e = { &g_DfsdmBuf[0], DWT->CYCCNT };
     BaseType_t higher = pdFALSE;
     if (xQueueSendFromISR(s_dmaQueue, &e, &higher) != pdTRUE)
         s_dmaQueueOverflow++;
     portYIELD_FROM_ISR(higher);
 }
 
-/* SAI4 BDMA full-complete — g_PdmBuf[PDM_BUF_HALF..PDM_BUF_TOTAL-1] ready. */
-void HAL_SAI_RxCpltCallback(SAI_HandleTypeDef *hsai)
+/* DFSDM DMA full-complete — g_DfsdmBuf[DFSDM_BUF_HALF..DFSDM_BUF_TOTAL-1] ready. */
+void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
 {
-    if (hsai->Instance != SAI4_Block_A) return;
-    DmaEntry_t e = { &g_PdmBuf[PDM_BUF_HALF], DWT->CYCCNT };
+    if (hdfsdm->Instance != DFSDM1_Filter0) return;
+    DmaEntry_t e = { &g_DfsdmBuf[DFSDM_BUF_HALF], DWT->CYCCNT };
     BaseType_t higher = pdFALSE;
     if (xQueueSendFromISR(s_dmaQueue, &e, &higher) != pdTRUE)
         s_dmaQueueOverflow++;
     portYIELD_FROM_ISR(higher);
 }
 
-/* IRQ trampoline — called from BDMA_Channel1_IRQHandler in stm32h7xx_it.c */
+/* DFSDM hardware overrun — RDATFIFO not read before next result was available.
+ * This means DMA1 is lagging and audio data was silently discarded by hardware.
+ * Any non-zero value here means the recording has gaps. */
+void HAL_DFSDM_FilterRegConvErrorCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
+{
+    (void)hdfsdm;
+    g_AudioHealth.dfsdm_overruns++;
+}
+
+/* IRQ trampoline — called from DMA1_Stream1_IRQHandler in stm32h7xx_it.c */
 void VoiceRec_DMA_IRQHandler(void)
 {
-    HAL_DMA_IRQHandler(&s_hdma);
+    HAL_DMA_IRQHandler(&s_hdma_dfsdm);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -335,23 +339,27 @@ void VoiceRecTask(void *arg)
         s_qDepth_max         = 0u;
         s_desync_count       = 0u;
         g_State              = REC_RECORDING;
+        /* Reset health counters for this recording */
+        g_AudioHealth.dfsdm_overruns      = 0u;
+        g_AudioHealth.sd_write_max_ms     = 0u;
+        g_AudioHealth.buffer_misses       = 0u;
+        g_AudioHealth.total_bytes_written = 0u;
         __DSB();
         RLOG("[REC] --- Stage 0: recording 3s ---\r\n");
 
-        /* Reset PDM filter internal state before each recording. */
-        {
-            uint32_t r1 = PDM_Filter_Init(&s_pdmHandler);
-            uint32_t r2 = PDM_Filter_setConfig(&s_pdmHandler, &s_pdmConfig);
-            RLOG("[REC] PDM reset: Init=0x%lX setConfig=0x%lX samples=%u",
-                 (unsigned long)r1, (unsigned long)r2,
-                 (unsigned)s_pdmConfig.output_samples_number);
-        }
+        /* HAL_DFSDM_FilterInit sets RDMAEN before DFEN — on STM32H7 the subsequent
+         * HAL_DFSDM_FilterConfigRegChannel RMW on FLTCR1 (with DFEN=1) can silently
+         * clear RDMAEN. HAL_DFSDM_FilterRegularStart_DMA checks RDMAEN and returns
+         * HAL_ERROR if it is 0, so the DMA never starts.
+         * Fix: force RDMAEN=1 here, after all init calls are complete and just before
+         * starting the DMA. This is safe — RDMAEN is writable when DFEN=1. */
+        s_hdfsdm_flt.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
 
-        /* Start SAI4 PDM DMA (BDMA_Channel1 → g_PdmBuf in D3 SRAM) */
+        /* Start DFSDM DMA (DMA1_Stream1 → g_DfsdmBuf in D2 SRAM) */
         HAL_StatusTypeDef hal =
-            HAL_SAI_Receive_DMA(&s_hsai,
-                                (uint8_t *)g_PdmBuf,
-                                PDM_BUF_TOTAL);
+            HAL_DFSDM_FilterRegularStart_DMA(&s_hdfsdm_flt,
+                                             g_DfsdmBuf,
+                                             DFSDM_BUF_TOTAL);
         if (hal != HAL_OK)
         {
             /* Post DMA_START error directly to log queue */
@@ -414,19 +422,14 @@ void VoiceRecTask(void *arg)
             }
         }
 
-        /* Stop SAI4 DMA */
-        HAL_SAI_DMAStop(&s_hsai);
+        /* Stop DFSDM DMA */
+        HAL_DFSDM_FilterRegularStop_DMA(&s_hdfsdm_flt);
 
         /* Drain any stale queue entries from callbacks that fired after stop */
         {
             DmaEntry_t discard = { NULL, 0u };
             while (xQueueReceive(s_dmaQueue, &discard, 0) == pdTRUE) {}
         }
-
-        /* Flush SINC3 filter state accumulated over the 3s recording.
-         * pInternalMemory holds 3s of history — must be cleared now so the
-         * next recording starts with a clean filter, not stale history. */
-        PDM_Filter_Init(&s_pdmHandler);
 
         /* Audio quality report — Terminal I/O only (IAR debugger window) */
         AudioQuality_Report();
@@ -544,6 +547,31 @@ void SDWriteTask(void *arg)
 
         g_FileIndex++;   /* only increment after successful f_open */
 
+        /* Pre-allocate contiguous clusters before writing.
+         * Without this, every f_write triggers a FAT cluster search (tens of ms on exFAT)
+         * causing DMA queue overflow → audio gaps → beeps.
+         *
+         * Strategy (per user architecture recommendation):
+         *   1. f_expand(opt=1): allocates a physically contiguous block — fastest SD DMA.
+         *      FF_USE_EXPAND=1 enabled in ffconf.h.
+         *   2. Fallback to f_lseek if f_expand fails (fragmented card, FATFS version).
+         *   3. f_lseek(0) to return file pointer to start before writing header. */
+        {
+            FSIZE_t prealloc = (FSIZE_t)(sizeof(WavHdr_t) + samplesSnapshot * sizeof(int16_t));
+            FRESULT fr_exp = f_expand(&file, prealloc, 1);  /* opt=1: allocate contiguous */
+            if (fr_exp == FR_OK)
+            {
+                RLOG("[REC] f_expand OK  %lu bytes contiguous", (unsigned long)prealloc);
+            }
+            else
+            {
+                /* Fallback: f_lseek forces cluster chain allocation non-contiguously */
+                RLOG("[REC] f_expand fr=%d — fallback to f_lseek", (int)fr_exp);
+                f_lseek(&file, prealloc);
+            }
+            f_lseek(&file, 0);  /* return to start for WAV header write */
+        }
+
         BuildWavHdr(&hdr, samplesSnapshot);
 
         fr = f_write(&file, &hdr, sizeof(hdr), &bw);
@@ -556,10 +584,18 @@ void SDWriteTask(void *arg)
         }
 
         /* Write PCM via AXI SRAM bounce buffer.
-         * g_AudioBuf lives in SDRAM (0xD0000000). SDMMC IDMA cannot reliably
-         * access SDRAM via the FMC bus on STM32H747I-DISCO — direct f_write
-         * from SDRAM causes code=7 (partial or zero-byte write).
-         * Fix: memcpy 4KB chunks SDRAM→AXI SRAM, then f_write from AXI SRAM. */
+         * g_AudioBuf is in D2 SRAM2 (0x30020000). SDMMC IDMA accesses memory via
+         * AXI bus matrix. D2 SRAM is not guaranteed reachable by SDMMC IDMA in all
+         * STM32H7 silicon revisions — use a static AXI SRAM bounce buffer to be safe.
+         *
+         * AXI SRAM (0x24000000) is cached (M7 D-Cache). Before handing a chunk to
+         * SDMMC IDMA we must flush the D-Cache for that buffer, otherwise SDMMC
+         * reads stale data from physical RAM while the real data sits in cache lines.
+         * SCB_CleanDCache_by_Addr() writes dirty lines back to physical RAM.
+         *
+         * Latency measurement: HAL_GetTick() before/after each f_write.
+         * g_AudioHealth.sd_write_max_ms updated if this write is the slowest seen.
+         * 4KB at 16kHz×2byte = 128ms window — if max_ms > 100 we risk queue overflow. */
         {
             static uint8_t s_pcmBounce[4096u] __attribute__((aligned(32)));
             uint32_t remaining = logMsg.sizeBytes;
@@ -570,8 +606,26 @@ void SDWriteTask(void *arg)
                 uint32_t chunk = (remaining < sizeof(s_pcmBounce)) ? remaining
                                                                     : sizeof(s_pcmBounce);
                 memcpy(s_pcmBounce, (const uint8_t *)g_AudioBuf + offset, chunk);
+
+                /* Flush D-Cache: ensure SDMMC IDMA reads the freshly copied bytes,
+                 * not stale lines. Size must be rounded up to 32-byte cache line. */
+                SCB_CleanDCache_by_Addr((uint32_t *)s_pcmBounce,
+                                        (int32_t)((chunk + 31u) & ~31u));
+
+                uint32_t t0 = HAL_GetTick();
                 frPcm = f_write(&file, s_pcmBounce, chunk, &bw);
-                if (frPcm != FR_OK || bw != chunk) { frPcm = FR_DISK_ERR; break; }
+                uint32_t dur = HAL_GetTick() - t0;
+
+                if (dur > g_AudioHealth.sd_write_max_ms)
+                    g_AudioHealth.sd_write_max_ms = dur;
+
+                if (frPcm != FR_OK || bw != chunk)
+                {
+                    g_AudioHealth.buffer_misses++;
+                    frPcm = FR_DISK_ERR;
+                    break;
+                }
+                g_AudioHealth.total_bytes_written += chunk;
                 offset    += chunk;
                 remaining -= chunk;
             }
@@ -598,6 +652,28 @@ void SDWriteTask(void *arg)
         RLOG("[REC] file=%s  size=%lu bytes",
             logMsg.filename, (unsigned long)logMsg.sizeBytes);
         RLOG("[REC] ========================================");
+
+        /* ── Health report ────────────────────────────────────────────────────
+         * At 16kHz×2B, each 4KB bounce chunk covers 128ms.
+         * If sd_write_max_ms > 100 → we are within 28ms of queue overflow.
+         * dfsdm_overruns > 0 → hardware discarded samples → audible gaps.
+         * buffer_misses  > 0 → f_write returned error or short write → gap. */
+        RLOG("--- AUDIO HEALTH REPORT ---");
+        RLOG("[HEALTH] dfsdm_overruns  : %lu  (MUST be 0 — hardware gap)",
+            (unsigned long)g_AudioHealth.dfsdm_overruns);
+        RLOG("[HEALTH] sd_write_max_ms : %lu ms  (limit ~100ms @ 16kHz)",
+            (unsigned long)g_AudioHealth.sd_write_max_ms);
+        RLOG("[HEALTH] buffer_misses   : %lu  (f_write errors/short writes)",
+            (unsigned long)g_AudioHealth.buffer_misses);
+        RLOG("[HEALTH] bytes_written   : %lu",
+            (unsigned long)g_AudioHealth.total_bytes_written);
+        if (g_AudioHealth.dfsdm_overruns > 0u || g_AudioHealth.buffer_misses > 0u)
+            RLOG("[HEALTH] STATUS: FAIL — recording has gaps!");
+        else if (g_AudioHealth.sd_write_max_ms > 100u)
+            RLOG("[HEALTH] STATUS: WARNING — SD latency high, check cluster size");
+        else
+            RLOG("[HEALTH] STATUS: OK — clean recording");
+        RLOG("---------------------------");
 
         /* ── Stage 2: stream WAV to NORA over UART8 ────────────────────────
          * AudioSD_SendFileToUART() sends:
@@ -748,11 +824,17 @@ void HealthMonTask(void *arg)
             uint32_t totalKB    = (uint32_t)(pfs->n_fatent - 2u)       * clusterKB;
             uint32_t usedKB     = totalKB - freeKB;
             uint32_t errCode    = AudioSD_GetErrorCode();
+            /* csize = sectors per cluster. 1 sector = 512 bytes.
+             * Recommended minimum: csize=256 (128KB clusters) for smooth recording.
+             * If csize < 32 (16KB), call AudioSD_Format() to reformat with larger clusters. */
             snprintf(buf, sizeof(buf),
-                "[HEALTH] card=PRESENT  free=%lu KB  used=%lu KB  sdErr=0x%08lX\r\n",
+                "[HEALTH] card=PRESENT  free=%lu KB  used=%lu KB  csize=%lu (%luKB/cluster)  sdErr=0x%08lX%s\r\n",
                 (unsigned long)freeKB,
                 (unsigned long)usedKB,
-                (unsigned long)errCode);
+                (unsigned long)(pfs->csize),
+                (unsigned long)clusterKB,
+                (unsigned long)errCode,
+                (pfs->csize < 32u) ? " WARN:cluster<16KB reformat!" : "");
         }
         else
         {
@@ -781,27 +863,26 @@ void HealthMonTask(void *arg)
  * SAI4 MONO mode: all 128 bytes are D1 mic data (no interleaving in MONO mode).
  * Library reads all 128 bytes = 1024 PDM bits → 16 PCM samples. ✓
  */
-static void StoreDmaChunk(const uint16_t *pdmSrc)
+static void StoreDmaChunk(const int32_t *src32)
 {
     if (g_SampleCount >= AUDIO_BUFFER_SAMPLES) return;
 
     g_DmaCallCount++;
 
-    /* PDM → PCM: AN5027 §3.1 + BSP_AUDIO_IN_PDMToPCM pattern.
-     * SAI4 MONO mode: both bytes of each 16-bit word are identical (e.g. D5D5 3838).
-     * in_ptr_channels=1 (stride-1) reads all 128 bytes = 1024 PDM bits → 16 PCM samples. */
-    static int16_t s_pcmHalf[DMA_HALF_SIZE];
-    PDM_Filter((uint8_t *)pdmSrc, (void *)s_pcmHalf, &s_pdmHandler);
-
-    /* Skip first WARMUP_CALLS results — SINC3 transient */
+    /* Skip first WARMUP_CALLS halves — DFSDM SINC3 filter settling transient */
     if (g_DmaCallCount <= WARMUP_CALLS) return;
 
     uint32_t remaining = AUDIO_BUFFER_SAMPLES - g_SampleCount;
     uint32_t toCopy    = (remaining < DMA_HALF_SIZE) ? remaining : DMA_HALF_SIZE;
 
+    /* Convert DFSDM 32-bit output → 16-bit PCM.
+     * DFSDM result register: 24-bit signed value in bits[31:8], channel in bits[7:0].
+     * RightBitShift=8 applied by hardware shifts the result right 8 bits inside the
+     * peripheral, so the meaningful audio sits in bits[15:0] after one more >>8 here.
+     * Reference: audio_rec.c SendPCMFrame() pattern — same shift confirmed working. */
     for (uint32_t i = 0u; i < toCopy; i++)
     {
-        g_AudioBuf[g_SampleCount + i] = s_pcmHalf[i];
+        g_AudioBuf[g_SampleCount + i] = (int16_t)(src32[i] >> 8);
     }
     g_SampleCount += toCopy;
 }
@@ -809,17 +890,26 @@ static void StoreDmaChunk(const uint16_t *pdmSrc)
 static void BuildWavHdr(WavHdr_t *h, uint32_t nSamples)
 {
     uint32_t dataBytes = nSamples * sizeof(int16_t);
+    /* RIFF — chunkSize = file_size - 8.
+     * file_size = 512 (this header) + dataBytes
+     * chunkSize = 512 + dataBytes - 8 = 504 + dataBytes */
     h->riff[0]='R'; h->riff[1]='I'; h->riff[2]='F'; h->riff[3]='F';
-    h->chunkSize      = dataBytes + 36u;
+    h->chunkSize      = 504u + dataBytes;
     h->wave[0]='W'; h->wave[1]='A'; h->wave[2]='V'; h->wave[3]='E';
+    /* fmt chunk */
     h->fmt[0]='f';  h->fmt[1]='m';  h->fmt[2]='t';  h->fmt[3]=' ';
     h->subchunk1Size  = 16u;
-    h->audioFormat    = 1u;                 /* PCM = uncompressed         */
-    h->numChannels    = 1u;                 /* mono                       */
-    h->sampleRate     = SAMPLE_RATE;        /* 16000                      */
-    h->byteRate       = SAMPLE_RATE * 2u;   /* sampleRate × ch × (bps/8)  */
-    h->blockAlign     = 2u;                 /* ch × (bps/8)               */
+    h->audioFormat    = 1u;
+    h->numChannels    = 1u;
+    h->sampleRate     = SAMPLE_RATE;
+    h->byteRate       = SAMPLE_RATE * 2u;
+    h->blockAlign     = 2u;
     h->bitsPerSample  = 16u;
+    /* JUNK chunk — 460 bytes of zeros, total chunk = 468 bytes */
+    h->junk[0]='J'; h->junk[1]='U'; h->junk[2]='N'; h->junk[3]='K';
+    h->junkSize       = 460u;
+    memset(h->junkData, 0, sizeof(h->junkData));
+    /* data chunk header — PCM starts at offset 512 (sector boundary) */
     h->data[0]='d'; h->data[1]='a'; h->data[2]='t'; h->data[3]='a';
     h->subchunk2Size  = dataBytes;
 }
@@ -846,31 +936,18 @@ static void Button_GPIO_Init(void)
     HAL_GPIO_Init(GPIOK, &gpio);
 }
 
-static void SAI4_HW_Init(void)
+static void DFSDM_HW_Init(void)
 {
-    /* ── PLL2 clock for SAI4 ─────────────────────────────────────────────
-     * HSE=25MHz / PLL2M=25 → VCO_in=1MHz × PLL2N=344 → VCO=344MHz / PLL2P=7
-     * → PLL2P_out ≈ 49.14 MHz  (SAI4A kernel clock)
-     * AudioFreq = 16000×8 = 128kHz  →  HAL computes MCKDIV for PDM clock */
-    RCC_PeriphCLKInitTypeDef rcc_pdm = {0};
-    HAL_RCCEx_GetPeriphCLKConfig(&rcc_pdm);
-    rcc_pdm.PeriphClockSelection      = RCC_PERIPHCLK_SAI4A;
-    rcc_pdm.Sai4AClockSelection       = RCC_SAI4ACLKSOURCE_PLL2;
-    rcc_pdm.PLL2.PLL2M                = 25u;
-    rcc_pdm.PLL2.PLL2N                = 344u;
-    rcc_pdm.PLL2.PLL2P                = 7u;
-    rcc_pdm.PLL2.PLL2Q                = 1u;
-    rcc_pdm.PLL2.PLL2R                = 1u;
-    rcc_pdm.PLL2.PLL2RGE              = RCC_PLL2VCIRANGE_1; /* VCO_in = 1 MHz → range 1-2MHz */
-    rcc_pdm.PLL2.PLL2VCOSEL           = RCC_PLL2VCOWIDE;
-    rcc_pdm.PLL2.PLL2FRACN            = 0u;
-    if (HAL_RCCEx_PeriphCLKConfig(&rcc_pdm) != HAL_OK) { Error_Handler(); }
-
     /* ── GPIO ────────────────────────────────────────────────────────────
-     * PE4 (AF8 =SAI4_FS_A)  — frame sync (required even in PDM mode)
-     * PE5 (AF8 =SAI4_SCK_A) — serial clock (SAI4 internal bit clock)
-     * PE2 (AF10=SAI4_CK1)   — PDM clock output to microphone
-     * PC1 (AF10=SAI4_D1)    — PDM data input from microphone (onboard mic DOUT) */
+     * PE2 → DFSDM1_CKOUT  (PDM clock output to microphone, AF3)
+     * PC1 → DFSDM1_DATIN0 (PDM data  input from microphone, AF3)
+     *
+     * NOTE: GPIO_AF3_DFSDM1 matches the reference in audio_rec.c (PD3/PD6).
+     * Verified by user in CubeMX: DFSDM functions appear on PE2 and PC1.
+     * If HAL_DFSDM_ChannelInit() returns HAL_ERROR, verify the AF number
+     * in CubeMX pin view — try GPIO_AF6_DFSDM1 if AF3 does not work.
+     *
+     * Physical mic: MP34DT05-A, LR=GND → data valid on falling clock edge. */
     __HAL_RCC_GPIOE_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
@@ -879,91 +956,106 @@ static void SAI4_HW_Init(void)
     gpio.Pull  = GPIO_NOPULL;
     gpio.Speed = GPIO_SPEED_FREQ_HIGH;
 
-    /* PE4 (AF8=SAI4_FS_A)  — frame sync
-     * PE5 (AF8=SAI4_SCK_A) — serial clock (SAI4 internal bit clock)
-     * PE2 (AF10=SAI4_CK1)  — PDM clock output to microphone
-     * All three are on GPIOE; BSP configures all four pins for SAI4 PDM mode. */
-    gpio.Pin       = GPIO_PIN_4 | GPIO_PIN_5;
-    gpio.Alternate = GPIO_AF8_SAI4;
+    gpio.Pin       = GPIO_PIN_2;          /* PE2 = DFSDM1_CKOUT */
+    gpio.Alternate = GPIO_AF3_DFSDM1;
     HAL_GPIO_Init(GPIOE, &gpio);
 
-    gpio.Pin       = GPIO_PIN_2;
-    gpio.Alternate = GPIO_AF10_SAI4;
-    HAL_GPIO_Init(GPIOE, &gpio);
-
-    /* PC1: AF10 = SAI4_D1 — PDM data input from microphone.
-     * Pull-up: mic DOUT is weakly driven; pull-up prevents floating. */
-    gpio.Pin       = GPIO_PIN_1;
-    gpio.Pull      = GPIO_PULLUP;
-    gpio.Alternate = GPIO_AF10_SAI4;
+    gpio.Pin       = GPIO_PIN_1;          /* PC1 = DFSDM1_DATIN0 */
+    gpio.Pull      = GPIO_PULLUP;         /* mic DOUT weakly driven — prevent float */
+    gpio.Alternate = GPIO_AF3_DFSDM1;
     HAL_GPIO_Init(GPIOC, &gpio);
 
-    /* ── SAI4 PDM init ───────────────────────────────────────────────────
-     * SAI4_Block_A in PDM master-receive mode.
-     * AudioFrequency = SampleRate × 8 = 128000 (HAL uses this for MCKDIV).
-     * FrameLength=16, SlotNumber=1, SlotActive=0: matches ST BSP MX_SAI4_Block_A_Init exactly.
-     * In SAI PDM mode the hardware captures both D0+D1 within one 16-bit slot automatically.
-     * PdmInit: Activation=ENABLE, MicPairsNbr=1, ClockEnable=CLOCK1. */
-    __HAL_RCC_SAI4_CLK_ENABLE();
+    /* ── DFSDM1 Channel 0 ────────────────────────────────────────────────
+     * Clock math (RM0399 §26 / dm00314099 §26 — same DFSDM chapter):
+     *   Source : DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM = APB2 = 100 MHz (IOC confirmed)
+     *   CKOUT  = APB2 / (2 × (Divider)) = 100 MHz / (2 × 25) = 2.0 MHz  ✓
+     *            MP34DT05-A spec: 1.2–3.25 MHz  ✓
+     *   OSR    = 125 → PCM = 2.0 MHz / 125 = 16,000 Hz  ✓ (UM2372 Table 9)
+     *
+     * SerialInterface.Type = DFSDM_CHANNEL_SPI_FALLING:
+     *   MP34DT05-A with LR=GND outputs on falling edge (DS12930 §4). */
+    __HAL_RCC_DFSDM1_CLK_ENABLE();
 
-    s_hsai.Instance = SAI4_Block_A;
+    s_hdfsdm_ch.Instance = DFSDM1_Channel0;
 
-    s_hsai.Init.AudioMode         = SAI_MODEMASTER_RX;
-    s_hsai.Init.Synchro           = SAI_ASYNCHRONOUS;
-    s_hsai.Init.SynchroExt        = SAI_SYNCEXT_DISABLE;
-    s_hsai.Init.OutputDrive       = SAI_OUTPUTDRIVE_DISABLE;
-    s_hsai.Init.NoDivider         = SAI_MASTERDIVIDER_DISABLE;
-    s_hsai.Init.FIFOThreshold     = SAI_FIFOTHRESHOLD_1QF;
-    s_hsai.Init.AudioFrequency    = (uint32_t)(SAMPLE_RATE * 16u); /* 256000 → MCKDIV=12 → PDM clock=2.047 MHz (within MP34DT05-A spec 1.2–3.25 MHz) */
-    s_hsai.Init.Mckdiv            = 0u;
-    s_hsai.Init.MonoStereoMode    = SAI_STEREOMODE;
-    s_hsai.Init.CompandingMode    = SAI_NOCOMPANDING;
-    s_hsai.Init.TriState          = SAI_OUTPUT_RELEASED;
-    s_hsai.Init.Protocol          = SAI_FREE_PROTOCOL;
-    s_hsai.Init.DataSize          = SAI_DATASIZE_16;
-    s_hsai.Init.FirstBit          = SAI_FIRSTBIT_LSB;
-    s_hsai.Init.ClockStrobing     = SAI_CLOCKSTROBING_FALLINGEDGE;
+    s_hdfsdm_ch.Init.OutputClock.Activation = ENABLE;
+    s_hdfsdm_ch.Init.OutputClock.Selection  = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM; /* APB2 = 100 MHz */
+    s_hdfsdm_ch.Init.OutputClock.Divider    = 25u; /* CKOUT = 100 MHz / (2×25) = 2.0 MHz */
 
-    s_hsai.Init.PdmInit.Activation  = ENABLE;
-    s_hsai.Init.PdmInit.MicPairsNbr = 1u;
-    s_hsai.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
+    s_hdfsdm_ch.Init.Input.Multiplexer  = DFSDM_CHANNEL_EXTERNAL_INPUTS;
+    s_hdfsdm_ch.Init.Input.DataPacking  = DFSDM_CHANNEL_STANDARD_MODE;
+    s_hdfsdm_ch.Init.Input.Pins         = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
 
-    s_hsai.FrameInit.FrameLength       = 16u;  /* 1 slot × 16 bits — BSP reference: MX_SAI4_Block_A_Init */
-    s_hsai.FrameInit.ActiveFrameLength = 1u;
-    s_hsai.FrameInit.FSDefinition      = SAI_FS_STARTFRAME;
-    s_hsai.FrameInit.FSPolarity        = SAI_FS_ACTIVE_HIGH;
-    s_hsai.FrameInit.FSOffset          = SAI_FS_FIRSTBIT;
+    s_hdfsdm_ch.Init.SerialInterface.Type     = DFSDM_CHANNEL_SPI_FALLING; /* LR=GND → falling edge */
+    s_hdfsdm_ch.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
 
-    s_hsai.SlotInit.FirstBitOffset = 0u;
-    s_hsai.SlotInit.SlotSize       = SAI_SLOTSIZE_DATASIZE;
-    s_hsai.SlotInit.SlotNumber     = 1u;             /* BSP reference: SlotNumber=1 in PDM mode */
-    s_hsai.SlotInit.SlotActive     = SAI_SLOTACTIVE_0;  /* BSP reference: SAI_SLOTACTIVE_0 in PDM mode */
+    s_hdfsdm_ch.Init.Awd.FilterOrder   = DFSDM_CHANNEL_FASTSINC_ORDER;
+    s_hdfsdm_ch.Init.Awd.Oversampling  = 10u;
 
-    if (HAL_SAI_Init(&s_hsai) != HAL_OK) { Error_Handler(); }
-}
+    s_hdfsdm_ch.Init.Offset        = 0;
+    /* RightBitShift calibration guide (Sinc3, OSR=125):
+     *   Max filter output = 125^3 = 1,953,125 → 21-bit signed value.
+     *   Hardware shift + software >>8 must together extract 16-bit PCM.
+     *
+     *   Start value = 8. Tune after first Audacity check:
+     *     Flat / too quiet  → lower  (try 6 or 4) — less attenuation
+     *     Distortion/clipping → raise (try 10)    — more attenuation
+     *
+     *   Note: OSR=125 gives 7.4× more output than OSR=64 (same shift).
+     *   If audio_rec.c worked fine with shift=8 at OSR=64, expect shift
+     *   of 10–11 may be needed here for the same audio level. */
+    s_hdfsdm_ch.Init.RightBitShift = 8u;
 
-static void DMA_HW_Init(void)
-{
-    /* SAI4 uses BDMA (Basic DMA), not DMA1/DMA2.
-     * BDMA can only access D3 SRAM (0x38000000) — hence g_PdmBuf placement. */
-    __HAL_RCC_BDMA_CLK_ENABLE();
+    if (HAL_DFSDM_ChannelInit(&s_hdfsdm_ch) != HAL_OK) { Error_Handler(); }
 
-    s_hdma.Instance                 = BDMA_Channel1;
-    s_hdma.Init.Request             = BDMA_REQUEST_SAI4_A;
-    s_hdma.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-    s_hdma.Init.PeriphInc           = DMA_PINC_DISABLE;
-    s_hdma.Init.MemInc              = DMA_MINC_ENABLE;
-    s_hdma.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD; /* SAI4 data = 16-bit */
-    s_hdma.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD; /* g_PdmBuf = uint16_t */
-    s_hdma.Init.Mode                = DMA_CIRCULAR;            /* ping-pong */
-    s_hdma.Init.Priority            = DMA_PRIORITY_HIGH;
-    s_hdma.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-    if (HAL_DMA_Init(&s_hdma) != HAL_OK) { Error_Handler(); }
+    /* ── DFSDM1 Filter 0 ─────────────────────────────────────────────────
+     * Sinc3, OSR=125, IntOSR=1:  2.0 MHz / 125 = 16,000 Hz PCM output. */
+    s_hdfsdm_flt.Instance = DFSDM1_Filter0;
 
-    __HAL_LINKDMA(&s_hsai, hdmarx, s_hdma);
+    s_hdfsdm_flt.Init.RegularParam.Trigger  = DFSDM_FILTER_SW_TRIGGER;
+    s_hdfsdm_flt.Init.RegularParam.FastMode = ENABLE;
+    s_hdfsdm_flt.Init.RegularParam.DmaMode  = ENABLE;
 
-    HAL_NVIC_SetPriority(BDMA_Channel1_IRQn, 5u, 0u);
-    HAL_NVIC_EnableIRQ(BDMA_Channel1_IRQn);
+    s_hdfsdm_flt.Init.InjectedParam.Trigger        = DFSDM_FILTER_SW_TRIGGER;
+    s_hdfsdm_flt.Init.InjectedParam.ScanMode        = DISABLE;
+    s_hdfsdm_flt.Init.InjectedParam.DmaMode         = DISABLE;
+    s_hdfsdm_flt.Init.InjectedParam.ExtTrigger      = DFSDM_FILTER_EXT_TRIG_TIM1_TRGO;
+    s_hdfsdm_flt.Init.InjectedParam.ExtTriggerEdge  = DFSDM_FILTER_EXT_TRIG_BOTH_EDGES;
+
+    s_hdfsdm_flt.Init.FilterParam.SincOrder       = DFSDM_FILTER_SINC3_ORDER;
+    s_hdfsdm_flt.Init.FilterParam.Oversampling    = 125u; /* 2.0 MHz / 125 = 16,000 Hz */
+    s_hdfsdm_flt.Init.FilterParam.IntOversampling = 1u;
+
+    if (HAL_DFSDM_FilterInit(&s_hdfsdm_flt) != HAL_OK) { Error_Handler(); }
+
+    if (HAL_DFSDM_FilterConfigRegChannel(&s_hdfsdm_flt,
+                                          DFSDM_CHANNEL_0,
+                                          DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
+    { Error_Handler(); }
+
+    /* ── DMA1 Stream1 ────────────────────────────────────────────────────
+     * DMA1/DMA2 can access D2 SRAM (0x30000000) where g_DfsdmBuf lives.
+     * 32-bit word: DFSDM result register is 32 bits.
+     * Circular mode: continuous ping-pong for the drain loop. */
+    __HAL_RCC_DMA1_CLK_ENABLE();
+
+    s_hdma_dfsdm.Instance                 = DMA1_Stream1;
+    s_hdma_dfsdm.Init.Request             = DMA_REQUEST_DFSDM1_FLT0;
+    s_hdma_dfsdm.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    s_hdma_dfsdm.Init.PeriphInc           = DMA_PINC_DISABLE;
+    s_hdma_dfsdm.Init.MemInc              = DMA_MINC_ENABLE;
+    s_hdma_dfsdm.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+    s_hdma_dfsdm.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
+    s_hdma_dfsdm.Init.Mode                = DMA_CIRCULAR;
+    s_hdma_dfsdm.Init.Priority            = DMA_PRIORITY_VERY_HIGH; /* audio is dictator — beats SDMMC on D2 bus arbiter */
+    s_hdma_dfsdm.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+
+    if (HAL_DMA_Init(&s_hdma_dfsdm) != HAL_OK) { Error_Handler(); }
+
+    __HAL_LINKDMA(&s_hdfsdm_flt, hdmaReg, s_hdma_dfsdm);
+
+    HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 4u, 0u); /* priority 4 > SDMMC(5) — audio wins */
+    HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -985,28 +1077,13 @@ static void DMA_HW_Init(void)
  * ═══════════════════════════════════════════════════════════════════════════ */
 static void AudioQuality_Report(void)
 {
-    /* ── [1] PDM bit density — MONO stream (all words = D1, our mic) ───────── */
-    /* HAL PDM MONO mode: buffer contains only D1 data (PC1, SAI4_D1).
-     * Healthy PDM at silence: ~50% ones. Stuck/dead: 0% or 100%. */
-    uint32_t ones_total = 0u;
-    for (uint32_t w = 0u; w < PDM_BUF_TOTAL; w++)
-    {
-        uint32_t v = g_PdmBuf[w];
-        while (v) { ones_total++; v &= v - 1u; }
-    }
-    uint32_t total_bits  = PDM_BUF_TOTAL * 16u;
-    uint32_t density_mic = (ones_total * 100u) / total_bits;
-
     RLOG("-------- Audio Quality Report --------");
-    RLOG("[PDM]  raw[0..7] : %04X %04X %04X %04X %04X %04X %04X %04X",
-        g_PdmBuf[0], g_PdmBuf[1], g_PdmBuf[2], g_PdmBuf[3],
-        g_PdmBuf[4], g_PdmBuf[5], g_PdmBuf[6], g_PdmBuf[7]);
-    RLOG("[PDM]  MONO D1 (PC1) density=%lu%%   (MONO mode: all words = mic D1)",
-        (unsigned long)density_mic);
-    RLOG("[PDM]  D1: %s  <-- mic is on D1 (PC1), HAL MONO mode",
-        (density_mic < 5u)  ? "DEAD/stuck-LOW" :
-        (density_mic > 95u) ? "DEAD/stuck-HIGH" :
-        (density_mic < 40u || density_mic > 60u) ? "WARN: off-centre" : "OK ~50%");
+    /* DFSDM raw output — first 8 samples from last DMA half */
+    RLOG("[DFSDM] raw[0..7] : %08lX %08lX %08lX %08lX %08lX %08lX %08lX %08lX",
+        (unsigned long)g_DfsdmBuf[0], (unsigned long)g_DfsdmBuf[1],
+        (unsigned long)g_DfsdmBuf[2], (unsigned long)g_DfsdmBuf[3],
+        (unsigned long)g_DfsdmBuf[4], (unsigned long)g_DfsdmBuf[5],
+        (unsigned long)g_DfsdmBuf[6], (unsigned long)g_DfsdmBuf[7]);
     RLOG("[DMA]  callbacks=%lu  warmup=%u  stored=%lu  overflow=%lu%s",
         (unsigned long)g_DmaCallCount, (unsigned)WARMUP_CALLS,
         (unsigned long)g_SampleCount / DMA_HALF_SIZE,
@@ -1112,15 +1189,15 @@ static void AudioQuality_Report(void)
         (s_snr_db < 10)          ? "FAIL: poor SNR — check PDM filter config" :
                                    "WARN: marginal — may work, tune gain");
 
-    /* ── [3] SAI4 + BDMA registers ──────────────────────────────────────── */
-    RLOG("[REG]  SAI4_Block_A->CR1   = 0x%08lX  (mode/clk/mono/firstbit)",  (unsigned long)SAI4_Block_A->CR1);
-    RLOG("[REG]  SAI4_Block_A->CR2   = 0x%08lX  (FIFO status/threshold)",   (unsigned long)SAI4_Block_A->CR2);
-    RLOG("[REG]  SAI4_Block_A->FRCR  = 0x%08lX  (frame length/sync)",       (unsigned long)SAI4_Block_A->FRCR);
-    RLOG("[REG]  SAI4_Block_A->SLOTR = 0x%08lX  (slot active mask)",        (unsigned long)SAI4_Block_A->SLOTR);
-    RLOG("[REG]  SAI4_Block_A->SR    = 0x%08lX  (errors: bit1=OVRUDR)",     (unsigned long)SAI4_Block_A->SR);
-    RLOG("[REG]  SAI4->PDMCR         = 0x%08lX  (PDM clk enable/mic pairs)",(unsigned long)SAI4->PDMCR);
-    RLOG("[REG]  BDMA_Ch1->CCR       = 0x%08lX", (unsigned long)BDMA_Channel1->CCR);
-    RLOG("[REG]  BDMA_Ch1->CNDTR     = 0x%08lX  (remaining count)",         (unsigned long)BDMA_Channel1->CNDTR);
-    RLOG("[REG]  BDMA_Ch1->CM0AR     = 0x%08lX  (expect 0x38000000)",       (unsigned long)BDMA_Channel1->CM0AR);
+    /* ── [3] DFSDM + DMA1 registers ─────────────────────────────────────── */
+    RLOG("[REG]  DFSDM1_Ch0->CHCFGR1 = 0x%08lX  (clock/input/SPI config)",  (unsigned long)DFSDM1_Channel0->CHCFGR1);
+    RLOG("[REG]  DFSDM1_Ch0->CHCFGR2 = 0x%08lX  (offset/shift)",            (unsigned long)DFSDM1_Channel0->CHCFGR2);
+    RLOG("[REG]  DFSDM1_Flt0->FLTCR1 = 0x%08lX  (filter enable/DMA/trig)",  (unsigned long)DFSDM1_Filter0->FLTCR1);
+    RLOG("[REG]  DFSDM1_Flt0->FLTCR2 = 0x%08lX  (IT enables)",              (unsigned long)DFSDM1_Filter0->FLTCR2);
+    RLOG("[REG]  DFSDM1_Flt0->FLTISR = 0x%08lX  (status: bit3=ROVRF ovrun)",(unsigned long)DFSDM1_Filter0->FLTISR);
+    RLOG("[REG]  DFSDM1_Flt0->FLTFCR = 0x%08lX  (Sinc order / OSR)",        (unsigned long)DFSDM1_Filter0->FLTFCR);
+    RLOG("[REG]  DMA1_St1->CR        = 0x%08lX  (stream config)",            (unsigned long)DMA1_Stream1->CR);
+    RLOG("[REG]  DMA1_St1->NDTR      = 0x%08lX  (remaining count)",          (unsigned long)DMA1_Stream1->NDTR);
+    RLOG("[REG]  DMA1_St1->M0AR      = 0x%08lX  (expect 0x30000000)",        (unsigned long)DMA1_Stream1->M0AR);
     RLOG("--------------------------------------");
 }
