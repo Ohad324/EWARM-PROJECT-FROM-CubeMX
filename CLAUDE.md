@@ -98,6 +98,62 @@ These are project rules, not suggestions:
 
 ---
 
+## 480 MHz Clock Rules — Non-Negotiable
+
+The CPU runs at 480 MHz (VOS0, PLL1: PLLM=5, PLLN=192, PLLP=2). These rules prevent silent resets, bus corruption, and peripheral failures.
+
+### 1. Power & Thermal Management
+
+- **Supply Config:** `HAL_PWREx_ConfigSupply()` must be called first to match board hardware (SMPS vs LDO).
+- **Voltage Scaling:** Must be in VOS0. You must poll for `PWR_FLAG_VOSRDY` after setting VOS0 before jumping to 480 MHz.
+- **Overdrive Mode:** Ensure SYSCFG clock is enabled to maintain the high-performance boost.
+- **Thermal:** Running at max speed increases power consumption. If the board is placed in an enclosure, it may require passive cooling (heatsink) or better airflow.
+
+### 2. Flash Memory Latency (Wait States)
+
+Flash memory cannot provide instructions at 480 MHz.
+
+- **Rule:** Must maintain `FLASH_LATENCY_4` (4 wait states).
+- **Note:** This is based on the AHB (240 MHz) speed. If stability issues occur during heavy memory access, test with `FLASH_LATENCY_5`.
+- **Risk:** Dropping to 3 or lower causes the CPU to read garbage instructions → HardFault or infinite loop.
+
+### 3. Bus Speed Limits (The "Gearbox")
+
+The H7 internal buses have lower speed limits than the CPU.
+
+| Bus | Max Speed | Current Divider | Actual Speed |
+|-----|-----------|-----------------|--------------|
+| AHB (HCLK) | 240 MHz | /2 | 240 MHz |
+| APB1 | 120 MHz | /2 (of AHB) | 120 MHz |
+| APB2 | 120 MHz | /2 (of AHB) | 120 MHz |
+| APB3 | 120 MHz | /2 (of AHB) | 120 MHz |
+| APB4 | 120 MHz | /2 (of AHB) | 120 MHz |
+
+- **Never** set `AHBCLKDivider = RCC_HCLK_DIV1` if CPU is 480 MHz.
+- If APB buses are overclocked: UART sends garbled data, timers run at double speed.
+
+### 4. Signal Integrity for High-Speed Pins
+
+At 480 MHz, GPIO switching is more aggressive.
+
+- **GPIO Speed:** For high-speed peripherals (DSI, SDRAM, QSPI), use `GPIO_SPEED_FREQ_VERY_HIGH`.
+- **Pull-ups:** At 480 MHz, signal ringing is more common. I2C lines need strong external pull-ups (2.2 kOhm instead of 10 kOhm). Keep SPI traces short.
+
+### 5. Clock Source Stability (HSE vs HSI)
+
+- **HSE:** Using 25 MHz external crystal. `HSE_VALUE` in `stm32h7xx_hal_conf.h` must match the physical crystal.
+- **PLL input:** VCO_IN must stay between 4-8 MHz (current: 25/5 = 5 MHz). If the crystal ever changes, recalculate PLLM.
+
+### 6. Peripheral Clock Independence
+
+Since we manually manage the clock tree (no CubeMX code generation):
+
+- **Kernel Clocks:** UART8, SAI4, and DFSDM have their own clock sources separate from the system clock.
+- **The Conflict:** Changing the main PLL can change peripheral speeds unexpectedly. Always verify `RCC_PeriphCLKInitTypeDef` after a main clock change.
+- Check `RCC_D2CCIPR` (UART8, SAI4) and `RCC_D3CCIPR` (BDMA, SAI4 kernel clock) registers.
+
+---
+
 ## STM32H7 SAI4 PDM Architecture — Non-Negotiable Rules
 
 These are hard-won lessons from this project. Generic PDM code for STM32 will **not** work here without all five of these satisfied.
