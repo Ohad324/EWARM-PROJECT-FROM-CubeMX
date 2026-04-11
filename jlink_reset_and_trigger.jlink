@@ -1,0 +1,26 @@
+// Reset stuck REC_SAVING state and trigger a recording
+si SWD
+speed 4000
+device STM32H747XI
+connect
+
+// Verify current state
+mem8 0x24057200 1
+
+// Reset g_State to REC_IDLE (0) — stuck at REC_SAVING (2)
+w1 0x24057200 0x00
+
+// Verify write
+mem8 0x24057200 1
+
+// Now trigger blue button via EXTI SWIER1 bit 13
+w4 0x58000008 0x00002000
+
+// Wait 300ms for ISR + task notification to process
+sleep 300
+
+// Check if recording started (g_State should now be 1=REC_RECORDING)
+mem8 0x24057200 1
+
+go
+exit

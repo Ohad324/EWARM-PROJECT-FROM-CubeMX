@@ -1,0 +1,33 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// Trigger EXTI13 (blue button) via SWIER1
+w4 0x58000008 0x00002000
+sleep 500
+
+// Wait for recording to start and complete (3s record + 400ms warmup + ~3s save = ~8s total)
+sleep 8000
+
+// Read g_State (0x24056E68) — 0=IDLE, 1=RECORDING, 2=SAVING
+mem8 0x24056E68 1
+
+// Read g_SampleCount (0x24056E18)
+mem32 0x24056E18 1
+
+// Read first 32 samples of g_AudioBuf (0x24018DC0) — 32 x int16 = 64 bytes = 16 words
+mem32 0x24018DC0 16
+
+// Read PDM buffer first 16 words (g_PdmBuf at 0x38000000)
+mem32 0x38000000 16
+
+// Read s_pdmHandler.in_ptr_channels — find offset: handler is static in voice_recorder.c
+// s_pdmHandler at offset from known data — search via ielfdump showed it near 0x24056xxx
+// Read the whole handler struct area (PDM_Filter_Handler_t ~= 40 bytes)
+// From ielfdump: s_pdmHandler would be near s_dmaSem=0x24056E2C
+// Let's read 64 bytes around that area to see the handler fields
+mem32 0x24056E00 16
+
+exit

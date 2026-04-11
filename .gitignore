@@ -1,0 +1,22 @@
+# Build output folders
+STM32H747I-DISCO_CM7/
+STM32H747I-DISCO_CM4/
+MyApplication_CM7/
+MyApplication_CM4/
+
+# IAR settings (user-specific)
+settings/
+
+# Logs and temp files
+*.log
+build.log
+cspycomm.log
+flash_output.txt
+TerminalIO.txt
+-LogFile
+-OutputFile
+-RTTSearchAddr
+
+# Backup files
+*.bak
+Backup of *

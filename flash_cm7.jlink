@@ -1,0 +1,4 @@
+r
+loadfile STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.hex
+r
+q

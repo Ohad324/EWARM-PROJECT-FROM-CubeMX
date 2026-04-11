@@ -1,0 +1,99 @@
+/*
+ * debug_breakpoints.mac — IAR C-SPY macro (J-Link Ultra — unlimited HW breakpoints)
+ *
+ * Covers the full pipeline: button → DMA → SD write → UART stream → NORA
+ * Uses __setCodeBreak() — software BPs allowed (J-Link Ultra, 26 BPs needed).
+ *
+ * ── A. VoiceRecTask ──────────────────────────────────────────────────────────
+ * BP01  voice_recorder.c:221   VoiceRecTask woke (button pressed)
+ * BP02  voice_recorder.c:232   DMA recording started
+ * BP03  voice_recorder.c:270   3 s done — DMA stopped
+ * BP04  voice_recorder.c:280   xQueueSend → signal SDWriteTask
+ *
+ * ── B. SDWriteTask — write phase ────────────────────────────────────────────
+ * BP05  voice_recorder.c:340   AudioSD_Remount() before f_open
+ * BP06  voice_recorder.c:342   f_open WAV file for writing
+ * BP07  voice_recorder.c:353   f_write WAV header
+ * BP08  voice_recorder.c:376   f_write PCM chunk loop
+ * BP09  voice_recorder.c:389   f_close WAV file
+ * BP10  voice_recorder.c:396   WAV written OK log
+ *
+ * ── C. SDWriteTask — stream phase ───────────────────────────────────────────
+ * BP11  voice_recorder.c:414   AudioSD_SendFileToUART (attempt loop)
+ * BP12  voice_recorder.c:420   All 3 send attempts failed
+ * BP13  voice_recorder.c:431   xQueueSend → RTTLogTask
+ *
+ * ── D. audio_sd.c — AudioSD_SendFileToUART internals ───────────────────────
+ * BP14  audio_sd.c:332         Entry Remount (clean SDMMC before read)
+ * BP15  audio_sd.c:336         f_stat (get file size)
+ * BP16  audio_sd.c:362         SD_LOG "Waiting 2s for NORA TLS"
+ * BP17  audio_sd.c:369         f_open for reading (after TLS delay)
+ * BP18  audio_sd.c:385         f_read chunk loop
+ * BP19  audio_sd.c:388         FREAD_ERR — f_read failed
+ * BP20  audio_sd.c:399         UART_TX_ERR — UART transmit failed
+ * BP21  audio_sd.c:405         Stream done log
+ * BP22  audio_sd.c:407         f_close after streaming
+ * BP23  audio_sd.c:412         Exit Remount (clean SDMMC after read)
+ *
+ * ── E. audio_sd.c — disk_read error path ────────────────────────────────────
+ * BP24  audio_sd.c:629         disk_read FAIL — SDMMC error (the bug)
+ * BP25  audio_sd.c:639         disk_read retry FAIL
+ *
+ * ── F. audio_sd.c — AudioSD_Remount ────────────────────────────────────────
+ * BP26  audio_sd.c:461         AudioSD_Remount entry
+ */
+
+execUserSetup()
+{
+    __var bp01, bp02, bp03, bp04, bp05, bp06, bp07, bp08, bp09, bp10;
+    __var bp11, bp12, bp13, bp14, bp15, bp16, bp17, bp18, bp19, bp20;
+    __var bp21, bp22, bp23, bp24, bp25, bp26;
+
+    /* ── A. VoiceRecTask ───────────────────────────────────────────────────── */
+    bp01 = __setCodeBreak("{voice_recorder.c}.221", 0, "2", "TRUE", "");
+    bp02 = __setCodeBreak("{voice_recorder.c}.232", 0, "1", "TRUE", "");
+    bp03 = __setCodeBreak("{voice_recorder.c}.270", 0, "1", "TRUE", "__message \"[BP03] g_SampleCount=\", g_SampleCount, \"\\n\"");
+    bp04 = __setCodeBreak("{voice_recorder.c}.280", 0, "1", "TRUE", "");
+
+    /* ── B. SDWriteTask — write phase ─────────────────────────────────────── */
+    bp05 = __setCodeBreak("{voice_recorder.c}.340", 0, "1", "TRUE", "");
+    bp06 = __setCodeBreak("{voice_recorder.c}.342", 0, "1", "TRUE", "__message \"[BP06] filename=\", filename, \"\\n\"");
+    bp07 = __setCodeBreak("{voice_recorder.c}.353", 0, "1", "TRUE", "");
+    bp08 = __setCodeBreak("{voice_recorder.c}.376", 0, "1", "TRUE", "");
+    bp09 = __setCodeBreak("{voice_recorder.c}.389", 0, "1", "TRUE", "");
+    bp10 = __setCodeBreak("{voice_recorder.c}.396", 0, "1", "TRUE", "__message \"[BP10] sizeBytes=\", logMsg.sizeBytes, \"\\n\"");
+
+    /* ── C. SDWriteTask — stream phase ────────────────────────────────────── */
+    bp11 = __setCodeBreak("{voice_recorder.c}.414", 0, "1", "TRUE", "");
+    bp12 = __setCodeBreak("{voice_recorder.c}.420", 0, "1", "TRUE", "");
+    bp13 = __setCodeBreak("{voice_recorder.c}.431", 0, "1", "TRUE", "");
+
+    /* ── D. AudioSD_SendFileToUART internals ──────────────────────────────── */
+    bp14 = __setCodeBreak("{audio_sd.c}.332",        0, "1", "TRUE", "");
+    bp15 = __setCodeBreak("{audio_sd.c}.336",        0, "1", "TRUE", "");
+    bp16 = __setCodeBreak("{audio_sd.c}.362",        0, "1", "TRUE", "");
+    bp17 = __setCodeBreak("{audio_sd.c}.369",        0, "1", "TRUE", "__message \"[BP17] fileSize=\", fileSize, \"\\n\"");
+    bp18 = __setCodeBreak("{audio_sd.c}.385",        0, "1", "TRUE", "__message \"[BP18] sentTotal=\", sentTotal, \"\\n\"");
+    bp19 = __setCodeBreak("{audio_sd.c}.388",        0, "1", "TRUE", "");
+    bp20 = __setCodeBreak("{audio_sd.c}.399",        0, "1", "TRUE", "");
+    bp21 = __setCodeBreak("{audio_sd.c}.405",        0, "1", "TRUE", "");
+    bp22 = __setCodeBreak("{audio_sd.c}.407",        0, "1", "TRUE", "");
+    bp23 = __setCodeBreak("{audio_sd.c}.412",        0, "1", "TRUE", "");
+
+    /* ── E. disk_read error path ──────────────────────────────────────────── */
+    bp24 = __setCodeBreak("{audio_sd.c}.629",        0, "1", "TRUE", "__message \"[BP24] sdErr=0x\", s_hsd1.ErrorCode:%x, \"\\n\"");
+    bp25 = __setCodeBreak("{audio_sd.c}.639",        0, "1", "TRUE", "");
+
+    /* ── F. AudioSD_Remount entry ─────────────────────────────────────────── */
+    bp26 = __setCodeBreak("{audio_sd.c}.461",        0, "1", "TRUE", "");
+
+
+    __message "debug_breakpoints.mac loaded — 26 hardware breakpoints set.\n";
+    __message "A: VoiceRecTask   BP01-BP04\n";
+    __message "B: SD write       BP05-BP10\n";
+    __message "C: SD stream      BP11-BP13\n";
+    __message "D: SendFileToUART BP14-BP23\n";
+    __message "E: disk_read err  BP24-BP25\n";
+    __message "F: Remount entry  BP26\n";
+    __message "Watch: g_SampleCount | filename | logMsg.sizeBytes | fileSize | sentTotal | s_hsd1.ErrorCode\n";
+}

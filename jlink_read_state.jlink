@@ -1,0 +1,20 @@
+// Read g_State, g_SysMode, voiceRecTaskHandle
+si SWD
+speed 4000
+device STM32H747XI
+connect
+
+// g_State (1 byte at 0x24057200)
+mem8 0x24057200 1
+
+// g_SysMode (1 byte at 0x24057201)
+mem8 0x24057201 1
+
+// voiceRecTaskHandle (4 bytes at 0x240571BC)
+mem32 0x240571BC 1
+
+// EXTI D1PR1 — check if any pending
+mem32 0x58000088 1
+
+go
+exit

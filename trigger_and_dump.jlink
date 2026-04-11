@@ -1,0 +1,26 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// Trigger EXTI line 13 via SWIER1 (simulates blue button press)
+w4 0x58000008 0x00002000
+sleep 500
+
+// Wait for recording + save to complete (150ms warmup + 3s record + ~1.5s SD write = ~5s)
+sleep 5500
+
+// Read g_State — should be 0 (IDLE) when done
+mem8 0x24056E68 1
+
+// Read g_SampleCount
+mem32 0x24056E18 1
+
+// Show first 8 samples (from settled region — index 64 onwards)
+mem16 0x24018DC0 128
+
+// Save full audio buffer (48000 samples × 2 bytes = 96000 = 0x17700 bytes)
+SaveBin "C:\TouchGFXProjects\MyApplication\EWARM\SystemView\audio_buf.bin" 0x24018DC0 0x17700
+
+exit

@@ -1,0 +1,25 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// Wait for recording + save to complete (~5s)
+sleep 6000
+
+// Read g_State — should be 0 (IDLE) when done
+mem8 0x24056E68 1
+
+// Read g_SampleCount
+mem32 0x24056E18 1
+
+// Read first 64 int16 samples from g_AudioBuf
+mem16 0x24018DC0 64
+
+// Read g_PdmBuf last snapshot
+mem32 0x38000000 8
+
+// Save full audio buffer
+SaveBin "C:\TouchGFXProjects\MyApplication\EWARM\SystemView\audio_buf.bin" 0x24018DC0 0x17700
+
+exit

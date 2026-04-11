@@ -1,0 +1,12 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+// Start RTT logging to file
+RTTLog 0 C:\TouchGFXProjects\MyApplication\EWARM\SystemView\rtt_log.txt
+sleep 500
+// Trigger EXTI13 (blue button) via SWIER1
+w4 0x58000008 0x00002000
+sleep 18000
+exit

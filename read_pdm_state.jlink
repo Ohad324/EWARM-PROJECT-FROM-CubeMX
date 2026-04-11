@@ -1,0 +1,25 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// Read g_State
+mem8 0x24056E68 1
+
+// Read SAI4_Block_A CR1 (check MONO bit)
+mem32 0x58005004 1
+
+// Read BDMA_Channel1 CCR (confirm running)
+mem32 0x58025008 1
+
+// Read BDMA_Channel1 CNDTR (remaining count — should be 0..127 if DMA running)
+mem32 0x5802500C 1
+
+// Read g_PdmBuf raw content (first 16 words = 128 PDM bits)
+mem16 0x38000000 32
+
+// Read BDMA_Channel1 CM0AR (should be 0x38000000)
+mem32 0x58025014 1
+
+exit

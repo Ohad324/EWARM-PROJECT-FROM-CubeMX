@@ -1,0 +1,52 @@
+/*
+ * debug_log.mac — cspybat logging macro
+ * Runs headless: sets breakpoints, logs all hits to debug_session.log
+ * Called by debug_run.bat
+ */
+
+execUserSetup()
+{
+    __var bp01, bp02, bp03, bp04, bp05, bp06, bp07, bp08, bp09, bp10;
+    __var bp11, bp12, bp13, bp14, bp15, bp16, bp17, bp18, bp19, bp20;
+    __var bp21, bp22, bp23, bp24, bp25, bp26;
+
+    /* ── A. VoiceRecTask ───────────────────────────────────────────────────── */
+    bp01 = __setCodeBreak("{voice_recorder.c}.221", 0, "2", "TRUE", "__message \"[BP01] VoiceRecTask woke\n\";");
+    bp02 = __setCodeBreak("{voice_recorder.c}.232", 0, "1", "TRUE", "__message \"[BP02] DMA started\n\";");
+    bp03 = __setCodeBreak("{voice_recorder.c}.271", 0, "1", "TRUE", "__message \"[BP03] g_SampleCount=\", g_SampleCount, \"\n\";");
+    bp04 = __setCodeBreak("{voice_recorder.c}.282", 0, "1", "TRUE", "__message \"[BP04] xQueueSend to SDWriteTask\n\";");
+
+    /* ── B. SDWriteTask — write phase ─────────────────────────────────────── */
+    bp05 = __setCodeBreak("{voice_recorder.c}.343", 0, "1", "TRUE", "__message \"[BP05] Remount before f_open\n\";");
+    bp06 = __setCodeBreak("{voice_recorder.c}.362", 0, "1", "TRUE", "__message \"[BP06] f_open\n\";");
+    bp07 = __setCodeBreak("{voice_recorder.c}.375", 0, "1", "TRUE", "__message \"[BP07] f_write WAV header\n\";");
+    bp08 = __setCodeBreak("{voice_recorder.c}.395", 0, "1", "TRUE", "__message \"[BP08] f_write PCM\n\";");
+    bp09 = __setCodeBreak("{voice_recorder.c}.411", 0, "1", "TRUE", "__message \"[BP09] f_close\n\";");
+    bp10 = __setCodeBreak("{voice_recorder.c}.417", 0, "1", "TRUE", "__message \"[BP10] WAV OK sizeBytes=\", logMsg.sizeBytes, \"\n\";");
+
+    /* ── C. SDWriteTask — stream phase ────────────────────────────────────── */
+    bp11 = __setCodeBreak("{voice_recorder.c}.434", 0, "1", "TRUE", "__message \"[BP11] SendFileToUART attempt\n\";");
+    bp12 = __setCodeBreak("{voice_recorder.c}.444", 0, "1", "TRUE", "__message \"[BP12] All 3 attempts failed\n\";");
+    bp13 = __setCodeBreak("{voice_recorder.c}.454", 0, "1", "TRUE", "__message \"[BP13] done result=\", logMsg.result, \"\n\";");
+
+    /* ── D. AudioSD_SendFileToUART internals ──────────────────────────────── */
+    bp14 = __setCodeBreak("{audio_sd.c}.332",        0, "1", "TRUE", "__message \"[BP14] Entry Remount\n\";");
+    bp15 = __setCodeBreak("{audio_sd.c}.336",        0, "1", "TRUE", "__message \"[BP15] f_stat\n\";");
+    bp16 = __setCodeBreak("{audio_sd.c}.362",        0, "1", "TRUE", "__message \"[BP16] Waiting 2s NORA TLS\n\";");
+    bp17 = __setCodeBreak("{audio_sd.c}.369",        0, "1", "TRUE", "__message \"[BP17] fileSize=\", fileSize, \"\n\";");
+    bp18 = __setCodeBreak("{audio_sd.c}.385",        0, "1", "TRUE", "__message \"[BP18] sentTotal=\", sentTotal, \"\n\";");
+    bp19 = __setCodeBreak("{audio_sd.c}.388",        0, "1", "TRUE", "__message \"[BP19] FREAD_ERR\n\";");
+    bp20 = __setCodeBreak("{audio_sd.c}.399",        0, "1", "TRUE", "__message \"[BP20] UART_TX_ERR\n\";");
+    bp21 = __setCodeBreak("{audio_sd.c}.405",        0, "1", "TRUE", "__message \"[BP21] Stream done sentTotal=\", sentTotal, \"\n\";");
+    bp22 = __setCodeBreak("{audio_sd.c}.407",        0, "1", "TRUE", "__message \"[BP22] f_close after stream\n\";");
+    bp23 = __setCodeBreak("{audio_sd.c}.412",        0, "1", "TRUE", "__message \"[BP23] Exit Remount\n\";");
+
+    /* ── E. disk_read error path ──────────────────────────────────────────── */
+    bp24 = __setCodeBreak("{audio_sd.c}.630",        0, "1", "TRUE", "__message \"[BP24] disk_read FAIL sdErr=0x\", s_hsd1.ErrorCode:%x, \"\n\";");
+    bp25 = __setCodeBreak("{audio_sd.c}.641",        0, "1", "TRUE", "__message \"[BP25] disk_read retry FAIL\n\";");
+
+    /* ── F. AudioSD_Remount entry ─────────────────────────────────────────── */
+    bp26 = __setCodeBreak("{audio_sd.c}.464",        0, "1", "TRUE", "__message \"[BP26] AudioSD_Remount entry\n\";");
+
+    __message "debug_log.mac loaded — 26 breakpoints set\n";
+}

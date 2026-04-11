@@ -1,0 +1,9 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+g
+rttstart
+sleep 20000
+rttlogfile
+exit

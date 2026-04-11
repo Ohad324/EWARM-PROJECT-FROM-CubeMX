@@ -1,0 +1,45 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Enable log to capture all output
+Log C:\TouchGFXProjects\MyApplication\EWARM\SystemView\jlink_session.log
+
+// Load and run firmware
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+
+// Wait for full boot (SD mount, tasks start, PDM init) — 3 seconds
+sleep 3000
+
+// Trigger EXTI13 (blue button) via SWIER1
+w4 0x58000008 0x00002000
+sleep 200
+// Verify trigger — read PR1 pending register
+mem32 0x58000088 1
+
+// Wait for full recording cycle:
+// warmup 10 halves=80ms + 3s record + save ~500ms = 4s total
+sleep 5000
+
+// Poll g_State (0x24056E68) — should be 0x00 (IDLE) when done
+mem8 0x24056E68 1
+
+// Read g_SampleCount
+mem32 0x24056E18 1
+
+// Save g_AudioBuf (96000 bytes = 48000 int16 samples) to binary file
+SaveBin "C:\TouchGFXProjects\MyApplication\EWARM\SystemView\audio_buf.bin" 0x24018DC0 0x17700
+
+// Read first 32 words (64 bytes = first 32 int16 samples)
+mem16 0x24018DC0 20
+
+// Read g_PdmBuf first 16 words
+mem32 0x38000000 8
+
+// Read SAI4 CR1 register
+mem32 0x58005004 1
+
+exit

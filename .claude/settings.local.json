@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(chmod:*)",
+      "Bash(mkdir:*)",
+      "Bash(attrib:*)",
+      "Read(//c/TouchGFXProjects/**)",
+      "Bash(cmd.exe /c \"dir C:\\\\TouchGFXProjects\")",
+      "Bash(cmd.exe /c \"dir /s /b C:\\\\TouchGFXProjects\\\\MyApplication\\\\CM7\\\\TouchGFX\\\\gui\\\\src\\\\music_screen 2>nul && dir /s /b C:\\\\TouchGFXProjects\\\\MyApplication\\\\CM7\\\\TouchGFX\\\\generated\\\\gui_generated\\\\src\\\\music_screen 2>nul\")",
+      "Read(//c//**)",
+      "Read(//c/Users/Ohad//**)",
+      "Bash(\"C:/TouchGFXProjects/IAR 9.70.2/ewarm-9.70.2/common/bin/iarbuild.exe\" STM32H747I-DISCO.ewp -build STM32H747I-DISCO_CM7)"
+    ]
+  }
+}

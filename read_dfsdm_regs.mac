@@ -1,0 +1,42 @@
+/* read_dfsdm_regs.mac */
+
+execUserSetup()
+{
+    __message "=== GPIOD ===";
+    __message "MODER=0x", __readMemory32(0x58020C00,"Memory"):%X,
+              "  AFRL=0x", __readMemory32(0x58020C20,"Memory"):%X;
+    __message "  PD3 mode=", ((__readMemory32(0x58020C00,"Memory")>>6)&3):%d,
+              " (want 2)  PD3 AF=", ((__readMemory32(0x58020C20,"Memory")>>12)&0xF):%d,
+              " (want 3)";
+    __message "  PD6 mode=", ((__readMemory32(0x58020C00,"Memory")>>12)&3):%d,
+              " (want 0=input not AF)";
+
+    __message "=== GPIOE ===";
+    __message "MODER=0x", __readMemory32(0x58021000,"Memory"):%X,
+              "  AFRL=0x", __readMemory32(0x58021020,"Memory"):%X;
+    __message "  PE7 mode=", ((__readMemory32(0x58021000,"Memory")>>14)&3):%d,
+              " (want 2)  PE7 AF=", ((__readMemory32(0x58021020,"Memory")>>28)&0xF):%d,
+              " (want 3)";
+
+    __message "=== DFSDM1 Channel0 (CKOUT) ===";
+    __message "CH0CFGR1=0x", __readMemory32(0x40017000,"Memory"):%X,
+              "  CKOUTDIV=", ((__readMemory32(0x40017000,"Memory")>>16)&0xFF):%d,
+              " (want 23)";
+
+    __message "=== DFSDM1 Channel1 ===";
+    __message "CH1CFGR1=0x", __readMemory32(0x40017020,"Memory"):%X,
+              "  SITP=", (__readMemory32(0x40017020,"Memory")&3):%d,
+              " (0=RISING 1=FALLING)";
+
+    __message "=== DFSDM1 Filter0 ===";
+    __message "FLTCR1=0x",   __readMemory32(0x40017100,"Memory"):%X,
+              "  RCH=",  ((__readMemory32(0x40017100,"Memory")>>24)&7):%d,
+              " (want 1)";
+    __message "FLTFCR=0x",   __readMemory32(0x40017114,"Memory"):%X,
+              "  FORD=", ((__readMemory32(0x40017114,"Memory")>>29)&7):%d,
+              "  FOSR=", ((__readMemory32(0x40017114,"Memory")>>16)&0x3FF):%d,
+              " (want 2,124)";
+    __message "FLTRDATAR=0x", __readMemory32(0x4001711C,"Memory"):%X,
+              "  RDATACH=", (__readMemory32(0x4001711C,"Memory")&7):%d,
+              " (want 1)";
+}

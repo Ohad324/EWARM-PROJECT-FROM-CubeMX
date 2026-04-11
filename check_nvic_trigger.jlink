@@ -1,0 +1,33 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// Read NVIC ISER1 (IRQ32-63) — EXTI15_10 is IRQ40
+// NVIC_ISER base = 0xE000E100, ISER1 = 0xE000E104
+mem32 0xE000E104 1
+
+// Read NVIC ISPR1 (pending)
+mem32 0xE000E304 1
+
+// Read EXTI1 IMR1 (interrupt mask register) — bit13 must be set
+mem32 0x40013C00 1
+
+// Read EXTI1 RTSR1 (rising trigger) — bit13 for rising edge on PC13
+mem32 0x40013C20 1
+
+// Now write SWIER1 bit13
+w4 0x40013C08 0x00002000
+sleep 100
+
+// Check NVIC pending again
+mem32 0xE000E304 1
+
+// Check PR1
+mem32 0x40013C88 1
+
+// Check g_State
+mem8 0x24056E68 1
+
+exit

@@ -1,0 +1,43 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Load firmware
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+
+// Wait longer for full boot (TouchGFX + SD + all tasks)
+sleep 6000
+
+// Check voiceRecTaskHandle is non-null
+mem32 0x24056E24 1
+
+// Check g_State = IDLE
+mem8 0x24056E68 1
+
+// Trigger via EXTI1 SWIER1 bit13
+w4 0x40013C08 0x00002000
+sleep 300
+
+// Verify g_State changed to RECORDING (1)
+mem8 0x24056E68 1
+
+// Wait for full cycle: 80ms warmup + 3s record + ~1s save
+sleep 5000
+
+// Read final state and sample count
+mem8 0x24056E68 1
+mem32 0x24056E18 1
+
+// Read first 64 int16 samples from g_AudioBuf
+mem16 0x24018DC0 64
+
+// Read g_PdmBuf first 16 words
+mem32 0x38000000 8
+
+// Save audio buffer to file for analysis
+SaveBin "C:\TouchGFXProjects\MyApplication\EWARM\SystemView\audio_buf.bin" 0x24018DC0 0x17700
+
+exit

@@ -1,0 +1,108 @@
+T62B4 684:493.440   SEGGER J-Link V9.30a Log File
+T62B4 684:498.240   DLL Compiled: Mar 30 2026 10:56:50
+T62B4 684:498.304   Logging started @ 2026-04-02 14:58
+T62B4 684:498.368   Process: C:\Program Files\SEGGER\SystemView\SystemView.exe
+T62B4 684:499.264 - 684498.432ms 
+T62B4 684:502.400 JLINK_ExecCommand("device = STM32H747XI_M7", ...). 
+T62B4 684:811.200   Flash bank @ 0x08000000: SFL: Parsing sectorization info from ELF file
+T62B4 684:811.456     FlashDevice.SectorInfo[0]: .SectorSize = 0x00020000, .SectorStartAddr = 0x00000000
+T62B4 684:811.584   FlashBank @0x08000000: Sectorization info from SFL ELF file ignored because sectorization override from DLL / XML file is active.
+T62B4 684:817.536   Flash bank @ 0x08100000: SFL: Parsing sectorization info from ELF file
+T62B4 684:817.600     FlashDevice.SectorInfo[0]: .SectorSize = 0x00020000, .SectorStartAddr = 0x00000000
+T62B4 684:817.664   FlashBank @0x08100000: Sectorization info from SFL ELF file ignored because sectorization override from DLL / XML file is active.
+T62B4 684:824.064   Flash bank @ 0x90000000: SFL: Parsing sectorization info from ELF file
+T62B4 684:824.128     FlashDevice.SectorInfo[0]: .SectorSize = 0x00010000, .SectorStartAddr = 0x00000000
+T62B4 684:870.016   Device "STM32H747XI_M7" selected.
+T62B4 684:876.928 - 372.748ms returns 0x00
+T62B4 684:878.784 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T62B4 684:890.944 - 12.896ms returns 0x00
+T62B4 684:891.072 JLINK_SetSpeed(4000)
+T62B4 684:894.592 - 3.514ms 
+T62B4 684:895.168 JLINK_ExecCommand("SetSkipInitECCRAMOnConnect = 1", ...). 
+T62B4 684:896.128 - 0.930ms returns 0x00
+T62B4 684:896.192 JLINK_ExecCommand("ForceAttachTarget = 1", ...). 
+T62B4 684:896.320 - 0.074ms returns 0x00
+T62B4 684:896.384 JLINK_Connect()
+T62B4 684:904.960   ConfigTargetSettings() start
+T62B4 684:907.776    J-Link Script File: Executing ConfigTargetSettings()
+T62B4 684:916.032   ConfigTargetSettings() end - Took 9.49ms
+T62B4 684:917.696   InitTarget() start
+T62B4 684:917.824    J-Link Script File: Executing InitTarget()
+T62B4 684:919.040   SWD selected. Executing JTAG -> SWD switching sequence.
+T62B4 684:921.984   DAP initialized successfully.
+T62B4 684:934.016   InitTarget() end - Took 14.9ms
+T62B4 684:938.688   Found SW-DP with ID 0x6BA02477
+T62B4 684:955.008   DPIDR: 0x6BA02477
+T62B4 684:955.520   CoreSight SoC-400 or earlier
+T62B4 684:955.904   AP map detection skipped. Manually configured AP map found.
+T62B4 684:956.288   AP[0]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+T62B4 684:956.608   AP[1]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+T62B4 684:956.992   AP[2]: APB-AP (IDR: Not set, ADDR: 0x00000000)
+T62B4 684:957.312   AP[3]: AHB-AP (IDR: Not set, ADDR: 0x00000000)
+T62B4 684:957.888   AP[0]: Skipped ROMBASE read. CoreBaseAddr manually set by user
+T62B4 684:959.680   AP[0]: Core found
+T62B4 684:961.344   CPUID register: 0x411FC271. Implementer code: 0x41 (ARM)
+T62B4 684:961.984   Cache: L1 I/D-cache present
+T62B4 684:964.224   Found Cortex-M7 r1p1, Little endian.
+T62B4 684:967.808   -- Max. mem block: 0x0002FB90
+T62B4 684:968.960   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T62B4 684:969.600   CPU_ReadMem(4 bytes @ 0xE0002000)
+T62B4 684:970.368   FPUnit: 8 code (BP) slots and 0 literal slots
+T62B4 684:970.432   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T62B4 684:970.816   CPU_ReadMem(4 bytes @ 0xE0001000)
+T62B4 684:971.136   CPU_WriteMem(4 bytes @ 0xE0001000)
+T62B4 684:971.584   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T62B4 684:971.968   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T62B4 684:972.288   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T62B4 684:972.608   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T62B4 684:973.312   ROM table scan skipped. CoreBaseAddr manually set by user: 0xE00FE000
+T62B4 684:973.312   CPU_WriteMem(4 bytes @ 0xE000ED84)
+T62B4 684:973.568   CPU_ReadMem(4 bytes @ 0xE000ED80)
+T62B4 684:974.400   I-Cache L1: 16 KB, 256 Sets, 32 Bytes/Line, 2-Way
+T62B4 684:974.400   CPU_WriteMem(4 bytes @ 0xE000ED84)
+T62B4 684:974.720   CPU_ReadMem(4 bytes @ 0xE000ED80)
+T62B4 684:975.488   D-Cache L1: 16 KB, 128 Sets, 32 Bytes/Line, 4-Way
+T62B4 684:975.872 - 79.498ms returns 0x00
+T62B4 684:976.768 JLINK_IsHalted()
+T62B4 684:977.088 - 0.376ms returns FALSE
+T62B4 684:977.216 JLINK_RTTERMINAL_Control(Cmd = JLINKARM_RTTERMINAL_CMD_START)
+T62B4 684:977.408 - 0.196ms returns 0x00
+T62B4 684:987.584 JLINK_IsHalted()
+T62B4 684:987.904 - 0.321ms returns FALSE
+T62B4 684:987.904 JLINK_RTTERMINAL_Control(Cmd = JLINKARM_RTTERMINAL_CMD_GETNUMBUF)
+T62B4 684:987.968 - 0.015ms returns 0xFFFFFFFE
+T62B4 684:993.664 JLINK_RTTERMINAL_Control(Cmd = JLINKARM_RTTERMINAL_CMD_GETNUMBUF)
+T62B4 684:993.664 - 0.031ms returns 0xFFFFFFFE
+T62B4 684:999.680 JLINK_RTTERMINAL_Control(Cmd = JLINKARM_RTTERMINAL_CMD_GETNUMBUF)
+T62B4 684:999.680 - 0.044ms returns 0xFFFFFFFE
+T7DC0 685:002.560   CPU_ReadMem(4 bytes @ 0xE000ED00)
+T7DC0 685:002.880   CPU_ReadMem(4 bytes @ 0xE000ED08)
+T7DC0 685:003.136   CPU_ReadMem(4 bytes @ 0x08000020)
+T7DC0 685:003.520   Periodic RTT: Looking for RTT CB @ 0x24000000 (Range 1/2)
+T7DC0 685:003.520   CPU_ReadMem(4096 bytes @ 0x24000000)
+T7DC0 685:015.872   CPU_ReadMem(24 bytes @ 0x24000058)
+T7DC0 685:016.320   Periodic RTT: RTT CB auto-detected @ 0x24000058
+T7DC0 685:016.320   Periodic RTT: RTT CB verified. Started data handling
+T7DC0 685:075.136   CPU_ReadMem(32 bytes @ 0x0805033C)
+T7DC0 685:075.712   CPU_ReadMem(32 bytes @ 0x0805046C)
+T62B4 685:076.480 JLINK_RTTERMINAL_Control(Cmd = JLINKARM_RTTERMINAL_CMD_GETNUMBUF)
+T62B4 685:076.544 - 0.046ms returns 0x02
+T62B4 685:082.496 JLINK_RTTERMINAL_Control(Cmd = JLINKARM_RTTERMINAL_CMD_GETDESC)
+T62B4 685:082.496   CPU_ReadMem(72 bytes @ 0x24000070)
+T62B4 685:083.648   CPU_ReadMem(32 bytes @ 0x0805033C)
+T62B4 685:084.544   CPU_ReadMem(32 bytes @ 0x0805033C)
+T62B4 685:085.056 - 2.541ms returns 0x00
+T62B4 685:085.056 JLINK_RTTERMINAL_Control(Cmd = JLINKARM_RTTERMINAL_CMD_GETDESC)
+T62B4 685:085.056   CPU_ReadMem(32 bytes @ 0x0805046C)
+T62B4 685:085.696 - 0.647ms returns 0x00
+T62B4 685:085.760 JLINK_IsHalted()
+T62B4 685:086.272 - 0.489ms returns FALSE
+T62B4 689:203.072 JLINK_Close()
+T62B4 689:250.752   OnDisconnectTarget() start
+T62B4 689:250.880    J-Link Script File: Executing OnDisconnectTarget()
+T62B4 689:262.080   Resetting used DBGMCU registers.
+T62B4 689:272.512   OnDisconnectTarget() end - Took 20.8ms
+T62B4 689:272.576   CPU_ReadMem(4 bytes @ 0xE0001000)
+T62B4 689:327.168 - 124.151ms
+T62B4 689:327.808   
+T62B4 689:327.872   Closed

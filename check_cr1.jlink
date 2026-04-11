@@ -1,0 +1,16 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+go
+
+// SAI4_Block_A CR1
+mem32 0x58005004 1
+
+// SAI4 PDMCR
+mem32 0x58005400 1
+
+// Read PDM buffer
+mem16 0x38000000 16
+
+exit
