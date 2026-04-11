@@ -33,14 +33,20 @@
  *   RTTLogTask → SEGGER_RTT result
  *
  * ── HARDWARE ─────────────────────────────────────────────────────────────────
- *   SAI4_Block_A  PDM master-receive (onboard MP34DT05-A microphone)
- *   Pins:  PE4 (AF8 =SAI4_FS_A)  → frame sync  (unlocks SAI4 master clock tree)
- *          PE5 (AF8 =SAI4_SCK_A) → serial clock (SAI4 internal bit clock)
- *          PE2 (AF10=SAI4_CK1)   → PDM clock output to microphone
- *          PC1 (AF10=SAI4_D1)    → PDM data input from microphone
- *   BDMA_Channel1 — only DMA that can reach D3 SRAM (SAI4 is in D3 domain)
- *   g_PdmBuf at 0x38000000 (D3 SRAM) — BDMA target, outside D-Cache region
- *   CRC peripheral — must be enabled before PDM_Filter_Init (library uses it)
+ *   Architecture: SAI4 (front-end) + DFSDM1 Channel 3 (back-end)
+ *
+ *   SAI4 drives the physical mic interface (4 pins — all on the board):
+ *     PE2 (AF10=SAI4_CK1)   → PDM clock output to microphone
+ *     PC1 (AF10=SAI4_D1)    → PDM data input from microphone
+ *     PE4 (AF8 =SAI4_FS_A)  → frame sync (unlocks SAI4 master clock tree)
+ *     PE5 (AF8 =SAI4_SCK_A) → serial clock (SAI4 internal bit clock)
+ *
+ *   DFSDM1 Channel 3 receives PDM internally from SAI4 via SPI_CLOCK_INTERNAL.
+ *   No separate DFSDM external pins needed — the mic is only wired to SAI4.
+ *   (CubeMX configures PD3/PC7 in MSP but they are unused on this board.)
+ *
+ *   DFSDM1 Filter0: Sinc3, hardware decimation → 16-bit PCM output
+ *   DMA1_Stream1 → g_DfsdmBuf in D2 SRAM (0x30000000)
  *   Button: PC13 EXTI15_10 rising edge  |  LED: PI12
  *
  * ── CLOCK MATH ───────────────────────────────────────────────────────────────
@@ -128,9 +134,12 @@ typedef struct {
 /* Compile-time check: header must be exactly 512 bytes */
 typedef char _WavHdr512Check[(sizeof(WavHdr_t) == 512u) ? 1 : -1];
 
-/* ── Peripheral handles (private to this file) ──────────────────────────── */
-static DFSDM_Channel_HandleTypeDef s_hdfsdm_ch;
-static DFSDM_Filter_HandleTypeDef  s_hdfsdm_flt;
+/* ── Peripheral handles — owned by CubeMX (main.c), used here via extern ── */
+extern DFSDM_Filter_HandleTypeDef  hdfsdm1_filter0;
+extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel3;
+extern SAI_HandleTypeDef           hsai_BlockA4;
+
+/* DMA handle — set up in DFSDM_DMA_Init(), linked to hdfsdm1_filter0 */
 static DMA_HandleTypeDef           s_hdma_dfsdm;
 
 /* ── DFSDM DMA buffer — int32_t (DFSDM result is 24-bit sign-extended to 32 bits).
@@ -150,8 +159,7 @@ static __no_init int32_t g_DfsdmBuf[DFSDM_BUF_TOTAL]  __attribute__((aligned(32)
 #pragma location = 0x30020000
 __no_init int16_t g_AudioBuf[AUDIO_BUFFER_SAMPLES] __attribute__((aligned(32)));
 
-/* No staging buffer needed — in_ptr_channels=2, library reads stride-2 bytes to
- * extract the unique PDM byte from each duplicated 16-bit word. Feed g_PdmBuf directly. */
+/* No staging buffer needed — DFSDM hardware does PDM→PCM decimation. */
 
 /* ── Audio health monitor ────────────────────────────────────────────────── */
 volatile AudioHealth_t g_AudioHealth = {0};
@@ -206,7 +214,7 @@ static uint32_t s_clip_cnt    = 0u;
 
 /* ── Forward declarations ────────────────────────────────────────────────── */
 static void Button_GPIO_Init(void);
-static void DFSDM_HW_Init(void);
+static void DFSDM_DMA_Init(void);
 static void StoreDmaChunk(const int32_t *src32);
 static void BuildWavHdr(WavHdr_t *h, uint32_t nSamples);
 static void AudioQuality_Report(void);
@@ -239,7 +247,7 @@ void VoiceRec_Init(void)
     configASSERT(xLogQueue);
 
     Button_GPIO_Init();
-    DFSDM_HW_Init();
+    DFSDM_DMA_Init();   /* DMA only — CubeMX owns channel/filter/GPIO init */
 
     g_State       = REC_IDLE;
     g_SampleCount = 0u;
@@ -347,17 +355,28 @@ void VoiceRecTask(void *arg)
         __DSB();
         RLOG("[REC] --- Stage 0: recording 3s ---\r\n");
 
+        /* ── Start SAI4 first — it drives the PDM clock to the microphone.
+         * DFSDM1 Channel 3 receives its data internally from SAI4.
+         * If SAI4 isn't running, DFSDM gets no PDM bitstream → silence/noise.
+         * Startup order: SAI4 clock running → DFSDM DMA started. */
+        if (HAL_SAI_Receive_DMA(&hsai_BlockA4, (uint8_t *)g_DfsdmBuf, DFSDM_BUF_TOTAL * 2u) != HAL_OK)
+        {
+            RLOG("[REC] WARN: SAI4 DMA start failed — trying without");
+            /* Non-fatal: SAI4 may already be running from MX_SAI4_Init.
+             * DFSDM can still work if SAI4 clock is already active. */
+        }
+
         /* HAL_DFSDM_FilterInit sets RDMAEN before DFEN — on STM32H7 the subsequent
          * HAL_DFSDM_FilterConfigRegChannel RMW on FLTCR1 (with DFEN=1) can silently
          * clear RDMAEN. HAL_DFSDM_FilterRegularStart_DMA checks RDMAEN and returns
          * HAL_ERROR if it is 0, so the DMA never starts.
          * Fix: force RDMAEN=1 here, after all init calls are complete and just before
          * starting the DMA. This is safe — RDMAEN is writable when DFEN=1. */
-        s_hdfsdm_flt.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
+        hdfsdm1_filter0.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
 
         /* Start DFSDM DMA (DMA1_Stream1 → g_DfsdmBuf in D2 SRAM) */
         HAL_StatusTypeDef hal =
-            HAL_DFSDM_FilterRegularStart_DMA(&s_hdfsdm_flt,
+            HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0,
                                              g_DfsdmBuf,
                                              DFSDM_BUF_TOTAL);
         if (hal != HAL_OK)
@@ -368,6 +387,7 @@ void VoiceRecTask(void *arg)
             err.timestamp = HAL_GetTick();
             strncpy(err.filename, "NONE", sizeof(err.filename));
             xQueueSend(xLogQueue, &err, pdMS_TO_TICKS(100));
+            HAL_SAI_DMAStop(&hsai_BlockA4);
             g_State = REC_IDLE; __DSB();
             continue;
         }
@@ -422,8 +442,9 @@ void VoiceRecTask(void *arg)
             }
         }
 
-        /* Stop DFSDM DMA */
-        HAL_DFSDM_FilterRegularStop_DMA(&s_hdfsdm_flt);
+        /* Stop order: DFSDM first (consumer), then SAI4 (clock source) */
+        HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);
+        HAL_SAI_DMAStop(&hsai_BlockA4);
 
         /* Drain any stale queue entries from callbacks that fired after stop */
         {
@@ -437,7 +458,7 @@ void VoiceRecTask(void *arg)
         /* Safety: if SAI4 DMA gave no samples, log and skip SD write */
         if (g_SampleCount == 0u)
         {
-            RLOG("[REC] WARN: SAI4 DMA gave 0 samples — check SAI4/BDMA config");
+            RLOG("[REC] WARN: DFSDM DMA gave 0 samples — check SAI4+DFSDM config");
             g_State = REC_IDLE; __DSB();
             continue;
         }
@@ -675,29 +696,8 @@ void SDWriteTask(void *arg)
             RLOG("[HEALTH] STATUS: OK — clean recording");
         RLOG("---------------------------");
 
-        /* ── Stage 2: stream WAV to NORA over UART8 ────────────────────────
-         * AudioSD_SendFileToUART() sends:
-         *   1. ASCII header:  AUDIO:FILE:<filename>:<bytes>\n
-         *   2. Raw WAV bytes: streamed in chunks until EOF
-         * NORA receives the stream, uploads to GCS, runs Speech-to-Text.
-         * Retry up to 3 times on failure — file stays on SD card so no
-         * re-recording is needed. 2-second gap between attempts gives NORA
-         * time to close the failed HTTP connection and reset. */
-        {
-            bool sent = false;
-            RLOG("[REC] --- Stage 2: streaming to NORA ---");
-            for (int attempt = 1; attempt <= 3 && !sent; attempt++)
-            {
-                RLOG("[REC] UART send attempt %d/3...\r\n", attempt);
-                sent = AudioSD_SendFileToUART(filename);
-                if (!sent && attempt < 3)
-                    vTaskDelay(pdMS_TO_TICKS(2000));
-            }
-            if (!sent)
-                RLOG("[REC] All 3 send attempts FAILED\r\n");
-            else
-                RLOG("[REC] Stream OK\r\n");
-        }
+        /* Stage 2 (UART streaming to NORA) removed — not needed for standalone recording.
+         * WAV file stays on SD card, accessible via USB MSC or card reader. */
 
 done:
         /* Remount on any error path — SDMMC stays dirty after a write failure
@@ -936,105 +936,22 @@ static void Button_GPIO_Init(void)
     HAL_GPIO_Init(GPIOK, &gpio);
 }
 
-static void DFSDM_HW_Init(void)
+static void DFSDM_DMA_Init(void)
 {
-    /* ── GPIO ────────────────────────────────────────────────────────────
-     * PE2 → DFSDM1_CKOUT  (PDM clock output to microphone, AF3)
-     * PC1 → DFSDM1_DATIN0 (PDM data  input from microphone, AF3)
+    /* ── DMA1 Stream1 for DFSDM1 Filter0 ─────────────────────────────────
      *
-     * NOTE: GPIO_AF3_DFSDM1 matches the reference in audio_rec.c (PD3/PD6).
-     * Verified by user in CubeMX: DFSDM functions appear on PE2 and PC1.
-     * If HAL_DFSDM_ChannelInit() returns HAL_ERROR, verify the AF number
-     * in CubeMX pin view — try GPIO_AF6_DFSDM1 if AF3 does not work.
+     * CubeMX owns: DFSDM1 channel/filter init (MX_DFSDM1_Init),
+     *              GPIO + clocks (HAL_DFSDM_FilterMspInit / ChannelMspInit),
+     *              SAI4 front-end (MX_SAI4_Init).
      *
-     * Physical mic: MP34DT05-A, LR=GND → data valid on falling clock edge. */
-    __HAL_RCC_GPIOE_CLK_ENABLE();
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-
-    GPIO_InitTypeDef gpio = {0};
-    gpio.Mode  = GPIO_MODE_AF_PP;
-    gpio.Pull  = GPIO_NOPULL;
-    gpio.Speed = GPIO_SPEED_FREQ_HIGH;
-
-    gpio.Pin       = GPIO_PIN_2;          /* PE2 = DFSDM1_CKOUT */
-    gpio.Alternate = GPIO_AF3_DFSDM1;
-    HAL_GPIO_Init(GPIOE, &gpio);
-
-    gpio.Pin       = GPIO_PIN_1;          /* PC1 = DFSDM1_DATIN0 */
-    gpio.Pull      = GPIO_PULLUP;         /* mic DOUT weakly driven — prevent float */
-    gpio.Alternate = GPIO_AF3_DFSDM1;
-    HAL_GPIO_Init(GPIOC, &gpio);
-
-    /* ── DFSDM1 Channel 0 ────────────────────────────────────────────────
-     * Clock math (RM0399 §26 / dm00314099 §26 — same DFSDM chapter):
-     *   Source : DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM = APB2 = 100 MHz (IOC confirmed)
-     *   CKOUT  = APB2 / (2 × (Divider)) = 100 MHz / (2 × 25) = 2.0 MHz  ✓
-     *            MP34DT05-A spec: 1.2–3.25 MHz  ✓
-     *   OSR    = 125 → PCM = 2.0 MHz / 125 = 16,000 Hz  ✓ (UM2372 Table 9)
+     * CubeMX does NOT generate DMA for DFSDM (IOC gap) — we do it here.
      *
-     * SerialInterface.Type = DFSDM_CHANNEL_SPI_FALLING:
-     *   MP34DT05-A with LR=GND outputs on falling edge (DS12930 §4). */
-    __HAL_RCC_DFSDM1_CLK_ENABLE();
-
-    s_hdfsdm_ch.Instance = DFSDM1_Channel0;
-
-    s_hdfsdm_ch.Init.OutputClock.Activation = ENABLE;
-    s_hdfsdm_ch.Init.OutputClock.Selection  = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM; /* APB2 = 100 MHz */
-    s_hdfsdm_ch.Init.OutputClock.Divider    = 25u; /* CKOUT = 100 MHz / (2×25) = 2.0 MHz */
-
-    s_hdfsdm_ch.Init.Input.Multiplexer  = DFSDM_CHANNEL_EXTERNAL_INPUTS;
-    s_hdfsdm_ch.Init.Input.DataPacking  = DFSDM_CHANNEL_STANDARD_MODE;
-    s_hdfsdm_ch.Init.Input.Pins         = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-
-    s_hdfsdm_ch.Init.SerialInterface.Type     = DFSDM_CHANNEL_SPI_FALLING; /* LR=GND → falling edge */
-    s_hdfsdm_ch.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
-
-    s_hdfsdm_ch.Init.Awd.FilterOrder   = DFSDM_CHANNEL_FASTSINC_ORDER;
-    s_hdfsdm_ch.Init.Awd.Oversampling  = 10u;
-
-    s_hdfsdm_ch.Init.Offset        = 0;
-    /* RightBitShift calibration guide (Sinc3, OSR=125):
-     *   Max filter output = 125^3 = 1,953,125 → 21-bit signed value.
-     *   Hardware shift + software >>8 must together extract 16-bit PCM.
+     * Architecture:
+     *   SAI4 (PE2/PC1/PE4/PE5) → physical mic → internal silicon routing
+     *   DFSDM1 Channel 3 (SPI_CLOCK_INTERNAL from SAI4) → Sinc3 decimation → PCM
+     *   DMA1 Stream1 → g_DfsdmBuf in D2 SRAM (0x30000000)
      *
-     *   Start value = 8. Tune after first Audacity check:
-     *     Flat / too quiet  → lower  (try 6 or 4) — less attenuation
-     *     Distortion/clipping → raise (try 10)    — more attenuation
-     *
-     *   Note: OSR=125 gives 7.4× more output than OSR=64 (same shift).
-     *   If audio_rec.c worked fine with shift=8 at OSR=64, expect shift
-     *   of 10–11 may be needed here for the same audio level. */
-    s_hdfsdm_ch.Init.RightBitShift = 8u;
-
-    if (HAL_DFSDM_ChannelInit(&s_hdfsdm_ch) != HAL_OK) { Error_Handler(); }
-
-    /* ── DFSDM1 Filter 0 ─────────────────────────────────────────────────
-     * Sinc3, OSR=125, IntOSR=1:  2.0 MHz / 125 = 16,000 Hz PCM output. */
-    s_hdfsdm_flt.Instance = DFSDM1_Filter0;
-
-    s_hdfsdm_flt.Init.RegularParam.Trigger  = DFSDM_FILTER_SW_TRIGGER;
-    s_hdfsdm_flt.Init.RegularParam.FastMode = ENABLE;
-    s_hdfsdm_flt.Init.RegularParam.DmaMode  = ENABLE;
-
-    s_hdfsdm_flt.Init.InjectedParam.Trigger        = DFSDM_FILTER_SW_TRIGGER;
-    s_hdfsdm_flt.Init.InjectedParam.ScanMode        = DISABLE;
-    s_hdfsdm_flt.Init.InjectedParam.DmaMode         = DISABLE;
-    s_hdfsdm_flt.Init.InjectedParam.ExtTrigger      = DFSDM_FILTER_EXT_TRIG_TIM1_TRGO;
-    s_hdfsdm_flt.Init.InjectedParam.ExtTriggerEdge  = DFSDM_FILTER_EXT_TRIG_BOTH_EDGES;
-
-    s_hdfsdm_flt.Init.FilterParam.SincOrder       = DFSDM_FILTER_SINC3_ORDER;
-    s_hdfsdm_flt.Init.FilterParam.Oversampling    = 125u; /* 2.0 MHz / 125 = 16,000 Hz */
-    s_hdfsdm_flt.Init.FilterParam.IntOversampling = 1u;
-
-    if (HAL_DFSDM_FilterInit(&s_hdfsdm_flt) != HAL_OK) { Error_Handler(); }
-
-    if (HAL_DFSDM_FilterConfigRegChannel(&s_hdfsdm_flt,
-                                          DFSDM_CHANNEL_0,
-                                          DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
-    { Error_Handler(); }
-
-    /* ── DMA1 Stream1 ────────────────────────────────────────────────────
-     * DMA1/DMA2 can access D2 SRAM (0x30000000) where g_DfsdmBuf lives.
+     * DMA1/DMA2 can access D2 SRAM where g_DfsdmBuf lives.
      * 32-bit word: DFSDM result register is 32 bits.
      * Circular mode: continuous ping-pong for the drain loop. */
     __HAL_RCC_DMA1_CLK_ENABLE();
@@ -1047,14 +964,14 @@ static void DFSDM_HW_Init(void)
     s_hdma_dfsdm.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
     s_hdma_dfsdm.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
     s_hdma_dfsdm.Init.Mode                = DMA_CIRCULAR;
-    s_hdma_dfsdm.Init.Priority            = DMA_PRIORITY_VERY_HIGH; /* audio is dictator — beats SDMMC on D2 bus arbiter */
+    s_hdma_dfsdm.Init.Priority            = DMA_PRIORITY_VERY_HIGH;
     s_hdma_dfsdm.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
 
     if (HAL_DMA_Init(&s_hdma_dfsdm) != HAL_OK) { Error_Handler(); }
 
-    __HAL_LINKDMA(&s_hdfsdm_flt, hdmaReg, s_hdma_dfsdm);
+    __HAL_LINKDMA(&hdfsdm1_filter0, hdmaReg, s_hdma_dfsdm);
 
-    HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 4u, 0u); /* priority 4 > SDMMC(5) — audio wins */
+    HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 5u, 0u); /* Must be >= configMAX_SYSCALL_INTERRUPT_PRIORITY (5) for xQueueSendFromISR */
     HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 }
 
@@ -1190,8 +1107,8 @@ static void AudioQuality_Report(void)
                                    "WARN: marginal — may work, tune gain");
 
     /* ── [3] DFSDM + DMA1 registers ─────────────────────────────────────── */
-    RLOG("[REG]  DFSDM1_Ch0->CHCFGR1 = 0x%08lX  (clock/input/SPI config)",  (unsigned long)DFSDM1_Channel0->CHCFGR1);
-    RLOG("[REG]  DFSDM1_Ch0->CHCFGR2 = 0x%08lX  (offset/shift)",            (unsigned long)DFSDM1_Channel0->CHCFGR2);
+    RLOG("[REG]  DFSDM1_Ch3->CHCFGR1 = 0x%08lX  (clock/input/SPI config)",  (unsigned long)DFSDM1_Channel3->CHCFGR1);
+    RLOG("[REG]  DFSDM1_Ch3->CHCFGR2 = 0x%08lX  (offset/shift)",            (unsigned long)DFSDM1_Channel3->CHCFGR2);
     RLOG("[REG]  DFSDM1_Flt0->FLTCR1 = 0x%08lX  (filter enable/DMA/trig)",  (unsigned long)DFSDM1_Filter0->FLTCR1);
     RLOG("[REG]  DFSDM1_Flt0->FLTCR2 = 0x%08lX  (IT enables)",              (unsigned long)DFSDM1_Filter0->FLTCR2);
     RLOG("[REG]  DFSDM1_Flt0->FLTISR = 0x%08lX  (status: bit3=ROVRF ovrun)",(unsigned long)DFSDM1_Filter0->FLTISR);

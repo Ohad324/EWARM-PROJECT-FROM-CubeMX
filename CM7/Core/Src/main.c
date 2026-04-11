@@ -337,8 +337,8 @@ Error_Handler();
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1024u, NULL,
               osPriorityBelowNormal, NULL);
   /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
-  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  2048u, xVoiceQueue, 6u, &voiceRecTaskHandle);
-  xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 3u, NULL);
+  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  2048u, xVoiceQueue, 26u, &voiceRecTaskHandle);
+  xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
   xTaskCreate(RTTLogTask,    "RTTLogTask",     256u, NULL,        1u, NULL);
   xTaskCreate(HealthMonTask, "HealthMonTask", 1024u, NULL,        1u, NULL);
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
@@ -507,7 +507,48 @@ static void MX_DFSDM1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN DFSDM1_Init 2 */
+  /* ── Override CubeMX defaults with correct DFSDM config ──────────────────
+   * CubeMX IOC has incomplete DFSDM1 settings (FastMode=OFF, DmaMode=OFF,
+   * FastSinc instead of Sinc3, wrong clock source).
+   * Re-init with correct values here in USER CODE so it survives regeneration.
+   *
+   * Architecture: SAI4 drives the mic pins (PE2/CK1, PC1/D1) and feeds PDM
+   * data to DFSDM1 Channel 3 via internal silicon routing (no external pins).
+   * SPI_CLOCK_INTERNAL tells DFSDM to receive clock from SAI4, not CKOUT.
+   *
+   * Filter clock math (Sinc3, OSR=125):
+   *   SAI4 provides ~2.0 MHz PDM clock to DFSDM internally
+   *   PCM = 2.0 MHz / 125 = 16,000 Hz ✓
+   *
+   * RightBitShift: Sinc3 OSR=125 → 125³ = 1,953,125 → ~21-bit
+   *   shift 8 → 13-bit range. Tune after Audacity check.
+   *
+   * NOTE: Divider=18 sets CKOUT = APB2/(2×18) ≈ 2.78 MHz.
+   *       In SPI_CLOCK_INTERNAL mode, SAI4 owns the actual PDM clock.
+   *       If audio is silent, try Divider=1 to rule out double-division. */
 
+  /* ── Filter 0: Sinc3, OSR=125, FastMode + DMA ── */
+  hdfsdm1_filter0.Init.RegularParam.FastMode = ENABLE;
+  hdfsdm1_filter0.Init.RegularParam.DmaMode  = ENABLE;
+  hdfsdm1_filter0.Init.FilterParam.SincOrder       = DFSDM_FILTER_SINC3_ORDER;
+  hdfsdm1_filter0.Init.FilterParam.Oversampling    = 125u;
+  hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1u;
+  if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK) { Error_Handler(); }
+
+  /* ── Channel 3: internal clock from SAI4, falling edge (LR=GND) ── */
+  hdfsdm1_channel3.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
+  hdfsdm1_channel3.Init.OutputClock.Divider      = 18u;  /* CKOUT — may be unused in INTERNAL mode */
+  hdfsdm1_channel3.Init.SerialInterface.Type     = DFSDM_CHANNEL_SPI_FALLING;
+  hdfsdm1_channel3.Init.RightBitShift            = 8u;
+  /* AWD (analog watchdog) — threshold alerts only, NOT audio decimation */
+  hdfsdm1_channel3.Init.Awd.FilterOrder          = DFSDM_CHANNEL_FASTSINC_ORDER;
+  hdfsdm1_channel3.Init.Awd.Oversampling         = 10u;
+  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel3) != HAL_OK) { Error_Handler(); }
+
+  /* Re-assign filter to channel 3 after re-init */
+  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_3,
+                                        DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
+  { Error_Handler(); }
   /* USER CODE END DFSDM1_Init 2 */
 
 }
