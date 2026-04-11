@@ -948,7 +948,7 @@ static void MX_UART8_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart8) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(&huart8) != HAL_OK)  /* Enable 16-deep HW FIFO — prevents ORE at 921600 baud */
   {
     Error_Handler();
   }
@@ -1040,24 +1040,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-static void MX_UART8_Init(void)
-{
-  huart8.Instance            = UART8;
-  huart8.Init.BaudRate       = 921600;
-  huart8.Init.WordLength     = UART_WORDLENGTH_8B;
-  huart8.Init.StopBits       = UART_STOPBITS_1;
-  huart8.Init.Parity         = UART_PARITY_NONE;
-  huart8.Init.Mode           = UART_MODE_TX_RX;
-  huart8.Init.HwFlowCtl      = UART_HWCONTROL_NONE;
-  huart8.Init.OverSampling   = UART_OVERSAMPLING_16;
-  huart8.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart8.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart8.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
 
 /* ── Helper: route one complete ASCII line received from NORA ────────────
  *

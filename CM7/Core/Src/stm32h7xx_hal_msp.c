@@ -826,7 +826,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_GPIO_Init(GPIOJ, &GPIO_InitStruct);
 
     /* USER CODE BEGIN UART8_MspInit 1 */
-
+    /* UART8 interrupt Init */
+    /* Priority 6: Safe for FreeRTOS syscalls, won't starve Audio DMA (P5) */
+    HAL_NVIC_SetPriority(UART8_IRQn, 6, 0);
+    HAL_NVIC_EnableIRQ(UART8_IRQn);
     /* USER CODE END UART8_MspInit 1 */
 
   }
@@ -856,7 +859,7 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     HAL_GPIO_DeInit(GPIOJ, GPIO_PIN_9|GPIO_PIN_8);
 
     /* USER CODE BEGIN UART8_MspDeInit 1 */
-
+    HAL_NVIC_DisableIRQ(UART8_IRQn);
     /* USER CODE END UART8_MspDeInit 1 */
   }
 
@@ -964,37 +967,4 @@ void HAL_SAI_MspDeInit(SAI_HandleTypeDef* hsai)
 }
 
 /* USER CODE BEGIN 1 */
-void HAL_UART_MspInit(UART_HandleTypeDef *huart)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  if (huart->Instance == UART8)
-  {
-    /* UART8 clock enable */
-    __HAL_RCC_UART8_CLK_ENABLE();
-    __HAL_RCC_GPIOJ_CLK_ENABLE();
-
-    /* PJ8 = TX (AF8), PJ9 = RX (AF8) — Arduino CN6 D1/D0 */
-    GPIO_InitStruct.Pin       = GPIO_PIN_8 | GPIO_PIN_9;
-    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull      = GPIO_NOPULL;
-    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF8_UART8;
-    HAL_GPIO_Init(GPIOJ, &GPIO_InitStruct);
-
-    /* UART8 interrupt init */
-    HAL_NVIC_SetPriority(UART8_IRQn, 5, 0);
-    HAL_NVIC_EnableIRQ(UART8_IRQn);
-  }
-}
-
-void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
-{
-  if (huart->Instance == UART8)
-  {
-    __HAL_RCC_UART8_CLK_DISABLE();
-    HAL_GPIO_DeInit(GPIOJ, GPIO_PIN_8 | GPIO_PIN_9);
-    HAL_NVIC_DisableIRQ(UART8_IRQn);
-  }
-}
 /* USER CODE END 1 */
