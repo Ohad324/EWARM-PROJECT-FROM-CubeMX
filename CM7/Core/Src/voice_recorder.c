@@ -445,6 +445,15 @@ void VoiceRecTask(void *arg)
                 if (depth > s_qDepth_max)
                     s_qDepth_max = depth;
 
+                /* D-Cache coherency — g_DfsdmBuf is at 0x30000000 (D2 SRAM).
+                 * D2 SRAM is cacheable under the default Cortex-M7 memory map
+                 * (only one MPU region is configured: Flash at 0x08000000).
+                 * DMA1 writes to physical SRAM, bypassing cache. Without this
+                 * invalidation the CPU reads stale cache lines and converts the
+                 * same value to PCM 3000 times — producing constant-DC output.
+                 * Half size = DFSDM_BUF_HALF × 4 = 64 bytes = 2 cache lines. */
+                SCB_InvalidateDCache_by_Addr((uint32_t*)e.ptr,
+                                             DFSDM_BUF_HALF * sizeof(int32_t));
                 StoreDmaChunk(e.ptr);
             }
         }
