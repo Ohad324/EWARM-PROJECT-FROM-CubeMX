@@ -355,16 +355,13 @@ void VoiceRecTask(void *arg)
         __DSB();
         RLOG("[REC] --- Stage 0: recording 3s ---\r\n");
 
-        /* ── Start SAI4 first — it drives the PDM clock to the microphone.
-         * DFSDM1 Channel 3 receives its data internally from SAI4.
-         * If SAI4 isn't running, DFSDM gets no PDM bitstream → silence/noise.
+        /* ── Enable SAI4 — drives the PDM clock to the microphone via PE2/SAI4_CK1.
+         * In the DFSDM bridge path SAI4 provides clock only; no SAI4 DMA is used.
+         * (hsai_BlockA4.hdmarx is NULL — BDMA is not wired for this path.)
+         * DFSDM1_Channel3 receives the PDM bitstream via internal silicon routing.
          * Startup order: SAI4 clock running → DFSDM DMA started. */
-        if (HAL_SAI_Receive_DMA(&hsai_BlockA4, (uint8_t *)g_DfsdmBuf, DFSDM_BUF_TOTAL * 2u) != HAL_OK)
-        {
-            RLOG("[REC] WARN: SAI4 DMA start failed — trying without");
-            /* Non-fatal: SAI4 may already be running from MX_SAI4_Init.
-             * DFSDM can still work if SAI4 clock is already active. */
-        }
+        __HAL_SAI_ENABLE(&hsai_BlockA4);
+        RLOG("[REC] SAI4 enabled — PDM clock active");
 
         /* HAL_DFSDM_FilterInit sets RDMAEN before DFEN — on STM32H7 the subsequent
          * HAL_DFSDM_FilterConfigRegChannel RMW on FLTCR1 (with DFEN=1) can silently
@@ -374,19 +371,27 @@ void VoiceRecTask(void *arg)
          * starting the DMA. This is safe — RDMAEN is writable when DFEN=1. */
         hdfsdm1_filter0.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
 
+        /* Diagnostic: dump key registers before DMA start */
+        RLOG("[REC] FLTCR1=0x%08lX CHCFGR1=0x%08lX SAI4_CR1=0x%08lX SAI4_PDMCR=0x%08lX",
+             (unsigned long)hdfsdm1_filter0.Instance->FLTCR1,
+             (unsigned long)hdfsdm1_channel3.Instance->CHCFGR1,
+             (unsigned long)hsai_BlockA4.Instance->CR1,
+             (unsigned long)SAI4->PDMCR);
+
         /* Start DFSDM DMA (DMA1_Stream1 → g_DfsdmBuf in D2 SRAM) */
         HAL_StatusTypeDef hal =
             HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0,
                                              g_DfsdmBuf,
                                              DFSDM_BUF_TOTAL);
+        RLOG("[REC] DFSDM DMA start: %s  DMA1_St1->CR=0x%08lX  NDTR=%lu",
+             hal == HAL_OK ? "OK" : "FAIL",
+             (unsigned long)DMA1_Stream1->CR,
+             (unsigned long)DMA1_Stream1->NDTR);
         if (hal != HAL_OK)
         {
-            /* Post DMA_START error directly to log queue */
-            LogMsg_t err = {0};
-            err.result    = REC_ERR_DMA_START;
-            err.timestamp = HAL_GetTick();
-            strncpy(err.filename, "NONE", sizeof(err.filename));
-            xQueueSend(xLogQueue, &err, pdMS_TO_TICKS(100));
+            RLOG("[REC] DFSDM DMA start FAILED — state=%d hdmaReg=%p",
+                 (int)hdfsdm1_filter0.State,
+                 (void*)hdfsdm1_filter0.hdmaReg);
             HAL_SAI_DMAStop(&hsai_BlockA4);
             g_State = REC_IDLE; __DSB();
             continue;
