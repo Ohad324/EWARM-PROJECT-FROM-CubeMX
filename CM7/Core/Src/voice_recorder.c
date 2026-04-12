@@ -486,6 +486,8 @@ void VoiceRecTask(void *arg)
         /* uint32_t msg = 1u; */
         /* xQueueSend(q, &msg, 0); */
         RLOG("[REC] SD write skipped (debug mode — re-enable xQueueSend to save WAV)");
+        g_State = REC_IDLE; __DSB();  /* must reset — normally SDWriteTask does this */
+        LED_OFF();
     }
 }
 
