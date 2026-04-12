@@ -84,6 +84,8 @@ MDMA_HandleTypeDef hmdma_jpeg_outfifo_th;
 
 LTDC_HandleTypeDef hltdc;
 
+SDRAM_HandleTypeDef hsdram1;
+
 QSPI_HandleTypeDef hqspi;
 
 SAI_HandleTypeDef hsai_BlockA4;
@@ -170,6 +172,7 @@ static void MPU_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_MDMA_Init(void);
 static void MX_QUADSPI_Init(void);
+static void MX_FMC_Init(void);
 static void MX_DMA2D_Init(void);
 static void MX_DSIHOST_DSI_Init(void);
 static void MX_LTDC_Init(void);
@@ -264,6 +267,7 @@ Error_Handler();
   MX_GPIO_Init();
   MX_MDMA_Init();
   MX_QUADSPI_Init();
+  MX_FMC_Init();
   MX_DMA2D_Init();
   MX_DSIHOST_DSI_Init();
   MX_LTDC_Init();
@@ -519,6 +523,52 @@ static void MX_DFSDM1_Init(void)
   { Error_Handler(); }
   /* USER CODE END DFSDM1_Init 2 */
 
+}
+
+/**
+  * @brief FMC Initialization Function — configures SDRAM bank 2 (IS42S32800J-6BLI)
+  *        MUST be called before MX_DMA2D_Init / MX_LTDC_Init, as both write to
+  *        the 0xD000'0000 SDRAM range.
+  * @param None
+  * @retval None
+  */
+static void MX_FMC_Init(void)
+{
+  /* USER CODE BEGIN FMC_Init 0 */
+  /* USER CODE END FMC_Init 0 */
+
+  FMC_SDRAM_TimingTypeDef SdramTiming = {0};
+
+  /* USER CODE BEGIN FMC_Init 1 */
+  FMC_Bank1_R->BTCR[0] &= ~FMC_BCRx_MBKEN;
+  /* USER CODE END FMC_Init 1 */
+
+  hsdram1.Instance = FMC_SDRAM_DEVICE;
+  hsdram1.Init.SDBank             = FMC_SDRAM_BANK2;
+  hsdram1.Init.ColumnBitsNumber   = FMC_SDRAM_COLUMN_BITS_NUM_9;
+  hsdram1.Init.RowBitsNumber      = FMC_SDRAM_ROW_BITS_NUM_12;
+  hsdram1.Init.MemoryDataWidth    = FMC_SDRAM_MEM_BUS_WIDTH_32;
+  hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
+  hsdram1.Init.CASLatency         = FMC_SDRAM_CAS_LATENCY_3;
+  hsdram1.Init.WriteProtection    = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
+  hsdram1.Init.SDClockPeriod      = FMC_SDRAM_CLOCK_PERIOD_2;
+  hsdram1.Init.ReadBurst          = FMC_SDRAM_RBURST_ENABLE;
+  hsdram1.Init.ReadPipeDelay      = FMC_SDRAM_RPIPE_DELAY_0;
+
+  SdramTiming.LoadToActiveDelay    = 2;
+  SdramTiming.ExitSelfRefreshDelay = 7;
+  SdramTiming.SelfRefreshTime      = 4;
+  SdramTiming.RowCycleDelay        = 7;
+  SdramTiming.WriteRecoveryTime    = 3;
+  SdramTiming.RPDelay              = 2;
+  SdramTiming.RCDDelay             = 2;
+
+  if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK) { Error_Handler(); }
+
+  /* USER CODE BEGIN FMC_Init 2 */
+  BSP_SDRAM_DeInit(0);
+  if (BSP_SDRAM_Init(0) != BSP_ERROR_NONE) { Error_Handler(); }
+  /* USER CODE END FMC_Init 2 */
 }
 
 /**
