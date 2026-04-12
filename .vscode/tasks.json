@@ -2,6 +2,45 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "DFSDM Debug Cycle (Build + Flash + Trigger + Watch)",
+            "type": "shell",
+            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\dfsdm_debug_cycle.bat\"",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/c"]
+                }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "DFSDM Monitor Only (Trigger + Watch — no rebuild)",
+            "type": "shell",
+            "command": "\"C:\\Program Files\\SEGGER\\JLink\\JLink.exe\" -NoGui 1 -device STM32H747XI_M7 -if SWD -speed 4000 -autoconnect 1 -CommandFile \"C:\\TouchGFXProjects\\MyApplication\\EWARM\\jlink_dfsdm_monitor.jlink\"",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/c"]
+                }
+            },
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "Debug Run (Rebuild + Flash + Log BPs)",
             "type": "shell",
             "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\debug_run.bat\"",
