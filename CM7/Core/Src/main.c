@@ -939,6 +939,14 @@ static void MX_SAI4_Init(void)
   }
   /* USER CODE BEGIN SAI4_Init 2 */
 
+  /* ── Force MCKDIV=12 — HAL rounds down to 11 for PLL2P=49.14 MHz ──────────
+   * HAL formula: MCKDIV = floor(49142857 / (16000 × 256 × 1)) = floor(12.0) = 11
+   * CK1 at MCKDIV=11: 49142857 / 22 = 2.234 MHz — 11.7% faster than DFSDM CKOUT
+   * CK1 at MCKDIV=12: 49142857 / 24 = 2.048 MHz — only 2.4% from CKOUT=2.0 MHz ✓
+   * Write MCKDIV while SAIEN=0 (HAL_SAI_Init leaves SAIEN=0 until DMA start). */
+  hsai_BlockA4.Instance->CR1 = (hsai_BlockA4.Instance->CR1 & ~SAI_xCR1_MCKDIV) |
+                                (12u << SAI_xCR1_MCKDIV_Pos);
+
   /* USER CODE END SAI4_Init 2 */
 
 }
