@@ -1,0 +1,44 @@
+// debug_boot.mac — Diagnostic: read key registers after short run
+
+execUserSetup()
+{
+    __message "=== Boot diagnostic armed ===";
+}
+
+execUserPreload()
+{
+}
+
+execUserExecutionStarted()
+{
+}
+
+execUserExecutionStopped()
+{
+    __var _cfsr;
+    __var _hfsr;
+    __var _rcc_cr;
+    __var _rcc_cfgr;
+    __var _pwr_d3cr;
+    __var _scb_ccr;
+    __var _ccmpufsr;
+
+    _cfsr     = __readMemory32(0xE000ED28, "Memory");
+    _hfsr     = __readMemory32(0xE000ED2C, "Memory");
+    _scb_ccr  = __readMemory32(0xE000ED14, "Memory");
+    _rcc_cr   = __readMemory32(0x58024400, "Memory");
+    _rcc_cfgr = __readMemory32(0x58024410, "Memory");
+    _pwr_d3cr = __readMemory32(0x58024818, "Memory");
+    _ccmpufsr = __readMemory32(0xE000ED28, "Memory");  // same as CFSR
+
+    __message "====================================";
+    __message ">>> EXECUTION STOPPED / TIMEOUT <<<";
+    __message "====================================";
+    __message "SCB_CCR   = ", _scb_ccr:%x, "  (bit17=IC, bit16=DC)";
+    __message "CFSR      = ", _cfsr:%x, "  (fault status)";
+    __message "HFSR      = ", _hfsr:%x, "  (hard fault)";
+    __message "RCC_CR    = ", _rcc_cr:%x, "  (bit25=PLL1RDY, bit24=PLL1ON)";
+    __message "RCC_CFGR  = ", _rcc_cfgr:%x, "  (SWS[5:3]: 0=HSI,1=CSI,2=HSE,3=PLL1)";
+    __message "PWR_D3CR  = ", _pwr_d3cr:%x, "  (VOSRDY=bit13)";
+    __message "====================================";
+}
