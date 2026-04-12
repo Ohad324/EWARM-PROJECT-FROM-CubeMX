@@ -14,6 +14,8 @@ define symbol __ICFEDIT_region_DTCMRAM_start__ = 0x20000000;
 define symbol __ICFEDIT_region_DTCMRAM_end__   = 0x2001FFFF;
 define symbol __ICFEDIT_region_SRAM1_start__   = 0x30000000;
 define symbol __ICFEDIT_region_SRAM1_end__     = 0x3001FFFF;
+define symbol __ICFEDIT_region_SRAM2_start__   = 0x30020000;
+define symbol __ICFEDIT_region_SRAM2_end__     = 0x3003FFFF;
 /*-Sizes-*/
 define symbol __ICFEDIT_size_cstack__ = 0x2000;  /* 8KB — IAR reported 96% used at 4KB */
 define symbol __ICFEDIT_size_heap__   = 0x1000;
@@ -31,6 +33,7 @@ define region RAM_region      = mem:[from __ICFEDIT_region_RAM_start__   to __IC
 define region ITCMRAM_region  = mem:[from __ICFEDIT_region_ITCMRAM_start__ to __ICFEDIT_region_ITCMRAM_end__];
 define region DTCMRAM_region  = mem:[from __ICFEDIT_region_DTCMRAM_start__ to __ICFEDIT_region_DTCMRAM_end__];
 define region SRAM1_region    = mem:[from __ICFEDIT_region_SRAM1_start__ to __ICFEDIT_region_SRAM1_end__];
+define region SRAM2_region    = mem:[from __ICFEDIT_region_SRAM2_start__ to __ICFEDIT_region_SRAM2_end__];
 
 define region SDRAM_region    = mem:[from __ICFEDIT_region_SDRAM_start__      to __ICFEDIT_region_SDRAM_end__];
 define region QSPI_region     = mem:[from __ICFEDIT_region_QSPI_start__    to __ICFEDIT_region_QSPI_end__];
@@ -48,13 +51,116 @@ place at address mem:__ICFEDIT_intvec_start__ { readonly section .intvec };
 place at address mem:0x08100000 { section .cm4_code };
 
 place in ROM_region   { readonly, section IntFlashSection, section FontFlashSection, section TextFlashSection };
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MEMORY MAP — Per-Task/Buffer Ownership
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ INTERNAL FLASH — 0x08000000..0x080FFFFF (1 MB)                     │
+ *  │   • Code, read-only data, vector table, font/text flash sections   │
+ *  │   • CM4 code at 0x08100000 (fixed offset for dual-core boot)       │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ AXI SRAM D1 — 0x24000000..0x2407FFFF (512 KB)   ← main RAM_region │
+ *  │   Owner: ALL tasks (default .bss/.data placement)                  │
+ *  │                                                                     │
+ *  │   VoiceRecTask:                                                     │
+ *  │     • Task stack (FreeRTOS xTaskCreate, 2 KB typical)              │
+ *  │     • s_dmaQueue storage (8 × DmaEntry_t = 64 bytes)               │
+ *  │     • s_pcmBounce (16 KB bounce buffer for SDMMC IDMA)             │
+ *  │     • g_SampleCount, g_DmaCallCount, g_State (globals)             │
+ *  │                                                                     │
+ *  │   SDWriteTask:                                                      │
+ *  │     • Task stack                                                    │
+ *  │     • xVoiceQueue (trigger from VoiceRecTask to SDWriteTask)       │
+ *  │     • FatFS work buffers (ff.c internal state)                     │
+ *  │     • WAV header staging (local vars on stack)                     │
+ *  │                                                                     │
+ *  │   RTTLogTask:                                                       │
+ *  │     • Task stack                                                    │
+ *  │     • xLogQueue storage (log strings from all other tasks)         │
+ *  │                                                                     │
+ *  │   TouchGFX / DisplayTask:                                           │
+ *  │     • Task stack, TouchGFX internal state                          │
+ *  │     • Decoded JPEG thumbnail data (temp buffer)                    │
+ *  │                                                                     │
+ *  │   FreeRTOS kernel:                                                  │
+ *  │     • TCB (task control blocks), ready lists, timer state          │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ DTCM — 0x20000000..0x2001FFFF (128 KB)                             │
+ *  │   Owner: M7 core only (no DMA access — fastest CPU reads/writes)   │
+ *  │                                                                     │
+ *  │   • CSTACK (main/interrupt stack, 8 KB)                            │
+ *  │   • HEAP   (malloc arena, 1 KB — not used: no dynamic allocation)  │
+ *  │                                                                     │
+ *  │   NOTE: DMA cannot access DTCM. Never place DMA buffers here.      │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ D2 SRAM1 — 0x30000000..0x3001FFFF (128 KB)                        │
+ *  │   Owner: VoiceRecTask + DMA1 (DFSDM audio pipeline)               │
+ *  │                                                                     │
+ *  │   • g_DfsdmBuf[32] (128 bytes) at 0x30000000                      │
+ *  │     DMA1_Stream1 writes DFSDM output here (circular, 32-bit words) │
+ *  │     VoiceRecTask reads via drain loop                              │
+ *  │     Placed via: #pragma location = 0x30000000                      │
+ *  │                                                                     │
+ *  │   DMA accessibility: DMA1, DMA2, MDMA                             │
+ *  │   Cache: cacheable under default M7 MPU (no MPU override for D2)   │
+ *  │   → SCB_InvalidateDCache_by_Addr() required before CPU read        │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ D2 SRAM2 — 0x30020000..0x3003FFFF (128 KB)                        │
+ *  │   Owner: VoiceRecTask (write) + SDWriteTask (read via bounce)      │
+ *  │                                                                     │
+ *  │   • g_AudioBuf[48000] (96 KB) at 0x30020000                       │
+ *  │     VoiceRecTask accumulates int16 PCM here during recording       │
+ *  │     SDWriteTask copies to s_pcmBounce (AXI SRAM) for SDMMC IDMA  │
+ *  │     Placed via: #pragma location = 0x30020000                      │
+ *  │                                                                     │
+ *  │   DMA accessibility: DMA1, DMA2 accessible                        │
+ *  │     SDMMC IDMA: uses AXI SRAM bounce buffer (not D2 direct)       │
+ *  │   Cache: cacheable — CPU must invalidate before reading post-DMA   │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ SDRAM — 0xD0000000..0xD1FFFFFF (32 MB external)                   │
+ *  │   Owner: DisplayTask / TouchGFX                                    │
+ *  │                                                                     │
+ *  │   • TouchGFX_Framebuffer (double-buffered RGB display)             │
+ *  │   • Video_RGB_Buffer (video decode output)                         │
+ *  │   • .sdram_bss (large TouchGFX assets, lookup tables)             │
+ *  │                                                                     │
+ *  │   Connected via FMC (Flexible Memory Controller)                   │
+ *  │   Access through AHB3 bus — shared with QSPI                      │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ QSPI Flash — 0x90000000..0x97FE0000 (external)                    │
+ *  │   Owner: Read-only (font data, extended flash sections)            │
+ *  │   • ExtFlashSection (pre-computed UI assets)                       │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* AXI SRAM D1 — default home for all task stacks, FreeRTOS, globals */
 place in RAM_region   { readwrite };
 
 /* Stack/Heap in DTCM — fastest M7 access, no DMA contention */
 place in DTCMRAM_region { block CSTACK, block HEAP };
 
-/* Audio DMA buffers in D2 SRAM1 — non-cacheable, DMA1 accessible */
+/* D2 SRAM1 — DFSDM DMA buffer (g_DfsdmBuf at 0x30000000, 128 bytes)
+ * Placed via #pragma location in voice_recorder.c — section anchors the region. */
 place at address mem:0x30000000 { section .audio_buffer };
+
+/* D2 SRAM2 — g_AudioBuf (0x30020000, 96 KB) placed via #pragma location.
+ * No section needed — absolute address placement bypasses the linker region.
+ * SRAM2_region is defined above so the linker knows this address space exists
+ * and can catch any accidental overlap with future allocations. */
 
 place in QSPI_region   { section ExtFlashSection };
 place in SDRAM_region  { first section TouchGFX_Framebuffer, section Video_RGB_Buffer,
