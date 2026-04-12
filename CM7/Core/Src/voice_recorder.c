@@ -482,9 +482,10 @@ void VoiceRecTask(void *arg)
         RLOG("[REC] Recording done: samples=%lu\r\n", (unsigned long)g_SampleCount);
         LED_ON();   /* stay ON — recording done, saving to SD */
 
-        /* Signal SDWriteTask */
-        uint32_t msg = 1u;
-        xQueueSend(q, &msg, 0);
+        /* Signal SDWriteTask — disabled while debugging DFSDM pipeline */
+        /* uint32_t msg = 1u; */
+        /* xQueueSend(q, &msg, 0); */
+        RLOG("[REC] SD write skipped (debug mode — re-enable xQueueSend to save WAV)");
     }
 }
 
