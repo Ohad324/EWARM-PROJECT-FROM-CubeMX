@@ -28,8 +28,13 @@ extern "C" {
 /* TS — print timestamp prefix to SWO Terminal I/O. */
 #define TS() printf("[T+%7lu] ", (unsigned long)HAL_GetTick())
 
-/* LOG — printf-style to SWO Terminal I/O (no timestamp). */
-#define LOG(fmt, ...) printf(fmt, ##__VA_ARGS__)
+/* LOG — printf-style to SWO Terminal I/O AND RTT channel 0 (no timestamp). */
+#define LOG(fmt, ...) do {                                                  \
+    char _lb[256];                                                          \
+    int  _ln = snprintf(_lb, sizeof(_lb), fmt, ##__VA_ARGS__);             \
+    if (_ln > 0) SEGGER_RTT_Write(0, _lb, (unsigned)_ln);                  \
+    printf(fmt, ##__VA_ARGS__);                                             \
+} while (0)
 
 /* LOG_TS — timestamped printf-style to SWO Terminal I/O. */
 #define LOG_TS(fmt, ...) do {                                           \
