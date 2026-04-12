@@ -491,6 +491,17 @@ static void MX_DFSDM1_Init(void)
    * LR=GND on MP34DT05-A → data on falling edge → SPI_FALLING.
    * RightBitShift=5: Sinc3 peak = 125³ = ~21-bit → shift 5 → 16-bit output. */
 
+  /* ── DFSDM global enable — MUST be set before any CHEN write ──────────────
+   * RM0399: "CHEN is writable only when DFSDMEN=1."
+   * DFSDMEN lives in DFSDM1_Channel0->CHCFGR1 bit 31 and is normally set by
+   * HAL_DFSDM_ChannelInit only when initialising Channel 0.  Since we skip
+   * Channel 0, we must enable the peripheral clock and assert DFSDMEN manually
+   * before calling ChannelInit for Channel 3; otherwise the CHEN=1 write is
+   * silently ignored and the channel stays disabled → no filter output → DMA
+   * never fires. */
+  __HAL_RCC_DFSDM1_CLK_ENABLE();
+  DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
+
   /* ── Step 1: Channel 3 ── */
   hdfsdm1_channel3.Instance                        = DFSDM1_Channel3;
   hdfsdm1_channel3.Init.OutputClock.Activation     = DISABLE;  /* CKOUT unused — SAI4 is clock source */
@@ -1186,7 +1197,7 @@ static void UARTReceiveTask(void *argument)
         "[UART] UARTReceiveTask started -- DMA+IDLE mode\n"
         "       UART8 |  921600 8N1 | DMA1 Stream0\n"
         "       DWT cycle counter enabled (400 MHz)\n"
-        "========================================\n\n");
+        "========================================\n");
 
     BLE_UART_StartDMA();
     LOG("[UART] DMA armed -- listening on UART8\n");
