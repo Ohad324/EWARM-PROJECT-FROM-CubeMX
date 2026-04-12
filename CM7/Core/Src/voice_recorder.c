@@ -372,7 +372,9 @@ void VoiceRecTask(void *arg)
         hdfsdm1_filter0.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
 
         /* Diagnostic: dump key registers before DMA start */
-        RLOG("[REC] FLTCR1=0x%08lX CHCFGR1=0x%08lX SAI4_CR1=0x%08lX SAI4_PDMCR=0x%08lX",
+        RLOG("[REC] Ch0_CHCFGR1=0x%08lX (expect 0x80180000: DFSDMEN+CKOUTDIV=24)",
+             (unsigned long)DFSDM1_Channel0->CHCFGR1);
+        RLOG("[REC] FLTCR1=0x%08lX Ch3_CHCFGR1=0x%08lX SAI4_CR1=0x%08lX SAI4_PDMCR=0x%08lX",
              (unsigned long)hdfsdm1_filter0.Instance->FLTCR1,
              (unsigned long)hdfsdm1_channel3.Instance->CHCFGR1,
              (unsigned long)hsai_BlockA4.Instance->CR1,
@@ -1112,6 +1114,7 @@ static void AudioQuality_Report(void)
                                    "WARN: marginal — may work, tune gain");
 
     /* ── [3] DFSDM + DMA1 registers ─────────────────────────────────────── */
+    RLOG("[REG]  DFSDM1_Ch0->CHCFGR1 = 0x%08lX  (global: DFSDMEN+CKOUTDIV expect 0x80180000)", (unsigned long)DFSDM1_Channel0->CHCFGR1);
     RLOG("[REG]  DFSDM1_Ch3->CHCFGR1 = 0x%08lX  (clock/input/SPI config)",  (unsigned long)DFSDM1_Channel3->CHCFGR1);
     RLOG("[REG]  DFSDM1_Ch3->CHCFGR2 = 0x%08lX  (offset/shift)",            (unsigned long)DFSDM1_Channel3->CHCFGR2);
     RLOG("[REG]  DFSDM1_Flt0->FLTCR1 = 0x%08lX  (filter enable/DMA/trig)",  (unsigned long)DFSDM1_Filter0->FLTCR1);

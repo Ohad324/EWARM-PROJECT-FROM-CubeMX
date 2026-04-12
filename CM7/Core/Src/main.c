@@ -501,6 +501,12 @@ static void MX_DFSDM1_Init(void)
    * never fires. */
   __HAL_RCC_DFSDM1_CLK_ENABLE();
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
+  /* ── DFSDM CKOUT = 2.0 MHz — required for SPICKSEL=INTERNAL to work ──────
+   * CKOUT = APB2 / ((CKOUTDIV+1) × 2) = 100 MHz / 50 = 2.0 MHz
+   * CKOUTDIV is a global setting in Channel 0 CHCFGR1 bits [23:16].
+   * Sinc3 OSR=125: PCM = 2.0 MHz / 125 = 16,000 Hz.
+   * SAI4 AudioFrequency=SAI_AUDIO_FREQUENCY_16K → MCKDIV=12 → CK1=2.048 MHz ≈ CKOUT. */
+  DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);
 
   /* ── Step 1: Channel 3 ── */
   hdfsdm1_channel3.Instance                        = DFSDM1_Channel3;
@@ -914,7 +920,7 @@ static void MX_SAI4_Init(void)
   hsai_BlockA4.Init.NoDivider = SAI_MCK_OVERSAMPLING_DISABLE;
   hsai_BlockA4.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
   hsai_BlockA4.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
-  hsai_BlockA4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_192K;
+  hsai_BlockA4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;  /* 16 kHz → MCKDIV=12 → CK1=2.048 MHz ≈ DFSDM CKOUT 2.0 MHz */
   hsai_BlockA4.Init.MonoStereoMode = SAI_STEREOMODE;
   hsai_BlockA4.Init.CompandingMode = SAI_NOCOMPANDING;
   hsai_BlockA4.Init.PdmInit.Activation = ENABLE;
@@ -928,7 +934,7 @@ static void MX_SAI4_Init(void)
   hsai_BlockA4.SlotInit.FirstBitOffset = 0;
   hsai_BlockA4.SlotInit.SlotSize = SAI_SLOTSIZE_DATASIZE;
   hsai_BlockA4.SlotInit.SlotNumber = 1;
-  hsai_BlockA4.SlotInit.SlotActive = 0x00000000;
+  hsai_BlockA4.SlotInit.SlotActive = SAI_SLOTACTIVE_0;  /* slot 0 active — SLOTR=0x00010000; SAI4 captures D1 on PC1 */
   if (HAL_SAI_Init(&hsai_BlockA4) != HAL_OK)
   {
     Error_Handler();

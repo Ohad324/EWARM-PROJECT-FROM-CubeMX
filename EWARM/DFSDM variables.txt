@@ -1,0 +1,195 @@
+; ═══════════════════════════════════════════════════════════════════════════════
+; DFSDM Audio Pipeline — Variable Status Summary
+; Updated: 2026-04-12  (after 3-bug fix commit)
+; Branch: fix/voice-recorder-pdm-clean
+; ═══════════════════════════════════════════════════════════════════════════════
+;
+; HOW TO USE IN IAR:
+;   View → Watch → Watch 1 → right-click → Add Expression → paste expression.
+;   Hardware registers: if IAR gives "Unknown symbol" use the Memory window at
+;   the hex address shown, or cast as shown in the ADDRESS CAST section below.
+;
+; ─── STATUS KEY ──────────────────────────────────────────────────────────────
+;   [OK]   correct, no change needed
+;   [BUG]  was wrong — now fixed in code
+;   [PEND] not yet measured after fix — verify on next flash
+; ─────────────────────────────────────────────────────────────────────────────
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 1. DFSDM GLOBAL (Channel 0 CHCFGR1) — last read BEFORE fix
+; ══════════════════════════════════════════════════════════════════════════════
+
+; Expression:  hdfsdm1_channel3.Instance->CHCFGR1
+; Last value:  0x00000085
+; Decoded:
+;   Bit 31 [DFSDMEN] = 0x80000000 → NOT SET in Channel 3's reg (expected — global lives in Ch0)
+;   Bit  7 [CHEN]    = 0x00000080 → SET (1) — channel IS enabled ✓
+;   Bit  2 [SPICKSEL_0]  = 0x00000004 → SET  → SPICKSEL=0b01 = Internal clock (CKOUT)
+;   Bit  0 [SITP_0]      = 0x00000001 → SET  → SITP=0b01 = SPI falling edge ✓
+; Result: [OK] CHEN=1, SITP=falling — correct config
+
+; Expression:  DFSDM1_Channel0->CHCFGR1  (IAR may error — use memory address)
+; Address cast: ((unsigned int*)0x40017400)[0]
+; Last value:   UNKNOWN (not read before fix)
+; After fix:
+;   Bit 31 [DFSDMEN]     = 0x80000000 → should be SET (we write it in USER CODE)
+;   Bits [23:16] [CKOUTDIV] = 0x00180000 → should be 24 (0x18 << 16) = CKOUT 2.0 MHz
+;   Expected after fix:  0x80180000  (DFSDMEN=1, CKOUTDIV=24)
+; Status: [PEND] verify after flash
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 2. DFSDM FILTER 0 (FLTCR1) — last read BEFORE fix
+; ══════════════════════════════════════════════════════════════════════════════
+
+; Expression:  hdfsdm1_filter0.Instance->FLTCR1
+; Last value:  0x23240001
+; Decoded:
+;   Bit 29 [FAST]    = 0x20000000 → SET ✓ fast mode enabled
+;   Bits [27:24] [RCSEL] = 0x03000000 → RCSEL=3 → Channel 3 ✓
+;   Bit 21 [RDMAEN]  = 0x00200000 → SET ✓ DMA requests enabled
+;   Bit 18 [RCONT]   = 0x00040000 → SET ✓ continuous conversion
+;   Bit  0 [DFEN]    = 0x00000001 → SET ✓ filter enabled
+; Result: [OK] all filter control bits correct
+
+; Expression:  hdfsdm1_filter0.Instance->FLTRDATAR
+; Last value:  0  (measured live in IAR Watch during recording)
+; Meaning:     No PCM conversion ever completed — filter was dead
+; Cause:       CKOUT=0 (disabled), filter has no sampling clock
+; After fix:   Should show non-zero, rapidly changing values during recording
+; Status: [PEND] — KEY VERIFICATION POINT after flash
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 3. DMA1 STREAM 1 — last read BEFORE fix
+; ══════════════════════════════════════════════════════════════════════════════
+
+; Expression (IAR cast):  ((DMA_Stream_TypeDef*)0x40020028)->CR
+; Last value:  0x0003551F
+; Decoded:
+;   Bit 18-16 [PL]   = 0b11  = Very high priority ✓
+;   Bit 14-13 [MSIZE]= 0b10  = 32-bit word transfers ✓
+;   Bit 12-11 [PSIZE]= 0b10  = 32-bit word transfers ✓
+;   Bit 10 [MINC]    = 1     = memory pointer increments ✓
+;   Bit  8 [CIRC]    = 1     = circular mode ✓
+;   Bit  7-6 [DIR]   = 0b00  = peripheral → memory ✓
+;   Bit  4 [TCIE]    = 1     = transfer complete interrupt enabled ✓
+;   Bit  3 [HTIE]    = 1     = half-transfer interrupt enabled ✓
+;   Bit  0 [EN]      = 1     = stream enabled ✓
+; Result: [OK] DMA fully correctly configured
+
+; Expression (IAR cast):  ((DMA_Stream_TypeDef*)0x40020028)->NDTR
+; Last value:  32  (frozen — never decremented)
+; Meaning:     DMA is waiting for DFSDM to assert a request — never happened
+; Cause:       DFSDM filter dead (no CKOUT) → never completed a conversion
+; After fix:   Should count DOWN from 32 as conversions occur
+; Status: [PEND] — SECOND KEY VERIFICATION POINT
+
+; Expression:  DMA1->LISR   (address 0x40020000)
+; Purpose:     Check for DMA error flags (TEIF1, DMEIF1)
+; Expected:    Bits [15:6] = 0 during healthy recording
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 4. SAI4 REGISTERS — last read BEFORE fix
+; ══════════════════════════════════════════════════════════════════════════════
+
+; Expression:  hsai_BlockA4.Instance->CR1
+; Last value:  0x00110041
+; Decoded:
+;   Bit 20 [MCKDIV_0] = 0x00100000 → MCKDIV=1  (WRONG — too fast! 49.14 MHz/2 = 24.57 MHz)
+;   Bit 16 [SAIEN]    = 0x00010000 → SET ✓ SAI block enabled
+;   Bit  0 [MODE_0]   = 0x00000001 → SAI_MODEMASTER_RX ✓
+; Note on MCKDIV: AudioFrequency=192000 → HAL computed MCKDIV=1 (overflow/rounding artifact)
+; [BUG] AudioFrequency changed to 250000u → expected MCKDIV=12 → CK1=2.048 MHz ✓
+; After fix MCKDIV bits [25:20] should be: 0b001100 = 0x0C → CR1[25:20] = 0x0C
+;   Expected CR1: 0x00C10041 (MCKDIV=12, SAIEN=1, MODEMASTER_RX)
+; Status: [PEND] verify after flash
+
+; Expression:  SAI4->PDMCR   (address: SAI4 base + 0x04C)
+; Last value:  0x00000101
+; Decoded:
+;   Bit  8 [CKEN1] = 1 → CK1 clock output enabled on PE2 ✓
+;   Bit  0 [PDMEN] = 1 → PDM interface active ✓
+; Result: [OK]
+
+; Expression:  SAI4_Block_A->SLOTR   (SAI4 Block A slot register)
+; Last value:  0x00000000  → NO SLOTS ACTIVE (the smoking gun!)
+; [BUG] Fixed: SlotActive changed from 0x00000000 to SAI_SLOTACTIVE_0
+; After fix:   SLOTR should be 0x00010000 (SLOTEN0=1 = slot 0 active)
+; Meaning:     SAI4 will now capture PDM data from PC1/SAI4_D1 → bridge carries data
+; Status: [PEND] — THIRD KEY VERIFICATION POINT
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 5. FreeRTOS / Application Variables — measured live
+; ══════════════════════════════════════════════════════════════════════════════
+
+; Expression:  g_State
+; Values:      0=REC_IDLE  1=REC_RECORDING  2=REC_SAVING
+; During bug:  Stays at 1 (RECORDING) forever — drain loop never completes
+
+; Expression:  g_SampleCount
+; During bug:  Never increments (no DMA callbacks, no StoreDmaChunk calls)
+; After fix:   Should increment by 16 per callback, reach 48000 in 3 seconds
+
+; Expression:  g_DmaCallCount
+; During bug:  0 always
+; After fix:   Should reach 3000 (48000 samples / 16 per half)
+
+; Expression:  s_dmaQueueOverflow
+; Expected:    0 (if drain loop keeps up with DMA)
+
+; Expression:  g_AudioHealth.dfsdm_overruns
+; Expected:    0 during normal recording (non-zero = filter overran)
+
+; Expression:  g_DfsdmBuf[0]   (raw DFSDM output, int32, sign-extended 24-bit PCM)
+; After fix:   Should show changing values (audio signal, not 0)
+
+; Expression:  g_AudioBuf[0]   (final int16 PCM accumulation buffer)
+; After fix:   Should contain audio data after recording completes
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 6. IAR ADDRESS CASTS (for registers IAR won't resolve by name)
+; ══════════════════════════════════════════════════════════════════════════════
+
+; DMA1_Stream1 CR   :  ((DMA_Stream_TypeDef*)0x40020028)->CR
+; DMA1_Stream1 NDTR :  ((DMA_Stream_TypeDef*)0x40020028)->NDTR
+; DMA1_Stream1 PAR  :  ((DMA_Stream_TypeDef*)0x40020028)->PAR    ; should = DFSDM FLTRDATAR addr
+; DMA1_Stream1 M0AR :  ((DMA_Stream_TypeDef*)0x40020028)->M0AR   ; should = 0x30000000 (g_DfsdmBuf)
+; DFSDM Ch0 CHCFGR1 :  ((DFSDM_Channel_TypeDef*)0x40017400)->CHCFGR1
+; DFSDM Ch3 CHCFGR1 :  ((DFSDM_Channel_TypeDef*)0x40017460)->CHCFGR1
+; DFSDM Flt0 FLTCR1 :  ((DFSDM_Filter_HandleTypeDef*)&hdfsdm1_filter0)->Instance->FLTCR1
+; SAI4 Block A SLOTR:  ((SAI_Block_TypeDef*)SAI4_Block_A)->SLOTR
+; SAI4 PDMCR        :  ((SAI_TypeDef*)SAI4)->PDMCR
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 7. CHANGES APPLIED — commit pending
+; ══════════════════════════════════════════════════════════════════════════════
+;
+;  File: CM7/Core/Src/main.c
+;
+;  [1] MX_DFSDM1_Init — CKOUTDIV=24 added after DFSDMEN line (~line 509):
+;      DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);
+;      Effect: DFSDM CKOUT = 100 MHz / 50 = 2.0 MHz → filter now has a clock
+;
+;  [2] MX_SAI4_Init — AudioFrequency changed (line 923):
+;      250000u   (was: SAI_AUDIO_FREQUENCY_192K = 192000)
+;      Effect: HAL computes MCKDIV=12 → CK1 on PE2 = 2.048 MHz ≈ DFSDM CKOUT
+;
+;  [3] MX_SAI4_Init — SlotActive fixed (line 937):
+;      SAI_SLOTACTIVE_0   (was: 0x00000000)
+;      Effect: SLOTR=0x00010000 → SAI4 captures PDM from PC1 → bridge active
+;
+; ══════════════════════════════════════════════════════════════════════════════
+; EXPECTED RESULT AFTER ALL 3 FIXES:
+;   FLTRDATAR  → non-zero, changing              (filter running)
+;   NDTR       → counts down from 32             (DMA moving data)
+;   SAI4 SLOTR → 0x00010000                     (slot 0 active)
+;   Ch0 CHCFGR1→ 0x80180000                     (DFSDMEN+CKOUTDIV=24)
+;   g_SampleCount → reaches 48000 in 3 seconds  (recording complete)
+;   SD card    → REC_XXX.wav written             (pipeline end-to-end OK)
+; ══════════════════════════════════════════════════════════════════════════════
