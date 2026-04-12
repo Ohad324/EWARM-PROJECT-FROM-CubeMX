@@ -491,22 +491,20 @@ static void MX_DFSDM1_Init(void)
    * LR=GND on MP34DT05-A → data on falling edge → SPI_FALLING.
    * RightBitShift=5: Sinc3 peak = 125³ = ~21-bit → shift 5 → 16-bit output. */
 
-  /* ── DFSDM global enable — MUST be set before any CHEN write ──────────────
+  /* ── DFSDM CKOUT + global enable — ORDER IS CRITICAL (RM0399 §30.4.2) ──────
+   * RM0399: "CKOUTDIV bits are writable only when DFSDMEN=0."
    * RM0399: "CHEN is writable only when DFSDMEN=1."
-   * DFSDMEN lives in DFSDM1_Channel0->CHCFGR1 bit 31 and is normally set by
-   * HAL_DFSDM_ChannelInit only when initialising Channel 0.  Since we skip
-   * Channel 0, we must enable the peripheral clock and assert DFSDMEN manually
-   * before calling ChannelInit for Channel 3; otherwise the CHEN=1 write is
-   * silently ignored and the channel stays disabled → no filter output → DMA
-   * never fires. */
-  __HAL_RCC_DFSDM1_CLK_ENABLE();
-  DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;
-  /* ── DFSDM CKOUT = 2.0 MHz — required for SPICKSEL=INTERNAL to work ──────
-   * CKOUT = APB2 / ((CKOUTDIV+1) × 2) = 100 MHz / 50 = 2.0 MHz
-   * CKOUTDIV is a global setting in Channel 0 CHCFGR1 bits [23:16].
+   * Therefore the sequence MUST be:
+   *   1. CKOUTDIV  (while DFSDMEN=0 — HW ignores write if DFSDMEN=1 already)
+   *   2. DFSDMEN=1 (locks in CKOUTDIV, enables peripheral)
+   *   3. HAL_DFSDM_ChannelInit (writes CHEN=1, valid now that DFSDMEN=1)
+   *
+   * CKOUT = APB2 / ((CKOUTDIV+1) × 2) = 100 MHz / ((24+1)×2) = 2.0 MHz
    * Sinc3 OSR=125: PCM = 2.0 MHz / 125 = 16,000 Hz.
-   * SAI4 AudioFrequency=SAI_AUDIO_FREQUENCY_16K → MCKDIV=12 → CK1=2.048 MHz ≈ CKOUT. */
-  DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);
+   * SAI4 AudioFrequency=SAI_AUDIO_FREQUENCY_16K → MCKDIV=11 → CK1≈2.24 MHz ≈ CKOUT. */
+  __HAL_RCC_DFSDM1_CLK_ENABLE();
+  DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
+  DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 
   /* ── Step 1: Channel 3 ── */
   hdfsdm1_channel3.Instance                        = DFSDM1_Channel3;
