@@ -226,8 +226,8 @@ int main(void)
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
 
-  /* Configure The Vector Table address */
-  SCB->VTOR = 0x08100000;
+  /* Configure The Vector Table address — CM7 vectors live in Bank 1 per ICF */
+  SCB->VTOR = 0x08000000;
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
@@ -479,78 +479,41 @@ static void MX_DFSDM1_Init(void)
   /* USER CODE BEGIN DFSDM1_Init 1 */
 
   /* USER CODE END DFSDM1_Init 1 */
-  hdfsdm1_filter0.Instance = DFSDM1_Filter0;
-  hdfsdm1_filter0.Init.RegularParam.Trigger = DFSDM_FILTER_SW_TRIGGER;
-  hdfsdm1_filter0.Init.RegularParam.FastMode = DISABLE;
-  hdfsdm1_filter0.Init.RegularParam.DmaMode = DISABLE;
-  hdfsdm1_filter0.Init.FilterParam.SincOrder = DFSDM_FILTER_FASTSINC_ORDER;
-  hdfsdm1_filter0.Init.FilterParam.Oversampling = 128;
-  hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1;
-  if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  hdfsdm1_channel3.Instance = DFSDM1_Channel3;
-  hdfsdm1_channel3.Init.OutputClock.Activation = ENABLE;
-  hdfsdm1_channel3.Init.OutputClock.Selection = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
-  hdfsdm1_channel3.Init.OutputClock.Divider = 2;
-  hdfsdm1_channel3.Init.Input.Multiplexer = DFSDM_CHANNEL_EXTERNAL_INPUTS;
-  hdfsdm1_channel3.Init.Input.DataPacking = DFSDM_CHANNEL_STANDARD_MODE;
-  hdfsdm1_channel3.Init.Input.Pins = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm1_channel3.Init.SerialInterface.Type = DFSDM_CHANNEL_SPI_RISING;
-  hdfsdm1_channel3.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
-  hdfsdm1_channel3.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
-  hdfsdm1_channel3.Init.Awd.Oversampling = 1;
-  hdfsdm1_channel3.Init.Offset = 0;
-  hdfsdm1_channel3.Init.RightBitShift = 0x11;
-  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_3, DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN DFSDM1_Init 2 */
-  /* ── Override CubeMX defaults with correct DFSDM config ──────────────────
-   * CubeMX IOC has incomplete DFSDM1 settings (FastMode=OFF, DmaMode=OFF,
-   * FastSinc instead of Sinc3, wrong clock source).
-   * Re-init with correct values here in USER CODE so it survives regeneration.
-   *
-   * Architecture: SAI4 drives the mic pins (PE2/CK1, PC1/D1) and feeds PDM
-   * data to DFSDM1 Channel 3 via internal silicon routing (no external pins).
-   * SPI_CLOCK_INTERNAL tells DFSDM to receive clock from SAI4, not CKOUT.
-   *
-   * Filter clock math (Sinc3, OSR=125):
-   *   SAI4 provides ~2.0 MHz PDM clock to DFSDM internally
-   *   PCM = 2.0 MHz / 125 = 16,000 Hz ✓
-   *
-   * RightBitShift: Sinc3 OSR=125 → 125³ = 1,953,125 → ~21-bit
-   *   shift 8 → 13-bit range. Tune after Audacity check.
-   *
-   * NOTE: Divider=18 sets CKOUT = APB2/(2×18) ≈ 2.78 MHz.
-   *       In SPI_CLOCK_INTERNAL mode, SAI4 owns the actual PDM clock.
-   *       If audio is silent, try Divider=1 to rule out double-division. */
+  /* HAL rule: Channel MUST be initialized before Filter (one call each).
+   * SPI_CLOCK_INTERNAL = SAI4 provides the PDM clock internally (~2.048 MHz).
+   * CKOUT pin (PD3) is not used — OutputClock disabled.
+   * Clock math: 2.048 MHz / OSR=125 = 16,384 Hz ≈ 16 kHz PCM ✓
+   * LR=GND on MP34DT05-A → data on falling edge → SPI_FALLING.
+   * RightBitShift=5: Sinc3 peak = 125³ = ~21-bit → shift 5 → 16-bit output. */
 
-  /* ── Filter 0: Sinc3, OSR=125, FastMode + DMA ── */
-  hdfsdm1_filter0.Init.RegularParam.FastMode = ENABLE;
-  hdfsdm1_filter0.Init.RegularParam.DmaMode  = ENABLE;
-  hdfsdm1_filter0.Init.FilterParam.SincOrder       = DFSDM_FILTER_SINC3_ORDER;
-  hdfsdm1_filter0.Init.FilterParam.Oversampling    = 125u;
-  hdfsdm1_filter0.Init.FilterParam.IntOversampling = 1u;
-  if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK) { Error_Handler(); }
-
-  /* ── Channel 3: internal clock from SAI4, falling edge (LR=GND) ── */
-  hdfsdm1_channel3.Init.SerialInterface.SpiClock = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
-  hdfsdm1_channel3.Init.OutputClock.Divider      = 18u;  /* CKOUT — may be unused in INTERNAL mode */
-  hdfsdm1_channel3.Init.SerialInterface.Type     = DFSDM_CHANNEL_SPI_FALLING;
-  hdfsdm1_channel3.Init.RightBitShift            = 5u;
-  /* AWD (analog watchdog) — threshold alerts only, NOT audio decimation */
-  hdfsdm1_channel3.Init.Awd.FilterOrder          = DFSDM_CHANNEL_FASTSINC_ORDER;
-  hdfsdm1_channel3.Init.Awd.Oversampling         = 10u;
+  /* ── Step 1: Channel 3 ── */
+  hdfsdm1_channel3.Instance                        = DFSDM1_Channel3;
+  hdfsdm1_channel3.Init.OutputClock.Activation     = DISABLE;  /* CKOUT unused — SAI4 is clock source */
+  hdfsdm1_channel3.Init.OutputClock.Selection      = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
+  hdfsdm1_channel3.Init.OutputClock.Divider        = 2u;       /* irrelevant when Activation=DISABLE */
+  hdfsdm1_channel3.Init.Input.Multiplexer          = DFSDM_CHANNEL_EXTERNAL_INPUTS;
+  hdfsdm1_channel3.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
+  hdfsdm1_channel3.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
+  hdfsdm1_channel3.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_FALLING;
+  hdfsdm1_channel3.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
+  hdfsdm1_channel3.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
+  hdfsdm1_channel3.Init.Awd.Oversampling           = 10u;
+  hdfsdm1_channel3.Init.Offset                     = 0;
+  hdfsdm1_channel3.Init.RightBitShift              = 5u;
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel3) != HAL_OK) { Error_Handler(); }
 
-  /* Re-assign filter to channel 3 after re-init */
+  /* ── Step 2: Filter 0 ── */
+  hdfsdm1_filter0.Instance                          = DFSDM1_Filter0;
+  hdfsdm1_filter0.Init.RegularParam.Trigger         = DFSDM_FILTER_SW_TRIGGER;
+  hdfsdm1_filter0.Init.RegularParam.FastMode        = ENABLE;
+  hdfsdm1_filter0.Init.RegularParam.DmaMode         = ENABLE;
+  hdfsdm1_filter0.Init.FilterParam.SincOrder        = DFSDM_FILTER_SINC3_ORDER;
+  hdfsdm1_filter0.Init.FilterParam.Oversampling     = 125u;
+  hdfsdm1_filter0.Init.FilterParam.IntOversampling  = 1u;
+  if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK) { Error_Handler(); }
+
+  /* ── Step 3: Assign channel to filter ── */
   if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_3,
                                         DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
   { Error_Handler(); }

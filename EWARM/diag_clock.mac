@@ -1,0 +1,119 @@
+// diag_clock.mac - Full boot-to-task forensic. Classifies PC against every
+// significant boot milestone to prove init reaches scheduled RTOS tasks.
+
+__var _stop;
+
+execUserSetup()
+{
+    _stop = 0;
+    __message "=== diag_clock (full boot probe) armed ===";
+}
+
+execUserExecutionStopped()
+{
+    __var _pc;
+    __var _lr;
+    __var _sp;
+    __var _primask;
+    __var _rcc_cr;
+    __var _rcc_cfgr;
+    __var _pwr_d3cr;
+    __var _cfsr;
+    __var _hfsr;
+
+    _stop = _stop + 1;
+
+    __writeMemory32(0x0000000F, 0xE000EDF4, "Memory"); _pc      = __readMemory32(0xE000EDF8, "Memory");
+    __writeMemory32(0x0000000E, 0xE000EDF4, "Memory"); _lr      = __readMemory32(0xE000EDF8, "Memory");
+    __writeMemory32(0x0000000D, 0xE000EDF4, "Memory"); _sp      = __readMemory32(0xE000EDF8, "Memory");
+    __writeMemory32(0x00000014, 0xE000EDF4, "Memory"); _primask = __readMemory32(0xE000EDF8, "Memory");
+
+    _rcc_cr    = __readMemory32(0x58024400, "Memory");
+    _rcc_cfgr  = __readMemory32(0x58024410, "Memory");
+    _pwr_d3cr  = __readMemory32(0x58024818, "Memory");
+    _cfsr      = __readMemory32(0xE000ED28, "Memory");
+    _hfsr      = __readMemory32(0xE000ED2C, "Memory");
+
+    __message "============================================";
+    __message ">>> STOP #", _stop:%d;
+    __message "PC        = ", _pc:%x;
+    __message "LR        = ", _lr:%x;
+    __message "SP        = ", _sp:%x;
+    __message "PRIMASK   = ", _primask:%x;
+    __message "RCC_CR    = ", _rcc_cr:%x;
+    __message "RCC_CFGR  = ", _rcc_cfgr:%x;
+    __message "PWR_D3CR  = ", _pwr_d3cr:%x;
+    __message "CFSR/HFSR = ", _cfsr:%x, " / ", _hfsr:%x;
+
+    // ----- Boot-milestone classification -----
+    // Early boot / CPU init
+    if ((_pc >= 0x08031DA8) && (_pc <  0x08031FF2))
+        __message "LOC --> in main() body (pre SystemClock_Config)";
+    else if ((_pc >= 0x08031FF2) && (_pc <  0x080320D2))
+        __message "LOC --> inside SystemClock_Config (clock init RUNNING)";
+    else if ((_pc >= 0x0803586C) && (_pc <  0x08035F64))
+        __message "LOC --> inside HAL_RCC_OscConfig (PLL config)";
+    else if ((_pc >= 0x08033540) && (_pc <  0x080337D0))
+        __message "LOC --> inside HAL_RCC_ClockConfig (sysclk switch)";
+
+    // Peripheral init
+    else if ((_pc >= 0x08032100) && (_pc <  0x080321EE))
+        __message "LOC --> inside MX_DFSDM1_Init";
+    else if ((_pc >= 0x080325DA) && (_pc <  0x0803265E))
+        __message "LOC --> inside MX_SAI4_Init";
+    else if ((_pc >= 0x08028390) && (_pc <  0x08028404))
+        __message "LOC --> inside VoiceRec_Init";
+    else if ((_pc >= 0x08024220) && (_pc <  0x080242B6))
+        __message "LOC --> inside AudioSD_Init";
+    else if ((_pc >= 0x08035564) && (_pc <  0x080355CE))
+        __message "LOC --> inside Music_Init";
+
+    // RTOS boot
+    else if ((_pc >= 0x08026DFC) && (_pc <  0x08026E80))
+        __message "LOC --> inside xTaskCreate (task creation in progress)";
+    else if ((_pc >= 0x0802712E) && (_pc <  0x080271DE))
+        __message "LOC --> inside vTaskStartScheduler";
+    else if ((_pc >= 0x0802D63E) && (_pc <  0x0802D740))
+        __message "LOC --> inside xPortStartScheduler";
+    else if ((_pc >= 0x08034EEA) && (_pc <  0x08034F24))
+        __message "LOC --> inside osKernelStart";
+    else if ((_pc >= 0x08033BDC) && (_pc <  0x08033C30))
+        __message "LOC --> inside PendSV_Handler (CTX SWITCH RUNNING)";
+    else if ((_pc >= 0x08033C34) && (_pc <  0x08033C50))
+        __message "LOC --> inside SVC_Handler";
+    else if ((_pc >= 0x08034E60) && (_pc <  0x08034E76))
+        __message "LOC --> inside SysTick_Handler (TICK FIRING)";
+
+    // Running tasks — proof the scheduler is live
+    else if ((_pc >= 0x08028536) && (_pc <  0x080287EC))
+        __message "LOC --> inside VoiceRecTask *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x0802882C) && (_pc <  0x08029138))
+        __message "LOC --> inside SDWriteTask *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x08029160) && (_pc <  0x0802924A))
+        __message "LOC --> inside RTTLogTask *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x08029264) && (_pc <  0x080293F8))
+        __message "LOC --> inside HealthMonTask *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x08034528) && (_pc <  0x08034532))
+        __message "LOC --> inside TouchGFX_Task *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x080401EE) && (_pc <  0x080401FA))
+        __message "LOC --> inside videoTaskFunc *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x08032CF8) && (_pc <  0x08033066))
+        __message "LOC --> inside UARTReceiveTask *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x08034D80) && (_pc <  0x08034DF4))
+        __message "LOC --> inside CommandHandler_TaskEntry *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x0802DAC2) && (_pc <  0x0802DBDE))
+        __message "LOC --> inside RtosTrace_DrainTask *** SCHEDULER LIVE ***";
+    else if ((_pc >= 0x08027904) && (_pc <  0x0802792E))
+        __message "LOC --> inside prvIdleTask *** SCHEDULER LIVE (idle) ***";
+
+    // Fault / error
+    else if ((_pc >= 0x080331D4) && (_pc <  0x080331D8))
+        __message "LOC --> Error_Handler() *** FIRMWARE TRAPPED ***";
+
+    else if (_pc >= 0x08000000)
+        __message "LOC --> elsewhere in flash (library/TouchGFX/JPEG/HAL code)";
+    else
+        __message "LOC --> NOT in flash: ", _pc:%x;
+
+    __message "============================================";
+}

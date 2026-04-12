@@ -1,0 +1,57 @@
+// bp_oskernel.mac — Plants a real FPB hardware breakpoint at osKernelStart
+// then confirms PC landed there when execution halts.
+//
+// osKernelStart @ 0x08034EEA  (thumb instruction, size 0x3A)
+// FPB registers (Cortex-M7 FPBv2):
+//   FP_CTRL  0xE0002000  bit1=KEY  bit0=ENABLE  (write 0x3 to unlock+enable)
+//   FP_COMP0 0xE0002008  bits[31:1]=addr[31:1]  bit0=ENABLE
+
+__var _hitCount;
+
+execUserSetup()
+{
+    _hitCount = 0;
+    __message "=== bp_oskernel loaded. Will arm FPB BP at osKernelStart (0x08034EEA) on first start ===";
+}
+
+execUserExecutionStarted()
+{
+    // Called AFTER reset/download, BEFORE CPU runs — FPB state is clean here.
+    __writeMemory32(0x00000003, 0xE0002000, "Memory");  // FP_CTRL: KEY=1, ENABLE=1
+    __writeMemory32(0x08034EEB, 0xE0002008, "Memory");  // FP_COMP0: 0x08034EEA | ENABLE
+    __message "FPB armed: COMP0=0x08034EEB  CTRL=", __readMemory32(0xE0002000, "Memory"):%x;
+}
+
+execUserExecutionStopped()
+{
+    __var _pc;
+    __var _lr;
+    __var _rcc_cfgr;
+    __var _cfsr;
+
+    __writeMemory32(0x0000000F, 0xE000EDF4, "Memory");
+    _pc = __readMemory32(0xE000EDF8, "Memory");
+    __writeMemory32(0x0000000E, 0xE000EDF4, "Memory");
+    _lr = __readMemory32(0xE000EDF8, "Memory");
+    _rcc_cfgr = __readMemory32(0x58024410, "Memory");
+    _cfsr     = __readMemory32(0xE000ED28, "Memory");
+
+    _hitCount = _hitCount + 1;
+    __message "============================================";
+    __message ">>> STOP #", _hitCount:%d;
+    __message "PC        = ", _pc:%x;
+    __message "LR        = ", _lr:%x;
+    __message "RCC_CFGR  = ", _rcc_cfgr:%x, "  (SWS[5:3]: 3=PLL1)";
+    __message "CFSR      = ", _cfsr:%x;
+
+    if ((_pc >= 0x08034EEA) && (_pc <= 0x08034F24))
+        __message ">>> *** HIT: PC IS INSIDE osKernelStart — BREAKPOINT CONFIRMED ***";
+    else if (_cfsr != 0)
+        __message ">>> FAULT detected, CFSR=", _cfsr:%x;
+    else if (_pc >= 0x08000000)
+        __message ">>> PC elsewhere in flash (not yet at osKernelStart)";
+    else
+        __message ">>> PC outside flash: ", _pc:%x;
+
+    __message "============================================";
+}
