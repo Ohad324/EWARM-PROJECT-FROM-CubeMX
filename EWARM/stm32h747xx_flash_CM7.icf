@@ -53,97 +53,184 @@ place at address mem:0x08100000 { section .cm4_code };
 place in ROM_region   { readonly, section IntFlashSection, section FontFlashSection, section TextFlashSection };
 
 /* ═══════════════════════════════════════════════════════════════════════════
- * MEMORY MAP — Per-Task/Buffer Ownership
+ * STM32H747 POWER DOMAIN ARCHITECTURE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ *  The H747 has three independent power domains. Each domain has its own:
+ *  clock gate, voltage regulator, and can enter low-power independently.
+ *  DMA controllers are domain-bound — they can only reach RAM in their
+ *  own domain or via the AHB bus matrix crossbar (with constraints below).
+ *
+ *  ┌──────────────────────────────────────────────────────────────────────┐
+ *  │  D1 — Core Domain (always-on while M7 runs)                        │
+ *  │  CPU: Cortex-M7 @ 400 MHz                                          │
+ *  │  DMA: MDMA (Memory-to-Memory DMA, can reach ALL domains)           │
+ *  │  DMA: DMA2D (2D graphics blitter, D1 only)                         │
+ *  │  Peripherals: JPEG decoder, OCTOSPI, FMC (SDRAM/QSPI controller)  │
+ *  │  RAM owned by D1:                                                   │
+ *  │    • Flash   0x08000000  (1 MB internal, bus: AXIM)                │
+ *  │    • ITCM    0x00000000  (64 KB, M7 instruction cache — NO DMA)    │
+ *  │    • DTCM    0x20000000  (128 KB, zero-wait M7 data — NO DMA)      │
+ *  │    • AXI SRAM 0x24000000 (512 KB, D1 AHB bus — DMA1/2/MDMA OK)    │
+ *  └──────────────────────────────────────────────────────────────────────┘
+ *            │ AHB bus matrix crossbar (M7 can reach D2/D3 RAM)
+ *  ┌──────────────────────────────────────────────────────────────────────┐
+ *  │  D2 — Peripheral Domain (active when any D2 peripheral runs)       │
+ *  │  CPU: Cortex-M4 @ 200 MHz (not used in this project — firmware     │
+ *  │       for CM4 is a stub; only CM7 runs application code)           │
+ *  │  DMA: DMA1 (audio pipeline: DFSDM→SRAM1)                          │
+ *  │  DMA: DMA2 (SD card: SDMMC1 IDMA → AXI SRAM bounce buffer)        │
+ *  │  Peripherals: DFSDM1, SDMMC1/2, SAI1/2/3, SPI, I2C, USART, USB   │
+ *  │  RAM owned by D2:                                                   │
+ *  │    • SRAM1  0x30000000  (128 KB — DMA1/DMA2/MDMA accessible)       │
+ *  │    • SRAM2  0x30020000  (128 KB — DMA1/DMA2/MDMA accessible)       │
+ *  │    • SRAM3  0x30040000  (32 KB  — DMA1/DMA2/MDMA accessible)       │
+ *  │  Rule: DMA1/DMA2 can access D1 AXI SRAM and D2 SRAM via crossbar  │
+ *  │         but CANNOT reach D3 SRAM directly.                         │
+ *  └──────────────────────────────────────────────────────────────────────┘
+ *            │ internal silicon bridge (SAI4→DFSDM1, D3→D2 data path)
+ *  ┌──────────────────────────────────────────────────────────────────────┐
+ *  │  D3 — Low-Power Domain (can stay alive when D1+D2 are stopped)     │
+ *  │  CPU: none (no processor in D3)                                    │
+ *  │  DMA: BDMA — can ONLY reach D3 SRAM (0x38000000). Cannot touch     │
+ *  │         D1 AXI or D2 SRAM at all.                                  │
+ *  │  Peripherals: SAI4 (PDM mic clock+data), LPTIM, RTC, LPUART,      │
+ *  │               ADC3, DAC, I2C4, SPI6                                │
+ *  │  RAM owned by D3:                                                   │
+ *  │    • SRAM4  0x38000000  (64 KB — only BDMA and M7 can access)      │
+ *  │    • Backup 0x38800000  (4 KB  — battery-backed, RTC data)         │
+ *  │  Rule: if SAI4 were DMA'd directly, buffer MUST be at 0x38000000.  │
+ *  │   This project uses SAI4→DFSDM1 internal bridge instead — SAI4     │
+ *  │   forwards PDM bits to D2 DFSDM1 via silicon routing, so BDMA      │
+ *  │   and D3 SRAM are NOT needed. D3 SRAM4 is unused in this project.  │
+ *  └──────────────────────────────────────────────────────────────────────┘
+ *
+ * ═══════════════════════════════════════════════════════════════════════════
+ * MEMORY MAP — Per-Region: Domain, DMA Rules, Owner Tasks, Buffers
  * ═══════════════════════════════════════════════════════════════════════════
  *
  *  ┌─────────────────────────────────────────────────────────────────────┐
- *  │ INTERNAL FLASH — 0x08000000..0x080FFFFF (1 MB)                     │
+ *  │ INTERNAL FLASH — D1 domain — 0x08000000..0x080FFFFF (1 MB)        │
+ *  │   DMA reach: MDMA (read), M7 AXIM bus (fetch/read)                │
  *  │   • Code, read-only data, vector table, font/text flash sections   │
- *  │   • CM4 code at 0x08100000 (fixed offset for dual-core boot)       │
+ *  │   • CM4 stub at 0x08100000 (fixed offset for dual-core boot)      │
  *  └─────────────────────────────────────────────────────────────────────┘
  *
  *  ┌─────────────────────────────────────────────────────────────────────┐
- *  │ AXI SRAM D1 — 0x24000000..0x2407FFFF (512 KB)   ← main RAM_region │
- *  │   Owner: ALL tasks (default .bss/.data placement)                  │
- *  │                                                                     │
- *  │   VoiceRecTask:                                                     │
- *  │     • Task stack (FreeRTOS xTaskCreate, 2 KB typical)              │
- *  │     • s_dmaQueue storage (8 × DmaEntry_t = 64 bytes)               │
- *  │     • s_pcmBounce (16 KB bounce buffer for SDMMC IDMA)             │
- *  │     • g_SampleCount, g_DmaCallCount, g_State (globals)             │
- *  │                                                                     │
- *  │   SDWriteTask:                                                      │
- *  │     • Task stack                                                    │
- *  │     • xVoiceQueue (trigger from VoiceRecTask to SDWriteTask)       │
- *  │     • FatFS work buffers (ff.c internal state)                     │
- *  │     • WAV header staging (local vars on stack)                     │
- *  │                                                                     │
- *  │   RTTLogTask:                                                       │
- *  │     • Task stack                                                    │
- *  │     • xLogQueue storage (log strings from all other tasks)         │
- *  │                                                                     │
- *  │   TouchGFX / DisplayTask:                                           │
- *  │     • Task stack, TouchGFX internal state                          │
- *  │     • Decoded JPEG thumbnail data (temp buffer)                    │
- *  │                                                                     │
- *  │   FreeRTOS kernel:                                                  │
- *  │     • TCB (task control blocks), ready lists, timer state          │
+ *  │ ITCM — D1 domain — 0x00000000..0x0000FFFF (64 KB)                 │
+ *  │   DMA reach: NONE — tightly coupled to M7 instruction bus only     │
+ *  │   Not used in this project (code runs from Flash/AXI SRAM).        │
  *  └─────────────────────────────────────────────────────────────────────┘
  *
  *  ┌─────────────────────────────────────────────────────────────────────┐
- *  │ DTCM — 0x20000000..0x2001FFFF (128 KB)                             │
- *  │   Owner: M7 core only (no DMA access — fastest CPU reads/writes)   │
+ *  │ DTCM — D1 domain — 0x20000000..0x2001FFFF (128 KB)                │
+ *  │   DMA reach: NONE — tightly coupled to M7 data bus (DTCMRAM)      │
+ *  │   Zero wait-state: fastest possible CPU reads/writes               │
  *  │                                                                     │
- *  │   • CSTACK (main/interrupt stack, 8 KB)                            │
- *  │   • HEAP   (malloc arena, 1 KB — not used: no dynamic allocation)  │
+ *  │   Owner: M7 core interrupt/main stack + heap                       │
+ *  │     • CSTACK (8 KB) — all ISRs and FreeRTOS scheduler run here    │
+ *  │     • HEAP   (1 KB) — unused (no dynamic allocation in project)    │
  *  │                                                                     │
- *  │   NOTE: DMA cannot access DTCM. Never place DMA buffers here.      │
+ *  │   RULE: Never place any DMA buffer here — DMA cannot see DTCM.    │
  *  └─────────────────────────────────────────────────────────────────────┘
  *
  *  ┌─────────────────────────────────────────────────────────────────────┐
- *  │ D2 SRAM1 — 0x30000000..0x3001FFFF (128 KB)                        │
- *  │   Owner: VoiceRecTask + DMA1 (DFSDM audio pipeline)               │
+ *  │ AXI SRAM — D1 domain — 0x24000000..0x2407FFFF (512 KB)            │
+ *  │   DMA reach: DMA1, DMA2 (via AHB bus crossbar), MDMA              │
+ *  │   M7 D-Cache: ENABLED — DMA writes require cache invalidation      │
  *  │                                                                     │
- *  │   • g_DfsdmBuf[32] (128 bytes) at 0x30000000                      │
- *  │     DMA1_Stream1 writes DFSDM output here (circular, 32-bit words) │
- *  │     VoiceRecTask reads via drain loop                              │
- *  │     Placed via: #pragma location = 0x30000000                      │
+ *  │   Owner: ALL FreeRTOS tasks (default .bss / .data placement)       │
  *  │                                                                     │
- *  │   DMA accessibility: DMA1, DMA2, MDMA                             │
- *  │   Cache: cacheable under default M7 MPU (no MPU override for D2)   │
- *  │   → SCB_InvalidateDCache_by_Addr() required before CPU read        │
+ *  │   VoiceRecTask (D1 ↔ D2 data flow — records audio):               │
+ *  │     • Task stack, s_dmaQueue (DFSDM ISR → task signalling)        │
+ *  │     • s_pcmBounce[16384] — SDMMC IDMA reads WAV payload from here │
+ *  │     • g_State, g_SampleCount, g_DmaCallCount (shared globals)     │
+ *  │                                                                     │
+ *  │   SDWriteTask (D1 AXI ← D2 SRAM2 via memcpy bounce):             │
+ *  │     • Task stack, xVoiceQueue, FatFS ff.c work area               │
+ *  │     • WAV header built on stack, written via SDMMC IDMA           │
+ *  │                                                                     │
+ *  │   RTTLogTask (pure D1):                                            │
+ *  │     • Task stack, xLogQueue (receives strings from all tasks)      │
+ *  │                                                                     │
+ *  │   TouchGFX / DisplayTask (D1 ↔ SDRAM for framebuffers):           │
+ *  │     • Task stack, TouchGFX engine state, JPEG temp decode buffer   │
+ *  │                                                                     │
+ *  │   FreeRTOS kernel:                                                 │
+ *  │     • TCBs, ready/delayed/suspended lists, timer wheel, queues    │
  *  └─────────────────────────────────────────────────────────────────────┘
  *
  *  ┌─────────────────────────────────────────────────────────────────────┐
- *  │ D2 SRAM2 — 0x30020000..0x3003FFFF (128 KB)                        │
- *  │   Owner: VoiceRecTask (write) + SDWriteTask (read via bounce)      │
+ *  │ D2 SRAM1 — D2 domain — 0x30000000..0x3001FFFF (128 KB)            │
+ *  │   DMA reach: DMA1 (write) ✓  DMA2 ✓  MDMA ✓                      │
+ *  │              BDMA ✗ (D3 DMA cannot cross into D2)                  │
+ *  │   M7 D-Cache: ENABLED (default MPU — no override for this region)  │
+ *  │     → SCB_InvalidateDCache_by_Addr() REQUIRED before CPU reads     │
+ *  │       data that DMA1 just wrote (voice_recorder.c drain loop)      │
  *  │                                                                     │
- *  │   • g_AudioBuf[48000] (96 KB) at 0x30020000                       │
- *  │     VoiceRecTask accumulates int16 PCM here during recording       │
- *  │     SDWriteTask copies to s_pcmBounce (AXI SRAM) for SDMMC IDMA  │
- *  │     Placed via: #pragma location = 0x30020000                      │
+ *  │   Owner: VoiceRecTask read + DMA1 write (DFSDM audio pipeline)    │
  *  │                                                                     │
- *  │   DMA accessibility: DMA1, DMA2 accessible                        │
- *  │     SDMMC IDMA: uses AXI SRAM bounce buffer (not D2 direct)       │
- *  │   Cache: cacheable — CPU must invalidate before reading post-DMA   │
+ *  │     • g_DfsdmBuf[32] int32_t (128 bytes) at 0x30000000            │
+ *  │       DMA1_Stream1 fills this circularly from DFSDM1_Filter0       │
+ *  │       DFSDM writes 24-bit sign-extended values into 32-bit words   │
+ *  │       VoiceRecTask calls SCB_Invalidate → StoreDmaChunk → >>8      │
+ *  │       Placed via: #pragma location = 0x30000000                    │
+ *  │                                                                     │
+ *  │   Why D2 SRAM (not D1 AXI)?                                        │
+ *  │     DMA1 lives in D2 and can reach both D1 and D2 RAM.            │
+ *  │     Placing the DFSDM buffer in D2 SRAM1 avoids sharing the AXI   │
+ *  │     bus with SDMMC1 IDMA during simultaneous SD writes.            │
  *  └─────────────────────────────────────────────────────────────────────┘
  *
  *  ┌─────────────────────────────────────────────────────────────────────┐
- *  │ SDRAM — 0xD0000000..0xD1FFFFFF (32 MB external)                   │
- *  │   Owner: DisplayTask / TouchGFX                                    │
+ *  │ D2 SRAM2 — D2 domain — 0x30020000..0x3003FFFF (128 KB)            │
+ *  │   DMA reach: DMA1 ✓  DMA2 ✓  MDMA ✓                               │
+ *  │              BDMA ✗  SDMMC IDMA: use AXI SRAM bounce (safer)       │
+ *  │   M7 D-Cache: ENABLED                                              │
  *  │                                                                     │
- *  │   • TouchGFX_Framebuffer (double-buffered RGB display)             │
- *  │   • Video_RGB_Buffer (video decode output)                         │
- *  │   • .sdram_bss (large TouchGFX assets, lookup tables)             │
+ *  │   Owner: VoiceRecTask (write) → SDWriteTask (read via bounce buf)  │
  *  │                                                                     │
- *  │   Connected via FMC (Flexible Memory Controller)                   │
- *  │   Access through AHB3 bus — shared with QSPI                      │
+ *  │     • g_AudioBuf[48000] int16_t (96 KB) at 0x30020000             │
+ *  │       VoiceRecTask accumulates PCM samples here during recording   │
+ *  │       StoreDmaChunk: src32[i]>>8 → int16, stored by CPU in D2     │
+ *  │       SDWriteTask: memcpy chunk → s_pcmBounce (AXI) → SDMMC IDMA  │
+ *  │       Placed via: #pragma location = 0x30020000                    │
+ *  │                                                                     │
+ *  │   Why not D1 AXI?                                                  │
+ *  │     Original placement was SDRAM (.sdram_bss) — SDMMC IDMA caused  │
+ *  │     RXOVERR because FMC auto-refresh (every 7.8 µs) blocked the    │
+ *  │     AHB3 bus. D2 SRAM2 uses a separate bounce buffer to decouple.  │
  *  └─────────────────────────────────────────────────────────────────────┘
  *
  *  ┌─────────────────────────────────────────────────────────────────────┐
- *  │ QSPI Flash — 0x90000000..0x97FE0000 (external)                    │
- *  │   Owner: Read-only (font data, extended flash sections)            │
- *  │   • ExtFlashSection (pre-computed UI assets)                       │
+ *  │ D3 SRAM4 — D3 domain — 0x38000000..0x3800FFFF (64 KB)  [UNUSED]   │
+ *  │   DMA reach: BDMA only — strictly D3-local                         │
+ *  │              M7 can read/write via AHB slave port                  │
+ *  │              DMA1/DMA2/MDMA: cannot access this region             │
+ *  │                                                                     │
+ *  │   Relevant history: SAI4 in BDMA mode would DMA PDM bits here.    │
+ *  │   This project uses SAI4→DFSDM1 internal silicon bridge instead.  │
+ *  │   SAI4 (D3 peripheral) forwards PDM data directly into DFSDM1     │
+ *  │   (D2 peripheral) without any DMA or CPU involvement.             │
+ *  │   D3 SRAM4 is therefore unused and not defined in this linker file.│
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ SDRAM — external — 0xD0000000..0xD1FFFFFF (32 MB)                 │
+ *  │   Connected via FMC (AHB3 bus, D1 domain)                         │
+ *  │   DMA reach: MDMA ✓  DMA1/DMA2: not recommended (AHB3 latency)    │
+ *  │                                                                     │
+ *  │   Owner: DisplayTask / TouchGFX engine                             │
+ *  │     • TouchGFX_Framebuffer — double-buffered RGB565 display output │
+ *  │     • Video_RGB_Buffer — video frame decode staging area           │
+ *  │     • .sdram_bss — large TouchGFX lookup tables, asset data        │
+ *  └─────────────────────────────────────────────────────────────────────┘
+ *
+ *  ┌─────────────────────────────────────────────────────────────────────┐
+ *  │ QSPI Flash — external — 0x90000000..0x97FE0000                    │
+ *  │   Connected via OCTOSPI (AHB3 bus, D1 domain)                     │
+ *  │   Read-only at runtime (memory-mapped XIP access)                  │
+ *  │   • ExtFlashSection — pre-computed UI assets, font bitmaps         │
  *  └─────────────────────────────────────────────────────────────────────┘
  * ═══════════════════════════════════════════════════════════════════════════ */
 
