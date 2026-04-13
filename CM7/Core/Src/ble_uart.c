@@ -197,7 +197,7 @@ void BLE_UART_Init(void)
        (= 5 in this project) so that xQueueSendFromISR() is legal inside the
        callback.  Priority 6 is one notch below the UART8 IRQ (5) so the UART
        IDLE handler can pre-empt a DMA TC handler if both fire simultaneously. */
-    HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 6, 0);
+    HAL_NVIC_SetPriority(DMA1_Stream0_IRQn, 7, 0);  /* UART RX DMA — lowest comms priority */
     HAL_NVIC_EnableIRQ(DMA1_Stream0_IRQn);
     /* Note: UART8_IRQn (needed for IDLE line detection) is already enabled at
        priority 5 by HAL_UART_MspInit() called from MX_UART8_Init().

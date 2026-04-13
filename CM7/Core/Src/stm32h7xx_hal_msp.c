@@ -827,8 +827,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 
     /* USER CODE BEGIN UART8_MspInit 1 */
     /* UART8 interrupt Init */
-    /* Priority 6: Safe for FreeRTOS syscalls, won't starve Audio DMA (P5) */
-    HAL_NVIC_SetPriority(UART8_IRQn, 6, 0);
+    /* Priority 7: UART/Comms — tertiary tier, below Audio(5) and LCD/JPEG(6) */
+    HAL_NVIC_SetPriority(UART8_IRQn, 7, 0);
     HAL_NVIC_EnableIRQ(UART8_IRQn);
     /* USER CODE END UART8_MspInit 1 */
 

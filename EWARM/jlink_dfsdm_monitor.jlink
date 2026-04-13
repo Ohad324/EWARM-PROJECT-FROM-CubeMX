@@ -1,24 +1,23 @@
 // JLink DFSDM Monitor Script
-// Assumes firmware is already running (flashed separately).
-// 1. Reads pre-trigger register state
-// 2. Triggers recording via EXTI13 SWIER1 (simulates blue button)
-// 3. Reads FLTRDATAR at t=0, t=1, t=2 seconds during recording
-//    → if values differ, DFSDM IS producing real output
-//    → if all equal 0x00EE6B03, DFSDM input is stuck high
-// 4. Reads DMA buffer and PCM audio buffer post-recording
+// Halts target to read peripheral registers accurately (D2/D3 regs return 0 while running).
+// 1. Connect → HALT → read all static config registers → RESUME
+// 2. Trigger recording via EXTI13 SWIER1
+// 3. HALT → snapshot dynamic regs (NDTR, FLTRDATAR, buffer) → RESUME × 3
+// 4. Final HALT → full buffer + PCM buffer
 //
 // Key addresses (STM32H747I-DISCO, CM7):
 //   DFSDM1_Ch0 CHCFGR1  0x40017400  expect 0x80180000 (DFSDMEN+CKOUTDIV=24)
-//   DFSDM1_Ch3 CHCFGR1  0x40017460  expect 0x00000085 (CHEN+SPICKSEL_INT+FALLING)
+//   DFSDM1_Ch3 CHCFGR1  0x40017460  expect 0x0000008D (CHEN+SPICKSEL=11+SITP=01)
 //   DFSDM1_Flt0 FLTCR1  0x40017500  expect 0x23240001 (CH3,Sinc3,DMA,DFEN)
-//   DFSDM1_Flt0 FLTISR  0x40017508  bits[23:16]=CKABF(normal=0xFF w/INT clk), bit3=ROVRF
+//   DFSDM1_Flt0 FLTISR  0x40017508  bits[23:16]=CKABF, bit3=ROVRF
 //   DFSDM1_Flt0 FLTRDATAR 0x4001751C snapshot during recording
 //   SAI4_Block_A CR1    0x58005004  expect 0x00C10041 (MCKDIV=12,SAIEN,RX)
 //   SAI4_Block_A SLOTR  0x58005010  expect 0x00010000 (SLOTEN0)
 //   SAI4 PDMCR          0x58005044  expect 0x00000101 (PDMEN+CKEN1)
 //   DMA1_Stream1 CR     0x40020028  expect 0x0003551F
 //   DMA1_Stream1 NDTR   0x4002002C  should be < 32 during recording
-//   g_DfsdmBuf[0..15]   0x30000000  D2 SRAM1 — DFSDM DMA destination
+//   DMA1_Stream1 M0AR   0x40020030  must == address of g_DfsdmBuf
+//   g_DfsdmBuf[0..31]   0x30000000  D2 SRAM1 — DFSDM DMA destination
 //   g_AudioBuf[0..15]   0x30020000  D2 SRAM2 — final int16 PCM samples
 
 si SWD
@@ -27,100 +26,97 @@ device STM32H747XI_M7
 connect
 
 // ============================================================
-// PRE-TRIGGER: static register verification
+// HALT — required to read D2/D3 peripheral registers accurately
+// (while running they return 0x00000000 via SWD AP)
 // ============================================================
-echo "=== PRE-TRIGGER REGISTERS ==="
-echo "--- RCC dual-core gates (Bug 6 verification) ---"
-echo "RCC->APB2ENR  (0x58024534) bit30 = DFSDM1EN shared gate (expect 1):"
+h
+
+// ============================================================
+// PRE-TRIGGER: static register verification (target HALTED)
+// ============================================================
 mem32 0x58024534 1
-echo "RCC_C1->APB2ENR (0x58024550) bit30 = DFSDM1EN CM7 gate (expect 1, was 0 before Bug6 fix):"
 mem32 0x58024550 1
-echo "--- DFSDM ---"
-echo "Ch0_CHCFGR1 (expect 0x80180000):"
 mem32 0x40017400 1
-echo "Ch3_CHCFGR1 (expect 0x0000008D: CHEN=1 SPICKSEL=11(SAI4-A) SITP=01):"
 mem32 0x40017460 1
-echo "Flt0_FLTCR1 (expect 0x23240001):"
 mem32 0x40017500 1
-echo "Flt0_FLTISR (CKABF bits[23:16]: CH3 bit19=1 pre-trigger(SAI4 off), 0 during recording; bit3=ROVRF expect 0):"
 mem32 0x40017508 1
-echo "Flt0_FLTRDATAR (before recording — should be near 0):"
 mem32 0x4001751C 1
-echo "--- SAI4 ---"
-echo "Block_A CR1 (expect 0x00C10041 MCKDIV=12):"
 mem32 0x58005004 1
-echo "Block_A SLOTR (expect 0x00010000 SLOTEN0):"
 mem32 0x58005010 1
-echo "PDMCR (expect 0x00000101):"
 mem32 0x58005044 1
-echo "--- DMA1 Stream1 ---"
-echo "CR (expect 0x0003551F):"
 mem32 0x40020028 1
-echo "NDTR (should be 32 = idle):"
 mem32 0x4002002C 1
+mem32 0x40020030 1
+
+// ============================================================
+// RESUME — let FreeRTOS run again before trigger
+// ============================================================
+g
+sleep 100
 
 // ============================================================
 // TRIGGER: simulate blue button press (EXTI13 via SWIER1)
 // ============================================================
-echo "=== TRIGGERING RECORDING (EXTI13 SWIER1) ==="
 w4 0x58000008 0x00002000
-sleep 300
+sleep 400
 
-// Verify trigger landed (PR1 bit 13 should have been cleared by ISR)
-echo "EXTI PR1 after trigger (bit13 should be 0 if ISR ran):"
+// Verify trigger landed — HALT to read EXTI PR1 accurately
+h
 mem32 0x58000088 1
+g
 
 // ============================================================
-// SNAPSHOT 1 — t=0 after trigger
+// SNAPSHOT 1 — t=400ms after trigger (recording active)
+// HALT briefly to read DFSDM + DMA registers accurately
 // ============================================================
-echo "=== SNAPSHOT 1 (t=0ms after trigger) ==="
-echo "FLTRDATAR snap1:"
+sleep 100
+h
 mem32 0x4001751C 1
-echo "NDTR snap1 (should be < 32 if DMA running):"
-mem32 0x4002002C 1
-echo "g_DfsdmBuf[0..3] snap1:"
-mem32 0x30000000 4
-
-// ============================================================
-// SNAPSHOT 2 — t=1000ms into recording
-// ============================================================
-sleep 1000
-echo "=== SNAPSHOT 2 (t=1000ms) ==="
-echo "FLTRDATAR snap2 (if == snap1 AND == 0x00EE6B03 → DFSDM input stuck high):"
-mem32 0x4001751C 1
-echo "g_DfsdmBuf[0..3] snap2:"
-mem32 0x30000000 4
-
-// ============================================================
-// SNAPSHOT 3 — t=2000ms into recording
-// ============================================================
-sleep 1000
-echo "=== SNAPSHOT 3 (t=2000ms) ==="
-echo "FLTRDATAR snap3:"
-mem32 0x4001751C 1
-echo "FLTISR (check ROVRF bit3 after sustained DMA):"
 mem32 0x40017508 1
-
-// ============================================================
-// POST-RECORDING — wait for 3s record window to finish
-// ============================================================
-sleep 1500
-echo "=== POST-RECORDING (t=4500ms) ==="
-echo "FLTRDATAR after recording:"
-mem32 0x4001751C 1
-echo "NDTR (should be <= 32):"
 mem32 0x4002002C 1
+mem32 0x30000000 4
+g
 
-// Read full DMA buffer (32 words = 128 bytes = one complete circular buffer)
-echo "g_DfsdmBuf[0..31] — full DMA circular buffer at 0x30000000:"
+// ============================================================
+// SNAPSHOT 2 — t=1500ms into recording
+// ============================================================
+sleep 1000
+h
+mem32 0x4001751C 1
+mem32 0x4002002C 1
+mem32 0x30000000 4
+g
+
+// ============================================================
+// SNAPSHOT 3 — t=2500ms into recording
+// ============================================================
+sleep 1000
+h
+mem32 0x4001751C 1
+mem32 0x40017508 1
+mem32 0x4002002C 1
+mem32 0x30000000 4
+g
+
+// ============================================================
+// POST-RECORDING — wait for 3s window to close
+// ============================================================
+sleep 1000
+h
+
+// Full DMA circular buffer (32 words)
 mem32 0x30000000 32
 
-// Read first 32 PCM int16 samples from audio buffer
-echo "g_AudioBuf[0..15] (first 16 int16 PCM samples) at 0x30020000:"
+// First 32 PCM int16 samples from audio buffer
 mem16 0x30020000 16
 
-// Read SAI4 status register (any errors?)
-echo "SAI4_Block_A SR (error flags):"
+// SAI4 final state
+mem32 0x58005004 1
 mem32 0x58005018 1
 
+// DMA final state
+mem32 0x40020028 1
+mem32 0x4002002C 1
+
+g
 exit
