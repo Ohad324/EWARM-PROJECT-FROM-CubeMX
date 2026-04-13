@@ -180,6 +180,7 @@ volatile AudioHealth_t g_AudioHealth = {0};
 /* ── Recording state ─────────────────────────────────────────────────────── */
 volatile RecState_t  g_State       = REC_IDLE;
 volatile uint32_t    g_SampleCount = 0u;
+volatile uint32_t    g_sdFreeKB    = 0u;  /* updated by SDWriteTask after each f_close — HealthMonTask reads this */
 static   uint32_t    g_DmaCallCount = 0u;  /* total DMA halves consumed — used for ping-pong halfIdx */
 static   uint32_t    g_FileIndex   = 0u;
 
@@ -706,6 +707,21 @@ void SDWriteTask(void *arg)
         }
 
         logMsg.success = 1u;
+
+        /* ── Free-space snapshot (the ONLY place f_getfree is called) ───────────
+         * Principle 1 — Zero Mutex Contention: during the 3-second recording
+         *   window SDWriteTask is blocked waiting; it never touches the SD card.
+         * Principle 2 — Zero Resource Theft: HealthMonTask only reads a 32-bit
+         *   integer from RAM (nanoseconds, no peripheral access).
+         * Principle 3 — Predictability: the heavy f_getfree call happens here,
+         *   after the WAV is safely closed and DMA has stopped — never mid-stream. */
+        {
+            DWORD freeClusters = 0u;
+            FATFS *pfs         = NULL;
+            if (f_getfree("0:", &freeClusters, &pfs) == FR_OK && pfs != NULL)
+                g_sdFreeKB = (uint32_t)freeClusters * (pfs->csize / 2u);
+        }
+
         RLOG("[REC] ========================================");
         RLOG("[REC] WAV WRITE COMPLETE");
         RLOG("[REC] file=%s  size=%lu bytes",
@@ -823,7 +839,6 @@ void HealthMonTask(void *arg)
 {
     (void)arg;
 
-    char buf[80];
     for (;;)
     {
         vTaskDelay(pdMS_TO_TICKS(10000u));
@@ -836,51 +851,13 @@ void HealthMonTask(void *arg)
             continue;
         }
 
-        /* Skip f_getfree while recording or SD busy — FatFS mutex at priority 1
-         * causes priority inversion: VoiceRecTask (26) blocks on HealthMon (1) → desync */
-        if (g_State != 0u || AudioSD_IsBusy())
-        {
-            RLOG("[HEALTH] card=PRESENT  recording/SD busy — skipping f_getfree");
-            continue;
-        }
-
-        DWORD   freeClusters = 0u;
-        FATFS  *pfs          = NULL;
-        FRESULT fr           = f_getfree("0:", &freeClusters, &pfs);
-        if (fr == FR_NOT_READY || fr == FR_NO_FILESYSTEM)
-        {
-            /* FR_NOT_READY: SDMMC CPSM degraded — remount and retry
-             * FR_NO_FILESYSTEM (13): volume not mounted yet — remount and retry */
-            RLOG("[HEALTH] SD fr=%d — remounting", (int)fr);
-            AudioSD_Remount();
-            fr = f_getfree("0:", &freeClusters, &pfs);
-        }
-        if (fr == FR_OK && pfs != NULL)
-        {
-            /* cluster size in sectors × 512 bytes → KB */
-            uint32_t clusterKB  = (uint32_t)(pfs->csize) / 2u; /* sectors/cluster ÷ 2 = KB/cluster */
-            uint32_t freeKB     = (uint32_t)(freeClusters)             * clusterKB;
-            uint32_t totalKB    = (uint32_t)(pfs->n_fatent - 2u)       * clusterKB;
-            uint32_t usedKB     = totalKB - freeKB;
-            uint32_t errCode    = AudioSD_GetErrorCode();
-            /* csize = sectors per cluster. 1 sector = 512 bytes.
-             * Recommended minimum: csize=256 (128KB clusters) for smooth recording.
-             * If csize < 32 (16KB), call AudioSD_Format() to reformat with larger clusters. */
-            snprintf(buf, sizeof(buf),
-                "[HEALTH] card=PRESENT  free=%lu KB  used=%lu KB  csize=%lu (%luKB/cluster)  sdErr=0x%08lX%s\r\n",
-                (unsigned long)freeKB,
-                (unsigned long)usedKB,
-                (unsigned long)(pfs->csize),
-                (unsigned long)clusterKB,
-                (unsigned long)errCode,
-                (pfs->csize < 32u) ? " WARN:cluster<16KB reformat!" : "");
-        }
-        else
-        {
-            snprintf(buf, sizeof(buf),
-                "[HEALTH] f_getfree fail: fr=%d\r\n", (int)fr);
-        }
-        RTT_TS(buf);
+        /* Principle 2 — Zero Resource Theft: read pre-computed value only.
+         * SDWriteTask writes g_sdFreeKB after every successful f_close().
+         * No FatFS call, no mutex, no SD hardware — just a RAM read.
+         * Value is 0 until the first recording completes. */
+        RLOG("[HEALTH] card=PRESENT  free=%lu KB  sdErr=0x%08lX",
+             (unsigned long)g_sdFreeKB,
+             (unsigned long)AudioSD_GetErrorCode());
     }
 }
 
