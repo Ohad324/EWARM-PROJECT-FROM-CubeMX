@@ -184,7 +184,7 @@ volatile uint32_t g_uartIsrCount = 0u;
 static const osThreadAttr_t uartReceiveTask_attributes = {
     .name       = "UARTReceiveTask",
     .stack_size = 1024 * 4,             /* 1024 words = 4 KB — increased from 512: crash showed SP 288B below base (2336B peak vs 2048B stack) */
-    .priority   = (osPriority_t) osPriorityAboveNormal,
+    .priority   = (osPriority_t) 26,
 };
 /* USER CODE END PV */
 
@@ -363,7 +363,7 @@ Error_Handler();
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1024u, NULL,
               osPriorityBelowNormal, NULL);
   /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
-  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  2048u, xVoiceQueue, 26u, &voiceRecTaskHandle);
+  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  2048u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
   xTaskCreate(RTTLogTask,    "RTTLogTask",     256u, NULL,        1u, NULL);
   /* HealthMonTask removed — health logged by SDWriteTask after each f_close() */

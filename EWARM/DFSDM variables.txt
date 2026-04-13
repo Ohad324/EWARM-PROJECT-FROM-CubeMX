@@ -397,29 +397,27 @@
 ; ┌───────────────────────┬──────────┬────────────────────────┬────────────────────────────────┐
 ; │ Task name             │ Priority │ CMSIS alias            │ Notes / Source                 │
 ; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ UARTReceiveTask       │   32     │ osPriorityAboveNormal  │ main.c:187 — NORA/BLE comms    │
-; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ VoiceRecTask          │   26     │ (raw, above Normal)    │ main.c:366 — must beat TouchGFX│
-; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ TouchGFXTask          │   24     │ osPriorityNormal       │ main.c:100 — UI rendering      │
-; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ SDWriteTask           │   20     │ (raw, above BelowNorm) │ main.c:367 — flush audio fast  │
-; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ JpegDisplayTask       │   16     │ osPriorityBelowNormal  │ music_display_task.c:26        │
-; │ CommandHandler        │   16     │ osPriorityBelowNormal  │ main.c:364 — CMD dispatch      │
-; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ videoTask             │    8     │ osPriorityLow          │ main.c:107 — permanently blocked│
-; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ RTTLogTask            │    1     │ (lowest app)           │ main.c:368 — CLAUDE.md rule 7  │
-; │ HealthMonTask         │    1     │ (lowest app)           │ main.c:369 — background only   │
-; │ RtosTrace_DrainTask   │    1     │ (lowest app)           │ main.c:372 — trace drain       │
-; └───────────────────────┴──────────┴────────────────────────┴────────────────────────────────┘
+; │ VoiceRecTask          │   32     │ osPriorityAboveNormal  │ main.c:366 — highest: audio must win│
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
+; │ UARTReceiveTask       │   26     │ (raw, above Normal)    │ main.c:187 — NORA/BLE comms         │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
+; │ TouchGFXTask          │   24     │ osPriorityNormal       │ main.c:100 — UI rendering           │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
+; │ SDWriteTask           │   20     │ (raw, above BelowNorm) │ main.c:367 — flush audio fast       │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
+; │ JpegDisplayTask       │   16     │ osPriorityBelowNormal  │ music_display_task.c:26             │
+; │ CommandHandler        │   16     │ osPriorityBelowNormal  │ main.c:364 — CMD dispatch           │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
+; │ videoTask             │    8     │ osPriorityLow          │ main.c:107 — permanently blocked    │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
+; │ RTTLogTask            │    1     │ (lowest app)           │ main.c:368 — CLAUDE.md rule 7       │
+; │ RtosTrace_DrainTask   │    1     │ (lowest app)           │ main.c:372 — trace drain            │
+; └───────────────────────┴──────────┴────────────────────────┴─────────────────────────────────────┘
 ;
 ; KEY RELATIONSHIPS:
-;   VoiceRecTask(26) > TouchGFX(24): recording preempts UI when button pressed ✓
+;   VoiceRecTask(32) > UARTReceiveTask(26): audio DMA drain cannot be starved by UART ✓
+;   UARTReceiveTask(26) > TouchGFX(24): NORA commands processed before next UI frame ✓
 ;   SDWriteTask(20) > JpegDisplay(16): SD flush completes before next JPEG decode ✓
-;   UARTReceiveTask(32) > VoiceRecTask(26): NORA commands processed immediately — review if
-;     this causes audio glitches (UART task could starve VoiceRecTask mid-recording)
 ;   RTTLogTask must stay at 1 per CLAUDE.md rule 7 — do not raise it
 
 
