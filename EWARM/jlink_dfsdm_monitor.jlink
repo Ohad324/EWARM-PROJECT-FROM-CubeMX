@@ -34,19 +34,46 @@ h
 // ============================================================
 // PRE-TRIGGER: static register verification (target HALTED)
 // ============================================================
-mem32 0x58024534 1
-mem32 0x58024550 1
-mem32 0x40017400 1
-mem32 0x40017460 1
-mem32 0x40017500 1
-mem32 0x40017508 1
-mem32 0x4001751C 1
-mem32 0x58005004 1
-mem32 0x58005010 1
-mem32 0x58005044 1
+
+// --- Firmware-captured debug globals (AXI SRAM — always readable) ---
+// INIT-TIME captures (from MX_DFSDM1_Init + MX_SAI4_Init):
+// g_dbg_ch3_chcfgr1 @ 0x24000050  expect 0x0000008D (CHEN+SPICKSEL=11+SITP=01)
+// g_dbg_ch0_chcfgr1 @ 0x24000054  expect 0x80180000 (DFSDMEN+CKOUTDIV=24)
+// g_dbg_flt0_fltcr1 @ 0x24000058  expect 0x23240001 (CH3,Sinc3,DMA,DFEN)
+// g_dbg_sai4_cr1    @ 0x2400005C  expect 0x00C00041 (MCKDIV=12,SAIEN=0 at init,RX)
+// g_dbg_sai4_pdmcr  @ 0x24000060  expect 0x00000101 (PDMEN+CKEN1)
+mem32 0x24000050 5
+
+// LIVE captures (from VoiceRecTask, updated on each recording trigger):
+// g_dbg_live_sai4_cr1 @ 0x24000064  expect 0x00C10041 (bit16=SAIEN=1 after ENABLE)
+// g_dbg_live_fltisr   @ 0x24000068  expect bit19=CKABF[3]=0 (SAI4 clock present)
+// g_dbg_live_hal_ok   @ 0x2400006C  expect 0x00000000 (DMA start OK)
+// g_dbg_live_fltcr1   @ 0x24000070  expect bit21=RDMAEN=1 (0x23260001)
+mem32 0x24000064 4
+
+// --- GPIO verification (AHB4 — always readable via JLink) ---
+// GPIOC (0x58020800): PC1 = SAI4_D1 data input from mic
+//   MODER   @ +0x00: bits[3:2] = pin1 mode → expect 0b10 (AF mode)
+//   IDR     @ +0x10: bit1 = current logical level of PC1 → idle should be 1 (pulled high when mic has no clock)
+//   AFR[0]  @ +0x20: bits[7:4] = pin1 AF → expect 0xA (AF10 = SAI4_D1)
+mem32 0x58020800 1
+mem32 0x58020810 1
+mem32 0x58020820 1
+// GPIOE (0x58021000): PE2 = SAI4_CK1 clock output to mic
+//   MODER   @ +0x00: bits[5:4] = pin2 mode → expect 0b10 (AF mode)
+//   IDR     @ +0x10: bit2 = current logical level — may toggle (clock running) or be stuck
+//   AFR[0]  @ +0x20: bits[11:8] = pin2 AF → expect 0xA (AF10 = SAI4_CK1)
+mem32 0x58021000 1
+mem32 0x58021010 1
+mem32 0x58021020 1
+
+// --- DMA1 Stream1 full descriptor (PAR + M0AR) ---
+// PAR  @ 0x40020030 = DFSDM FLTRDATAR source (expect 0x4001711C = real DFSDM1_Flt0->FLTRDATAR)
+// M0AR @ 0x40020034 = DMA destination (expect 0x30000000 = g_DfsdmBuf)
 mem32 0x40020028 1
 mem32 0x4002002C 1
 mem32 0x40020030 1
+mem32 0x40020034 1
 
 // ============================================================
 // RESUME — let FreeRTOS run again before trigger
@@ -71,8 +98,9 @@ g
 // ============================================================
 sleep 100
 h
-mem32 0x4001751C 1
-mem32 0x40017508 1
+// Live globals captured at recording start by VoiceRecTask
+mem32 0x24000064 4
+// DMA NDTR + DMA buffer first 4 words
 mem32 0x4002002C 1
 mem32 0x30000000 4
 g

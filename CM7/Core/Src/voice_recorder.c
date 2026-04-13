@@ -136,8 +136,21 @@ typedef char _WavHdr512Check[(sizeof(WavHdr_t) == 512u) ? 1 : -1];
 
 /* ── Peripheral handles — owned by CubeMX (main.c), used here via extern ── */
 extern DFSDM_Filter_HandleTypeDef  hdfsdm1_filter0;
-extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel3;
+extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;  /* CH0 = SAI4 MicPair1 rising edge test */
 extern SAI_HandleTypeDef           hsai_BlockA4;
+
+/* ── Live debug globals — declared in main.c, captured here at recording time ─
+ * Read via JLink mem32 using addresses from the .map file.
+ * g_dbg_live_sai4_cr1: SAI4 CR1 right after __HAL_SAI_ENABLE.
+ *   Bit 16 (SAIEN) MUST be 1. If 0 → SAI4 never enabled → no CK1 → mic silent.
+ * g_dbg_live_fltisr: DFSDM FLTISR after DMA start.
+ *   Bit 19 (CKABF[3]) = 1 → clock absence on CH3 → SAI4 bridge not active.
+ * g_dbg_live_hal_ok: 0=DMA start OK, 0xFFFFFFFF=FAIL.
+ * g_dbg_live_fltcr1: FLTCR1 right before DMA start (after RDMAEN force).      */
+extern volatile uint32_t g_dbg_live_sai4_cr1;
+extern volatile uint32_t g_dbg_live_fltisr;
+extern volatile uint32_t g_dbg_live_hal_ok;
+extern volatile uint32_t g_dbg_live_fltcr1;
 
 /* DMA handle — set up in DFSDM_DMA_Init(), linked to hdfsdm1_filter0 */
 static DMA_HandleTypeDef           s_hdma_dfsdm;
@@ -361,7 +374,9 @@ void VoiceRecTask(void *arg)
          * DFSDM1_Channel3 receives the PDM bitstream via internal silicon routing.
          * Startup order: SAI4 clock running → DFSDM DMA started. */
         __HAL_SAI_ENABLE(&hsai_BlockA4);
-        RLOG("[REC] SAI4 enabled — PDM clock active");
+        g_dbg_live_sai4_cr1 = hsai_BlockA4.Instance->CR1;   /* bit16 SAIEN must be 1 */
+        RLOG("[REC] SAI4 enabled — CR1=0x%08lX (bit16=SAIEN must be 1)",
+             (unsigned long)g_dbg_live_sai4_cr1);
 
         /* HAL_DFSDM_FilterInit sets RDMAEN before DFEN — on STM32H7 the subsequent
          * HAL_DFSDM_FilterConfigRegChannel RMW on FLTCR1 (with DFEN=1) can silently
@@ -370,13 +385,14 @@ void VoiceRecTask(void *arg)
          * Fix: force RDMAEN=1 here, after all init calls are complete and just before
          * starting the DMA. This is safe — RDMAEN is writable when DFEN=1. */
         hdfsdm1_filter0.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
+        g_dbg_live_fltcr1 = hdfsdm1_filter0.Instance->FLTCR1;  /* expect RDMAEN=bit21 set */
 
         /* Diagnostic: dump key registers before DMA start */
         RLOG("[REC] Ch0_CHCFGR1=0x%08lX (expect 0x80180000: DFSDMEN+CKOUTDIV=24)",
              (unsigned long)DFSDM1_Channel0->CHCFGR1);
-        RLOG("[REC] FLTCR1=0x%08lX Ch3_CHCFGR1=0x%08lX SAI4_CR1=0x%08lX SAI4_PDMCR=0x%08lX",
+        RLOG("[REC] FLTCR1=0x%08lX Ch0_CHCFGR1=0x%08lX SAI4_CR1=0x%08lX SAI4_PDMCR=0x%08lX",
              (unsigned long)hdfsdm1_filter0.Instance->FLTCR1,
-             (unsigned long)hdfsdm1_channel3.Instance->CHCFGR1,
+             (unsigned long)hdfsdm1_channel0.Instance->CHCFGR1,
              (unsigned long)hsai_BlockA4.Instance->CR1,
              (unsigned long)SAI4->PDMCR);
 
@@ -385,10 +401,13 @@ void VoiceRecTask(void *arg)
             HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0,
                                              g_DfsdmBuf,
                                              DFSDM_BUF_TOTAL);
-        RLOG("[REC] DFSDM DMA start: %s  DMA1_St1->CR=0x%08lX  NDTR=%lu",
+        g_dbg_live_hal_ok = (hal == HAL_OK) ? 0x00000000u : 0xFFFFFFFFu;
+        g_dbg_live_fltisr = hdfsdm1_filter0.Instance->FLTISR;  /* bit19=CKABF[3]: 1=no SAI4 clock */
+        RLOG("[REC] DFSDM DMA start: %s  DMA1_St1->CR=0x%08lX  NDTR=%lu  FLTISR=0x%08lX",
              hal == HAL_OK ? "OK" : "FAIL",
              (unsigned long)DMA1_Stream1->CR,
-             (unsigned long)DMA1_Stream1->NDTR);
+             (unsigned long)DMA1_Stream1->NDTR,
+             (unsigned long)g_dbg_live_fltisr);
         if (hal != HAL_OK)
         {
             RLOG("[REC] DFSDM DMA start FAILED — state=%d hdmaReg=%p",
@@ -817,21 +836,22 @@ void HealthMonTask(void *arg)
             continue;
         }
 
-        /* Skip f_getfree while SD is busy (writing or streaming) — concurrent
-         * FatFS access corrupts win[] sector cache → FR_DISK_ERR mid-read (B-008) */
-        if (AudioSD_IsBusy())
+        /* Skip f_getfree while recording or SD busy — FatFS mutex at priority 1
+         * causes priority inversion: VoiceRecTask (26) blocks on HealthMon (1) → desync */
+        if (g_State != 0u || AudioSD_IsBusy())
         {
-            RLOG("[HEALTH] card=PRESENT  SD busy — skipping f_getfree");
+            RLOG("[HEALTH] card=PRESENT  recording/SD busy — skipping f_getfree");
             continue;
         }
 
         DWORD   freeClusters = 0u;
         FATFS  *pfs          = NULL;
         FRESULT fr           = f_getfree("0:", &freeClusters, &pfs);
-        if (fr == FR_NOT_READY)
+        if (fr == FR_NOT_READY || fr == FR_NO_FILESYSTEM)
         {
-            /* SDMMC CPSM degraded after init — full recover and retry once */
-            RLOG("[HEALTH] SD NOT_READY — remounting");
+            /* FR_NOT_READY: SDMMC CPSM degraded — remount and retry
+             * FR_NO_FILESYSTEM (13): volume not mounted yet — remount and retry */
+            RLOG("[HEALTH] SD fr=%d — remounting", (int)fr);
             AudioSD_Remount();
             fr = f_getfree("0:", &freeClusters, &pfs);
         }
@@ -1127,8 +1147,8 @@ static void AudioQuality_Report(void)
 
     /* ── [3] DFSDM + DMA1 registers ─────────────────────────────────────── */
     RLOG("[REG]  DFSDM1_Ch0->CHCFGR1 = 0x%08lX  (global: DFSDMEN+CKOUTDIV expect 0x80180000)", (unsigned long)DFSDM1_Channel0->CHCFGR1);
-    RLOG("[REG]  DFSDM1_Ch3->CHCFGR1 = 0x%08lX  (clock/input/SPI config)",  (unsigned long)DFSDM1_Channel3->CHCFGR1);
-    RLOG("[REG]  DFSDM1_Ch3->CHCFGR2 = 0x%08lX  (offset/shift)",            (unsigned long)DFSDM1_Channel3->CHCFGR2);
+    RLOG("[REG]  DFSDM1_Ch0->CHCFGR1 = 0x%08lX  (active ch: SPICKSEL=11 expect 0x0000008C)", (unsigned long)DFSDM1_Channel0->CHCFGR1);
+    RLOG("[REG]  DFSDM1_Ch0->CHCFGR2 = 0x%08lX  (offset/shift)",            (unsigned long)DFSDM1_Channel0->CHCFGR2);
     RLOG("[REG]  DFSDM1_Flt0->FLTCR1 = 0x%08lX  (filter enable/DMA/trig)",  (unsigned long)DFSDM1_Filter0->FLTCR1);
     RLOG("[REG]  DFSDM1_Flt0->FLTCR2 = 0x%08lX  (IT enables)",              (unsigned long)DFSDM1_Filter0->FLTCR2);
     RLOG("[REG]  DFSDM1_Flt0->FLTISR = 0x%08lX  (status: bit3=ROVRF ovrun)",(unsigned long)DFSDM1_Filter0->FLTISR);

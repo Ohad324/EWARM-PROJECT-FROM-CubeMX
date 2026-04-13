@@ -72,7 +72,7 @@
 CRC_HandleTypeDef hcrc;
 
 DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
-DFSDM_Channel_HandleTypeDef hdfsdm1_channel3;
+DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;  /* CH0 = SAI4 MicPair1 D1 (rising edge test — was CH1) */
 
 DMA2D_HandleTypeDef hdma2d;
 
@@ -113,6 +113,28 @@ UART_HandleTypeDef huart8;
 
 /* BLE UART queue — receives messages from UARTReceiveTask, consumed by Model::tick() */
 QueueHandle_t xBleQueue;
+
+/* ── DFSDM debug snapshot — readable via JLink mem32 without RTT viewer ────
+ * Captured immediately after SPICKSEL=11 write in MX_DFSDM1_Init().
+ * Expected value: 0x0000008D (CHEN=1, SPICKSEL=11, SITP=01).
+ * If 0x00000085: SPICKSEL write did not apply (CHEN was not cleared first).
+ * If 0x00000000: DFSDM clock not enabled (RCC gate missing).              */
+volatile uint32_t g_dbg_ch3_chcfgr1  = 0xDEADBEEFu;  /* Ch3 CHCFGR1 after SPICKSEL=11 */
+volatile uint32_t g_dbg_ch0_chcfgr1  = 0xDEADBEEFu;  /* Ch0 CHCFGR1 (DFSDMEN+CKOUTDIV) */
+volatile uint32_t g_dbg_flt0_fltcr1  = 0xDEADBEEFu;  /* Filter0 FLTCR1 (DFEN+CH3+Sinc3) */
+volatile uint32_t g_dbg_sai4_cr1     = 0xDEADBEEFu;  /* SAI4 CR1 (MCKDIV+SAIEN+PDM) */
+volatile uint32_t g_dbg_sai4_pdmcr   = 0xDEADBEEFu;  /* SAI4 PDMCR (PDMEN+CKEN1) */
+
+/* ── LIVE debug snapshot — captured at VoiceRecTask recording-start time ────
+ * Updated on each recording trigger (overwritten each time).
+ * g_dbg_live_sai4_cr1: SAI4 CR1 right after __HAL_SAI_ENABLE → expect bit16=1 (SAIEN).
+ * g_dbg_live_fltisr:   DFSDM Filter0 FLTISR after DMA start → bit19=CKABF[3] (1=no clock).
+ * g_dbg_live_hal_ok:   HAL_DFSDM_FilterRegularStart_DMA return: 0x00000000=OK, 0xFFFFFFFF=FAIL.
+ * g_dbg_live_fltcr1:   FLTCR1 right before DMA start (after RDMAEN force).            */
+volatile uint32_t g_dbg_live_sai4_cr1 = 0xDEADBEEFu;
+volatile uint32_t g_dbg_live_fltisr   = 0xDEADBEEFu;
+volatile uint32_t g_dbg_live_hal_ok   = 0xDEADBEEFu;
+volatile uint32_t g_dbg_live_fltcr1   = 0xDEADBEEFu;
 
 /* Voice recorder queue — VoiceRecTask signals SDWriteTask when 5s recording is done */
 static QueueHandle_t xVoiceQueue;
@@ -515,36 +537,42 @@ static void MX_DFSDM1_Init(void)
   DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 
-  /* ── Step 1: Channel 3 ── */
-  hdfsdm1_channel3.Instance                        = DFSDM1_Channel3;
-  hdfsdm1_channel3.Init.OutputClock.Activation     = DISABLE;  /* CKOUT unused — SAI4 is clock source */
-  hdfsdm1_channel3.Init.OutputClock.Selection      = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
-  hdfsdm1_channel3.Init.OutputClock.Divider        = 2u;       /* irrelevant when Activation=DISABLE */
-  hdfsdm1_channel3.Init.Input.Multiplexer          = DFSDM_CHANNEL_EXTERNAL_INPUTS;
-  hdfsdm1_channel3.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
-  hdfsdm1_channel3.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm1_channel3.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_FALLING;
-  hdfsdm1_channel3.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
-  hdfsdm1_channel3.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
-  hdfsdm1_channel3.Init.Awd.Oversampling           = 10u;
-  hdfsdm1_channel3.Init.Offset                     = 0;
-  hdfsdm1_channel3.Init.RightBitShift              = 5u;
-  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel3) != HAL_OK) { Error_Handler(); }
+  /* ── Step 1: Channel 1 (SAI4 MicPair1 D1 — LR=GND, falling edge) ──────────
+   * Root cause analysis (2026-04-13):
+   *   CH3 (DFSDM1_DATIN3 = PC7) does NOT connect to SAI4 MicPair1 D1 in silicon.
+   *   The SAI4→DFSDM internal bridge routes:
+   *     MicPair1 D1 (falling edge, LR=GND mic on PC1) → DFSDM1_Channel1
+   *     MicPair1 D0 (rising edge, empty)               → DFSDM1_Channel0
+   *     MicPair2 D1 (falling edge, 2nd mic)            → DFSDM1_Channel3
+   *   CH3 was sampling PC7 (DFSDM_DATIN3) which is pulled HIGH → constant all-1s.
+   *   CH1 (falling edge) showed all-0s — testing CH0 (rising edge) per Gemini hypothesis. */
+  hdfsdm1_channel0.Instance                        = DFSDM1_Channel0;
+  hdfsdm1_channel0.Init.OutputClock.Activation     = DISABLE;  /* CKOUT unused — SAI4 is clock source */
+  hdfsdm1_channel0.Init.OutputClock.Selection      = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
+  hdfsdm1_channel0.Init.OutputClock.Divider        = 2u;       /* irrelevant when Activation=DISABLE */
+  hdfsdm1_channel0.Init.Input.Multiplexer          = DFSDM_CHANNEL_EXTERNAL_INPUTS;
+  hdfsdm1_channel0.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
+  hdfsdm1_channel0.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
+  hdfsdm1_channel0.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_RISING;   /* rising edge test */
+  hdfsdm1_channel0.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
+  hdfsdm1_channel0.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
+  hdfsdm1_channel0.Init.Awd.Oversampling           = 10u;
+  hdfsdm1_channel0.Init.Offset                     = 0;
+  hdfsdm1_channel0.Init.RightBitShift              = 5u;
+  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel0) != HAL_OK) { Error_Handler(); }
 
-  /* ── Override SPICKSEL: route Channel 3 to SAI4 Block A internal bridge ──
-   * HAL DFSDM_CHANNEL_SPI_CLOCK_INTERNAL (SPICKSEL=01) samples data from PC7
-   * (DFSDM1_DATIN3) clocked by PD3 (CKOUT).  PC7 is NOT connected to the mic
-   * on this board — mic is on PC1 (SAI4_D1) — so PC7 floats high → all-1s.
-   *
-   * Fix: SPICKSEL=11 → RM0399 §31.3.2: for CH2/CH3, SPICKSEL=11 sources
-   * both the bit clock and PDM data from SAI4 Block A internally.
-   * No PC7 or PD3 involved; mic wiring PE2/PC1 feeds SAI4 which feeds DFSDM.
-   *
-   * SPICKSEL is write-protected when CHEN=1 → clear CHEN briefly. */
-  DFSDM1_Channel3->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
-  DFSDM1_Channel3->CHCFGR1  = (DFSDM1_Channel3->CHCFGR1 & ~DFSDM_CHCFGR1_SPICKSEL_Msk)
-                             | (DFSDM_CHCFGR1_SPICKSEL_0 | DFSDM_CHCFGR1_SPICKSEL_1); /* =11: SAI4-A → CH3 */
-  DFSDM1_Channel3->CHCFGR1 |=  DFSDM_CHCFGR1_CHEN;
+  /* ── Override SPICKSEL=11: route Channel 0 to SAI4 Block A internal bridge ─
+   * HAL sets SPICKSEL=01 (DFSDM_CHANNEL_SPI_CLOCK_INTERNAL = CKOUT).
+   * We need SPICKSEL=11 so CH0 receives clock+data from SAI4 bridge, not DATIN0 pin.
+   * SPICKSEL is write-protected when CHEN=1 → clear CHEN, write, restore. */
+  DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
+  DFSDM1_Channel0->CHCFGR1  = (DFSDM1_Channel0->CHCFGR1 & ~DFSDM_CHCFGR1_SPICKSEL_Msk)
+                             | (DFSDM_CHCFGR1_SPICKSEL_0 | DFSDM_CHCFGR1_SPICKSEL_1); /* =11: SAI4-A → CH0 */
+  DFSDM1_Channel0->CHCFGR1 |=  DFSDM_CHCFGR1_CHEN;
+
+  /* ── Snapshot registers into globals — readable via JLink without RTT ── */
+  g_dbg_ch3_chcfgr1 = DFSDM1_Channel0->CHCFGR1;   /* expect 0x0000008C (CH0 SPICKSEL=11, SITP=00 rising) */
+  g_dbg_ch0_chcfgr1 = DFSDM1_Channel0->CHCFGR1;   /* expect 0x80180000 (DFSDMEN+CKOUTDIV=24) */
 
   /* ── Step 2: Filter 0 ── */
   hdfsdm1_filter0.Instance                          = DFSDM1_Filter0;
@@ -557,9 +585,11 @@ static void MX_DFSDM1_Init(void)
   if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK) { Error_Handler(); }
 
   /* ── Step 3: Assign channel to filter ── */
-  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_3,
+  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_0,
                                         DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
   { Error_Handler(); }
+
+  g_dbg_flt0_fltcr1 = DFSDM1_Filter0->FLTCR1;     /* expect 0x23240001 */
   /* USER CODE END DFSDM1_Init 2 */
 
 }
@@ -970,6 +1000,9 @@ static void MX_SAI4_Init(void)
    * Write MCKDIV while SAIEN=0 (HAL_SAI_Init leaves SAIEN=0 until DMA start). */
   hsai_BlockA4.Instance->CR1 = (hsai_BlockA4.Instance->CR1 & ~SAI_xCR1_MCKDIV) |
                                 (12u << SAI_xCR1_MCKDIV_Pos);
+
+  g_dbg_sai4_cr1   = hsai_BlockA4.Instance->CR1;    /* expect 0x00C10040 (MCKDIV=12, SAIEN=0 yet) */
+  g_dbg_sai4_pdmcr = SAI4->PDMCR;                   /* expect 0x00000101 (PDMEN+CKEN1) */
 
   /* USER CODE END SAI4_Init 2 */
 
