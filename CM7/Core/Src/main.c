@@ -281,7 +281,7 @@ Error_Handler();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
-  MX_UART8_Init();
+  /* MX_UART8_Init() already called above in the CubeMX init sequence — removed duplicate. */
   /* Attach DMA1 Stream0 to huart8 and create xRawBleQueue / xBleHistMutex.
      Must run after MX_UART8_Init() (UART handle ready) and before
      osKernelStart() (RTOS objects created here).
@@ -502,7 +502,16 @@ static void MX_DFSDM1_Init(void)
    * CKOUT = APB2 / ((CKOUTDIV+1) × 2) = 100 MHz / ((24+1)×2) = 2.0 MHz
    * Sinc3 OSR=125: PCM = 2.0 MHz / 125 = 16,000 Hz.
    * SAI4 AudioFrequency=SAI_AUDIO_FREQUENCY_16K → MCKDIV=11 → CK1≈2.24 MHz ≈ CKOUT. */
-  __HAL_RCC_DFSDM1_CLK_ENABLE();
+
+  /* ── RCC clock enable — DUAL GATE for STM32H747 dual-core ──────────────────
+   * On H747, two independent RCC gates must be set for CM7 to access DFSDM1:
+   *   __HAL_RCC_DFSDM1_CLK_ENABLE()    → RCC->APB2ENR    (shared bus clock)
+   *   __HAL_RCC_C1_DFSDM1_CLK_ENABLE() → RCC_C1->APB2ENR (CM7-core gate)
+   * Using only the shared gate leaves DMA reachable but CM7 register writes
+   * silently no-op — the C1 gate is required for reliable CM7 register access. */
+  __HAL_RCC_DFSDM1_CLK_ENABLE();      /* shared APB2 bus clock — enables DMA path */
+  __HAL_RCC_C1_DFSDM1_CLK_ENABLE();  /* CM7 core gate — required for register access on H747 */
+
   DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 

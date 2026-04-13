@@ -30,6 +30,11 @@ connect
 // PRE-TRIGGER: static register verification
 // ============================================================
 echo "=== PRE-TRIGGER REGISTERS ==="
+echo "--- RCC dual-core gates (Bug 6 verification) ---"
+echo "RCC->APB2ENR  (0x58024534) bit30 = DFSDM1EN shared gate (expect 1):"
+mem32 0x58024534 1
+echo "RCC_C1->APB2ENR (0x58024550) bit30 = DFSDM1EN CM7 gate (expect 1, was 0 before Bug6 fix):"
+mem32 0x58024550 1
 echo "--- DFSDM ---"
 echo "Ch0_CHCFGR1 (expect 0x80180000):"
 mem32 0x40017400 1

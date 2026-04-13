@@ -197,6 +197,9 @@
 ; 7. IAR ADDRESS CASTS
 ; ══════════════════════════════════════════════════════════════════════════════
 
+; RCC_C1 APB2ENR    :  ((RCC_Core_TypeDef*)0x58024534)->APB2ENR   bit30=DFSDM1EN (must be 1)
+;   IAR Watch alt:    *((unsigned int*)0x58024550)                 bit30 must = 1
+;   If 0: CM7 writes to DFSDM registers are silently discarded (Bug 6)
 ; DFSDM Ch0 CHCFGR1 :  ((DFSDM_Channel_TypeDef*)0x40017400)->CHCFGR1
 ; DFSDM Ch3 CHCFGR1 :  ((DFSDM_Channel_TypeDef*)0x40017460)->CHCFGR1
 ; DFSDM Flt0 FLTCR1 :  ((DFSDM_Filter_TypeDef*)0x40017500)->FLTCR1
@@ -238,6 +241,14 @@
 ;   Fix: force MCKDIV=12 via direct CR1 write after HAL_SAI_Init
 ;   MCKDIV=12 → CK1=2.048 MHz → only 2.4% from CKOUT (acceptable for voice)
 
+; [Bug 6] RCC dual-gate not set — CM7 register writes silently no-op
+;   __HAL_RCC_DFSDM1_CLK_ENABLE() only sets RCC->APB2ENR (shared/DMA bus clock)
+;   On STM32H747 dual-core, CM7 also needs RCC_C1->APB2ENR bit 30 = 1
+;   Without C1 gate: DMA can reach DFSDM (shared bus), but CM7 register writes
+;   (CKOUTDIV, CHCFGR1, FLTCR1 etc.) may be silently discarded
+;   Fix: add __HAL_RCC_C1_DFSDM1_CLK_ENABLE() immediately after the shared enable
+;   Verify: IAR Watch → RCC_C1->APB2ENR (0x58024550) bit 30 must be 1
+;           if it shows 0, all DFSDM config registers were no-ops → filter broken
 
 ; ══════════════════════════════════════════════════════════════════════════════
 ; 9. EXPECTED LOG OUTPUT AFTER REBUILD+FLASH
