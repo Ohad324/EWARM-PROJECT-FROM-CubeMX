@@ -310,6 +310,7 @@ void VoiceRec_DMA_IRQHandler(void)
 void VoiceRecTask(void *arg)
 {
     QueueHandle_t q = (QueueHandle_t)arg;
+    (void)q;   /* SDWriteTask handoff disabled during DFSDM debug — suppress unused warning */
     uint32_t notif;
 
     for (;;)
@@ -386,7 +387,7 @@ void VoiceRecTask(void *arg)
                 ledToggle += pdMS_TO_TICKS(500u);
             }
 
-            DmaEntry_t e = { NULL, 0u };
+            DmaEntry_t e = { NULL };
             if (xQueueReceive(s_dmaQueue, &e, pdMS_TO_TICKS(10u)) == pdTRUE)
             {
                 /* D-Cache coherency — g_DfsdmBuf is at 0x30000000 (D2 SRAM).
@@ -408,7 +409,7 @@ void VoiceRecTask(void *arg)
 
         /* Drain any stale queue entries from callbacks that fired after stop */
         {
-            DmaEntry_t discard = { NULL, 0u };
+            DmaEntry_t discard = { NULL };
             while (xQueueReceive(s_dmaQueue, &discard, 0) == pdTRUE) {}
         }
 
