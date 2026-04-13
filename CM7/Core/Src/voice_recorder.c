@@ -29,8 +29,7 @@
  *   VoiceRecTask drain loop → StoreDmaChunk() → PDM_Filter (1 call, 64 words→16 PCM)
  *   Accumulates 3000 callbacks × 16 samples = 48000 samples (3 s) in g_AudioBuf
  *   Stop DMA → xQueueSend(xVoiceQueue) → SDWriteTask wakes
- *   SDWriteTask → f_open / f_write(WAV header + PCM) / f_close → xLogQueue
- *   RTTLogTask → SEGGER_RTT result
+ *   SDWriteTask → f_open / f_write(WAV header + PCM) / f_close
  *
  * ── HARDWARE ─────────────────────────────────────────────────────────────────
  *   Architecture: SAI4 (front-end) + DFSDM1 Channel 3 (back-end)
@@ -66,7 +65,7 @@
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
 #include "audio_sd.h"       /* AudioSD_GetErrorCode(), AudioSD_Remount() */
-#include "log_mutex.h"      /* RTT_TS() — timestamped RTT log lines  */
+/* log_mutex.h removed — no RTT logging in hot path */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
 #include <limits.h>      /* ULONG_MAX */
@@ -180,46 +179,19 @@ volatile AudioHealth_t g_AudioHealth = {0};
 /* ── Recording state ─────────────────────────────────────────────────────── */
 volatile RecState_t  g_State       = REC_IDLE;
 volatile uint32_t    g_SampleCount = 0u;
-volatile uint32_t    g_sdFreeKB    = 0u;  /* updated by SDWriteTask after each f_close — HealthMonTask reads this */
+volatile uint32_t    g_sdFreeKB    = 0u;  /* updated by SDWriteTask after each f_close */
 static   uint32_t    g_DmaCallCount = 0u;  /* total DMA halves consumed — used for ping-pong halfIdx */
 static   uint32_t    g_FileIndex   = 0u;
 
 /* ── FreeRTOS objects ────────────────────────────────────────────────────── */
 TaskHandle_t       voiceRecTaskHandle = NULL;
-QueueHandle_t      xLogQueue          = NULL;
 
-/* ── DMA sync measurement ────────────────────────────────────────────────────
- * Each queue entry carries the buffer pointer AND the DWT cycle count at the
- * moment the ISR posted it.  The drain loop measures how long the entry sat in
- * the queue (latency = pop_cycles - post_cycles).  This is the software
- * equivalent of the oscilloscope pin-toggle test described in the sync article:
- *
- *   ISR posts  → DWT stamp = "pin HIGH"
- *   Task pops  → delta     = "pin LOW"  (= CPU latency to service this half)
- *
- * If latency > 1 ms (480,000 cycles at 480 MHz) the DMA is lapping the CPU.
- * ─────────────────────────────────────────────────────────────────────────── */
 typedef struct {
     const int32_t  *ptr;       /* buffer pointer (&g_DfsdmBuf[0] or [DFSDM_BUF_HALF]) */
-    uint32_t        stamp_cy;  /* DWT->CYCCNT at ISR post time */
 } DmaEntry_t;
 
 static QueueHandle_t s_dmaQueue = NULL;
-static volatile uint32_t s_dmaQueueOverflow = 0u;  /* ISR drop counter */
-
-/* Sync statistics — reset each recording, reported in quality log */
-static uint32_t s_latency_max_cy  = 0u;  /* worst-case ISR→task latency (cycles) */
-static uint32_t s_latency_max_us  = 0u;  /* same, in microseconds                */
-static UBaseType_t s_qDepth_max   = 0u;  /* highest queue depth seen mid-drain   */
-static uint32_t s_desync_count    = 0u;  /* halves where latency > 1 ms deadline */
-
-/* Audio quality results — static so IAR Watch window can see them after recording */
-static uint32_t s_noise_rms   = 0u;
-static uint32_t s_speech_rms  = 0u;
-static int32_t  s_snr_db      = 0;
-static int32_t  s_peak        = 0;
-static int32_t  s_dc_offset   = 0;
-static uint32_t s_clip_cnt    = 0u;
+static volatile uint32_t s_dmaQueueOverflow = 0u;  /* ISR drop counter (for g_AudioHealth) */
 
 /* ── LED helpers ─────────────────────────────────────────────────────────── */
 #define LED_ON()     HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, GPIO_PIN_SET)
@@ -231,7 +203,6 @@ static void Button_GPIO_Init(void);
 static void DFSDM_DMA_Init(void);
 static void StoreDmaChunk(const int32_t *src32);
 static void BuildWavHdr(WavHdr_t *h, uint32_t nSamples);
-static void AudioQuality_Report(void);
 
 /* ═══════════════════════════════════════════════════════════════════════════
  *  Public API
@@ -256,9 +227,7 @@ void VoiceRec_Init(void)
 {
     /* Create FreeRTOS objects before enabling any IRQs */
     s_dmaQueue = xQueueCreate(32u, sizeof(DmaEntry_t));
-    xLogQueue  = xQueueCreate(4u, sizeof(LogMsg_t));
     configASSERT(s_dmaQueue);
-    configASSERT(xLogQueue);
 
     Button_GPIO_Init();
     DFSDM_DMA_Init();   /* DMA only — CubeMX owns channel/filter/GPIO init */
@@ -298,13 +267,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 }
 
-/* DFSDM DMA half-complete — g_DfsdmBuf[0..DFSDM_BUF_HALF-1] ready.
- * Buffer is in D2 SRAM (0x30000000) — not cached, no SCB_InvalidateDCache needed.
- * Stamp DWT cycle counter at ISR entry — "pin HIGH" for latency measurement. */
+/* DFSDM DMA half-complete — g_DfsdmBuf[0..DFSDM_BUF_HALF-1] ready. */
 void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
 {
     if (hdfsdm->Instance != DFSDM1_Filter0) return;
-    DmaEntry_t e = { &g_DfsdmBuf[0], DWT->CYCCNT };
+    DmaEntry_t e = { &g_DfsdmBuf[0] };
     BaseType_t higher = pdFALSE;
     if (xQueueSendFromISR(s_dmaQueue, &e, &higher) != pdTRUE)
         s_dmaQueueOverflow++;
@@ -315,7 +282,7 @@ void HAL_DFSDM_FilterRegConvHalfCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
 void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
 {
     if (hdfsdm->Instance != DFSDM1_Filter0) return;
-    DmaEntry_t e = { &g_DfsdmBuf[DFSDM_BUF_HALF], DWT->CYCCNT };
+    DmaEntry_t e = { &g_DfsdmBuf[DFSDM_BUF_HALF] };
     BaseType_t higher = pdFALSE;
     if (xQueueSendFromISR(s_dmaQueue, &e, &higher) != pdTRUE)
         s_dmaQueueOverflow++;
@@ -356,10 +323,6 @@ void VoiceRecTask(void *arg)
         g_SampleCount        = 0u;
         g_DmaCallCount       = 0u;
         s_dmaQueueOverflow   = 0u;
-        s_latency_max_cy     = 0u;
-        s_latency_max_us     = 0u;
-        s_qDepth_max         = 0u;
-        s_desync_count       = 0u;
         g_State              = REC_RECORDING;
         /* Reset health counters for this recording */
         g_AudioHealth.dfsdm_overruns      = 0u;
@@ -367,7 +330,6 @@ void VoiceRecTask(void *arg)
         g_AudioHealth.buffer_misses       = 0u;
         g_AudioHealth.total_bytes_written = 0u;
         __DSB();
-        RLOG("[REC] --- Stage 0: recording 3s ---\r\n");
 
         /* ── Enable SAI4 — drives the PDM clock to the microphone via PE2/SAI4_CK1.
          * In the DFSDM bridge path SAI4 provides clock only; no SAI4 DMA is used.
@@ -375,9 +337,7 @@ void VoiceRecTask(void *arg)
          * DFSDM1_Channel3 receives the PDM bitstream via internal silicon routing.
          * Startup order: SAI4 clock running → DFSDM DMA started. */
         __HAL_SAI_ENABLE(&hsai_BlockA4);
-        g_dbg_live_sai4_cr1 = hsai_BlockA4.Instance->CR1;   /* bit16 SAIEN must be 1 */
-        RLOG("[REC] SAI4 enabled — CR1=0x%08lX (bit16=SAIEN must be 1)",
-             (unsigned long)g_dbg_live_sai4_cr1);
+        g_dbg_live_sai4_cr1 = hsai_BlockA4.Instance->CR1;
 
         /* HAL_DFSDM_FilterInit sets RDMAEN before DFEN — on STM32H7 the subsequent
          * HAL_DFSDM_FilterConfigRegChannel RMW on FLTCR1 (with DFEN=1) can silently
@@ -386,16 +346,7 @@ void VoiceRecTask(void *arg)
          * Fix: force RDMAEN=1 here, after all init calls are complete and just before
          * starting the DMA. This is safe — RDMAEN is writable when DFEN=1. */
         hdfsdm1_filter0.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
-        g_dbg_live_fltcr1 = hdfsdm1_filter0.Instance->FLTCR1;  /* expect RDMAEN=bit21 set */
-
-        /* Diagnostic: dump key registers before DMA start */
-        RLOG("[REC] Ch0_CHCFGR1=0x%08lX (expect 0x80180000: DFSDMEN+CKOUTDIV=24)",
-             (unsigned long)DFSDM1_Channel0->CHCFGR1);
-        RLOG("[REC] FLTCR1=0x%08lX Ch0_CHCFGR1=0x%08lX SAI4_CR1=0x%08lX SAI4_PDMCR=0x%08lX",
-             (unsigned long)hdfsdm1_filter0.Instance->FLTCR1,
-             (unsigned long)hdfsdm1_channel0.Instance->CHCFGR1,
-             (unsigned long)hsai_BlockA4.Instance->CR1,
-             (unsigned long)SAI4->PDMCR);
+        g_dbg_live_fltcr1 = hdfsdm1_filter0.Instance->FLTCR1;
 
         /* Start DFSDM DMA (DMA1_Stream1 → g_DfsdmBuf in D2 SRAM) */
         HAL_StatusTypeDef hal =
@@ -403,17 +354,9 @@ void VoiceRecTask(void *arg)
                                              g_DfsdmBuf,
                                              DFSDM_BUF_TOTAL);
         g_dbg_live_hal_ok = (hal == HAL_OK) ? 0x00000000u : 0xFFFFFFFFu;
-        g_dbg_live_fltisr = hdfsdm1_filter0.Instance->FLTISR;  /* bit19=CKABF[3]: 1=no SAI4 clock */
-        RLOG("[REC] DFSDM DMA start: %s  DMA1_St1->CR=0x%08lX  NDTR=%lu  FLTISR=0x%08lX",
-             hal == HAL_OK ? "OK" : "FAIL",
-             (unsigned long)DMA1_Stream1->CR,
-             (unsigned long)DMA1_Stream1->NDTR,
-             (unsigned long)g_dbg_live_fltisr);
+        g_dbg_live_fltisr = hdfsdm1_filter0.Instance->FLTISR;
         if (hal != HAL_OK)
         {
-            RLOG("[REC] DFSDM DMA start FAILED — state=%d hdmaReg=%p",
-                 (int)hdfsdm1_filter0.State,
-                 (void*)hdfsdm1_filter0.hdmaReg);
             HAL_SAI_DMAStop(&hsai_BlockA4);
             g_State = REC_IDLE; __DSB();
             continue;
@@ -434,8 +377,6 @@ void VoiceRecTask(void *arg)
          *   If delta > 480,000 cycles (1 ms @ 480 MHz) → desync */
         TickType_t ledToggle = xTaskGetTickCount() + pdMS_TO_TICKS(500u);
 
-#define CYCLES_PER_MS  480000u   /* 480 MHz */
-#define CYCLES_PER_US  480u
 
         while (g_SampleCount < AUDIO_BUFFER_SAMPLES)
         {
@@ -448,23 +389,6 @@ void VoiceRecTask(void *arg)
             DmaEntry_t e = { NULL, 0u };
             if (xQueueReceive(s_dmaQueue, &e, pdMS_TO_TICKS(10u)) == pdTRUE)
             {
-                /* "pin LOW" — measure how long this half waited */
-                uint32_t now     = DWT->CYCCNT;
-                uint32_t latency = now - e.stamp_cy;   /* wraps correctly */
-
-                if (latency > s_latency_max_cy)
-                {
-                    s_latency_max_cy = latency;
-                    s_latency_max_us = latency / CYCLES_PER_US;
-                }
-                if (latency > CYCLES_PER_MS)
-                    s_desync_count++;
-
-                /* Queue depth at this moment = backlog of unprocessed halves */
-                UBaseType_t depth = uxQueueMessagesWaiting(s_dmaQueue);
-                if (depth > s_qDepth_max)
-                    s_qDepth_max = depth;
-
                 /* D-Cache coherency — g_DfsdmBuf is at 0x30000000 (D2 SRAM).
                  * D2 SRAM is cacheable under the default Cortex-M7 memory map
                  * (only one MPU region is configured: Flash at 0x08000000).
@@ -488,24 +412,18 @@ void VoiceRecTask(void *arg)
             while (xQueueReceive(s_dmaQueue, &discard, 0) == pdTRUE) {}
         }
 
-        /* Audio quality report — Terminal I/O only (IAR debugger window) */
-        AudioQuality_Report();
-
-        /* Safety: if SAI4 DMA gave no samples, log and skip SD write */
+        /* Safety: if DMA gave no samples, reset and retry */
         if (g_SampleCount == 0u)
         {
-            RLOG("[REC] WARN: DFSDM DMA gave 0 samples — check SAI4+DFSDM config");
             g_State = REC_IDLE; __DSB();
             continue;
         }
 
-        RLOG("[REC] Recording done: samples=%lu\r\n", (unsigned long)g_SampleCount);
         LED_ON();   /* stay ON — recording done, saving to SD */
 
         /* Signal SDWriteTask — disabled while debugging DFSDM pipeline */
         /* uint32_t msg = 1u; */
         /* xQueueSend(q, &msg, 0); */
-        RLOG("[REC] SD write skipped (debug mode — re-enable xQueueSend to save WAV)");
         g_State = REC_IDLE; __DSB();  /* must reset — normally SDWriteTask does this */
         LED_OFF();
     }
@@ -538,7 +456,6 @@ void SDWriteTask(void *arg)
                 if (f_stat(probe, &fno) != FR_OK) break;
                 g_FileIndex = i;
             }
-            RLOG("[REC] SD scan: next index=%lu", (unsigned long)(g_FileIndex + 1u));
         }
 
         /* ── Mark saving state BEFORE any SD operations ─────────────────── */
@@ -568,17 +485,11 @@ void SDWriteTask(void *arg)
         UINT     bw;
         WavHdr_t hdr;
 
-        RLOG("[REC] --- Stage 1: writing WAV to SD ---");
-        RLOG("[REC] file=%s  samples=%lu",
-            filename, (unsigned long)samplesSnapshot);
-
         FRESULT fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
         if (fr != FR_OK)
         {
-            /* Blank / unrecognised card — format first, then retry */
             if (fr == FR_NO_FILESYSTEM)
             {
-                RLOG("[REC] FAIL f_open: no filesystem — formatting card");
                 if (!AudioSD_Format())
                 {
                     logMsg.result = REC_ERR_SD_OPEN;
@@ -588,7 +499,6 @@ void SDWriteTask(void *arg)
             else
             {
                 /* SDMMC peripheral error — remount once as recovery */
-                RLOG("[REC] FAIL f_open: fr=%d — remounting", (int)fr);
                 if (!AudioSD_Remount())
                 {
                     logMsg.result = REC_ERR_SD_OPEN;
@@ -598,12 +508,10 @@ void SDWriteTask(void *arg)
             fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
             if (fr != FR_OK)
             {
-                RLOG("[REC] FAIL f_open after recovery: fr=%d", (int)fr);
                 logMsg.result = REC_ERR_SD_OPEN;
                 goto done;
             }
         }
-        RLOG("[REC] f_open OK\r\n");
 
         g_FileIndex++;   /* only increment after successful f_open */
 
@@ -619,14 +527,9 @@ void SDWriteTask(void *arg)
         {
             FSIZE_t prealloc = (FSIZE_t)(sizeof(WavHdr_t) + samplesSnapshot * sizeof(int16_t));
             FRESULT fr_exp = f_expand(&file, prealloc, 1);  /* opt=1: allocate contiguous */
-            if (fr_exp == FR_OK)
-            {
-                RLOG("[REC] f_expand OK  %lu bytes contiguous", (unsigned long)prealloc);
-            }
-            else
+            if (fr_exp != FR_OK)
             {
                 /* Fallback: f_lseek forces cluster chain allocation non-contiguously */
-                RLOG("[REC] f_expand fr=%d — fallback to f_lseek", (int)fr_exp);
                 f_lseek(&file, prealloc);
             }
             f_lseek(&file, 0);  /* return to start for WAV header write */
@@ -637,7 +540,6 @@ void SDWriteTask(void *arg)
         fr = f_write(&file, &hdr, sizeof(hdr), &bw);
         if (fr != FR_OK || bw != sizeof(hdr))
         {
-            RLOG("[REC] FAIL f_write header: fr=%d\r\n", (int)fr);
             logMsg.result = REC_ERR_SD_WRITE_HDR;
             f_close(&file);
             goto done;
@@ -682,8 +584,7 @@ void SDWriteTask(void *arg)
                 if (frPcm != FR_OK || bw != chunk)
                 {
                     g_AudioHealth.buffer_misses++;
-                    frPcm = FR_DISK_ERR;
-                    break;
+                    frPcm = FR_DISK_ERR; break;
                 }
                 g_AudioHealth.total_bytes_written += chunk;
                 offset    += chunk;
@@ -691,8 +592,6 @@ void SDWriteTask(void *arg)
             }
             if (frPcm != FR_OK || offset != logMsg.sizeBytes)
             {
-                RLOG("[REC] FAIL f_write PCM: fr=%d offset=%lu\r\n",
-                       (int)frPcm, (unsigned long)offset);
                 logMsg.result = REC_ERR_SD_WRITE_PCM;
                 f_close(&file);
                 goto done;
@@ -701,7 +600,6 @@ void SDWriteTask(void *arg)
 
         if (f_close(&file) != FR_OK)
         {
-            RLOG("[REC] FAIL f_close\r\n");
             logMsg.result = REC_ERR_SD_CLOSE;
             goto done;
         }
@@ -720,55 +618,15 @@ void SDWriteTask(void *arg)
                 g_sdFreeKB = (uint32_t)freeClusters * (pfs->csize / 2u);
         }
 
-        RLOG("[REC] ========================================");
-        RLOG("[REC] WAV WRITE COMPLETE");
-        RLOG("[REC] file=%s  size=%lu bytes",
-            logMsg.filename, (unsigned long)logMsg.sizeBytes);
-        RLOG("[REC] ========================================");
-
-        /* ── Health report (owned by SDWriteTask — the only task with real knowledge) ─
-         * At 16kHz×2B, each 4KB bounce chunk covers 128ms.
-         * sd_write_max_ms > 100 → within 28ms of queue overflow → WARNING
-         * dfsdm_overruns  > 0  → hardware discarded samples     → audible gaps
-         * buffer_misses   > 0  → f_write error or short write   → audible gap   */
-        RLOG("--- AUDIO HEALTH REPORT ---");
-        RLOG("[HEALTH] dfsdm_overruns  : %lu  (MUST be 0 — hardware gap)",
-            (unsigned long)g_AudioHealth.dfsdm_overruns);
-        RLOG("[HEALTH] sd_write_max_ms : %lu ms  (limit ~100ms @ 16kHz)",
-            (unsigned long)g_AudioHealth.sd_write_max_ms);
-        RLOG("[HEALTH] buffer_misses   : %lu  (f_write errors/short writes)",
-            (unsigned long)g_AudioHealth.buffer_misses);
-        RLOG("[HEALTH] bytes_written   : %lu",
-            (unsigned long)g_AudioHealth.total_bytes_written);
-        RLOG("[HEALTH] sd_free         : %lu KB",
-            (unsigned long)g_sdFreeKB);
-        RLOG("[HEALTH] sd_err          : 0x%08lX",
-            (unsigned long)AudioSD_GetErrorCode());
-        if (g_AudioHealth.dfsdm_overruns > 0u || g_AudioHealth.buffer_misses > 0u)
-            RLOG("[HEALTH] STATUS: FAIL — recording has gaps!");
-        else if (g_AudioHealth.sd_write_max_ms > 100u)
-            RLOG("[HEALTH] STATUS: WARNING — SD latency high, check cluster size");
-        else
-            RLOG("[HEALTH] STATUS: OK — clean recording");
-        RLOG("---------------------------");
-
         /* Stage 2 (UART streaming to NORA) removed — not needed for standalone recording.
          * WAV file stays on SD card, accessible via USB MSC or card reader. */
 
 done:
         /* Remount on any error path — SDMMC stays dirty after a write failure
          * and all subsequent FatFS calls return FR_NOT_READY until the peripheral
-         * is reset.
-         * B-010: second occurrence 2026-04-04 → fix applied. */
-        RLOG("[REC] DONE result=%d file=%s\r\n",
-               (int)logMsg.result, logMsg.filename);
+         * is reset. */
         if (logMsg.result != REC_OK)
             AudioSD_Remount();
-
-        if (xQueueSend(xLogQueue, &logMsg, pdMS_TO_TICKS(100u)) != pdTRUE)
-        {
-            RLOG("[REC] xLogQueue full - log dropped");
-        }
 
         g_State = REC_IDLE;
         __DSB();
@@ -776,50 +634,19 @@ done:
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
- *  RTTLogTask — prints bug log at boot, then reports WAV save results
+ *  RTTLogTask — polls SD_DETECT, drives LED2
  * ═══════════════════════════════════════════════════════════════════════════ */
 void RTTLogTask(void *arg)
 {
     (void)arg;
-
-    /* Print living bug log to RTT only (not Terminal I/O) */
-    SEGGER_RTT_WriteString(0, "\r\n=== BUG LOG ===\r\n");
-    SEGGER_RTT_WriteString(0, "B-001 BUILD  .sdram section missing in .icf    FIXED\r\n");
-    SEGGER_RTT_WriteString(0, "B-002 DMA    vTaskDelay used instead of drain  FIXED\r\n");
-    SEGGER_RTT_WriteString(0, "B-003 SD     f_mount called after xTaskCreate  FIXED\r\n");
-    SEGGER_RTT_WriteString(0, "=== END BUG LOG ===\r\n\r\n");
-
-    char rttBuf[96];
-    LogMsg_t msg;
     for (;;)
     {
-        /* Poll SD_DETECT (PI8, active-low) every 200 ms via queue timeout.
+        /* Poll SD_DETECT (PI8, active-low) every 200 ms.
          * LED2 (PI13) ON = card present, OFF = card absent. */
-        if (xQueueReceive(xLogQueue, &msg, pdMS_TO_TICKS(200u)) != pdTRUE)
-        {
-            GPIO_PinState det = HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8);
-            HAL_GPIO_WritePin(GPIOI, GPIO_PIN_13,
-                              (det == GPIO_PIN_RESET) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-            continue;
-        }
-
-        if (msg.result == REC_OK)
-        {
-            snprintf(rttBuf, sizeof(rttBuf),
-                "[REC] OK      %s  %lu bytes  t=%lu ms\r\n",
-                msg.filename,
-                (unsigned long)msg.sizeBytes,
-                (unsigned long)msg.timestamp);
-        }
-        else
-        {
-            snprintf(rttBuf, sizeof(rttBuf),
-                "[REC] FAIL    %s  code=%d  t=%lu ms\r\n",
-                msg.filename,
-                (int)msg.result,
-                (unsigned long)msg.timestamp);
-        }
-        RTT_TS(rttBuf);
+        GPIO_PinState det = HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8);
+        HAL_GPIO_WritePin(GPIOI, GPIO_PIN_13,
+                          (det == GPIO_PIN_RESET) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        vTaskDelay(pdMS_TO_TICKS(200u));
     }
 }
 
@@ -960,23 +787,9 @@ static void DFSDM_DMA_Init(void)
     HAL_NVIC_EnableIRQ(DMA1_Stream1_IRQn);
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
- *  AudioQuality_Report — diagnostic measurements after each recording.
- *  Output goes to Terminal I/O only (IAR debugger window) via LOG().
- *
- *  Three measurement points:
- *
- *  [1] PDM bit density — proves the mic is producing a valid PDM bitstream.
- *      Scans entire g_PdmBuf (last 2 DMA half-buffers captured).
- *      Healthy PDM at silence: ~50% ones. Stuck/dead: 0% or 100%.
- *
- *  [2] PCM statistics — measures quality of the converted audio.
- *      noise_window : samples [0..8000)     = first 0.5 s (before speech)
- *      speech_window: samples [8000..40000) = middle 2.0 s (speech content)
- *
- *  [3] SAI4 + BDMA registers — confirms peripheral state after recording.
- *      SAI4_Block_A CR1, SR, PDMCR; BDMA Channel1 CCR, CNDTR.
- * ═══════════════════════════════════════════════════════════════════════════ */
+/* AudioQuality_Report removed — all RLOG removed per project policy.
+ * Raw data still accessible via IAR Watch: g_AudioBuf, g_DfsdmBuf, g_AudioHealth. */
+#if 0  /* kept for reference, never compiled */
 static void AudioQuality_Report(void)
 {
     RLOG("-------- Audio Quality Report --------");
@@ -1104,3 +917,4 @@ static void AudioQuality_Report(void)
     RLOG("[REG]  DMA1_St1->M0AR      = 0x%08lX  (expect 0x30000000)",        (unsigned long)DMA1_Stream1->M0AR);
     RLOG("--------------------------------------");
 }
+#endif /* 0 */

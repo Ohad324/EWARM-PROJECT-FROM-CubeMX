@@ -81,7 +81,6 @@ extern volatile AudioHealth_t g_AudioHealth;
 
 /* ── Globals shared with main.c ──────────────────────────────────────────── */
 extern TaskHandle_t       voiceRecTaskHandle;   /* used by button ISR       */
-extern QueueHandle_t      xLogQueue;            /* SDWriteTask → RTTLogTask */
 
 #ifdef __cplusplus
 }
