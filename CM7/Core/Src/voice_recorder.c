@@ -41,9 +41,9 @@
  *     PE4 (AF8 =SAI4_FS_A)  → frame sync (unlocks SAI4 master clock tree)
  *     PE5 (AF8 =SAI4_SCK_A) → serial clock (SAI4 internal bit clock)
  *
- *   DFSDM1 Channel 3 receives PDM internally from SAI4 via SPI_CLOCK_INTERNAL.
- *   No separate DFSDM external pins needed — the mic is only wired to SAI4.
- *   (CubeMX configures PD3/PC7 in MSP but they are unused on this board.)
+ *   DFSDM1 Channel 3 receives PDM from SAI4 via the internal silicon bridge
+ *   (SPICKSEL=11 in CHCFGR1 — set by direct register write after ChannelInit).
+ *   No external DFSDM pins used: PD3/PC7 configured by CubeMX MSP but unused.
  *
  *   DFSDM1 Filter0: Sinc3, hardware decimation → 16-bit PCM output
  *   DMA1_Stream1 → g_DfsdmBuf in D2 SRAM (0x30000000)
@@ -967,7 +967,7 @@ static void DFSDM_DMA_Init(void)
      *
      * Architecture:
      *   SAI4 (PE2/PC1/PE4/PE5) → physical mic → internal silicon routing
-     *   DFSDM1 Channel 3 (SPI_CLOCK_INTERNAL from SAI4) → Sinc3 decimation → PCM
+     *   DFSDM1 Channel 3 (SPICKSEL=11: SAI4 Block A bridge) → Sinc3 decimation → PCM
      *   DMA1 Stream1 → g_DfsdmBuf in D2 SRAM (0x30000000)
      *
      * DMA1/DMA2 can access D2 SRAM where g_DfsdmBuf lives.

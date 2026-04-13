@@ -531,6 +531,21 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel3.Init.RightBitShift              = 5u;
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel3) != HAL_OK) { Error_Handler(); }
 
+  /* ── Override SPICKSEL: route Channel 3 to SAI4 Block A internal bridge ──
+   * HAL DFSDM_CHANNEL_SPI_CLOCK_INTERNAL (SPICKSEL=01) samples data from PC7
+   * (DFSDM1_DATIN3) clocked by PD3 (CKOUT).  PC7 is NOT connected to the mic
+   * on this board — mic is on PC1 (SAI4_D1) — so PC7 floats high → all-1s.
+   *
+   * Fix: SPICKSEL=11 → RM0399 §31.3.2: for CH2/CH3, SPICKSEL=11 sources
+   * both the bit clock and PDM data from SAI4 Block A internally.
+   * No PC7 or PD3 involved; mic wiring PE2/PC1 feeds SAI4 which feeds DFSDM.
+   *
+   * SPICKSEL is write-protected when CHEN=1 → clear CHEN briefly. */
+  DFSDM1_Channel3->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
+  DFSDM1_Channel3->CHCFGR1  = (DFSDM1_Channel3->CHCFGR1 & ~DFSDM_CHCFGR1_SPICKSEL_Msk)
+                             | (DFSDM_CHCFGR1_SPICKSEL_0 | DFSDM_CHCFGR1_SPICKSEL_1); /* =11: SAI4-A → CH3 */
+  DFSDM1_Channel3->CHCFGR1 |=  DFSDM_CHCFGR1_CHEN;
+
   /* ── Step 2: Filter 0 ── */
   hdfsdm1_filter0.Instance                          = DFSDM1_Filter0;
   hdfsdm1_filter0.Init.RegularParam.Trigger         = DFSDM_FILTER_SW_TRIGGER;
