@@ -21,8 +21,8 @@
         <ByteLimit>50</ByteLimit>
     </Stack>
     <PlDriver>
-        <FirstRun>0</FirstRun>
         <MemConfigValue>C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm\config\debugger\ST\STM32H747XI_M7.ddf</MemConfigValue>
+        <FirstRun>0</FirstRun>
     </PlDriver>
     <ArmDriver>
         <EnableCache>0</EnableCache>
@@ -36,11 +36,11 @@
         <LeaveTargetRunning>_ 0</LeaveTargetRunning>
         <CStepIntDis>_ 0</CStepIntDis>
         <jlinkResetStyle>12</jlinkResetStyle>
-        <jlinkResetStrategy>8</jlinkResetStrategy>
+        <jlinkResetStrategy>0</jlinkResetStrategy>
         <MultiCoreRunAll>0</MultiCoreRunAll>
     </JLinkDriver>
     <DebugChecksum>
-        <Checksum>658287089</Checksum>
+        <Checksum>2442451571</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -55,20 +55,20 @@
         <ShowSource>1</ShowSource>
     </Trace1>
     <CallStack>
-        <ShowArgs>0</ShowArgs>
+        <ShowArgs>1</ShowArgs>
     </CallStack>
     <SWOTraceHWSettings>
         <OverrideDefaultClocks>0</OverrideDefaultClocks>
-        <CpuClock>480000000</CpuClock>
+        <CpuClock>400000000</CpuClock>
         <ClockAutoDetect>0</ClockAutoDetect>
         <ClockWanted>2000000</ClockWanted>
         <JtagSpeed>2000000</JtagSpeed>
-        <Prescaler>240</Prescaler>
+        <Prescaler>200</Prescaler>
         <TimeStampPrescIndex>0</TimeStampPrescIndex>
         <TimeStampPrescData>0</TimeStampPrescData>
         <PcSampCYCTAP>1</PcSampCYCTAP>
         <PcSampPOSTCNT>13</PcSampPOSTCNT>
-        <PcSampIndex>2</PcSampIndex>
+        <PcSampIndex>10</PcSampIndex>
         <DataLogMode>2</DataLogMode>
         <ITMportsEnable>63</ITMportsEnable>
         <ITMportsTermIO>1</ITMportsTermIO>
@@ -132,7 +132,7 @@
     <InterruptLog>
         <GraphEnabled>0</GraphEnabled>
         <LogEnabled>1</LogEnabled>
-        <ShowTimeLog>1</ShowTimeLog>
+        <ShowTimeLog>0</ShowTimeLog>
         <SumEnabled>1</SumEnabled>
         <ShowTimeSum>1</ShowTimeSum>
         <SumSortOrder>3</SumSortOrder>
@@ -161,26 +161,33 @@
         <mode>0</mode>
     </DisassembleMode>
     <Breakpoints2>
-        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.297.3" 0 0 1 "" 0 "" 0</Bp0>
-        <Bp1>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.337.1" 0 0 1 "" 0 "" 0</Bp1>
-        <Bp2>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.355.1" 0 0 1 "" 0 "" 0</Bp2>
-        <Bp3>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.340.1" 0 0 1 "" 0 "" 0</Bp3>
-        <Bp4>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.341.1" 0 0 1 "" 0 "" 0</Bp4>
-        <Bp5>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.342.1" 0 0 1 "" 0 "" 0</Bp5>
-        <Bp6>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.344.1" 0 0 1 "" 0 "" 0</Bp6>
-        <Bp7>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.381.3" 0 0 1 "" 0 "" 0</Bp7>
-        <Bp8>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal.c}.228.1" 0 0 1 "" 0 "" 0</Bp8>
-        <Bp9>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.233.3" 0 0 1 "" 0 "" 0</Bp9>
-        <Bp10>_ 0 "EMUL_CODE" "0x803'1e7a" 0 0 1 "" 0 "" 0</Bp10>
-        <Bp11>_ 0 "EMUL_CODE" "0x803'1ea8" 0 0 1 "" 0 "" 0</Bp11>
-        <Bp12>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.214.3" 0 0 1 "" 0 "" 0</Bp12>
-        <Bp13>_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.209.3" 0 0 1 "" 0 "" 0</Bp13>
-        <Count>14</Count>
+        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.382.1" 0 0 1 "" 0 "" 0</Bp0>
+        <Bp1>_ 0 "EMUL_CODE" "0x803'1e62" 0 0 1 "" 0 "" 0</Bp1>
+        <Bp2>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.214.3" 0 0 1 "" 0 "" 0</Bp2>
+        <Bp3>_ 0 "EMUL_CODE" "0x803'1e74" 0 0 1 "" 0 "" 0</Bp3>
+        <Bp4>_ 0 "EMUL_CODE" "0x803'1e70" 0 0 1 "" 0 "" 0</Bp4>
+        <Bp5>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.241.1" 0 0 1 "" 0 "" 0</Bp5>
+        <Bp6>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.249.1" 0 0 1 "" 0 "" 0</Bp6>
+        <Bp7>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.286.3" 0 0 1 "" 0 "" 0</Bp7>
+        <Bp8>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.252.1" 0 0 1 "" 0 "" 0</Bp8>
+        <Bp9>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.483.1" 0 0 1 "" 0 "" 0</Bp9>
+        <Bp10>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.322.3" 0 0 1 "" 0 "" 0</Bp10>
+        <Bp11>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.355.3" 0 0 1 "" 0 "" 0</Bp11>
+        <Bp12>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.1361.1" 0 0 1 "" 0 "" 0</Bp12>
+        <Bp13>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.1131.1" 0 0 1 "" 0 "" 0</Bp13>
+        <Bp14>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.301.3" 0 0 1 "" 0 "" 0</Bp14>
+        <Bp15>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.969.3" 0 0 1 "" 0 "" 0</Bp15>
+        <Bp16>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.1204.5" 0 0 1 "" 0 "" 0</Bp16>
+        <Bp17>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.899.1" 0 0 1 "" 0 "" 0</Bp17>
+        <Bp18>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.835.1" 0 0 1 "" 0 "" 0</Bp18>
+        <Bp19>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.800.1" 0 0 1 "" 0 "" 0</Bp19>
+        <Bp20>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.651.23" 0 0 1 "" 0 "" 0</Bp20>
+        <Count>21</Count>
     </Breakpoints2>
     <DriverProfiling>
-        <Enabled>0</Enabled>
+        <Enabled>1</Enabled>
         <Mode>3</Mode>
-        <Graph>0</Graph>
+        <Graph>1</Graph>
         <Symbiont>0</Symbiont>
         <Exclusions />
     </DriverProfiling>

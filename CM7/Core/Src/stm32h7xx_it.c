@@ -299,7 +299,7 @@ void DMA1_Stream0_IRQHandler(void)
  * EXTI15_10_IRQHandler — handles external interrupts on GPIO lines 10-15.
  * PC13 (blue wakeup button) is on EXTI line 13, which falls in this range.
  * HAL_GPIO_EXTI_IRQHandler clears the pending flag and calls
- * HAL_GPIO_EXTI_Callback (defined in audio_rec.c) with GPIO_PIN_13.
+ * HAL_GPIO_EXTI_Callback (defined in voice_recorder.c) with GPIO_PIN_13.
  */
 void EXTI15_10_IRQHandler(void)
 {

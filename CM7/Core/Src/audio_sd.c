@@ -43,6 +43,7 @@
 #include "FreeRTOS.h"
 #include "task.h"           /* vTaskDelay                        */
 #include "log_mutex.h"      /* SEGGER_RTT_printf, RTT_TS         */
+#include "itm_log.h"        /* STAGE() — ITM + RTT, no printf    */
 #include <string.h>         /* memcpy, strlen                    */
 #include <stdio.h>          /* snprintf                          */
 
@@ -154,7 +155,7 @@ static void     BuildWavHeader(WavHeader_t *hdr, uint32_t dataBytes);
  * ─────────────────────────────────────────────────────────────────────────── */
 bool AudioSD_Init(void)
 {
-    /* Init GPIOs first so SD_DETECT pin (PI8) is readable */
+    STAGE("SDINIT1 PASS");
     SDMMC1_GPIO_Init();
 
     /* Check card is inserted BEFORE initialising the peripheral.
@@ -163,16 +164,20 @@ bool AudioSD_Init(void)
      * fails and calls Error_Handler() — crashing the entire system. */
     if (HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8) == GPIO_PIN_SET)
     {
+        STAGE("SDINIT2 FAIL");
         SD_LOG("ABSENT");
         return false;
     }
+    STAGE("SDINIT2 PASS");
 
     SDMMC1_Peripheral_Init();
+    STAGE("SDINIT3 PASS");
 
     /* Register filesystem object — deferred mount (opt=0) per UM1722 / FatFS docs.
      * disk_initialize + BPB read are deferred until the first file operation
      * (f_open in SDWriteTask).  f_mount(opt=0) always returns FR_OK here. */
     f_mount(&s_fatfs, "0:", 0);
+    STAGE("SDINIT4 PASS");
 
     s_sdReady = true;
     SD_LOG("OK");
@@ -514,6 +519,7 @@ void AudioSD_NotifyReady(void)
  * ─────────────────────────────────────────────────────────────────────────── */
 bool AudioSD_Remount(void)
 {
+    STAGE("REMOUNT1 PASS");
     /* Soft abort first — clears SDMMC interrupt flags and HAL state */
     HAL_SD_Abort(&s_hsd1);
     s_hsd1.ErrorCode = HAL_SD_ERROR_NONE;
@@ -527,11 +533,14 @@ bool AudioSD_Remount(void)
     HAL_SD_DeInit(&s_hsd1);
     vTaskDelay(pdMS_TO_TICKS(20u));   /* let card power-cycle settle */
     SDMMC1_Peripheral_Init();         /* full re-init: HAL_SD_Init + 4-bit bus */
+    STAGE("REMOUNT2 PASS");
 
     f_mount(NULL, "0:", 0);                        /* force unmount */
     FRESULT fr = f_mount(&s_fatfs, "0:", 1);       /* re-mount now */
     s_sdReady = (fr == FR_OK);
     SD_LOG("Remount result: fr=%d sdReady=%d", (int)fr, (int)s_sdReady);
+    if (s_sdReady) STAGE("REMOUNT3 PASS");
+    else           STAGE("REMOUNT3 FAIL");
     return s_sdReady;
 }
 
@@ -544,19 +553,28 @@ bool AudioSD_Remount(void)
 bool AudioSD_Format(void)
 {
     SD_LOG("FORMAT — card has no filesystem, formatting as exFAT...");
-    static uint8_t work[4096];
-    static const MKFS_PARM opt = { FM_EXFAT, 0, 0, 0, 0x20000 }; /* 128 KB clusters */
+    /* work[] must be >= cluster size (FR_NOT_ENOUGH_CORE if too small).
+     * NULL/0 triggers ff_memalloc which is unavailable (no dynamic alloc).
+     * 4 KB clusters: work buffer = cluster size = 4096 bytes — fits in BSS.
+     * Standard for exFAT on SD cards; fast enough for WAV sequential writes. */
+    static uint8_t work[4096u];
+    static const MKFS_PARM opt = { FM_EXFAT, 0, 0, 0, 4096u }; /* 4 KB clusters */
+    STAGE("FMT1 PASS");
     FRESULT res = f_mkfs("0:", &opt, work, sizeof(work));
     if (res != FR_OK) {
+        STAGE("FMT2 FAIL");
         SD_LOG("FORMAT_FAIL:%d", (int)res);
         return false;
     }
-    /* Mount immediately after format — filesystem was just created, opt=1 is safe */
+    STAGE("FMT2 PASS");
+
     res = f_mount(&s_fatfs, "0:", 1);
     if (res != FR_OK) {
+        STAGE("FMT3 FAIL");
         SD_LOG("FORMAT_REMOUNT_FAIL:%d", (int)res);
         return false;
     }
+    STAGE("FMT3 PASS");
     s_sdReady = true;
     SD_LOG("FORMAT+MOUNT OK");
     return true;

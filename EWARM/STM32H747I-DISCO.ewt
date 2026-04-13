@@ -3709,6 +3709,12 @@
         </group>
     </group>
     <group>
+        <name>Docs</name>
+        <file>
+            <name>$PROJ_DIR$\DFSDM variables.txt</name>
+        </file>
+    </group>
+    <group>
         <name>Drivers</name>
         <group>
             <name>BSP</name>
@@ -3757,6 +3763,9 @@
         </group>
         <group>
             <name>STM32H7xx_HAL_Driver</name>
+            <file>
+                <name>$PROJ_DIR$\..\CM7\Core\Lib\libPDMFilter_CM7_IAR_wc16.a</name>
+            </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal.c</name>
             </file>
@@ -3840,6 +3849,12 @@
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_rcc_ex.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_sai.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_sai_ex.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_sd.c</name>
@@ -4034,5 +4049,14 @@
     </group>
     <file>
         <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ff.c</name>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ffsystem.c</name>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\..\Middlewares\Third_Party\FatFs\src\ffunicode.c</name>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\stm32h747xx_flash_CM7.icf</name>
     </file>
 </project>

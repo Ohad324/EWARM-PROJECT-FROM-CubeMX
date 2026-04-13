@@ -2,6 +2,7 @@
 #include "jpeg_decoder.h"
 #include "log_mutex.h"
 #include "timing_log.h"    /* TLOG(), T_US() */
+#include "itm_log.h"       /* STAGE() — ITM PORT[0] + RTT WriteString, zero printf */
 #include "main.h"          /* huart8 */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -57,6 +58,7 @@ void Music_Poll(void)
     {
     /* ── MSG_TRACK ──────────────────────────────────────────────── */
     case MSG_TRACK:
+        STAGE("TGFX1 PASS");
         done.type = MUSIC_DONE_TRACK;
         strncpy(done.track.title,   raw.track.title,
                 sizeof(done.track.title)   - 1u);
@@ -66,18 +68,25 @@ void Music_Poll(void)
                 sizeof(done.track.videoId) - 1u);
 
         if (xQueueSend(xMusicDoneQueue, &done, pdMS_TO_TICKS(10)) != pdTRUE)
+        {
+            STAGE("TGFX2 FAIL");
             LOG("[WARN] xMusicDoneQueue full -- TRACK dropped\n");
+        }
         else
+        {
+            STAGE("TGFX2 PASS");
             LOG("[4] Track sent to screen: \"%s\" by \"%s\""
                 "  [%lu ms from track received]\n",
                 raw.track.title, raw.track.artist,
                 DWT_MS(DWT_SNAP() - g_t_track));
+        }
         break;
 
     /* ── MSG_THUMB ──────────────────────────────────────────────── */
     case MSG_THUMB:
     {
         uint32_t w = 0u, h = 0u;
+        STAGE("TGFX3 PASS");
         uint32_t t_dec_start = DWT_SNAP();
         HAL_StatusTypeDef st =
             JPEG_Decode(raw.thumb.data, raw.thumb.size, &w, &h);
@@ -85,21 +94,29 @@ void Music_Poll(void)
 
         if (st == HAL_OK)
         {
+            STAGE("TGFX4 PASS");
             done.type         = MUSIC_DONE_THUMB;
             done.thumb.rgb888 = JPEG_GetRGB888Buffer();
             done.thumb.width  = w;
             done.thumb.height = h;
 
             if (xQueueSend(xMusicDoneQueue, &done, pdMS_TO_TICKS(10)) != pdTRUE)
+            {
+                STAGE("TGFX5 FAIL");
                 LOG("[WARN] xMusicDoneQueue full -- THUMB dropped\n");
+            }
             else
+            {
+                STAGE("TGFX5 PASS");
                 LOG("[4] Thumbnail sent to screen: %lu x %lu px"
                     "  [decode: %lu ms  |  total: %lu ms]\n",
                     w, h, DWT_MS(dec_cycles),
                     DWT_MS(DWT_SNAP() - g_t_track));
+            }
         }
         else
         {
+            STAGE("TGFX4 FAIL");
             LOG("[ERROR] JPEG decode FAILED  [%lu ms]\n", DWT_MS(dec_cycles));
         }
         break;
@@ -107,6 +124,7 @@ void Music_Poll(void)
 
     /* ── MSG_ERROR ──────────────────────────────────────────────── */
     case MSG_ERROR:
+        STAGE("TGFX1 FAIL");
         LOG("[ERROR] Display error: %s\n", raw.error.reason);
         done.type = MUSIC_DONE_ERROR;
         strncpy(done.error.reason, raw.error.reason,

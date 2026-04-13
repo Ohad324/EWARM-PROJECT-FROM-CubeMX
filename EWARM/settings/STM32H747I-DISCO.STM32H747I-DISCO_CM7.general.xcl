@@ -16,8 +16,6 @@
 
  "--device_macro=C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm/config/debugger/ST/STM32H7xx_TRACE.dmac"
 
- "--flash_loader=C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm/config/flashloader/ST/FlashSTM32H7x5xI.board"
-
  
 
 

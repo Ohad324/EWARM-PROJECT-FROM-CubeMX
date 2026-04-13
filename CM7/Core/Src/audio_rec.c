@@ -316,19 +316,8 @@ void HAL_DFSDM_FilterRegConvCpltCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
     portYIELD_FROM_ISR(higher);
 }
 
-/* ── HAL_GPIO_EXTI_Callback ───────────────────────────────────────────────────
- * Called by HAL from EXTI15_10_IRQHandler when PC13 falls (button pressed).
- * Gives s_buttonSem to wake the AudioRecTask.
- * Only responds to GPIO_PIN_13 — ignores any other EXTI lines on 10-15.
- * ─────────────────────────────────────────────────────────────────────────── */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    if (GPIO_Pin != GPIO_PIN_13) return; /* only handle the wakeup button */
-
-    BaseType_t higher = pdFALSE;
-    xSemaphoreGiveFromISR(s_buttonSem, &higher); /* wake the AudioRecTask */
-    portYIELD_FROM_ISR(higher);
-}
+/* HAL_GPIO_EXTI_Callback removed — AudioRecTask is disabled.
+ * The callback now lives exclusively in voice_recorder.c (VoiceRecTask). */
 
 /* ── AudioRec_Init ────────────────────────────────────────────────────────────
  * Public init function — call once from main() after MX_GPIO_Init().

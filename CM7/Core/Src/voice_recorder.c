@@ -65,7 +65,8 @@
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
 #include "audio_sd.h"       /* AudioSD_GetErrorCode(), AudioSD_Remount() */
-/* log_mutex.h removed — no RTT logging in hot path */
+#include "log_mutex.h"   /* RLOG — button diagnostic only, not in audio hot path */
+#include "itm_log.h"     /* STAGE() — ITM PORT[0] + RTT WriteString, zero printf */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
 #include <limits.h>      /* ULONG_MAX */
@@ -256,6 +257,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     s_lastPress = now;
 
     HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);  /* visual confirmation */
+    RLOG("[BTN] PC13 pressed — g_State=%d handle=%p\n",
+         (int)g_State, (void*)voiceRecTaskHandle);
 
     /* Only notify task if it has been created */
     if (g_State == REC_IDLE
@@ -339,15 +342,11 @@ void VoiceRecTask(void *arg)
          * Startup order: SAI4 clock running → DFSDM DMA started. */
         __HAL_SAI_ENABLE(&hsai_BlockA4);
         g_dbg_live_sai4_cr1 = hsai_BlockA4.Instance->CR1;
+        STAGE("DFSDM1 PASS");
 
-        /* HAL_DFSDM_FilterInit sets RDMAEN before DFEN — on STM32H7 the subsequent
-         * HAL_DFSDM_FilterConfigRegChannel RMW on FLTCR1 (with DFEN=1) can silently
-         * clear RDMAEN. HAL_DFSDM_FilterRegularStart_DMA checks RDMAEN and returns
-         * HAL_ERROR if it is 0, so the DMA never starts.
-         * Fix: force RDMAEN=1 here, after all init calls are complete and just before
-         * starting the DMA. This is safe — RDMAEN is writable when DFEN=1. */
         hdfsdm1_filter0.Instance->FLTCR1 |= DFSDM_FLTCR1_RDMAEN;
         g_dbg_live_fltcr1 = hdfsdm1_filter0.Instance->FLTCR1;
+        STAGE("DFSDM2 PASS");
 
         /* Start DFSDM DMA (DMA1_Stream1 → g_DfsdmBuf in D2 SRAM) */
         HAL_StatusTypeDef hal =
@@ -356,12 +355,15 @@ void VoiceRecTask(void *arg)
                                              DFSDM_BUF_TOTAL);
         g_dbg_live_hal_ok = (hal == HAL_OK) ? 0x00000000u : 0xFFFFFFFFu;
         g_dbg_live_fltisr = hdfsdm1_filter0.Instance->FLTISR;
+
         if (hal != HAL_OK)
         {
+            STAGE("DFSDM3 FAIL");
             HAL_SAI_DMAStop(&hsai_BlockA4);
             g_State = REC_IDLE; __DSB();
             continue;
         }
+        STAGE("DFSDM3 PASS");
 
         /* ── Active drain loop ──────────────────────────────────────────── */
         /* NEVER use vTaskDelay here — DMA is running and must be drained.  */
@@ -376,8 +378,8 @@ void VoiceRecTask(void *arg)
          *   Task reads DWT at pop   = "pin LOW"
          *   delta = latency = time the half sat waiting for the CPU
          *   If delta > 480,000 cycles (1 ms @ 480 MHz) → desync */
+        STAGE("DFSDM4 PASS");
         TickType_t ledToggle = xTaskGetTickCount() + pdMS_TO_TICKS(500u);
-
 
         while (g_SampleCount < AUDIO_BUFFER_SAMPLES)
         {
@@ -406,6 +408,7 @@ void VoiceRecTask(void *arg)
         /* Stop order: DFSDM first (consumer), then SAI4 (clock source) */
         HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);
         HAL_SAI_DMAStop(&hsai_BlockA4);
+        STAGE("DFSDM5 PASS");
 
         /* Drain any stale queue entries from callbacks that fired after stop */
         {
@@ -420,13 +423,15 @@ void VoiceRecTask(void *arg)
             continue;
         }
 
+        RLOG("[REC] DFSDM done — samples=%lu  fltisr=0x%08lX\n",
+             g_SampleCount, hdfsdm1_filter0.Instance->FLTISR);
+
         LED_ON();   /* stay ON — recording done, saving to SD */
 
-        /* Signal SDWriteTask — disabled while debugging DFSDM pipeline */
-        /* uint32_t msg = 1u; */
-        /* xQueueSend(q, &msg, 0); */
-        g_State = REC_IDLE; __DSB();  /* must reset — normally SDWriteTask does this */
-        LED_OFF();
+        /* Signal SDWriteTask to write WAV file */
+        uint32_t msg = 1u;
+        xQueueSend(q, &msg, 0);
+        /* g_State reset + LED_OFF() is now owned by SDWriteTask */
     }
 }
 
@@ -489,6 +494,7 @@ void SDWriteTask(void *arg)
         FRESULT fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
         if (fr != FR_OK)
         {
+            STAGE("SD1 FAIL");
             if (fr == FR_NO_FILESYSTEM)
             {
                 if (!AudioSD_Format())
@@ -515,6 +521,7 @@ void SDWriteTask(void *arg)
         }
 
         g_FileIndex++;   /* only increment after successful f_open */
+        STAGE("SD1 PASS");
 
         /* Pre-allocate contiguous clusters before writing.
          * Without this, every f_write triggers a FAT cluster search (tens of ms on exFAT)
@@ -530,9 +537,11 @@ void SDWriteTask(void *arg)
             FRESULT fr_exp = f_expand(&file, prealloc, 1);  /* opt=1: allocate contiguous */
             if (fr_exp != FR_OK)
             {
+                STAGE("SD2 FAIL");
                 /* Fallback: f_lseek forces cluster chain allocation non-contiguously */
                 f_lseek(&file, prealloc);
             }
+            else { STAGE("SD2 PASS"); }
             f_lseek(&file, 0);  /* return to start for WAV header write */
         }
 
@@ -541,10 +550,12 @@ void SDWriteTask(void *arg)
         fr = f_write(&file, &hdr, sizeof(hdr), &bw);
         if (fr != FR_OK || bw != sizeof(hdr))
         {
+            STAGE("SD3 FAIL");
             logMsg.result = REC_ERR_SD_WRITE_HDR;
             f_close(&file);
             goto done;
         }
+        STAGE("SD3 PASS");
 
         /* Write PCM via AXI SRAM bounce buffer.
          * g_AudioBuf is in D2 SRAM2 (0x30020000). SDMMC IDMA accesses memory via
@@ -564,6 +575,7 @@ void SDWriteTask(void *arg)
             uint32_t remaining = logMsg.sizeBytes;
             uint32_t offset    = 0u;
             FRESULT  frPcm     = FR_OK;
+            STAGE("SD4 PASS");
             while (remaining > 0u && frPcm == FR_OK)
             {
                 uint32_t chunk = (remaining < sizeof(s_pcmBounce)) ? remaining
@@ -593,17 +605,21 @@ void SDWriteTask(void *arg)
             }
             if (frPcm != FR_OK || offset != logMsg.sizeBytes)
             {
+                STAGE("SD4 FAIL");
                 logMsg.result = REC_ERR_SD_WRITE_PCM;
                 f_close(&file);
                 goto done;
             }
         }
 
-        if (f_close(&file) != FR_OK)
+        FRESULT fr_close = f_close(&file);
+        if (fr_close != FR_OK)
         {
+            STAGE("SD5 FAIL");
             logMsg.result = REC_ERR_SD_CLOSE;
             goto done;
         }
+        STAGE("SD5 PASS");
 
         logMsg.success = 1u;
 
@@ -623,6 +639,15 @@ void SDWriteTask(void *arg)
          * WAV file stays on SD card, accessible via USB MSC or card reader. */
 
 done:
+        if (logMsg.result == REC_OK)
+            RLOG("[SD] WRITE OK — %s  %lu bytes  free=%lu KB\n",
+                 logMsg.filename,
+                 (unsigned long)logMsg.sizeBytes,
+                 (unsigned long)g_sdFreeKB);
+        else
+            RLOG("[SD] WRITE FAIL — result=%d  file=%s  fr=%d\n",
+                 (int)logMsg.result, logMsg.filename, (int)fr);
+
         /* Remount on any error path — SDMMC stays dirty after a write failure
          * and all subsequent FatFS calls return FR_NOT_READY until the peripheral
          * is reset. */
