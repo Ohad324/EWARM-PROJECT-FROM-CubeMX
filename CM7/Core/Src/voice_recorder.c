@@ -65,7 +65,7 @@
 #include "semphr.h"
 #include "queue.h"
 #include "ff.h"             /* FatFS f_open/f_write/f_close */
-#include "audio_sd.h"       /* AudioSD_GetErrorCode() — HealthMonTask */
+#include "audio_sd.h"       /* AudioSD_GetErrorCode(), AudioSD_Remount() */
 #include "log_mutex.h"      /* RTT_TS() — timestamped RTT log lines  */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
@@ -708,13 +708,11 @@ void SDWriteTask(void *arg)
 
         logMsg.success = 1u;
 
-        /* ── Free-space snapshot (the ONLY place f_getfree is called) ───────────
-         * Principle 1 — Zero Mutex Contention: during the 3-second recording
-         *   window SDWriteTask is blocked waiting; it never touches the SD card.
-         * Principle 2 — Zero Resource Theft: HealthMonTask only reads a 32-bit
-         *   integer from RAM (nanoseconds, no peripheral access).
-         * Principle 3 — Predictability: the heavy f_getfree call happens here,
-         *   after the WAV is safely closed and DMA has stopped — never mid-stream. */
+        /* ── Free-space snapshot ─────────────────────────────────────────────
+         * Called here (after f_close, DMA stopped) — never during recording.
+         * Principle 1: Zero Mutex Contention  — SD already mounted, no contest
+         * Principle 2: Zero Resource Theft     — no background task polls SD
+         * Principle 3: Predictability          — only fires post-write, not mid-stream */
         {
             DWORD freeClusters = 0u;
             FATFS *pfs         = NULL;
@@ -728,11 +726,11 @@ void SDWriteTask(void *arg)
             logMsg.filename, (unsigned long)logMsg.sizeBytes);
         RLOG("[REC] ========================================");
 
-        /* ── Health report ────────────────────────────────────────────────────
+        /* ── Health report (owned by SDWriteTask — the only task with real knowledge) ─
          * At 16kHz×2B, each 4KB bounce chunk covers 128ms.
-         * If sd_write_max_ms > 100 → we are within 28ms of queue overflow.
-         * dfsdm_overruns > 0 → hardware discarded samples → audible gaps.
-         * buffer_misses  > 0 → f_write returned error or short write → gap. */
+         * sd_write_max_ms > 100 → within 28ms of queue overflow → WARNING
+         * dfsdm_overruns  > 0  → hardware discarded samples     → audible gaps
+         * buffer_misses   > 0  → f_write error or short write   → audible gap   */
         RLOG("--- AUDIO HEALTH REPORT ---");
         RLOG("[HEALTH] dfsdm_overruns  : %lu  (MUST be 0 — hardware gap)",
             (unsigned long)g_AudioHealth.dfsdm_overruns);
@@ -742,6 +740,10 @@ void SDWriteTask(void *arg)
             (unsigned long)g_AudioHealth.buffer_misses);
         RLOG("[HEALTH] bytes_written   : %lu",
             (unsigned long)g_AudioHealth.total_bytes_written);
+        RLOG("[HEALTH] sd_free         : %lu KB",
+            (unsigned long)g_sdFreeKB);
+        RLOG("[HEALTH] sd_err          : 0x%08lX",
+            (unsigned long)AudioSD_GetErrorCode());
         if (g_AudioHealth.dfsdm_overruns > 0u || g_AudioHealth.buffer_misses > 0u)
             RLOG("[HEALTH] STATUS: FAIL — recording has gaps!");
         else if (g_AudioHealth.sd_write_max_ms > 100u)
@@ -755,8 +757,8 @@ void SDWriteTask(void *arg)
 
 done:
         /* Remount on any error path — SDMMC stays dirty after a write failure
-         * and all subsequent FatFS calls (including HealthMonTask f_getfree)
-         * return FR_NOT_READY until the peripheral is reset.
+         * and all subsequent FatFS calls return FR_NOT_READY until the peripheral
+         * is reset.
          * B-010: second occurrence 2026-04-04 → fix applied. */
         RLOG("[REC] DONE result=%d file=%s\r\n",
                (int)logMsg.result, logMsg.filename);
@@ -821,45 +823,12 @@ void RTTLogTask(void *arg)
     }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
- *  HealthMonTask — SD card health monitor, 10-second cadence
- *
- *  Prints to RTT channel 0 every 10 seconds:
- *    [HEALTH] card=PRESENT  free=1234 KB  used=567 KB  err=0x00000000
- *    [HEALTH] card=ABSENT
- *
- *  Checks:
- *    - SD_DETECT pin PI8 (active-low: RESET = card present)
- *    - f_getfree("0:") for free/used cluster count (only when card present)
- *    - s_hsd1.ErrorCode from audio_sd.c (exposed via AudioSD_GetErrorCode())
- *
- *  Priority 1 (lowest) — must not interfere with recording pipeline.
- * ═══════════════════════════════════════════════════════════════════════════ */
-void HealthMonTask(void *arg)
-{
-    (void)arg;
-
-    for (;;)
-    {
-        vTaskDelay(pdMS_TO_TICKS(10000u));
-
-        /* SD_DETECT: PI8, active-low — RESET means card is inserted */
-        GPIO_PinState det = HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8);
-        if (det != GPIO_PIN_RESET)
-        {
-            RLOG("[HEALTH] card=ABSENT");
-            continue;
-        }
-
-        /* Principle 2 — Zero Resource Theft: read pre-computed value only.
-         * SDWriteTask writes g_sdFreeKB after every successful f_close().
-         * No FatFS call, no mutex, no SD hardware — just a RAM read.
-         * Value is 0 until the first recording completes. */
-        RLOG("[HEALTH] card=PRESENT  free=%lu KB  sdErr=0x%08lX",
-             (unsigned long)g_sdFreeKB,
-             (unsigned long)AudioSD_GetErrorCode());
-    }
-}
+/* HealthMonTask removed — health reporting moved into SDWriteTask.
+ * SDWriteTask logs [HEALTH] lines after every successful f_close():
+ *   dfsdm_overruns, sd_write_max_ms, buffer_misses, bytes_written,
+ *   sd_free (KB), sd_err, and STATUS (OK / WARNING / FAIL).
+ * No periodic background task needed — the data is naturally available
+ * at the only moment that matters: right after each recording completes. */
 
 /* ═══════════════════════════════════════════════════════════════════════════
  *  Private helpers

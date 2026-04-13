@@ -366,7 +366,7 @@ Error_Handler();
   xTaskCreate(VoiceRecTask,  "VoiceRecTask",  2048u, xVoiceQueue, 26u, &voiceRecTaskHandle);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
   xTaskCreate(RTTLogTask,    "RTTLogTask",     256u, NULL,        1u, NULL);
-  xTaskCreate(HealthMonTask, "HealthMonTask", 1024u, NULL,        1u, NULL);
+  /* HealthMonTask removed — health logged by SDWriteTask after each f_close() */
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);

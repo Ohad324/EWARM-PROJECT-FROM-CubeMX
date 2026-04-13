@@ -93,8 +93,8 @@ uint32_t AudioSD_GetErrorCode(void);
 
 /*
  * AudioSD_IsBusy — returns true while AudioSD_SendFileToUART() is active.
- * HealthMonTask calls this to skip f_getfree() during streaming — concurrent
- * FatFS access corrupts win[] and causes FR_DISK_ERR mid-read (B-008).
+ * Callers should avoid FatFS operations while busy — concurrent access
+ * corrupts win[] and causes FR_DISK_ERR mid-read (B-008).
  */
 bool AudioSD_IsBusy(void);
 

@@ -100,7 +100,7 @@ static uint32_t  s_dataBytesWritten = 0;   /* PCM bytes written so far          
 static char      s_currentFilename[16];    /* e.g. "REC_001.wav\0"               */
 static bool      s_sdReady          = false;
 static bool      s_fileOpen         = false;
-static volatile bool s_sdBusy       = false;  /* true while writing or streaming — HealthMonTask skips f_getfree */
+static volatile bool s_sdBusy       = false;  /* true while writing or streaming — callers must avoid concurrent FatFS access */
 
 /* ── Double-buffer write pool (Ping-Pong) ────────────────────────────────────
  * Two 4 KB sector-aligned buffers.  AudioSD_WriteFrame() fills s_wbuf[s_wFill]
