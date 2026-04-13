@@ -96,8 +96,8 @@ UART_HandleTypeDef huart8;
 osThreadId_t TouchGFXTaskHandle;
 const osThreadAttr_t TouchGFXTask_attributes = {
   .name = "TouchGFXTask",
-  .stack_size = 3048 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+  .stack_size = 5120 * 4,   /* was 3048 — enlarged for JPEG decode stack (Music_Poll) */
+  .priority = (osPriority_t) osPriorityBelowNormal,  /* was Normal(24) → BelowNormal(16) < SDWriteTask(20) */
 };
 /* Definitions for videoTask */
 osThreadId_t videoTaskHandle;
@@ -347,8 +347,10 @@ Error_Handler();
   /* creation of TouchGFXTask */
   TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
 
-  /* creation of videoTask */
-  videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
+  /* videoTask removed — MJPEG decoder not active in this project.
+   * videoController object stays in TouchGFXGeneratedHAL.cpp so video
+   * widgets compile; they just do not decode frames. Re-enable if needed. */
+  /* videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes); */
 
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);

@@ -397,27 +397,27 @@
 ; ┌───────────────────────┬──────────┬────────────────────────┬────────────────────────────────┐
 ; │ Task name             │ Priority │ CMSIS alias            │ Notes / Source                 │
 ; ├───────────────────────┼──────────┼────────────────────────┼────────────────────────────────┤
-; │ VoiceRecTask          │   32     │ osPriorityAboveNormal  │ main.c:366 — highest: audio must win│
-; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
-; │ UARTReceiveTask       │   26     │ (raw, above Normal)    │ main.c:187 — NORA/BLE comms         │
-; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
-; │ TouchGFXTask          │   24     │ osPriorityNormal       │ main.c:100 — UI rendering           │
-; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
-; │ SDWriteTask           │   20     │ (raw, above BelowNorm) │ main.c:367 — flush audio fast       │
-; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
-; │ JpegDisplayTask       │   16     │ osPriorityBelowNormal  │ music_display_task.c:26             │
-; │ CommandHandler        │   16     │ osPriorityBelowNormal  │ main.c:364 — CMD dispatch           │
-; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
-; │ videoTask             │    8     │ osPriorityLow          │ main.c:107 — permanently blocked    │
-; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────┤
-; │ RTTLogTask            │    1     │ (lowest app)           │ main.c:368 — CLAUDE.md rule 7       │
-; │ RtosTrace_DrainTask   │    1     │ (lowest app)           │ main.c:372 — trace drain            │
-; └───────────────────────┴──────────┴────────────────────────┴─────────────────────────────────────┘
+; │ VoiceRecTask          │   32     │ osPriorityAboveNormal  │ main.c:366 — highest: audio must win    │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────────┤
+; │ UARTReceiveTask       │   26     │ (raw, above Normal)    │ main.c:187 — NORA/BLE comms             │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────────┤
+; │ SDWriteTask           │   20     │ (raw, above BelowNorm) │ main.c:367 — SD flush after recording   │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────────┤
+; │ TouchGFXTask (LCD)    │   16     │ osPriorityBelowNormal  │ main.c:98  — COMBINED: render+JPEG+poll │
+; │ CommandHandler        │   16     │ osPriorityBelowNormal  │ main.c:364 — CMD dispatch               │
+; ├───────────────────────┼──────────┼────────────────────────┼─────────────────────────────────────────┤
+; │ RTTLogTask            │    1     │ (lowest app)           │ main.c:368 — CLAUDE.md rule 7           │
+; │ RtosTrace_DrainTask   │    1     │ (lowest app)           │ main.c:372 — trace drain                │
+; └───────────────────────┴──────────┴────────────────────────┴─────────────────────────────────────────┘
+;
+; TASKS REMOVED:
+;   JpegDisplayTask — merged into TouchGFXTask via Music_Poll() in Model::tick()
+;   videoTask       — MJPEG decoder not active; videoController object remains compiled
 ;
 ; KEY RELATIONSHIPS:
-;   VoiceRecTask(32) > UARTReceiveTask(26): audio DMA drain cannot be starved by UART ✓
-;   UARTReceiveTask(26) > TouchGFX(24): NORA commands processed before next UI frame ✓
-;   SDWriteTask(20) > JpegDisplay(16): SD flush completes before next JPEG decode ✓
+;   VoiceRecTask(32) > SDWriteTask(20) > TouchGFXTask(16): audio + SD always preempt display ✓
+;   UARTReceiveTask(26) > TouchGFXTask(16): NORA commands processed before next UI frame ✓
+;   JPEG decode runs inside TouchGFXTask — display freezes ~200–500 ms on album art load (accepted) ✓
 ;   RTTLogTask must stay at 1 per CLAUDE.md rule 7 — do not raise it
 
 
