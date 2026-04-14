@@ -379,7 +379,7 @@ Error_Handler();
   /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
   xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
-  xTaskCreate(RTTLogTask,    "RTTLogTask",     256u, NULL,        1u, NULL);
+  xTaskCreate(RTTLogTask,    "RTTLogTask",    1024u, NULL,        1u, NULL);
   /* HealthMonTask removed — health logged by SDWriteTask after each f_close() */
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
