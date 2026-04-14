@@ -280,8 +280,8 @@ hsai->Init.ClockStrobing       = SAI_CLOCKSTROBING_FALLINGEDGE;
 3. Call `PDM_Filter_Init()` + `PDM_Filter_setConfig()` before **every** recording.
 4. One `PDM_Filter()` call per DMA half — feed `(uint8_t*)pdmSrc`.
 5. **Never manually extract or block bits** — pass the raw DMA buffer, cast as `uint8_t*`.
-6. **LR=HIGH (SB43 open, R213 pull-up) → mic outputs on RISING edge → DFSDM Channel 0 (SITP=00)**
-   This was confirmed from the board schematic. Do NOT use Channel 1 or falling edge for this board.
+6. **LR=HIGH (SB43 open, R213 pull-up) → mic outputs on FALLING edge → DFSDM Channel 0 (SITP=01)**
+   This was confirmed from the board schematic. Do NOT use Channel 1 or rising edge for this board.
 
 ### 6. Memory Placement — D3 SRAM for BDMA
 
@@ -300,24 +300,27 @@ PCM output buffer (`g_AudioBuf`) lives in AXI SRAM (D1, default `.bss`) — writ
 
 ### The active DFSDM channel is Channel 0 — NEVER Channel 1
 
+### *** THIS BOARD IS WIRED AS LR=HIGH (RIGHT CHANNEL) ***
+
 This was confirmed by reading the board schematic (mb1248-h747i-d04-schematic.pdf, U21 MP34DT05-A RIGHT mic):
 
 **Schematic facts:**
 - **SB43 (LEFT SELECTION) = OPEN** — LR pin is NOT pulled to GND
 - **R213 (10K)** pulls LR up to the VDD/+3V3 rail
-- Therefore **LR = HIGH → RIGHT channel → PDM data on RISING edge of CLK**
+- Therefore **LR = HIGH → RIGHT channel → PDM data on FALLING edge of CLK**
+- Required: **SITP=01 (falling edge), ch0_cfg1=0x8018008D** — NOT 0x8018008C
 
 **DFSDM silicon routing (RM0399):**
-- Rising edge (D0) → **DFSDM1 Channel 0** ← correct channel
-- Falling edge (D1) → DFSDM1 Channel 1 ← empty slot, no mic data
+- Falling edge (D0) → **DFSDM1 Channel 0** ← correct channel (SITP=01)
+- Rising edge (D1) → DFSDM1 Channel 1 ← empty slot, no mic data
 
 **Required register configuration:**
 | Register | Field | Value | Meaning |
 |----------|-------|-------|---------|
-| `DFSDM1_Channel0->CHCFGR1` | SITP[1:0] | `00` | Rising edge — matches LR=HIGH |
+| `DFSDM1_Channel0->CHCFGR1` | SITP[1:0] | `01` | Falling edge — matches LR=HIGH |
 | `DFSDM1_Channel0->CHCFGR1` | SPICKSEL[3:2] | `11` | SAI4 internal bridge as clock/data source |
 | `DFSDM1_Channel0->CHCFGR1` | CHEN | `1` | Channel enabled |
-| `DFSDM1_Channel0->CHCFGR1` | Expected full value | `0x0000008C` | CHEN + SPICKSEL=11 + SITP=00 |
+| `DFSDM1_Channel0->CHCFGR1` | Expected full value | `0x0000008D` | CHEN + SPICKSEL=11 + SITP=01 |
 | `DFSDM1_Channel0->CHCFGR2` | DTRBS[4:0] | `6` | Right-shift 6: Sinc3 OSR=125 max ±30,517 fits int16_t |
 | `DFSDM1_Filter0->FLTCR1` | RCSEL | CH0 | Regular filter reads Channel 0 |
 
@@ -327,16 +330,16 @@ This was confirmed by reading the board schematic (mb1248-h747i-d04-schematic.pd
 - DTRBS=6 → max ±30,517 → fits int16_t cleanly ✓
 - StoreDmaChunk shift: `(int16_t)(src32[i] >> 8)` — correct only when DTRBS=6
 
-**Why Channel 1 fails:**
-- CH1 expects falling edge (SITP=01)
-- LR=HIGH mic never outputs on falling edge → PC1 appears stuck LOW
-- DFSDM CH1 CKABF flag gets set (clock absence)
-- Output = Sinc3 all-zeros saturation → DC garbage
+**Why SITP=00 (rising edge) fails with LR=HIGH:**
+- LR=HIGH mic drives PDM data on falling clock edge only
+- SITP=00 (rising) captures the idle half-cycle → all-zeros input to DFSDM
+- Sinc3 filter on all-zeros → negative full-scale output = -30518 (DC garbage)
+- Fix: SITP=01 (falling) → captures actual mic data
 
 **Global clock (Channel 0 is also the clock master):**
 - `DFSDM1_Channel0->CHCFGR1` bit 31 = DFSDMEN = 1 (global enable)
 - bits 22:16 = CKOUTDIV = 24 → CKOUT = APB2(100MHz) / (2×25) = 2.0 MHz ✓
-- Expected Ch0 CHCFGR1 full value with global bits: `0x8018008C`
+- Expected Ch0 CHCFGR1 full value with global bits: `0x8018008D`
 
 **SAI4 mic clock:**
 - PE2 (SAI4_CK1) → 2.048 MHz to mic (PLL2P/24 = 49.14MHz/24)

@@ -52,7 +52,7 @@ extern "C" {
  * to monitor the full audio pipeline health without any RTT output needed.
  */
 typedef struct {
-    /* [0] CH0CFGR1   Expect 0x8018008C (Master En, Div 24, CHEN, SAI4 Bridge, Rising) */
+    /* [0] CH0CFGR1   Expect 0x8018008D (Master En, Div 24, CHEN, SAI4 Bridge, Falling) */
     uint32_t ch0_cfg1;
     /* [1] CH0CFGR2   Expect 0x00000030 (DTRBS = 6) */
     uint32_t ch0_cfg2;
@@ -67,10 +67,14 @@ typedef struct {
     /* [6] DMA_NDTR   Should be moving during recording. If stuck, DMA is dead. */
     uint32_t dma_ndtr;
     /* [7] Last Data  FLTRDATAR>>8 with arithmetic shift (int32_t cast preserves sign).
-     *               Oscillates ±30517 = mic working. Stuck at 4501 = DTRBS=5 bug. */
+     *               Oscillates ±30517 = mic working. Stuck at -30518 = SITP wrong edge. */
     int32_t  last_val;
     /* [8] Heartbeat  Increments every 200 ms. Proves monitor is running. */
     uint32_t uptime_ticks;
+    /* [9]  LR=Low  reference: SITP=00 (rising  edge) → expect 0x8018008C */
+    uint32_t ref_lr_low;
+    /* [10] LR=High reference: SITP=01 (falling edge) → expect 0x8018008D  ← THIS BOARD */
+    uint32_t ref_lr_high;
 } DFSDM_Debug_Hub_t;
 
 /* Placed at 0x24000050 (AXI SRAM) — __no_init, startup does not zero it */

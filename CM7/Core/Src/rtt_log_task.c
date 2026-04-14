@@ -104,10 +104,10 @@ static void DFSDM_BootCheck(void)
     n = snprintf(b, sizeof(b), "[BOOT]  2. DFSDM channel       : CH%u  (RCSEL bits[27:24])   [%s] expect 0\r\n",
                  rcsel, PF(rcsel == 0u)); RTT(b, n);
 
-    /* 3. Edge selection — SITP=00 = rising edge */
-    n = snprintf(b, sizeof(b), "[BOOT]  3. Edge (SITP)         : %s  (bits[1:0]=0x%02X)       [%s] expect 00=rising\r\n",
-                 (sitp == 0u) ? "RISING (00)" : "FALLING(01)",
-                 sitp, PF(sitp == 0u)); RTT(b, n);
+    /* 3. Edge selection — SITP=01 = falling edge (LR=HIGH mic drives data on falling CLK) */
+    n = snprintf(b, sizeof(b), "[BOOT]  3. Edge (SITP)         : %s  (bits[1:0]=0x%02X)       [%s] expect 01=falling\r\n",
+                 (sitp == 1u) ? "FALLING(01)" : "RISING (00)",
+                 sitp, PF(sitp == 1u)); RTT(b, n);
 
     /* 4. SPICKSEL — must be 11 (SAI4 bridge) */
     n = snprintf(b, sizeof(b), "[BOOT]  4. SPICKSEL            : %u%u  (bits[3:2]=0x%02X)       [%s] expect 11=SAI4\r\n",
@@ -152,7 +152,7 @@ static void DFSDM_BootCheck(void)
                  (unsigned long)sai4pdmcr, PF(sai4pdmcr == 0x00000101u)); RTT(b, n);
 
     /* Summary */
-    uint8_t allOk = (rcsel == 0u) && (sitp == 0u) && (spicksel == 3u) &&
+    uint8_t allOk = (rcsel == 0u) && (sitp == 1u) && (spicksel == 3u) &&
                     (chen == 1u)  && (dfsdmen == 1u) && (ckoutdiv == 24u) &&
                     (ford == 3u)  && (osr == 125u)   && (dtrbs == 6u) &&
                     (dfen == 1u)  && (sai4pdmcr == 0x00000101u);
@@ -303,7 +303,7 @@ void RTTLogTask(void *arg)
                     pn = snprintf(pbuf, sizeof(pbuf),
                         "[T+%7lu ms] [DFSDM] Ch0CFG1=%08lX[%s] Ch0CFG2=%08lX[%s] FLTFCR=%08lX[%s] SAI4PDMCR=%08lX[%s]\r\n",
                         (unsigned long)HAL_GetTick(),
-                        (unsigned long)ch0cfg1,   (ch0cfg1   == 0x8018008Cu)       ? "OK" : "FAIL",
+                        (unsigned long)ch0cfg1,   (ch0cfg1   == 0x8018008Du)       ? "OK" : "FAIL",
                         (unsigned long)ch0cfg2,   ((ch0cfg2  & 0xF8u) == 0x30u)    ? "OK" : "FAIL",
                         (unsigned long)fltfcr,    (fltfcr    == 0x607C0000u)       ? "OK" : "FAIL",
                         (unsigned long)sai4pdmcr, (sai4pdmcr == 0x00000101u)       ? "OK" : "FAIL");

@@ -526,8 +526,8 @@ static void MX_DFSDM1_Init(void)
    * SPI_CLOCK_INTERNAL = SAI4 provides the PDM clock internally (~2.048 MHz).
    * CKOUT pin (PD3) is not used — OutputClock disabled.
    * Clock math: 2.048 MHz / OSR=125 = 16,384 Hz ≈ 16 kHz PCM ✓
-   * LR=GND on MP34DT05-A → data on falling edge → SPI_FALLING.
-   * RightBitShift=5: Sinc3 peak = 125³ = ~21-bit → shift 5 → 16-bit output. */
+   * LR=HIGH on MP34DT05-A (SB43 open, R213 pull-up) → data on falling edge → SPI_FALLING (SITP=01).
+   * RightBitShift=6: Sinc3 peak = 125³ = ~21-bit → shift 6 → max ±30517 fits int16_t. */
 
   /* ── DFSDM CKOUT + global enable — ORDER IS CRITICAL (RM0399 §30.4.2) ──────
    * RM0399: "CKOUTDIV bits are writable only when DFSDMEN=0."
@@ -553,13 +553,13 @@ static void MX_DFSDM1_Init(void)
   DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 
-  /* ── Step 1: Channel 0 — SAI4 MicPair1 D0 (LR=HIGH mic on PC1, rising edge) ──
+  /* ── Step 1: Channel 0 — SAI4 MicPair1 D0 (LR=HIGH mic on PC1, falling edge) ──
    * Hardware-confirmed from schematic mb1248-h747i-d04:
    *   SB43 (LEFT SELECTION) = OPEN → LR pulled HIGH via R213(10K) to VDD
-   *   LR=HIGH → RIGHT channel → PDM data on RISING edge of CLK
+   *   LR=HIGH → RIGHT channel → PDM data on FALLING edge of CLK
    * Silicon routing (RM0399): SAI4 MicPair1 bridges to:
-   *   DFSDM1_Channel0 (rising  edge = D0) ← mic on PC1, LR=HIGH  ← THIS PROJECT
-   *   DFSDM1_Channel1 (falling edge = D1) ← empty slot (LR=HIGH mic never outputs here)
+   *   DFSDM1_Channel0 (falling edge = D0) ← mic on PC1, LR=HIGH  ← THIS PROJECT
+   *   DFSDM1_Channel1 (rising  edge = D1) ← empty slot (LR=HIGH mic never outputs here)
    * SPICKSEL=11 routes SAI4 Block A internal bridge as clock+data source.
    * SPICKSEL is write-protected when CHEN=1 → clear CHEN, write, restore.
    * RightBitShift=6: Sinc3 OSR=125 max = 125³ = 1,953,125 → >>6 = 30,517 fits int16_t.
@@ -571,7 +571,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel0.Init.Input.Multiplexer          = DFSDM_CHANNEL_EXTERNAL_INPUTS;
   hdfsdm1_channel0.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
   hdfsdm1_channel0.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm1_channel0.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_RISING;   /* rising edge = LR=HIGH mic */
+  hdfsdm1_channel0.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_FALLING;  /* falling edge = LR=HIGH mic (SB43 open, LR pulled HIGH via R213) */
   hdfsdm1_channel0.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
   hdfsdm1_channel0.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel0.Init.Awd.Oversampling           = 10u;
@@ -588,8 +588,10 @@ static void MX_DFSDM1_Init(void)
   DFSDM1_Channel0->CHCFGR1 |=  DFSDM_CHCFGR1_CHEN;
 
   /* ── Snapshot into g_dbg (0x24000050) — visible in IAR Live Watch ─── */
-  g_dbg.ch0_cfg1 = DFSDM1_Channel0->CHCFGR1;  /* expect 0x8018008C */
-  g_dbg.ch0_cfg2 = DFSDM1_Channel0->CHCFGR2;  /* expect 0x00000030 */
+  g_dbg.ch0_cfg1    = DFSDM1_Channel0->CHCFGR1;  /* expect 0x8018008D */
+  g_dbg.ch0_cfg2    = DFSDM1_Channel0->CHCFGR2;  /* expect 0x00000030 */
+  g_dbg.ref_lr_low  = 0x8018008Cu;  /* LR=Low  (LEFT)  SITP=00 rising  edge */
+  g_dbg.ref_lr_high = 0x8018008Du;  /* LR=High (RIGHT) SITP=01 falling edge ← THIS BOARD */
 
   /* ── Step 2: Filter 0 ── */
   hdfsdm1_filter0.Instance                          = DFSDM1_Filter0;

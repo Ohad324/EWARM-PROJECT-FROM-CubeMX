@@ -3589,6 +3589,18 @@
         <name>Application</name>
         <group>
             <name>EWARM</name>
+            <group>
+                <name>Tasks</name>
+                <file>
+                    <name>$PROJ_DIR$\..\CM7\Core\Src\command_handler.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\CM7\Core\Src\rtos_trace.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\CM7\Core\Src\rtt_log_task.c</name>
+                </file>
+            </group>
             <file>
                 <name>$PROJ_DIR$\startup_stm32h747xx_CM4.s</name>
             </file>
@@ -4079,18 +4091,6 @@
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\timers.c</name>
             </file>
         </group>
-    </group>
-    <group>
-        <name>Tasks</name>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\Core\Src\command_handler.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\Core\Src\rtos_trace.c</name>
-        </file>
-        <file>
-            <name>$PROJ_DIR$\..\CM7\Core\Src\rtt_log_task.c</name>
-        </file>
     </group>
     <group>
         <name>Utilities</name>
