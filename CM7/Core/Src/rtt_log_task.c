@@ -60,15 +60,22 @@ static void DFSDM_BootCheck(void)
     char b[160];
     int  n;
 
-    /* Refresh g_dbg from live registers (HAL symbols = correct ST CMSIS offsets) */
+    /* Refresh all g_dbg fields from live registers */
     g_dbg.ch0_cfg1     = DFSDM1_Channel0->CHCFGR1;
     g_dbg.ch0_cfg2     = DFSDM1_Channel0->CHCFGR2;
     g_dbg.flt0_cr1     = DFSDM1_Filter0->FLTCR1;
+    g_dbg.flt0_cr2     = DFSDM1_Filter0->FLTCR2;
     g_dbg.flt0_fcr     = DFSDM1_Filter0->FLTFCR;
     g_dbg.flt0_isr     = DFSDM1_Filter0->FLTISR;
     g_dbg.sai4_pdm     = SAI4->PDMCR;
+    g_dbg.dma_cr       = DMA1_Stream1->CR;
     g_dbg.dma_ndtr     = DMA1_Stream1->NDTR;
-    g_dbg.last_val     = (int32_t)((int32_t)DFSDM1_Filter0->FLTRDATAR >> 8);
+    g_dbg.dma_m0ar     = DMA1_Stream1->M0AR;
+    g_dbg.sitp         = g_dbg.ch0_cfg1 & 0x3u;
+    g_dbg.spicksel     = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;
+    g_dbg.dtrbs        = (g_dbg.ch0_cfg2 >> 3u) & 0x1Fu;
+    g_dbg.last_raw     = (uint32_t)DFSDM1_Filter0->FLTRDATAR;
+    g_dbg.last_val     = (int32_t)((int32_t)g_dbg.last_raw >> 8);
     g_dbg.uptime_ticks = 0u;   /* boot-check snapshot — uptime not meaningful yet */
 
     /* Read from struct — single consistent snapshot for all checks below */
@@ -185,15 +192,20 @@ void RTTLogTask(void *arg)
         g_dbg.ch0_cfg1     = DFSDM1_Channel0->CHCFGR1;
         g_dbg.ch0_cfg2     = DFSDM1_Channel0->CHCFGR2;
         g_dbg.flt0_cr1     = DFSDM1_Filter0->FLTCR1;
+        g_dbg.flt0_cr2     = DFSDM1_Filter0->FLTCR2;
         g_dbg.flt0_fcr     = DFSDM1_Filter0->FLTFCR;
         g_dbg.flt0_isr     = DFSDM1_Filter0->FLTISR;
         g_dbg.sai4_pdm     = SAI4->PDMCR;
+        g_dbg.dma_cr       = DMA1_Stream1->CR;
         g_dbg.dma_ndtr     = DMA1_Stream1->NDTR;
+        g_dbg.dma_m0ar     = DMA1_Stream1->M0AR;
+        g_dbg.sitp         = g_dbg.ch0_cfg1 & 0x3u;
+        g_dbg.spicksel     = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;
+        g_dbg.dtrbs        = (g_dbg.ch0_cfg2 >> 3u) & 0x1Fu;
         /* FLTRDATAR bits[31:8] = 24-bit signed result (left-aligned).
-         * Cast to int32_t BEFORE shift → arithmetic shift → sign bit preserved.
-         * DO NOT cast to uint32_t first — that turns negative samples positive.
-         * Expected range with DTRBS=6: ±30517. Stuck at 4501 = DTRBS=5 bug. */
-        g_dbg.last_val     = (int32_t)((int32_t)DFSDM1_Filter0->FLTRDATAR >> 8);
+         * Cast to int32_t BEFORE shift → arithmetic shift → sign bit preserved. */
+        g_dbg.last_raw     = (uint32_t)DFSDM1_Filter0->FLTRDATAR;
+        g_dbg.last_val     = (int32_t)((int32_t)g_dbg.last_raw >> 8);
         g_dbg.uptime_ticks++;
 
         /* CKABF[0] = bit 16 of FLTISR — sticky flag: set at boot before SAI4 started,
@@ -278,55 +290,67 @@ void RTTLogTask(void *arg)
                  * g_dbg at 0x24000050 is refreshed every 200 ms at the top of
                  * this loop, so values here are always current.
                  *
-                 * Additional runtime-only registers (FLTISR, FLTCR2, DMA_CR) are
-                 * read live here since they are not in the 6-field DebugHub struct. */
+                 * All registers are now in g_dbg — refreshed every 200 ms above.
+                 * Read from struct for a single consistent snapshot per ping. */
                 {
-                    /* From DebugHub (refreshed every 200 ms above) */
+                    /* Snapshot all fields from g_dbg */
                     uint32_t ch0cfg1   = g_dbg.ch0_cfg1;
                     uint32_t ch0cfg2   = g_dbg.ch0_cfg2;
                     uint32_t fltcr1    = g_dbg.flt0_cr1;
+                    uint32_t fltcr2    = g_dbg.flt0_cr2;
                     uint32_t fltfcr    = g_dbg.flt0_fcr;
+                    uint32_t fltisr    = g_dbg.flt0_isr;
                     uint32_t sai4pdmcr = g_dbg.sai4_pdm;
+                    uint32_t dma_cr    = g_dbg.dma_cr;
                     uint32_t ndtr      = g_dbg.dma_ndtr;
+                    uint32_t m0ar      = g_dbg.dma_m0ar;
+                    uint32_t sitp_val  = g_dbg.sitp;
+                    uint32_t spick_val = g_dbg.spicksel;
+                    uint32_t dtrbs_val = g_dbg.dtrbs;
+                    uint32_t last_raw  = g_dbg.last_raw;
+                    int32_t  last_val  = g_dbg.last_val;
 
-                    /* Live reads for registers not in g_dbg */
-                    uint32_t fltcr2 = DFSDM1_Filter0->FLTCR2;
-                    uint32_t fltisr = g_dbg.flt0_isr;   /* already captured at top of loop */
-                    uint32_t dma_cr = DMA1_Stream1->CR;
-
-                    /* FLTISR: CKABF[7:0]=bits[23:16], ROVRF=bit3 */
-                    const char *isrTag;
+                    /* Decode FLTISR status tag */
                     uint8_t ckabf = (uint8_t)((fltisr >> 16) & 0xFFu);
                     uint8_t ovr   = (uint8_t)((fltisr >>  3) & 0x01u);
+                    const char *isrTag;
                     if      (ckabf && ovr) isrTag = "CKABF+OVR!";
                     else if (ckabf)        isrTag = "CKABF!";
                     else if (ovr)          isrTag = "OVR!";
                     else                   isrTag = "OK";
 
-                    /* Extract SITP bits for explicit display */
-                    uint8_t sitp_val = (uint8_t)(ch0cfg1 & 0x3u);
-
-                    /* Line 1 — config registers (g_dbg fields) + explicit SITP */
+                    /* Line 1 — channel config + SAI4 */
                     pn = snprintf(pbuf, sizeof(pbuf),
-                        "[T+%7lu ms] [DFSDM] Ch0CFG1=%08lX[%s] SITP=%u(%s)[%s] Ch0CFG2=%08lX[%s] FLTFCR=%08lX[%s] SAI4PDMCR=%08lX[%s]\r\n",
+                        "[T+%7lu ms] [DFSDM] Ch0CFG1=%08lX[%s] SITP=%lu(%s)[%s] SPICKSEL=%lu[%s] Ch0CFG2=%08lX DTRBS=%lu[%s] SAI4PDMCR=%08lX[%s]\r\n",
                         (unsigned long)HAL_GetTick(),
-                        (unsigned long)ch0cfg1,   (ch0cfg1   == 0x8018008Du)       ? "OK" : "FAIL",
-                        sitp_val, (sitp_val == 1u) ? "FALL" : "RISE",
-                                                  (sitp_val  == 1u)                ? "OK" : "FAIL",
-                        (unsigned long)ch0cfg2,   ((ch0cfg2  & 0xF8u) == 0x30u)    ? "OK" : "FAIL",
-                        (unsigned long)fltfcr,    (fltfcr    == 0x607C0000u)       ? "OK" : "FAIL",
-                        (unsigned long)sai4pdmcr, (sai4pdmcr == 0x00000101u)       ? "OK" : "FAIL");
+                        (unsigned long)ch0cfg1,   (ch0cfg1   == 0x8018008Du)  ? "OK" : "FAIL",
+                        (unsigned long)sitp_val,  (sitp_val  == 1u) ? "FALL" : "RISE",
+                                                  (sitp_val  == 1u)            ? "OK" : "FAIL",
+                        (unsigned long)spick_val, (spick_val == 3u)            ? "OK" : "FAIL",
+                        (unsigned long)ch0cfg2,
+                        (unsigned long)dtrbs_val, (dtrbs_val == 6u)            ? "OK" : "FAIL",
+                        (unsigned long)sai4pdmcr, (sai4pdmcr == 0x00000101u)  ? "OK" : "FAIL");
                     emit(pbuf, pn);
 
-                    /* Line 2 — runtime status + NDTR */
+                    /* Line 2 — filter + DMA runtime */
                     pn = snprintf(pbuf, sizeof(pbuf),
-                        "[T+%7lu ms] [DFSDM] FLTCR1=%08lX[%s] FLTCR2=%08lX[%s] FLTISR=%08lX[%s] DMA_CR=%08lX[%s] NDTR=%lu\r\n",
+                        "[T+%7lu ms] [DFSDM] FLTCR1=%08lX[%s] FLTCR2=%08lX[%s] FLTFCR=%08lX[%s] FLTISR=%08lX[%s]\r\n",
                         (unsigned long)HAL_GetTick(),
-                        (unsigned long)fltcr1, ((fltcr1 & 0x1u) == 0x1u)                   ? "OK" : "FAIL",
-                        (unsigned long)fltcr2, (fltcr2 == 0u)                               ? "OK" : "WARN",
-                        (unsigned long)fltisr, isrTag,
-                        (unsigned long)dma_cr, ((dma_cr & ~0x1u) == (0x00035500u & ~0x1u))  ? "OK" : "FAIL",
-                        (unsigned long)ndtr);
+                        (unsigned long)fltcr1, ((fltcr1 & 0x1u) == 0x1u)    ? "OK" : "FAIL",
+                        (unsigned long)fltcr2,  (fltcr2 == 0u)               ? "OK" : "WARN",
+                        (unsigned long)fltfcr,  (fltfcr == 0x607C0000u)      ? "OK" : "FAIL",
+                        (unsigned long)fltisr,  isrTag);
+                    emit(pbuf, pn);
+
+                    /* Line 3 — DMA state + live audio sample */
+                    pn = snprintf(pbuf, sizeof(pbuf),
+                        "[T+%7lu ms] [DFSDM] DMA_CR=%08lX[%s] NDTR=%lu M0AR=%08lX[%s] last_raw=%08lX last_val=%ld\r\n",
+                        (unsigned long)HAL_GetTick(),
+                        (unsigned long)dma_cr,   ((dma_cr & ~0x1u) == (0x00035500u & ~0x1u)) ? "OK" : "FAIL",
+                        (unsigned long)ndtr,
+                        (unsigned long)m0ar,     (m0ar == 0x30000000u)                        ? "OK" : "FAIL",
+                        (unsigned long)last_raw,
+                        (long)last_val);
                     emit(pbuf, pn);
                 }
             }

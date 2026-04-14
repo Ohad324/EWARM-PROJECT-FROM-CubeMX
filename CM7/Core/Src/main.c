@@ -590,6 +590,15 @@ static void MX_DFSDM1_Init(void)
   /* ── Snapshot into g_dbg (0x24000050) — visible in IAR Live Watch ─── */
   g_dbg.ch0_cfg1    = DFSDM1_Channel0->CHCFGR1;  /* expect 0x8018008D */
   g_dbg.ch0_cfg2    = DFSDM1_Channel0->CHCFGR2;  /* expect 0x00000030 */
+  g_dbg.sitp        = g_dbg.ch0_cfg1 & 0x3u;                   /* expect 1 = falling */
+  g_dbg.spicksel    = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;           /* expect 3 = SAI4 bridge */
+  g_dbg.dtrbs       = (g_dbg.ch0_cfg2 >> 3u) & 0x1Fu;          /* expect 6 */
+  g_dbg.dma_cr      = DMA1_Stream1->CR;
+  g_dbg.dma_ndtr    = DMA1_Stream1->NDTR;
+  g_dbg.dma_m0ar    = DMA1_Stream1->M0AR;
+  g_dbg.last_raw    = 0u;
+  g_dbg.last_val    = 0;
+  g_dbg.uptime_ticks = 0u;
   g_dbg.ref_lr_low  = 0x8018008Cu;  /* LR=Low  (LEFT)  SITP=00 rising  edge */
   g_dbg.ref_lr_high = 0x8018008Du;  /* LR=High (RIGHT) SITP=01 falling edge ← THIS BOARD */
 
@@ -609,6 +618,7 @@ static void MX_DFSDM1_Init(void)
   { Error_Handler(); }
 
   g_dbg.flt0_cr1 = DFSDM1_Filter0->FLTCR1;    /* expect 0x20240001 (RCSEL=0=CH0) */
+  g_dbg.flt0_cr2 = DFSDM1_Filter0->FLTCR2;    /* expect 0x00000000 (no IT enables) */
   g_dbg.flt0_fcr = DFSDM1_Filter0->FLTFCR;    /* expect 0x607C0000 (Sinc3, OSR=125) */
   g_dbg.flt0_isr = DFSDM1_Filter0->FLTISR;    /* expect 0x00000000 at boot (no CKABF yet) */
   /* USER CODE END DFSDM1_Init 2 */

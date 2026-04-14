@@ -46,34 +46,65 @@ extern "C" {
 /**
  * DFSDM Mission Control Hub
  * Target Address: 0x24000050 (AXI SRAM D1)
- * J-Link command: mem32 0x24000050 10
+ * J-Link command: mem32 0x24000050 18
  *
- * RTTLogTask refreshes every 200 ms. Pin this address in IAR Live Watch
- * to monitor the full audio pipeline health without any RTT output needed.
+ * RTTLogTask refreshes all fields every 200 ms. Pin this address in IAR
+ * Live Watch to monitor the full audio pipeline without RTT output.
+ *
+ * Fields [14..16] are decoded extracts of hardware registers for
+ * easy reading — no bit-math needed in the debugger.
  */
 typedef struct {
-    /* [0] CH0CFGR1   Expect 0x8018008D (Master En, Div 24, CHEN, SAI4 Bridge, Falling) */
+    /* ── DFSDM Channel 0 registers ─────────────────────────────────── */
+    /* [0]  CH0CFGR1  Expect 0x8018008D (DFSDMEN+CKOUTDIV=24+CHEN+SPICKSEL=11+SITP=01) */
     uint32_t ch0_cfg1;
-    /* [1] CH0CFGR2   Expect 0x00000030 (DTRBS = 6) */
+    /* [1]  CH0CFGR2  Expect 0x00000030 (DTRBS=6 → bits[7:3]=0x06) */
     uint32_t ch0_cfg2;
-    /* [2] FLT0CR1    Expect 0x20240001 (RCSEL=0, RDMAEN=1, DFEN=1) */
+
+    /* ── DFSDM Filter 0 registers ──────────────────────────────────── */
+    /* [2]  FLTCR1    Expect 0x20240001 (RCSEL=0=CH0, RDMAEN=1, DFEN=1) */
     uint32_t flt0_cr1;
-    /* [3] FLT0FCR    Expect 0x607C0000 (Sinc3, FOSR=125-1) */
+    /* [3]  FLTCR2    Expect 0x00000000 (no interrupt enables) */
+    uint32_t flt0_cr2;
+    /* [4]  FLTFCR    Expect 0x607C0000 (Sinc3 order=3, FOSR=124 = OSR-1) */
     uint32_t flt0_fcr;
-    /* [4] FLT0ISR    Watch Bit 17 (CKABF). If 1, Clock is missing! */
+    /* [5]  FLTISR    bits[23:16]=CKABF (sticky OK), bit3=ROVRF (overrun) */
     uint32_t flt0_isr;
-    /* [5] SAI4_PDMCR Expect 0x00000101 (PDMEN, CKEN1) */
+
+    /* ── SAI4 ───────────────────────────────────────────────────────── */
+    /* [6]  SAI4 PDMCR  Expect 0x00000101 (PDMEN=1, CKEN1=1) */
     uint32_t sai4_pdm;
-    /* [6] DMA_NDTR   Should be moving during recording. If stuck, DMA is dead. */
+
+    /* ── DMA1 Stream 1 ──────────────────────────────────────────────── */
+    /* [7]  DMA CR    bit0=EN. Expect 0x00035500 idle / 0x00035501 active */
+    uint32_t dma_cr;
+    /* [8]  DMA NDTR  Counts down during recording. Stuck = DMA dead. */
     uint32_t dma_ndtr;
-    /* [7] Last Data  FLTRDATAR>>8 with arithmetic shift (int32_t cast preserves sign).
-     *               Oscillates ±30517 = mic working. Stuck at -30518 = SITP wrong edge. */
+    /* [9]  DMA M0AR  Expect 0x30000000 (buffer base address) */
+    uint32_t dma_m0ar;
+
+    /* ── Decoded fields (no bit-math in debugger) ───────────────────── */
+    /* [10] SITP      bits[1:0] of ch0_cfg1. Expect 1 = falling edge (LR=HIGH THIS BOARD) */
+    uint32_t sitp;
+    /* [11] SPICKSEL  bits[3:2] of ch0_cfg1. Expect 3 = 11b = SAI4 bridge */
+    uint32_t spicksel;
+    /* [12] DTRBS     bits[7:3] of ch0_cfg2. Expect 6. (5 = DC overflow bug!) */
+    uint32_t dtrbs;
+
+    /* ── Live audio data ─────────────────────────────────────────────── */
+    /* [13] last_raw  Raw FLTRDATAR (uint32_t). Expect oscillating. 0xFF88CA00 = silence. */
+    uint32_t last_raw;
+    /* [14] last_val  (int32_t)FLTRDATAR>>8. Expect ±30517 active. -30518 = silence/DC. */
     int32_t  last_val;
-    /* [8] Heartbeat  Increments every 200 ms. Proves monitor is running. */
+
+    /* ── Housekeeping ────────────────────────────────────────────────── */
+    /* [15] uptime    Increments every 200 ms. Proves RTTLogTask is alive. */
     uint32_t uptime_ticks;
-    /* [9]  LR=Low  reference: SITP=00 (rising  edge) → expect 0x8018008C */
+
+    /* ── Reference values for Live Watch comparison ──────────────────── */
+    /* [16] LR=Low  (LEFT)  ch0_cfg1 with SITP=00 rising  = 0x8018008C */
     uint32_t ref_lr_low;
-    /* [10] LR=High reference: SITP=01 (falling edge) → expect 0x8018008D  ← THIS BOARD */
+    /* [17] LR=High (RIGHT) ch0_cfg1 with SITP=01 falling = 0x8018008D ← THIS BOARD */
     uint32_t ref_lr_high;
 } DFSDM_Debug_Hub_t;
 
