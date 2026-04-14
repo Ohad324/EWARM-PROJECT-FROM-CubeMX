@@ -173,10 +173,14 @@ void RTTLogTask(void *arg)
     uint32_t cycleCount = 0u;   /* 200 ms ticks — drop report every 5 cycles (1 s)  */
     uint32_t pingCount  = 0u;   /* 1 s ticks    — system health ping every 25 (5 s) */
 
+    /* One-shot boot self-test — prints [BOOT] lines to RTT + Terminal I/O */
+    DFSDM_BootCheck();
+
     for (;;)
     {
         /* ── Refresh g_dbg every tick (200 ms) — IAR Live Watch at 0x24000050 ─
-         * All 9 fields updated here. dma_ndtr and last_val move during recording.
+         * Fields [0..8] updated here. Fields [9..10] (ref_lr_low/high) are
+         * constant reference values written once in MX_DFSDM1_Init().
          * uptime_ticks increments each pass — proves this task is alive.       */
         g_dbg.ch0_cfg1     = DFSDM1_Channel0->CHCFGR1;
         g_dbg.ch0_cfg2     = DFSDM1_Channel0->CHCFGR2;
@@ -299,11 +303,16 @@ void RTTLogTask(void *arg)
                     else if (ovr)          isrTag = "OVR!";
                     else                   isrTag = "OK";
 
-                    /* Line 1 — config registers (g_dbg fields) */
+                    /* Extract SITP bits for explicit display */
+                    uint8_t sitp_val = (uint8_t)(ch0cfg1 & 0x3u);
+
+                    /* Line 1 — config registers (g_dbg fields) + explicit SITP */
                     pn = snprintf(pbuf, sizeof(pbuf),
-                        "[T+%7lu ms] [DFSDM] Ch0CFG1=%08lX[%s] Ch0CFG2=%08lX[%s] FLTFCR=%08lX[%s] SAI4PDMCR=%08lX[%s]\r\n",
+                        "[T+%7lu ms] [DFSDM] Ch0CFG1=%08lX[%s] SITP=%u(%s)[%s] Ch0CFG2=%08lX[%s] FLTFCR=%08lX[%s] SAI4PDMCR=%08lX[%s]\r\n",
                         (unsigned long)HAL_GetTick(),
                         (unsigned long)ch0cfg1,   (ch0cfg1   == 0x8018008Du)       ? "OK" : "FAIL",
+                        sitp_val, (sitp_val == 1u) ? "FALL" : "RISE",
+                                                  (sitp_val  == 1u)                ? "OK" : "FAIL",
                         (unsigned long)ch0cfg2,   ((ch0cfg2  & 0xF8u) == 0x30u)    ? "OK" : "FAIL",
                         (unsigned long)fltfcr,    (fltfcr    == 0x607C0000u)       ? "OK" : "FAIL",
                         (unsigned long)sai4pdmcr, (sai4pdmcr == 0x00000101u)       ? "OK" : "FAIL");
