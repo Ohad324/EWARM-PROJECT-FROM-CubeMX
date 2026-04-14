@@ -57,6 +57,7 @@
 
 #include "voice_recorder.h"
 #include "main.h"           /* LED1_Pin, LED1_GPIO_Port, Error_Handler */
+#include "usb_msc.h"        /* g_usbMscActive — skip recording during format mode */
 #include "stm32h7xx_hal.h"
 /* PDM2PCM software library removed — DFSDM hardware does decimation */
 #include "FreeRTOS.h"
@@ -321,6 +322,9 @@ void VoiceRecTask(void *arg)
         /* Block until button ISR (Phase 1) or WakeWordTask (Phase 2) notifies */
         xTaskNotifyWait(0u, ULONG_MAX, &notif, portMAX_DELAY);
 
+        /* Skip recording while USB MSC format mode owns SDMMC1 */
+        if (g_usbMscActive) continue;
+
         /* Ignore spurious notifications if not idle */
         if (g_State != REC_IDLE) continue;
 
@@ -495,15 +499,11 @@ void SDWriteTask(void *arg)
         if (fr != FR_OK)
         {
             STAGE("SD1 FAIL");
-            if (fr == FR_NO_FILESYSTEM)
-            {
-                if (!AudioSD_Format())
-                {
-                    logMsg.result = REC_ERR_SD_OPEN;
-                    goto done;
-                }
-            }
-            else
+            /* No auto-format — SD card must be pre-formatted via USB MSC + Copilot script.
+             * FR_NO_FILESYSTEM means the card needs formatting; user must run the
+             * format flow (hold blue button 4s at boot, plug CN1, run Copilot script).
+             * For other errors: attempt a single remount to recover from stale FatFS state. */
+            if (fr != FR_NO_FILESYSTEM)
             {
                 /* SDMMC peripheral error — remount once as recovery */
                 if (!AudioSD_Remount())
@@ -511,9 +511,14 @@ void SDWriteTask(void *arg)
                     logMsg.result = REC_ERR_SD_OPEN;
                     goto done;
                 }
+                fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
+                if (fr != FR_OK)
+                {
+                    logMsg.result = REC_ERR_SD_OPEN;
+                    goto done;
+                }
             }
-            fr = f_open(&file, filename, FA_CREATE_ALWAYS | FA_WRITE);
-            if (fr != FR_OK)
+            else
             {
                 logMsg.result = REC_ERR_SD_OPEN;
                 goto done;

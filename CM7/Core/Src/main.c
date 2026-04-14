@@ -40,6 +40,7 @@
 #include "cmsis_os2.h"           /* osKernelGetTickCount() */
 #include "timing_log.h"          /* TLOG(), T_US() — RTT timing instrumentation */
 #include "rtos_trace.h"          /* RtosTrace_Init(), RtosTrace_DrainTask()     */
+#include "usb_msc.h"             /* USB_MSC_TaskEntry() — boot-time format recovery */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -372,6 +373,10 @@ Error_Handler();
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);
+  /* USB MSC format recovery — hold blue button 4s at boot → board exposes
+   * SD as USB MSC on CN1 → diskpart formats as exFAT (MBR+partition) →
+   * board resets. FF_MULTI_PARTITION=1 then mounts the result. */
+  xTaskCreate(USB_MSC_TaskEntry, "UsbMscTask", 512u, NULL, 2u, NULL);
 
   /* USER CODE END RTOS_THREADS */
 

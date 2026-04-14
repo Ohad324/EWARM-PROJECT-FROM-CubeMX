@@ -78,6 +78,11 @@ extern void VoiceRec_DMA_IRQHandler(void);
 /* AudioSD_SDMMC_IRQHandler() wraps HAL_SD_IRQHandler(&s_hsd1).
    The SD handle is private to audio_sd.c; same trampoline pattern. */
 extern void AudioSD_SDMMC_IRQHandler(void);
+/* USB_MSC_SDMMC_IRQHandler() wraps HAL_SD_IRQHandler(&s_hsd_msc).
+   Active only while USB MSC format mode owns SDMMC1. */
+extern void USB_MSC_SDMMC_IRQHandler(void);
+/* g_usbMscActive: set to 1 by usb_msc.c when USB MSC owns SDMMC1 */
+extern volatile uint32_t g_usbMscActive;
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -325,7 +330,16 @@ void DMA1_Stream1_IRQHandler(void)
  */
 void SDMMC1_IRQHandler(void)
 {
-    AudioSD_SDMMC_IRQHandler();
+    if (g_usbMscActive)
+        USB_MSC_SDMMC_IRQHandler();
+    else
+        AudioSD_SDMMC_IRQHandler();
+}
+
+void OTG_HS_IRQHandler(void)
+{
+    extern PCD_HandleTypeDef *USB_MSC_GetPCDHandle(void);
+    HAL_PCD_IRQHandler(USB_MSC_GetPCDHandle());
 }
 
 /* USER CODE END 1 */

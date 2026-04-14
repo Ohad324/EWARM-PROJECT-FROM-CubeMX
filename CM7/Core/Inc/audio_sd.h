@@ -1,3 +1,4 @@
+/* cache-bust: 2026-04-14 */
 /*
  * audio_sd.h — SD card WAV recording layer
  *
@@ -78,6 +79,12 @@ bool AudioSD_Remount(void);
  * Returns true if the volume is mounted and ready.
  */
 bool AudioSD_Format(void);
+
+/*
+ * AudioSD_DeInit — unmount FatFS and release SDMMC1 peripheral.
+ * Call before USB MSC takes ownership of SDMMC1.
+ */
+void AudioSD_DeInit(void);
 
 /*
  * AudioSD_SDMMC_IRQHandler — trampoline; call from SDMMC1_IRQHandler in stm32h7xx_it.c.

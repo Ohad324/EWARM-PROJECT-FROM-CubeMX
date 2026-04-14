@@ -47,6 +47,15 @@
 #include <string.h>         /* memcpy, strlen                    */
 #include <stdio.h>          /* snprintf                          */
 
+/* FatFS multi-partition map — required when FF_MULTI_PARTITION == 1.
+ * Maps logical drive "0:" → physical drive 0, MBR partition 1.
+ * Any standard Windows format (Explorer / diskpart / USB MSC) creates
+ * MBR at sector 0 with exFAT starting at sector 2048. FatFS reads the
+ * MBR, finds partition 1, and mounts from there. */
+PARTITION VolToPart[FF_VOLUMES] = {
+    {0, 1}   /* "0:" → physical drive 0, partition 1 */
+};
+
 /* Timestamped RTT log line for this module — avoids SendUartStr on UART8.
  * Uses SEGGER_RTT_Write (always linked) rather than SEGGER_RTT_printf
  * (only in SEGGER_RTT_printf.c, not compiled in this project). */
@@ -172,6 +181,35 @@ bool AudioSD_Init(void)
 
     SDMMC1_Peripheral_Init();
     STAGE("SDINIT3 PASS");
+
+    /* ── TEMPORARY: sector-0 diagnostic (ITM Terminal I/O only) ─────────────
+     * Expected output in IAR Terminal I/O for a good MBR+exFAT card:
+     *   sec0 dr=0
+     *   sec0 sig=43605     ← 0xAA55 in decimal
+     *   sec0 type=7        ← 0x07 = exFAT/NTFS partition type
+     *   sec0 lba=2048      ← partition start sector
+     *   sec0 oemid=[EXFAT   ]  ← only if sector 0 IS the VBR (SFD format)
+     * ─────────────────────────────────────────────────────────────────────── */
+    {
+        DRESULT dr = disk_read(0, s_sectorBuf, 0, 1);
+        _itm_str("sec0 dr=");
+        _itm_u32((uint32_t)dr);
+        _itm_str("sec0 sig=");
+        _itm_u32(((uint32_t)s_sectorBuf[511] << 8) | s_sectorBuf[510]);
+        _itm_str("sec0 type=");
+        _itm_u32(s_sectorBuf[0x1C2]);
+        _itm_str("sec0 lba=");
+        _itm_u32(((uint32_t)s_sectorBuf[0x1C9] << 24) |
+                 ((uint32_t)s_sectorBuf[0x1C8] << 16) |
+                 ((uint32_t)s_sectorBuf[0x1C7] <<  8) |
+                  (uint32_t)s_sectorBuf[0x1C6]);
+        _itm_str("sec0 oemid=[");
+        for (int _i = 3; _i < 11; _i++) {
+            uint8_t _c = s_sectorBuf[_i];
+            ITM_SendChar((_c >= 0x20u && _c < 0x7Fu) ? _c : '?');
+        }
+        _itm_str("]\n");
+    }
 
     /* Register filesystem object — deferred mount (opt=0) per UM1722 / FatFS docs.
      * disk_initialize + BPB read are deferred until the first file operation
@@ -544,6 +582,19 @@ bool AudioSD_Remount(void)
     return s_sdReady;
 }
 
+/* ── AudioSD_DeInit ───────────────────────────────────────────────────────────
+ * Release SDMMC1 and unmount FatFS — called before USB MSC takes ownership.
+ * Does NOT re-initialize. After this, the caller owns SDMMC1.
+ * ─────────────────────────────────────────────────────────────────────────── */
+void AudioSD_DeInit(void)
+{
+    f_mount(NULL, "0:", 0);     /* unmount — FatFS releases volume state */
+    HAL_SD_Abort(&s_hsd1);
+    HAL_SD_DeInit(&s_hsd1);
+    s_sdReady = false;
+    RLOG("[SD] AudioSD_DeInit — SDMMC1 released for USB MSC");
+}
+
 /* ── AudioSD_Format ───────────────────────────────────────────────────────────
  * Format the SD card as exFAT and immediately mount the new volume.
  * Called from SDWriteTask when f_open returns FR_NO_FILESYSTEM — meaning the
@@ -554,11 +605,10 @@ bool AudioSD_Format(void)
 {
     SD_LOG("FORMAT — card has no filesystem, formatting as exFAT...");
     /* work[] must be >= cluster size (FR_NOT_ENOUGH_CORE if too small).
-     * NULL/0 triggers ff_memalloc which is unavailable (no dynamic alloc).
-     * 4 KB clusters: work buffer = cluster size = 4096 bytes — fits in BSS.
-     * Standard for exFAT on SD cards; fast enough for WAV sequential writes. */
+     * FF_MULTI_PARTITION=1: f_mkfs creates MBR at sector 0 + exFAT partition.
+     * f_mount then reads MBR → finds partition 1 → mounts. */
     static uint8_t work[4096u];
-    static const MKFS_PARM opt = { FM_EXFAT, 0, 0, 0, 4096u }; /* 4 KB clusters */
+    static const MKFS_PARM opt = { FM_EXFAT, 0, 0, 0, 4096u };
     STAGE("FMT1 PASS");
     FRESULT res = f_mkfs("0:", &opt, work, sizeof(work));
     if (res != FR_OK) {
@@ -789,7 +839,12 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
                 }
             }
         }
-        SCB_InvalidateDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
+        /* HAL_SD_ReadBlocks uses CPU FIFO polling (not IDMA/DMA) — data is written
+         * directly to s_sectorBuf via tempbuff pointer, leaving dirty cache lines.
+         * SCB_InvalidateDCache_by_Addr (DCIMVAC) would DISCARD those dirty lines
+         * before they are flushed to SRAM → memcpy would read stale zeros from SRAM.
+         * No cache operation needed here: the CPU itself wrote the data; it is
+         * already in the cache and the memcpy reads it directly from there. */
         memcpy(buff + i * 512u, s_sectorBuf, 512u);
     }
     return RES_OK;

@@ -43,7 +43,7 @@
 #define FF_VOLUMES       1
 #define FF_STR_VOLUME_ID 0
 #define FF_VOLUME_STRS   "SD"
-#define FF_MULTI_PARTITION  0
+#define FF_MULTI_PARTITION  1
 #define FF_MIN_SS    512
 #define FF_MAX_SS    512
 #define FF_LBA64     0
