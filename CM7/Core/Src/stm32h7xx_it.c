@@ -80,9 +80,9 @@ extern void VoiceRec_DMA_IRQHandler(void);
 extern void AudioSD_SDMMC_IRQHandler(void);
 /* USB_MSC_SDMMC_IRQHandler() wraps HAL_SD_IRQHandler(&s_hsd_msc).
    Active only while USB MSC format mode owns SDMMC1. */
-extern void USB_MSC_SDMMC_IRQHandler(void);
+/* extern void USB_MSC_SDMMC_IRQHandler(void); */   /* USB MSC disabled */
 /* g_usbMscActive: set to 1 by usb_msc.c when USB MSC owns SDMMC1 */
-extern volatile uint32_t g_usbMscActive;
+/* extern volatile uint32_t g_usbMscActive; */      /* USB MSC disabled */
 /* USER CODE END EV */
 
 /******************************************************************************/
@@ -109,7 +109,7 @@ void NMI_Handler(void)
 void HardFault_Handler(void)
 {
   /* USER CODE BEGIN HardFault_IRQn 0 */
-
+  SEGGER_RTT_WriteString(0, "[FATAL] HardFault! Check stack HWM — VoiceRecTask overflow suspected\n");
   /* USER CODE END HardFault_IRQn 0 */
   while (1)
   {
@@ -330,9 +330,10 @@ void DMA1_Stream1_IRQHandler(void)
  */
 void SDMMC1_IRQHandler(void)
 {
-    if (g_usbMscActive)
-        USB_MSC_SDMMC_IRQHandler();
-    else
+    /* USB MSC disabled — always route to audio_sd */
+    /* if (g_usbMscActive)            */
+    /*     USB_MSC_SDMMC_IRQHandler(); */
+    /* else                           */
         AudioSD_SDMMC_IRQHandler();
 }
 

@@ -40,13 +40,11 @@ typedef enum {
     REC_SAVING    = 2,
 } RecState_t;
 
-/* ── Result message posted by SDWriteTask → RTTLogTask ──────────────────── */
+/* ── Log entry posted to xLogQueue by any task → printed by RTTLogTask ───── */
 typedef struct {
-    char         filename[32];
-    uint32_t     sizeBytes;
-    uint8_t      success;
-    REC_Result_t result;     /* exact stage that failed (REC_OK = success) */
-    uint32_t     timestamp;  /* HAL_GetTick() at time of save              */
+    uint32_t    timestamp;   /* HAL_GetTick() ms since boot — wraps every 49 days */
+    const char *pcMsg;       /* pointer to string literal in flash — only 4 bytes copied */
+    uint32_t    val;         /* optional numeric value (error code, byte count, etc.)    */
 } LogMsg_t;
 
 /* ── Public API ──────────────────────────────────────────────────────────── */
@@ -64,7 +62,7 @@ RecState_t VoiceRec_GetState(void);
 /* FreeRTOS task entries — pass to xTaskCreate */
 void VoiceRecTask(void *arg);   /* arg = QueueHandle_t xVoiceQueue */
 void SDWriteTask(void *arg);    /* arg = QueueHandle_t xVoiceQueue */
-void RTTLogTask(void *arg);     /* arg = NULL                      */
+/* RTTLogTask declared in rtt_log_task.h */
 
 /* IRQ trampoline — called from DMA1_Stream1_IRQHandler in stm32h7xx_it.c */
 void VoiceRec_DMA_IRQHandler(void);
@@ -79,8 +77,9 @@ typedef struct {
 
 extern volatile AudioHealth_t g_AudioHealth;
 
-/* ── Globals shared with main.c ──────────────────────────────────────────── */
+/* ── Globals shared with main.c / rtt_log_task.c ────────────────────────── */
 extern TaskHandle_t       voiceRecTaskHandle;   /* used by button ISR       */
+extern volatile uint32_t  g_sdFreeKB;           /* updated after each f_close */
 
 #ifdef __cplusplus
 }

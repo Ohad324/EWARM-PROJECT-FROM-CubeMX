@@ -38,6 +38,7 @@
 #include "ble_uart.h"
 #include "ble_queue.h"       /* xBleQueue, BLE_MSG_LEN — consumed by Model::tick() */
 #include "main.h"            /* Error_Handler(), huart8 */
+#include "audio_sd.h"        /* UartHealth_t, g_UartHealth */
 #include "stm32h7xx_hal.h"
 #include "SEGGER_RTT.h"
 #include <string.h>
@@ -415,8 +416,15 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance != UART8) return;
 
+    /* Accumulate into UartHealth before clearing ErrorCode.
+     * This callback clears huart->ErrorCode below, so audio_sd.c reads 0x00
+     * unless we capture it here first. ISR-safe: single writer. */
+    uint32_t ec = huart->ErrorCode;
+    if (ec & HAL_UART_ERROR_ORE) g_UartHealth.rx_overruns++;
+    g_UartHealth.tx_last_err_code = ec;
+
     RTT_LOG("[UART] ErrorCallback: err=0x%08lX — clearing + re-arming DMA\n",
-            (unsigned long)huart->ErrorCode);
+            (unsigned long)ec);
 
     __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_OREF  |
                                   UART_CLEAR_FEF   |

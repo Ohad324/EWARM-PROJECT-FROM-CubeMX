@@ -56,17 +56,11 @@ PARTITION VolToPart[FF_VOLUMES] = {
     {0, 1}   /* "0:" → physical drive 0, partition 1 */
 };
 
-/* Timestamped RTT log line for this module — avoids SendUartStr on UART8.
- * Uses SEGGER_RTT_Write (always linked) rather than SEGGER_RTT_printf
- * (only in SEGGER_RTT_printf.c, not compiled in this project). */
-#define SD_LOG(fmt, ...) do { \
-    char _sd_buf[80]; \
-    int  _sd_n = snprintf(_sd_buf, sizeof(_sd_buf), \
-                          "[T+%7lu] [SD] " fmt "\r\n", \
-                          (unsigned long)HAL_GetTick(), ##__VA_ARGS__); \
-    if (_sd_n > 0) SEGGER_RTT_Write(0, _sd_buf, (unsigned)_sd_n); \
-    if (_sd_n > 0) { printf("%s", _sd_buf); } \
-} while (0)
+/* SD_LOG — post a log entry to xLogQueue via Log_ToQueue().
+ * msg must be a string literal.  val is an optional uint32_t.
+ * No printf, no ITM, no blocking.  RTTLogTask prints to Terminal I/O + RTT. */
+#define SD_LOG(msg, val)   Log_ToQueue("[SD] " msg, (uint32_t)(val))
+#define SD_LOG0(msg)       Log_ToQueue("[SD] " msg, 0u)
 
 /* ── Configuration ───────────────────────────────────────────────────────────
  * AUDIO_SD_SAMPLES_PER_FRAME : must match AUDIO_BUF_SAMPLES in audio_rec.c
@@ -148,6 +142,9 @@ extern UART_HandleTypeDef huart8;
  * sends "AUDIO:READY". Polled by AudioSD_SendFileToUART(). */
 static volatile bool s_audioReady = false;
 
+/* UART health — written by SDWriteTask, read by RTTLogTask [PING] */
+volatile UartHealth_t g_UartHealth = { 0u };
+
 /* ── Forward declarations ─────────────────────────────────────────────────── */
 static void     SDMMC1_GPIO_Init(void);
 static void     SDMMC1_Peripheral_Init(void);
@@ -174,7 +171,7 @@ bool AudioSD_Init(void)
     if (HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_8) == GPIO_PIN_SET)
     {
         STAGE("SDINIT2 FAIL");
-        SD_LOG("ABSENT");
+        SD_LOG0("ABSENT");
         return false;
     }
     STAGE("SDINIT2 PASS");
@@ -206,7 +203,8 @@ bool AudioSD_Init(void)
         _itm_str("sec0 oemid=[");
         for (int _i = 3; _i < 11; _i++) {
             uint8_t _c = s_sectorBuf[_i];
-            ITM_SendChar((_c >= 0x20u && _c < 0x7Fu) ? _c : '?');
+            if (ITM->PORT[0U].u32 != 0UL)   /* fire-and-forget, no wait */
+                ITM->PORT[0U].u8 = (_c >= 0x20u && _c < 0x7Fu) ? _c : '?';
         }
         _itm_str("]\n");
     }
@@ -218,7 +216,7 @@ bool AudioSD_Init(void)
     STAGE("SDINIT4 PASS");
 
     s_sdReady = true;
-    SD_LOG("OK");
+    SD_LOG0("INIT_OK");
     return true;
 }
 
@@ -230,7 +228,7 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
 {
     if (!s_sdReady)
     {
-        SD_LOG("NOT_READY");
+        SD_LOG0("NOT_READY");
         return false;
     }
 
@@ -249,7 +247,7 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
 
     if (res != FR_NO_FILE)
     {
-        SD_LOG("NO_FREE_NAME");
+        SD_LOG0("NO_FREE_NAME");
         return false;
     }
 
@@ -257,22 +255,22 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
     res = f_open(&s_wavFile, s_currentFilename, FA_WRITE | FA_CREATE_NEW);
     if (res != FR_OK)
     {
-        SD_LOG("OPEN_FAIL:%d — attempting remount", (int)res);
+        SD_LOG("OPEN_FAIL_FR=", (uint32_t)res);
         /* FatFS internal state may be stale after USB MSC raw access.
          * Force unmount + remount to recover the volume. */
         f_mount(NULL, "0:", 0);
         FRESULT fr2 = f_mount(&s_fatfs, "0:", 1);
         if (fr2 != FR_OK)
         {
-            SD_LOG("REMOUNT_FAIL:%d", (int)fr2);
+            SD_LOG("REMOUNT_FAIL_FR=", (uint32_t)fr2);
             s_sdReady = false;
             return false;
         }
-        SD_LOG("REMOUNT_OK — retrying f_open");
+        SD_LOG0("REMOUNT_OK_RETRY");
         res = f_open(&s_wavFile, s_currentFilename, FA_WRITE | FA_CREATE_NEW);
         if (res != FR_OK)
         {
-            SD_LOG("OPEN_FAIL_AFTER_REMOUNT:%d", (int)res);
+            SD_LOG("OPEN_FAIL_AFTER_REMOUNT_FR=", (uint32_t)res);
             s_sdReady = false;
             return false;
         }
@@ -294,7 +292,7 @@ bool AudioSD_StartRecording(char *filename_out, uint8_t maxLen)
         snprintf(filename_out, maxLen, "%s", s_currentFilename);
     }
 
-    SD_LOG("REC_START:%s", s_currentFilename);
+    SD_LOG0("REC_START");
     return true;
 }
 
@@ -326,7 +324,7 @@ void AudioSD_WriteFrame(const int32_t *src32, uint32_t nSamples)
         if (res == FR_OK && bw == WBUF_BYTES)
             s_dataBytesWritten += WBUF_BYTES;
         else
-            SD_LOG("WRITE_ERR buf=%u", s_wFillIdx);
+            SD_LOG("WRITE_ERR_BUF=", s_wFillIdx);
 
         s_wFillIdx  ^= 1u;   /* 0 → 1 → 0 → ... */
         s_wbufFill   = 0u;
@@ -340,7 +338,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
 {
     if (!s_fileOpen)
     {
-        SD_LOG("NO_FILE_OPEN");
+        SD_LOG0("NO_FILE_OPEN");
         return false;
     }
 
@@ -352,7 +350,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
         if (fres == FR_OK && bw == s_wbufFill)
             s_dataBytesWritten += s_wbufFill;
         else
-            SD_LOG("FLUSH_ERR remaining=%lu", (unsigned long)s_wbufFill);
+            SD_LOG("FLUSH_ERR_REM=", s_wbufFill);
         s_wbufFill = 0u;
     }
 
@@ -360,7 +358,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
     FRESULT res = f_lseek(&s_wavFile, 0);
     if (res != FR_OK)
     {
-        SD_LOG("SEEK_FAIL");
+        SD_LOG0("SEEK_FAIL");
         f_close(&s_wavFile);
         s_fileOpen = false;
         return false;
@@ -379,7 +377,7 @@ bool AudioSD_StopRecording(char *filename_out, uint8_t maxLen)
         snprintf(filename_out, maxLen, "%s", s_currentFilename);
     }
 
-    SD_LOG("REC_STOP:%s %lu bytes", s_currentFilename, (unsigned long)s_dataBytesWritten);
+    SD_LOG("REC_STOP_BYTES=", s_dataBytesWritten);
     return true;
 }
 
@@ -395,7 +393,7 @@ bool AudioSD_SendFileToUART(const char *filename)
 {
     if (!s_sdReady)
     {
-        SD_LOG("NOT_READY");
+        SD_LOG0("NOT_READY");
         return false;
     }
 
@@ -409,11 +407,20 @@ bool AudioSD_SendFileToUART(const char *filename)
     FILINFO fno;
     if (f_stat(filename, &fno) != FR_OK)
     {
-        SD_LOG("FSTAT_FAIL:%s", filename);
+        SD_LOG0("FSTAT_FAIL");
         s_sdBusy = false;
         return false;
     }
     FSIZE_t fileSize = fno.fsize;
+    SD_LOG("UART_TX_FILE_SIZE=", (uint32_t)fileSize);   /* bytes announced to NORA */
+    g_UartHealth.tx_last_declared = (uint32_t)fileSize;
+
+    /* Clear stale AUDIO:READY flag BEFORE anything goes to NORA.
+     * Must happen before the flush send — if NORA has a cached TLS session it
+     * can reply with AUDIO:READY in <100 ms; clearing after the header send
+     * (old placement) would race with UARTReceiveTask and discard the ACK
+     * (B-010). */
+    s_audioReady = false;
 
     /* Flush NORA's line buffer before sending the header.
      * STM32 UART TX glitches during reset leave garbage bytes in NORA's
@@ -429,28 +436,27 @@ bool AudioSD_SendFileToUART(const char *filename)
                            "AUDIO:FILE:%s:%lu\n",
                            filename, (unsigned long)fileSize);
     HAL_UART_Transmit(&huart8, (uint8_t *)hdrMsg, (uint16_t)hdrLen, 200);
-
-    /* Clear any stale AUDIO:READY from a previous session before sending
-     * the header — prevents a leftover flag from triggering an early stream. */
-    s_audioReady = false;
+    STAGE("STREAM1 PASS");   /* header sent to NORA */
 
     /* Wait for NORA to send "AUDIO:READY" — signals TLS done + GCS HTTP PUT open.
      * Replaces the old fixed 1 s delay: the flag is set by AudioSD_NotifyReady()
      * which routeAsciiMessage() calls the moment AUDIO:READY arrives on UART8.
      * Timeout: 10 s (TLS typically < 1 s; 10 s covers slow WiFi). */
-    SD_LOG("Waiting for AUDIO:READY from NORA...");
+    SD_LOG0("WAIT_AUDIO_READY");
     uint32_t t0 = HAL_GetTick();
     while (!s_audioReady)
     {
         if ((HAL_GetTick() - t0) >= 10000u)
         {
-            SD_LOG("AUDIO:READY timeout — NORA not ready");
+            RLOG0("STREAM2 FAIL");
+            SD_LOG0("AUDIO_READY_TIMEOUT");
             s_sdBusy = false;
             return false;
         }
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-    SD_LOG("AUDIO:READY received — streaming now");
+    RLOG0("STREAM2 PASS");
+    SD_LOG0("AUDIO_READY_RCVD");
 
     /* Open file AFTER the 2s delay — keeps f_open fresh immediately before
      * reading.  Holding the file open during vTaskDelay allows other tasks
@@ -459,7 +465,7 @@ bool AudioSD_SendFileToUART(const char *filename)
     FRESULT res = f_open(&file, filename, FA_READ);
     if (res != FR_OK)
     {
-        SD_LOG("FILE_OPEN_FAIL:%d", (int)res);
+        SD_LOG("FILE_OPEN_FAIL_FR=", (uint32_t)res);
         s_sdBusy = false;
         return false;
     }
@@ -467,26 +473,46 @@ bool AudioSD_SendFileToUART(const char *filename)
     /* Stream file in chunks */
     static uint8_t s_txChunk[AUDIO_SD_UART_CHUNK] __attribute__((aligned(32)));
     UINT     br;
-    bool     ok       = true;
-    uint32_t sentTotal = 0;
+    bool     ok         = true;
+    uint32_t sentTotal  = 0;
+    uint32_t retryTotal = 0;   /* total HAL_BUSY retries across all chunks */
 
     while (1)
     {
         res = f_read(&file, s_txChunk, sizeof(s_txChunk), &br);
         if (res != FR_OK)
         {
-            SD_LOG("FREAD_ERR:%d at %lu sdErr=0x%08lX", (int)res, sentTotal,
-                   (unsigned long)s_hsd1.ErrorCode);
+            SD_LOG("FREAD_ERR_AT=", sentTotal);
             ok = false;
             break;
         }
         if (br == 0) break;   /* clean EOF */
 
-        HAL_StatusTypeDef txRes =
-            HAL_UART_Transmit(&huart8, s_txChunk, (uint16_t)br, 500);
+        /* Transmit with retry on HAL_BUSY (max 3 attempts).
+         * HAL_BUSY means huart8.gState != HAL_UART_STATE_READY — can happen
+         * if a DMA RX callback touches the handle concurrently.
+         * huart8.ErrorCode bits: ORE=0x08, FE=0x04, NE=0x02, PE=0x01.
+         * All retries are logged so overrun patterns are visible in RTT Viewer. */
+        HAL_StatusTypeDef txRes = HAL_ERROR;
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            txRes = HAL_UART_Transmit(&huart8, s_txChunk, (uint16_t)br, 500);
+            if (txRes == HAL_OK) break;
+
+            retryTotal++;
+            g_UartHealth.tx_retries++;
+            g_UartHealth.tx_last_err_code = huart8.ErrorCode;
+            SD_LOG("UART_TX_RETRY_ERR=", (uint32_t)huart8.ErrorCode);
+
+            if (txRes != HAL_BUSY) break;   /* HAL_ERROR/TIMEOUT — no point retrying */
+            vTaskDelay(pdMS_TO_TICKS(5));   /* brief back-off before retry */
+        }
+
         if (txRes != HAL_OK)
         {
-            SD_LOG("UART_TX_ERR:%d at %lu", (int)txRes, sentTotal);
+            g_UartHealth.tx_hard_fails++;
+            g_UartHealth.tx_last_err_code = huart8.ErrorCode;
+            SD_LOG("UART_TX_FAIL_AT=", sentTotal);
             ok = false;
             break;
         }
@@ -499,7 +525,15 @@ bool AudioSD_SendFileToUART(const char *filename)
          * ability to drain (reads 1 KB, writes to GCS HTTP, loops). */
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-    SD_LOG("Stream done: %lu/%lu bytes ok=%d", sentTotal, (unsigned long)fileSize, (int)ok);
+    if (ok) RLOG0("STREAM3 PASS");
+    else    RLOG0("STREAM3 FAIL");
+    g_UartHealth.tx_last_sent = sentTotal;
+    g_UartHealth.tx_transfer_count++;
+    SD_LOG("STREAM_DONE_BYTES=", sentTotal);
+    SD_LOG("STREAM_DECLARED_B=", (uint32_t)fileSize);
+    if (sentTotal != (uint32_t)fileSize)
+        SD_LOG("STREAM_MISMATCH!=", (uint32_t)fileSize - sentTotal);
+    SD_LOG("STREAM_RETRIES=",    retryTotal);
 
     f_close(&file);
 
@@ -576,9 +610,9 @@ bool AudioSD_Remount(void)
     f_mount(NULL, "0:", 0);                        /* force unmount */
     FRESULT fr = f_mount(&s_fatfs, "0:", 1);       /* re-mount now */
     s_sdReady = (fr == FR_OK);
-    SD_LOG("Remount result: fr=%d sdReady=%d", (int)fr, (int)s_sdReady);
-    if (s_sdReady) STAGE("REMOUNT3 PASS");
-    else           STAGE("REMOUNT3 FAIL");
+    SD_LOG("REMOUNT_FR=", (uint32_t)fr);
+    if (s_sdReady) RLOG0("REMOUNT3 PASS");
+    else           RLOG0("REMOUNT3 FAIL");
     return s_sdReady;
 }
 
@@ -592,7 +626,7 @@ void AudioSD_DeInit(void)
     HAL_SD_Abort(&s_hsd1);
     HAL_SD_DeInit(&s_hsd1);
     s_sdReady = false;
-    RLOG("[SD] AudioSD_DeInit — SDMMC1 released for USB MSC");
+    RLOG0("[SD] SDMMC1_RELEASED");
 }
 
 /* ── AudioSD_Format ───────────────────────────────────────────────────────────
@@ -603,7 +637,7 @@ void AudioSD_DeInit(void)
  * ─────────────────────────────────────────────────────────────────────────── */
 bool AudioSD_Format(void)
 {
-    SD_LOG("FORMAT — card has no filesystem, formatting as exFAT...");
+    SD_LOG0("FORMAT_START_EXFAT");
     /* work[] must be >= cluster size (FR_NOT_ENOUGH_CORE if too small).
      * FF_MULTI_PARTITION=1: f_mkfs creates MBR at sector 0 + exFAT partition.
      * f_mount then reads MBR → finds partition 1 → mounts. */
@@ -613,7 +647,7 @@ bool AudioSD_Format(void)
     FRESULT res = f_mkfs("0:", &opt, work, sizeof(work));
     if (res != FR_OK) {
         STAGE("FMT2 FAIL");
-        SD_LOG("FORMAT_FAIL:%d", (int)res);
+        SD_LOG("FORMAT_FAIL_FR=", (uint32_t)res);
         return false;
     }
     STAGE("FMT2 PASS");
@@ -621,12 +655,12 @@ bool AudioSD_Format(void)
     res = f_mount(&s_fatfs, "0:", 1);
     if (res != FR_OK) {
         STAGE("FMT3 FAIL");
-        SD_LOG("FORMAT_REMOUNT_FAIL:%d", (int)res);
+        SD_LOG("FORMAT_REMOUNT_FAIL_FR=", (uint32_t)res);
         return false;
     }
     STAGE("FMT3 PASS");
     s_sdReady = true;
-    SD_LOG("FORMAT+MOUNT OK");
+    SD_LOG0("FORMAT_MOUNT_OK");
     return true;
 }
 
@@ -704,7 +738,7 @@ static void SDMMC1_Peripheral_Init(void)
     if (HAL_SD_Init(&s_hsd1) != HAL_OK)
     {
         /* Non-fatal — SD recording unavailable but system keeps running */
-        SD_LOG("INIT_FAIL");
+        SD_LOG0("INIT_FAIL");
         return;
     }
 
@@ -712,7 +746,7 @@ static void SDMMC1_Peripheral_Init(void)
     if (HAL_SD_ConfigWideBusOperation(&s_hsd1, SDMMC_BUS_WIDE_4B) != HAL_OK)
     {
         /* Some cards don't support 4-bit; continue with 1-bit */
-        SD_LOG("1BIT_MODE");
+        SD_LOG0("1BIT_MODE");
     }
 
     HAL_NVIC_SetPriority(SDMMC1_IRQn, 5, 0);
@@ -782,8 +816,7 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
              *   5. Poll card back to TRANSFER — typically < 5 ms
              *   6. Retry the read once.
              */
-            SD_LOG("disk_read FAIL sec=%lu sdErr=0x%08lX — DPSM reset+retry",
-                   (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+            SD_LOG("DISK_READ_FAIL_ERR=", s_hsd1.ErrorCode);
             HAL_SD_Abort(&s_hsd1);
             SDMMC1->DCTRL = 0;
             SDMMC1->ICR   = 0x1FE007FFu;
@@ -795,24 +828,22 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
                 {
                     if ((HAL_GetTick() - _tr) > 500u)
                     {
-                        SD_LOG("disk_read card-state timeout after reset sec=%lu",
-                               (unsigned long)(sector + i));
+                        SD_LOG0("DISK_READ_CARD_STATE_TIMEOUT");
                         return RES_ERROR;
                     }
                 }
             }
-            SD_LOG("disk_read retry sec=%lu", (unsigned long)(sector + i));
+            SD_LOG0("DISK_READ_RETRY");
             vTaskSuspendAll();
             HAL_StatusTypeDef retryResult = HAL_SD_ReadBlocks(&s_hsd1, s_sectorBuf,
                                   (uint32_t)(sector + i), 1, 1000);
             xTaskResumeAll();
             if (retryResult != HAL_OK)
             {
-                SD_LOG("disk_read retry FAIL sec=%lu sdErr=0x%08lX — full remount",
-                       (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                SD_LOG("DISK_READ_RETRY_FAIL_ERR=", s_hsd1.ErrorCode);
                 if (!AudioSD_Remount())
                 {
-                    SD_LOG("disk_read remount FAIL — SD unrecoverable");
+                    SD_LOG0("DISK_READ_REMOUNT_FAIL");
                     return RES_ERROR;
                 }
                 vTaskSuspendAll();
@@ -821,8 +852,7 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
                 xTaskResumeAll();
                 if (finalResult != HAL_OK)
                 {
-                    SD_LOG("disk_read final FAIL sec=%lu sdErr=0x%08lX",
-                           (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                    SD_LOG("DISK_READ_FINAL_FAIL_ERR=", s_hsd1.ErrorCode);
                     return RES_ERROR;
                 }
             }
@@ -833,8 +863,7 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
             {
                 if (HAL_GetTick() - _t0 > 500u)
                 {
-                    SD_LOG("disk_read card state timeout sec=%lu",
-                           (unsigned long)(sector + i));
+                    SD_LOG0("DISK_READ_XFER_TIMEOUT");
                     return RES_ERROR;
                 }
             }
@@ -879,8 +908,7 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
         {
             /* TX_UNDERRUN (0x10) / RXOVERR (0x20): host-side FIFO error.
              * Same lightweight reset as disk_read — no DeInit to avoid 2–5 s hang. */
-            SD_LOG("disk_write FAIL sec=%lu sdErr=0x%08lX — DPSM reset+retry",
-                   (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+            SD_LOG("DISK_WRITE_FAIL_ERR=", s_hsd1.ErrorCode);
             HAL_SD_Abort(&s_hsd1);
             SDMMC1->DCTRL = 0;
             SDMMC1->ICR   = 0x1FE007FFu;
@@ -891,28 +919,26 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
                 {
                     if ((HAL_GetTick() - _tr) > 500u)
                     {
-                        SD_LOG("disk_write card-state timeout after reset sec=%lu",
-                               (unsigned long)(sector + i));
+                        SD_LOG0("DISK_WRITE_CARD_STATE_TIMEOUT");
                         return RES_ERROR;
                     }
                 }
             }
             /* Re-clean cache line before retry — the bounce buffer is still valid */
             SCB_CleanDCache_by_Addr((uint32_t *)s_sectorBuf, 512);
-            SD_LOG("disk_write retry sec=%lu", (unsigned long)(sector + i));
+            SD_LOG0("DISK_WRITE_RETRY");
             vTaskSuspendAll();
             HAL_StatusTypeDef retryResult = HAL_SD_WriteBlocks(&s_hsd1, s_sectorBuf,
                                                  (uint32_t)(sector + i), 1, 1000);
             xTaskResumeAll();
             if (retryResult != HAL_OK)
             {
-                SD_LOG("disk_write retry FAIL sec=%lu sdErr=0x%08lX — full remount",
-                       (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                SD_LOG("DISK_WRITE_RETRY_FAIL_ERR=", s_hsd1.ErrorCode);
                 /* Lightweight DPSM reset insufficient — HAL state machine still stuck.
                  * Full DeInit+reinit as last resort (costs ~200ms but recovers correctly). */
                 if (!AudioSD_Remount())
                 {
-                    SD_LOG("disk_write remount FAIL — SD unrecoverable");
+                    SD_LOG0("DISK_WRITE_REMOUNT_FAIL");
                     return RES_ERROR;
                 }
                 /* Retry once more after full remount */
@@ -923,8 +949,7 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
                 xTaskResumeAll();
                 if (finalResult != HAL_OK)
                 {
-                    SD_LOG("disk_write final FAIL sec=%lu sdErr=0x%08lX",
-                           (unsigned long)(sector + i), (unsigned long)s_hsd1.ErrorCode);
+                    SD_LOG("DISK_WRITE_FINAL_FAIL_ERR=", s_hsd1.ErrorCode);
                     return RES_ERROR;
                 }
             }
@@ -935,8 +960,7 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
             {
                 if (HAL_GetTick() - _t0 > 500u)
                 {
-                    SD_LOG("disk_write card state timeout sec=%lu",
-                           (unsigned long)(sector + i));
+                    SD_LOG0("DISK_WRITE_XFER_TIMEOUT");
                     return RES_ERROR;
                 }
             }

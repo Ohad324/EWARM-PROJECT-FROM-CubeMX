@@ -231,7 +231,7 @@ __vector_table
         SECTION .text:CODE:NOROOT:REORDER(2)
 Reset_Handler
 
-        LDR     R0, =ExitRun0Mode
+YEYESYEYESyesy        LDR     R0, =ExitRun0Mode
         BLX     R0
         LDR     R0, =SystemInit
         BLX     R0

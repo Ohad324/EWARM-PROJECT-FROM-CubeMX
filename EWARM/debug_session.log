@@ -10,9 +10,7 @@ DMAC/Trace: Enabling GPIOB clock ...
 DMAC/Trace: GPIOB 3 port configured as SWO (AF0, Very high speed).
 DMAC/Trace: Other than PLL1 clock as CPU clock detected.
 DMAC/Trace: Trace clock should be 1/2 of CPU clock frequency.
-WARNING: SWO data stream not stopped when target stopped
-WARNING: SWO data stream not stopped when target stopped
-ERROR: [syntax error, unexpected MESSAGE] column 1, while parsing "__message "[BP02] DMA started
+ERROR: [syntax error, unexpected MESSAGE] column 1, while parsing "__message "[BP01] VoiceRecTask woke
        ";"
 
      CSpyBat terminating.

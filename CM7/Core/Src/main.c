@@ -33,14 +33,15 @@
 #include "ble_uart.h"            /* DMA+IDLE driver, bleHistory, BLE_UART_Init() */
 #include "audio_rec.h"           /* button-triggered MEMS recording, AudioRec_Init() */
 #include "audio_sd.h"            /* SD card WAV recording — AudioSD_Init()           */
-#include "voice_recorder.h"      /* VoiceRec_ButtonInit(), button ISR, RTT log       */
+#include "voice_recorder.h"      /* VoiceRec_ButtonInit(), VoiceRecTask, SDWriteTask  */
+#include "rtt_log_task.h"        /* RTTLogTask — deferred log queue drain             */
 #include "command_handler.h"     /* voice CMD: receiver — CommandHandler_Init()       */
 #include "log_mutex.h"           /* LOG() macro — outputs to SEGGER RTT */
 #include "music_display_task.h"  /* Music_Init(), xMusicQueue, music_msg_t */
 #include "cmsis_os2.h"           /* osKernelGetTickCount() */
 #include "timing_log.h"          /* TLOG(), T_US() — RTT timing instrumentation */
 #include "rtos_trace.h"          /* RtosTrace_Init(), RtosTrace_DrainTask()     */
-#include "usb_msc.h"             /* USB_MSC_TaskEntry() — boot-time format recovery */
+/* #include "usb_msc.h" */        /* USB MSC disabled — task not created */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,7 +74,7 @@
 CRC_HandleTypeDef hcrc;
 
 DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
-DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;  /* CH0 = SAI4 MicPair1 D1 (rising edge test — was CH1) */
+DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;  /* CH0 = SAI4 MicPair1 D0 (rising edge, LR=HIGH mic on PC1) — hardware-confirmed */
 
 DMA2D_HandleTypeDef hdma2d;
 
@@ -115,16 +116,17 @@ UART_HandleTypeDef huart8;
 /* BLE UART queue — receives messages from UARTReceiveTask, consumed by Model::tick() */
 QueueHandle_t xBleQueue;
 
-/* ── DFSDM debug snapshot — readable via JLink mem32 without RTT viewer ────
- * Captured immediately after SPICKSEL=11 write in MX_DFSDM1_Init().
- * Expected value: 0x0000008D (CHEN=1, SPICKSEL=11, SITP=01).
- * If 0x00000085: SPICKSEL write did not apply (CHEN was not cleared first).
- * If 0x00000000: DFSDM clock not enabled (RCC gate missing).              */
-volatile uint32_t g_dbg_ch3_chcfgr1  = 0xDEADBEEFu;  /* Ch3 CHCFGR1 after SPICKSEL=11 */
-volatile uint32_t g_dbg_ch0_chcfgr1  = 0xDEADBEEFu;  /* Ch0 CHCFGR1 (DFSDMEN+CKOUTDIV) */
-volatile uint32_t g_dbg_flt0_fltcr1  = 0xDEADBEEFu;  /* Filter0 FLTCR1 (DFEN+CH3+Sinc3) */
-volatile uint32_t g_dbg_sai4_cr1     = 0xDEADBEEFu;  /* SAI4 CR1 (MCKDIV+SAIEN+PDM) */
-volatile uint32_t g_dbg_sai4_pdmcr   = 0xDEADBEEFu;  /* SAI4 PDMCR (PDMEN+CKEN1) */
+/* Log queue — any task posts LogMsg_t entries; RTTLogTask drains and prints */
+QueueHandle_t    xLogQueue;
+volatile uint32_t g_logDropped = 0u;   /* incremented by Log_ToQueue on queue-full */
+static StaticQueue_t s_logQueueObj;
+static uint8_t s_logQueueStorage[32u * sizeof(LogMsg_t)];
+
+/* ── DFSDM Mission Control Hub — live register snapshot at 0x24000050 ──────
+ * J-Link: mem32 0x24000050 10    IAR: pin address in Live Watch window.
+ * RTTLogTask refreshes every 200 ms.  __no_init = startup does not zero it. */
+#pragma location = 0x24000050
+__no_init volatile DFSDM_Debug_Hub_t g_dbg;
 
 /* ── LIVE debug snapshot — captured at VoiceRecTask recording-start time ────
  * Updated on each recording trigger (overwritten each time).
@@ -310,6 +312,14 @@ Error_Handler();
      osKernelStart() (RTOS objects created here).
      The actual HAL_UARTEx_ReceiveToIdle_DMA() call happens inside
      UARTReceiveTask so the FreeRTOS ISR infrastructure is live first. */
+  /* Log queue — created here so AudioSD_Init/VoiceRec_Init log calls are captured.
+   * xQueueCreateStatic uses pre-allocated storage and is safe before osKernelInitialize(). */
+  xLogQueue = xQueueCreateStatic(32u,
+                                 (UBaseType_t)sizeof(LogMsg_t),
+                                 s_logQueueStorage,
+                                 &s_logQueueObj);
+  configASSERT(xLogQueue != NULL);
+
   BLE_UART_Init();
   /* Full voice recorder init: button EXTI + DFSDM + DMA + RTOS objects.
      audio_rec.c is excluded from build so no DMA/GPIO conflict. */
@@ -342,6 +352,7 @@ Error_Handler();
   Music_Init();
   /* Voice recorder handoff queue: depth 1, VoiceRecTask → SDWriteTask */
   xVoiceQueue = xQueueCreate(1, sizeof(uint32_t));
+  /* xLogQueue already created in USER CODE 2 before AudioSD_Init() */
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
@@ -363,20 +374,18 @@ Error_Handler();
   // xTaskCreate(AudioRec_TaskEntry, "AudioRec", 4096u, NULL, osPriorityNormal, NULL);
   /* CommandHandler: receives CMD: messages from NORA, dispatches to screen.
      Stack 1024 words.  Priority below normal: display updates are not time-critical. */
-  xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1024u, NULL,
+  xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1536u, NULL,
               osPriorityBelowNormal, NULL);
   /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
-  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  2048u, xVoiceQueue, 32u, &voiceRecTaskHandle);
+  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
   xTaskCreate(RTTLogTask,    "RTTLogTask",     256u, NULL,        1u, NULL);
   /* HealthMonTask removed — health logged by SDWriteTask after each f_close() */
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);
-  /* USB MSC format recovery — hold blue button 4s at boot → board exposes
-   * SD as USB MSC on CN1 → diskpart formats as exFAT (MBR+partition) →
-   * board resets. FF_MULTI_PARTITION=1 then mounts the result. */
-  xTaskCreate(USB_MSC_TaskEntry, "UsbMscTask", 512u, NULL, 2u, NULL);
+  /* USB MSC format recovery — disabled.
+   * xTaskCreate(USB_MSC_TaskEntry, "UsbMscTask", 512u, NULL, 2u, NULL); */
 
   /* USER CODE END RTOS_THREADS */
 
@@ -544,15 +553,17 @@ static void MX_DFSDM1_Init(void)
   DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 
-  /* ── Step 1: Channel 1 (SAI4 MicPair1 D1 — LR=GND, falling edge) ──────────
-   * Root cause analysis (2026-04-13):
-   *   CH3 (DFSDM1_DATIN3 = PC7) does NOT connect to SAI4 MicPair1 D1 in silicon.
-   *   The SAI4→DFSDM internal bridge routes:
-   *     MicPair1 D1 (falling edge, LR=GND mic on PC1) → DFSDM1_Channel1
-   *     MicPair1 D0 (rising edge, empty)               → DFSDM1_Channel0
-   *     MicPair2 D1 (falling edge, 2nd mic)            → DFSDM1_Channel3
-   *   CH3 was sampling PC7 (DFSDM_DATIN3) which is pulled HIGH → constant all-1s.
-   *   CH1 (falling edge) showed all-0s — testing CH0 (rising edge) per Gemini hypothesis. */
+  /* ── Step 1: Channel 0 — SAI4 MicPair1 D0 (LR=HIGH mic on PC1, rising edge) ──
+   * Hardware-confirmed from schematic mb1248-h747i-d04:
+   *   SB43 (LEFT SELECTION) = OPEN → LR pulled HIGH via R213(10K) to VDD
+   *   LR=HIGH → RIGHT channel → PDM data on RISING edge of CLK
+   * Silicon routing (RM0399): SAI4 MicPair1 bridges to:
+   *   DFSDM1_Channel0 (rising  edge = D0) ← mic on PC1, LR=HIGH  ← THIS PROJECT
+   *   DFSDM1_Channel1 (falling edge = D1) ← empty slot (LR=HIGH mic never outputs here)
+   * SPICKSEL=11 routes SAI4 Block A internal bridge as clock+data source.
+   * SPICKSEL is write-protected when CHEN=1 → clear CHEN, write, restore.
+   * RightBitShift=6: Sinc3 OSR=125 max = 125³ = 1,953,125 → >>6 = 30,517 fits int16_t.
+   *   (DTRBS=5 produced max ±61,035 → int16_t overflow → false DC=4501.) */
   hdfsdm1_channel0.Instance                        = DFSDM1_Channel0;
   hdfsdm1_channel0.Init.OutputClock.Activation     = DISABLE;  /* CKOUT unused — SAI4 is clock source */
   hdfsdm1_channel0.Init.OutputClock.Selection      = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
@@ -560,26 +571,25 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel0.Init.Input.Multiplexer          = DFSDM_CHANNEL_EXTERNAL_INPUTS;
   hdfsdm1_channel0.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
   hdfsdm1_channel0.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm1_channel0.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_RISING;   /* rising edge test */
+  hdfsdm1_channel0.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_RISING;   /* rising edge = LR=HIGH mic */
   hdfsdm1_channel0.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
   hdfsdm1_channel0.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel0.Init.Awd.Oversampling           = 10u;
   hdfsdm1_channel0.Init.Offset                     = 0;
-  hdfsdm1_channel0.Init.RightBitShift              = 5u;
+  hdfsdm1_channel0.Init.RightBitShift              = 6u;        /* DTRBS=6: max ±30,517 fits int16_t */
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel0) != HAL_OK) { Error_Handler(); }
 
-  /* ── Override SPICKSEL=11: route Channel 0 to SAI4 Block A internal bridge ─
-   * HAL sets SPICKSEL=01 (DFSDM_CHANNEL_SPI_CLOCK_INTERNAL = CKOUT).
-   * We need SPICKSEL=11 so CH0 receives clock+data from SAI4 bridge, not DATIN0 pin.
-   * SPICKSEL is write-protected when CHEN=1 → clear CHEN, write, restore. */
+  /* ── Override SPICKSEL=11 on Channel 0 — SAI4 Block A internal bridge ──────
+   * HAL sets SPICKSEL=01 (DFSDM_CHANNEL_SPI_CLOCK_INTERNAL = CKOUT pin).
+   * We need SPICKSEL=11 so CH0 receives from SAI4 bridge, not DATIN0 pin. */
   DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
   DFSDM1_Channel0->CHCFGR1  = (DFSDM1_Channel0->CHCFGR1 & ~DFSDM_CHCFGR1_SPICKSEL_Msk)
                              | (DFSDM_CHCFGR1_SPICKSEL_0 | DFSDM_CHCFGR1_SPICKSEL_1); /* =11: SAI4-A → CH0 */
   DFSDM1_Channel0->CHCFGR1 |=  DFSDM_CHCFGR1_CHEN;
 
-  /* ── Snapshot registers into globals — readable via JLink without RTT ── */
-  g_dbg_ch3_chcfgr1 = DFSDM1_Channel0->CHCFGR1;   /* expect 0x0000008C (CH0 SPICKSEL=11, SITP=00 rising) */
-  g_dbg_ch0_chcfgr1 = DFSDM1_Channel0->CHCFGR1;   /* expect 0x80180000 (DFSDMEN+CKOUTDIV=24) */
+  /* ── Snapshot into g_dbg (0x24000050) — visible in IAR Live Watch ─── */
+  g_dbg.ch0_cfg1 = DFSDM1_Channel0->CHCFGR1;  /* expect 0x8018008C */
+  g_dbg.ch0_cfg2 = DFSDM1_Channel0->CHCFGR2;  /* expect 0x00000030 */
 
   /* ── Step 2: Filter 0 ── */
   hdfsdm1_filter0.Instance                          = DFSDM1_Filter0;
@@ -596,7 +606,9 @@ static void MX_DFSDM1_Init(void)
                                         DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
   { Error_Handler(); }
 
-  g_dbg_flt0_fltcr1 = DFSDM1_Filter0->FLTCR1;     /* expect 0x23240001 */
+  g_dbg.flt0_cr1 = DFSDM1_Filter0->FLTCR1;    /* expect 0x20240001 (RCSEL=0=CH0) */
+  g_dbg.flt0_fcr = DFSDM1_Filter0->FLTFCR;    /* expect 0x607C0000 (Sinc3, OSR=125) */
+  g_dbg.flt0_isr = DFSDM1_Filter0->FLTISR;    /* expect 0x00000000 at boot (no CKABF yet) */
   /* USER CODE END DFSDM1_Init 2 */
 
 }
@@ -1008,8 +1020,8 @@ static void MX_SAI4_Init(void)
   hsai_BlockA4.Instance->CR1 = (hsai_BlockA4.Instance->CR1 & ~SAI_xCR1_MCKDIV) |
                                 (12u << SAI_xCR1_MCKDIV_Pos);
 
-  g_dbg_sai4_cr1   = hsai_BlockA4.Instance->CR1;    /* expect 0x00C10040 (MCKDIV=12, SAIEN=0 yet) */
-  g_dbg_sai4_pdmcr = SAI4->PDMCR;                   /* expect 0x00000101 (PDMEN+CKEN1) */
+  g_dbg.sai4_pdm = SAI4->PDMCR;                     /* expect 0x00000101 (PDMEN+CKEN1) */
+  /* SAI4 CR1 not in DebugHub — still readable at hsai_BlockA4.Instance->CR1 or 0x58005404 */
 
   /* USER CODE END SAI4_Init 2 */
 
@@ -1158,7 +1170,7 @@ static void MX_GPIO_Init(void)
  * ──────────────────────────────────────────────────────────────────────── */
 static void routeAsciiMessage(const char *msg, uint16_t len)
 {
-    RLOG("[ROUTE] line: \"%s\" (%u bytes)", msg, (unsigned)len);
+    RLOG("[ROUTE] line_len=", len);
     BLE_UART_HistPush(msg);
 
     if (strncmp(msg, "RESULT:", 7) == 0)
@@ -1168,7 +1180,7 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         strncpy(bleMsg, msg, BLE_MSG_LEN - 1u);
         bleMsg[BLE_MSG_LEN - 1u] = '\0';
         if (xQueueSend(xBleQueue, bleMsg, 0) != pdTRUE)
-            RLOG("[WARN] xBleQueue full -- RESULT dropped!");
+            RLOG0("[WARN] BLE_Q_FULL_RESULT");
     }
     else if (strncmp(msg, "TRACK:", 6) == 0)
     {
@@ -1203,12 +1215,11 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         }
 
         g_t_track = DWT_SNAP();
-        RLOG("[1] YouTube track received: \"%s\" | \"%s\" | videoId=%s",
-            m.track.title, m.track.artist, m.track.videoId);
-        RLOG("[2] PC player notified (NORA HTTP POST)");
+        RLOG0("[1] TRACK_RCVD");
+        RLOG0("[2] TRACK_TO_MUSIC_Q");
 
         if (xQueueSend(xMusicQueue, &m, 0) != pdTRUE)
-            RLOG("[WARN] xMusicQueue full -- TRACK dropped");
+            RLOG0("[WARN] MUSIC_Q_FULL_TRACK");
     }
     else if (strncmp(msg, "THUMB:", 6) == 0)
     {
@@ -1218,27 +1229,77 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
     }
     else if (strncmp(msg, "ERROR:", 6) == 0)
     {
-        RLOG("[ERROR] NORA error: \"%s\"", msg + 6);
+        /* Log the actual error text from NORA, not just the event */
+        RLOG("[ERROR] NORA_ERR len=", len);
+        SEGGER_RTT_WriteString(0, "[ERROR] NORA: \"");
+        SEGGER_RTT_Write(0, msg + 6, (len > 6u) ? len - 6u : 0u);
+        SEGGER_RTT_WriteString(0, "\"\n");
+        printf("[ERROR] NORA: \"%.*s\"\n", (int)(len > 6u ? (int)len - 6 : 0), msg + 6);
+
         music_msg_t m;
         memset(&m, 0, sizeof(m));
         m.type = MSG_ERROR;
         strncpy(m.error.reason, msg + 6, sizeof(m.error.reason) - 1u);
         if (xQueueSend(xMusicQueue, &m, 0) != pdTRUE)
-            RLOG("[WARN] xMusicQueue full -- ERROR dropped");
+            RLOG0("[WARN] MUSIC_Q_FULL_ERR");
     }
     else if (strncmp(msg, "CMD:", 4) == 0)
     {
         /* Voice command routed back from NORA (Rule B / Rule C).
          * Hand off to CommandHandler task — non-blocking; drop if queue full. */
-        RLOG("[CMD] routing to CommandHandler: \"%s\"", msg);
+        RLOG0("[CMD] CMD_ROUTE");
         if (CommandHandler_Post(msg) == 0)
-            RLOG("[WARN] CMD queue full -- dropped: \"%s\"", msg);
+            RLOG0("[WARN] CMD_Q_FULL");
     }
-    else if (strncmp(msg, "AUDIO:READY", 11) == 0)
+    else if (strstr(msg, "AUDIO:READY") != NULL)
     {
         /* NORA has opened the GCS HTTP PUT and is ready to receive WAV bytes.
          * Signal AudioSD_SendFileToUART() to start streaming. */
+        RLOG("[ROUTE] AUDIO_READY_RCVD", len);
         AudioSD_NotifyReady();
+    }
+    else if (strncmp(msg, "UPLOAD:OK:", 10) == 0)
+    {
+        /* NORA: GCS upload succeeded — "UPLOAD:OK:<filename>" */
+        RLOG("[CLOUD] UPLOAD_OK len=", len);
+        SEGGER_RTT_WriteString(0, "[CLOUD] UPLOAD_OK: \"");
+        SEGGER_RTT_Write(0, msg + 10, len > 10u ? len - 10u : 0u);
+        SEGGER_RTT_WriteString(0, "\"\n");
+        printf("[CLOUD] UPLOAD_OK: \"%.*s\"\n", (int)(len > 10u ? len - 10u : 0u), msg + 10);
+    }
+    else if (strncmp(msg, "UPLOAD:FAIL", 11) == 0)
+    {
+        /* NORA: GCS upload failed — "UPLOAD:FAIL" or "UPLOAD:FAIL:<reason>" */
+        RLOG("[CLOUD] UPLOAD_FAIL len=", len);
+        SEGGER_RTT_WriteString(0, "[CLOUD] UPLOAD_FAIL: \"");
+        SEGGER_RTT_Write(0, msg, len < 60u ? len : 60u);
+        SEGGER_RTT_WriteString(0, "\"\n");
+        printf("[CLOUD] UPLOAD_FAIL: \"%.*s\"\n", (int)(len < 60u ? len : 60u), msg);
+    }
+    else if (strncmp(msg, "STT:OK:", 7) == 0)
+    {
+        /* NORA: speech-to-text succeeded — "STT:OK:<transcript>" */
+        RLOG("[STT] OK len=", len);
+        SEGGER_RTT_WriteString(0, "[STT] TRANSCRIPT: \"");
+        SEGGER_RTT_Write(0, msg + 7, len > 7u ? len - 7u : 0u);
+        SEGGER_RTT_WriteString(0, "\"\n");
+        printf("[STT] TRANSCRIPT: \"%.*s\"\n", (int)(len > 7u ? len - 7u : 0u), msg + 7);
+    }
+    else if (strncmp(msg, "STT:FAIL", 8) == 0)
+    {
+        /* NORA: speech-to-text ran but produced no transcript */
+        RLOG0("[STT] FAIL -- no transcript");
+        SEGGER_RTT_WriteString(0, "[STT] FAIL -- no transcript (silence or noise)\n");
+        printf("[STT] FAIL -- no transcript (silence or noise)\n");
+    }
+    else
+    {
+        /* Unknown message from NORA — log full content so we can identify it */
+        RLOG("[ROUTE] UNKNOWN len=", len);
+        SEGGER_RTT_WriteString(0, "[ROUTE] UNKNOWN: \"");
+        SEGGER_RTT_Write(0, msg, len < 60u ? len : 60u);
+        SEGGER_RTT_WriteString(0, "\"\n");
+        printf("[ROUTE] UNKNOWN: \"%.*s\"\n", (int)(len < 60u ? len : 60u), msg);
     }
 }
 
@@ -1300,20 +1361,11 @@ static void UARTReceiveTask(void *argument)
                 accumLen = 0u;
                 accum[0] = '\0';
             }
-            else
-            {
-                RLOG("[UART] heartbeat -- idle (ISR count=%lu)", g_uartIsrCount);
-            }
+            /* Heartbeat suppressed — only log if ISR count changed (actual traffic) */
             continue;
         }
 
         TLOG("3 xRawBleQueue_recv len=%u  t=%lu us", raw.len, T_US());
-        RLOG("[UART] burst: %u bytes  [%02X %02X %02X %02X]",
-            raw.len,
-            raw.len > 0u ? raw.data[0] : 0u,
-            raw.len > 1u ? raw.data[1] : 0u,
-            raw.len > 2u ? raw.data[2] : 0u,
-            raw.len > 3u ? raw.data[3] : 0u);
 
         /* Process every byte in this DMA burst. */
         uint16_t i = 0u;

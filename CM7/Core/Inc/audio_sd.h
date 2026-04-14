@@ -113,4 +113,22 @@ bool AudioSD_IsBusy(void);
  */
 void AudioSD_NotifyReady(void);
 
+/* ── UART health counters ────────────────────────────────────────────────────
+ * Accumulated across all AudioSD_SendFileToUART() calls since boot.
+ * Read by RTTLogTask [PING] every 5 s for non-intrusive health monitoring.
+ * Written only by SDWriteTask (single writer) — no mutex needed.
+ * ─────────────────────────────────────────────────────────────────────────── */
+typedef struct
+{
+    uint32_t tx_retries;        /* cumulative HAL_BUSY retries (all transfers)     */
+    uint32_t tx_hard_fails;     /* hard failures: HAL_ERROR or HAL_TIMEOUT         */
+    uint32_t tx_last_err_code;  /* last huart8.ErrorCode (ORE=8, FE=4, NE=2, PE=1)*/
+    uint32_t tx_last_declared;  /* bytes announced to NORA in last transfer header */
+    uint32_t tx_last_sent;      /* bytes actually transmitted in last transfer      */
+    uint32_t tx_transfer_count; /* number of completed AudioSD_SendFileToUART calls */
+    uint32_t rx_overruns;       /* ORE count from HAL_UART_ErrorCallback (ISR)     */
+} UartHealth_t;
+
+extern volatile UartHealth_t g_UartHealth;
+
 #endif /* AUDIO_SD_H */

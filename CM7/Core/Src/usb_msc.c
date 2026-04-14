@@ -92,11 +92,11 @@ static bool s_sdInit(void)
     s_hsd_msc.Init.ClockDiv            = 4;
 
     if (HAL_SD_Init(&s_hsd_msc) != HAL_OK) {
-        RLOG("[MSC] SD init FAIL");
+        RLOG0("[MSC] SD_INIT_FAIL");
         return false;
     }
     if (HAL_SD_ConfigWideBusOperation(&s_hsd_msc, SDMMC_BUS_WIDE_4B) != HAL_OK)
-        RLOG("[MSC] SD 4-bit config FAIL — continuing 1-bit");
+        RLOG0("[MSC] SD_4BIT_FAIL");
     return true;
 }
 
@@ -137,7 +137,7 @@ int8_t USB_MSC_StorageInit(uint8_t lun)
 {
     (void)lun;
     bool ok = s_sdInit();
-    RLOG("[MSC] StorageInit lun=%u result=%d", lun, ok ? 0 : -1);
+    RLOG("[MSC] STORAGE_INIT ok=", (uint32_t)(ok ? 1u : 0u));
     return ok ? 0 : -1;
 }
 
@@ -148,12 +148,12 @@ int8_t USB_MSC_StorageGetCapacity(uint8_t lun,
     (void)lun;
     HAL_SD_CardInfoTypeDef info;
     if (HAL_SD_GetCardInfo(&s_hsd_msc, &info) != HAL_OK) {
-        RLOG("[MSC] GetCapacity FAIL");
+        RLOG0("[MSC] GETCAPACITY_FAIL");
         return -1;
     }
     *block_num  = info.LogBlockNbr - 1u;
     *block_size = (uint16_t)info.LogBlockSize;
-    RLOG("[MSC] GetCapacity blocks=%lu blksize=%u", *block_num, *block_size);
+    RLOG("[MSC] GETCAPACITY blocks=", *block_num);
     return 0;
 }
 
@@ -190,11 +190,11 @@ int8_t USB_MSC_StorageRead(uint8_t lun,
         /* D2 SRAM1 is non-cacheable (MPU region 7) — no cache ops needed */
         if (!s_sdWaitReady(2000u)) return -1;
         if (HAL_SD_ReadBlocks(&s_hsd_msc, s_mscSectorBuf, addr, n, 5000u) != HAL_OK) {
-            RLOG("[MSC] Read FAIL blk=%lu n=%u err=0x%08lX", addr, n, s_hsd_msc.ErrorCode);
+            SEGGER_RTT_WriteString(0, "[MSC] READ_FAIL\n");   /* ISR context — RTT only */
             return -1;
         }
         if (!s_sdWaitReady(5000u)) {
-            RLOG("[MSC] Read WaitReady TIMEOUT blk=%lu", addr);
+            SEGGER_RTT_WriteString(0, "[MSC] READ_WAIT_TIMEOUT\n");
             return -1;
         }
         memcpy(dst, s_mscSectorBuf, bytes);
@@ -223,11 +223,11 @@ int8_t USB_MSC_StorageWrite(uint8_t lun,
         memcpy(s_mscSectorBuf, src, bytes);
         if (!s_sdWaitReady(2000u)) return -1;
         if (HAL_SD_WriteBlocks(&s_hsd_msc, s_mscSectorBuf, addr, n, 5000u) != HAL_OK) {
-            RLOG("[MSC] Write FAIL blk=%lu n=%u err=0x%08lX", addr, n, s_hsd_msc.ErrorCode);
+            SEGGER_RTT_WriteString(0, "[MSC] WRITE_FAIL\n");   /* ISR context — RTT only */
             return -1;
         }
         if (!s_sdWaitReady(5000u)) {
-            RLOG("[MSC] Write WaitReady TIMEOUT blk=%lu", addr);
+            SEGGER_RTT_WriteString(0, "[MSC] WRITE_WAIT_TIMEOUT\n");
             return -1;
         }
 

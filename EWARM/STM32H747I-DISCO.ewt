@@ -3597,6 +3597,51 @@
             </file>
         </group>
         <group>
+            <name>USBD</name>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_pcd.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_pcd_ex.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_ll_usb.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\CM7\Core\Src\usb_msc.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\CM7\Core\Src\usbd_conf.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_core.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ctlreq.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\CM7\Core\Src\usbd_desc.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Core\Src\usbd_ioreq.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_bot.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_data.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\Middlewares\ST\STM32_USB_Device_Library\Class\MSC\Src\usbd_msc_scsi.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\CM7\Core\Src\usbd_storage.c</name>
+            </file>
+        </group>
+        <group>
             <name>User</name>
             <group>
                 <name>CM4</name>
@@ -3619,18 +3664,12 @@
                     <name>Core</name>
                     <group>
                         <name>Inc</name>
-                        <file>
-                            <name>$PROJ_DIR$\..\CM7\Core\Src\rtos_trace.c</name>
-                        </file>
                     </group>
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\audio_sd.c</name>
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\ble_uart.c</name>
-                    </file>
-                    <file>
-                        <name>$PROJ_DIR$\..\CM7\Core\Src\command_handler.c</name>
                     </file>
                     <file>
                         <name>$PROJ_DIR$\..\CM7\Core\Src\fault_handler_asm.s</name>
@@ -4040,6 +4079,18 @@
                 <name>$PROJ_DIR$\..\Middlewares\Third_Party\FreeRTOS\Source\timers.c</name>
             </file>
         </group>
+    </group>
+    <group>
+        <name>Tasks</name>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\Core\Src\command_handler.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\Core\Src\rtos_trace.c</name>
+        </file>
+        <file>
+            <name>$PROJ_DIR$\..\CM7\Core\Src\rtt_log_task.c</name>
+        </file>
     </group>
     <group>
         <name>Utilities</name>

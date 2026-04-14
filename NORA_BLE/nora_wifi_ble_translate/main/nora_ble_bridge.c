@@ -59,8 +59,8 @@
 #define BLE_DEFAULT_LANGPAIR "en|he"
 
 /* Wi-Fi credentials — change before flashing */
-#define WIFI_SSID        "Ohad2.4"
-#define WIFI_PASSWORD    "paypal324"
+#define WIFI_SSID        "Sightsys_SEC24"
+#define WIFI_PASSWORD    "0542584033"
 #define WIFI_MAX_RETRY   5
 
 /* ── Google Translate response buffer ───────────────────────────────────── */

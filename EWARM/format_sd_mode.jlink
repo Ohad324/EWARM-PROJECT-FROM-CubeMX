@@ -1,0 +1,16 @@
+// format_sd_mode.jlink — Flash firmware + set force-format flag + run
+//
+// g_forceFormatMode lives at 0x3800FFFC (__no_init, D3 SRAM last word).
+// Writing FORCE_FORMAT_MAGIC (0xF04CA700) here before the CPU starts causes
+// USB_MSC_TaskEntry to bypass the 4-second button hold and enter format mode
+// immediately on first boot.  The flag is cleared by the task on first read.
+
+h
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+
+// Write magic value to g_forceFormatMode before releasing CPU
+w4 0x3800FFFC 0xF04CA700
+
+g
+exit

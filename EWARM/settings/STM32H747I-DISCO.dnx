@@ -32,15 +32,15 @@
         <TraceBufferSize>0x10000</TraceBufferSize>
         <TraceStallIfFIFOFull>0x0</TraceStallIfFIFOFull>
         <TracePortSize>0x0</TracePortSize>
-        <CpuHaltOnBreakpointSet>_ 0</CpuHaltOnBreakpointSet>
-        <LeaveTargetRunning>_ 0</LeaveTargetRunning>
-        <CStepIntDis>_ 0</CStepIntDis>
         <jlinkResetStyle>12</jlinkResetStyle>
         <jlinkResetStrategy>0</jlinkResetStrategy>
         <MultiCoreRunAll>0</MultiCoreRunAll>
+        <CpuHaltOnBreakpointSet>_ 0</CpuHaltOnBreakpointSet>
+        <LeaveTargetRunning>_ 0</LeaveTargetRunning>
+        <CStepIntDis>_ 0</CStepIntDis>
     </JLinkDriver>
     <DebugChecksum>
-        <Checksum>2442451571</Checksum>
+        <Checksum>4049415655</Checksum>
     </DebugChecksum>
     <Exceptions>
         <StopOnUncaught>_ 0</StopOnUncaught>
@@ -153,37 +153,6 @@
         <ShowTimeSum>1</ShowTimeSum>
         <SumSortOrder>0</SumSortOrder>
     </EventLog>
-    <TermIOLog>
-        <LoggingEnabled>_ 0</LoggingEnabled>
-        <LogFile>_ ""</LogFile>
-    </TermIOLog>
-    <DisassembleMode>
-        <mode>0</mode>
-    </DisassembleMode>
-    <Breakpoints2>
-        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.382.1" 0 0 1 "" 0 "" 0</Bp0>
-        <Bp1>_ 0 "EMUL_CODE" "0x803'1e62" 0 0 1 "" 0 "" 0</Bp1>
-        <Bp2>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.214.3" 0 0 1 "" 0 "" 0</Bp2>
-        <Bp3>_ 0 "EMUL_CODE" "0x803'1e74" 0 0 1 "" 0 "" 0</Bp3>
-        <Bp4>_ 0 "EMUL_CODE" "0x803'1e70" 0 0 1 "" 0 "" 0</Bp4>
-        <Bp5>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.241.1" 0 0 1 "" 0 "" 0</Bp5>
-        <Bp6>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.249.1" 0 0 1 "" 0 "" 0</Bp6>
-        <Bp7>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.286.3" 0 0 1 "" 0 "" 0</Bp7>
-        <Bp8>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.252.1" 0 0 1 "" 0 "" 0</Bp8>
-        <Bp9>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.483.1" 0 0 1 "" 0 "" 0</Bp9>
-        <Bp10>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.322.3" 0 0 1 "" 0 "" 0</Bp10>
-        <Bp11>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.355.3" 0 0 1 "" 0 "" 0</Bp11>
-        <Bp12>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.1361.1" 0 0 1 "" 0 "" 0</Bp12>
-        <Bp13>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.1131.1" 0 0 1 "" 0 "" 0</Bp13>
-        <Bp14>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.301.3" 0 0 1 "" 0 "" 0</Bp14>
-        <Bp15>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.969.3" 0 0 1 "" 0 "" 0</Bp15>
-        <Bp16>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.1204.5" 0 0 1 "" 0 "" 0</Bp16>
-        <Bp17>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.899.1" 0 0 1 "" 0 "" 0</Bp17>
-        <Bp18>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.835.1" 0 0 1 "" 0 "" 0</Bp18>
-        <Bp19>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.800.1" 0 0 1 "" 0 "" 0</Bp19>
-        <Bp20>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.651.23" 0 0 1 "" 0 "" 0</Bp20>
-        <Count>21</Count>
-    </Breakpoints2>
     <DriverProfiling>
         <Enabled>1</Enabled>
         <Mode>3</Mode>
@@ -201,4 +170,16 @@
         <SuppressDialog>0</SuppressDialog>
         <SuppressResolveSourcesForDebugTarget>1</SuppressResolveSourcesForDebugTarget>
     </Aliases>
+    <TermIOLog>
+        <LoggingEnabled>_ 0</LoggingEnabled>
+        <LogFile>_ ""</LogFile>
+    </TermIOLog>
+    <DisassembleMode>
+        <mode>0</mode>
+    </DisassembleMode>
+    <Breakpoints2>
+        <Bp0>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\main.c}.241.3" 0 0 1 "" 0 "" 0</Bp0>
+        <Bp1>_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\CM7\Core\Src\voice_recorder.c}.683.14" 0 0 1 "" 0 "" 0</Bp1>
+        <Count>2</Count>
+    </Breakpoints2>
 </settings>

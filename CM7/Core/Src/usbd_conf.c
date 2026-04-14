@@ -131,13 +131,13 @@ void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum)
 
 void HAL_PCD_ConnectCallback(PCD_HandleTypeDef *hpcd)
 {
-    RLOG("[USB] CONNECT");
+    SEGGER_RTT_WriteString(0, "[USB] CONNECT\n");   /* ISR context — RTT only */
     USBD_LL_DevConnected(hpcd->pData);
 }
 
 void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
 {
-    RLOG("[USB] DISCONNECT");
+    SEGGER_RTT_WriteString(0, "[USB] DISCONNECT\n");   /* ISR context — RTT only */
     USBD_LL_DevDisconnected(hpcd->pData);
 }
 

@@ -29,7 +29,7 @@
 #define TRACE_RTT_BUF_BYTES 8192u        /* RTT host-side buffer  */
 #define DRAIN_PERIOD_MS     5u           /* drain wakeup interval */
 #define CPU_CLK_HZ          480000UL     /* 480 MHz Cortex-M7     */
-#define WATERMARK_PERIOD_MS 200u         /* stack HWM report interval */
+#define WATERMARK_PERIOD_MS 5000u        /* stack HWM report interval */
 #define MAX_TASK_COUNT      16u          /* upper bound for system state */
 
 /* ── Ring buffer record (16 bytes) ──────────────────────────────────────── */
@@ -213,7 +213,7 @@ static void emit_run_counts(void)
             "[T+%7lu] [RUNS] -- switches per %u ms --\n",
             (unsigned long)HAL_GetTick(), WATERMARK_PERIOD_MS);
         if (len > 0)
-            SEGGER_RTT_Write(0u, line, (unsigned)len);
+            SEGGER_RTT_Write(TRACE_RTT_CHANNEL, line, (unsigned)len);
     }
 
     for (uint32_t i = 0u; i < n; i++) {
@@ -225,7 +225,7 @@ static void emit_run_counts(void)
             s_run_counts[i].name ? s_run_counts[i].name : "?",
             (unsigned long)cnt);
         if (len > 0)
-            SEGGER_RTT_Write(0u, line, (unsigned)len);
+            SEGGER_RTT_Write(TRACE_RTT_CHANNEL, line, (unsigned)len);
     }
 }
 
@@ -244,7 +244,7 @@ static void emit_stack_watermarks(void)
             (unsigned long)HAL_GetTick(),
             (unsigned long)xPortGetFreeHeapSize());
         if (len > 0)
-            SEGGER_RTT_Write(0u, line, (unsigned)len);
+            SEGGER_RTT_Write(TRACE_RTT_CHANNEL, line, (unsigned)len);
     }
 
     for (UBaseType_t i = 0u; i < n; i++) {
@@ -254,7 +254,7 @@ static void emit_stack_watermarks(void)
             info[i].pcTaskName,
             (unsigned)info[i].usStackHighWaterMark);
         if (len > 0)
-            SEGGER_RTT_Write(0u, line, (unsigned)len);
+            SEGGER_RTT_Write(TRACE_RTT_CHANNEL, line, (unsigned)len);
     }
 }
 
