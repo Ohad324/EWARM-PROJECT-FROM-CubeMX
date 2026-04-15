@@ -1,0 +1,205 @@
+/*
+ * dfsdm_runtime_check.mac — CSpyBat headless macro
+ * NO breakpoints. Runs firmware, takes 4 timed register snapshots:
+ *   SNAP 1: At main() — before any peripheral init
+ *   SNAP 2: After 8s — firmware fully initialized, idle
+ *   SNAP 3: 2s after blue-button SW trigger — mid-recording
+ *   SNAP 4: 7s after trigger — post-recording
+ *
+ * Usage: run via dfsdm_runtime_check.bat (CSpyBat)
+ */
+
+dfsdm_snapshot(__var tag)
+{
+    __var ch0cfg1, ch1cfg1, ch1cfg2, fltcr1, fltfcr, fltisr, fltrdatar;
+    __var sai4cr1, pdmcr, pdmdly, sai4sr, sai4dr, sai4slotr;
+    __var dmacr, dmandtr, dmapar, dmam0ar;
+    __var rcc_apb2, rcc_apb4, rcc_ahb1;
+    __var gpioc_moder, gpioc_afrl, gpioc_idr;
+    __var gpioe_moder, gpioe_afrl, gpioe_idr;
+    __var state, sampleCnt, fileIdx;
+
+    /* ── RCC clocks ── */
+    rcc_apb2 = __readMemory32(0x580244F0, "Memory");
+    rcc_apb4 = __readMemory32(0x580244F8, "Memory");
+    rcc_ahb1 = __readMemory32(0x580244D8, "Memory");
+
+    /* ── DFSDM1 Channel 0 (clock master) ── */
+    ch0cfg1 = __readMemory32(0x40017400, "Memory");
+
+    /* ── DFSDM1 Channel 1 (data channel) ── */
+    ch1cfg1 = __readMemory32(0x40017420, "Memory");
+    ch1cfg2 = __readMemory32(0x40017424, "Memory");
+
+    /* ── DFSDM1 Filter 0 ── */
+    fltcr1    = __readMemory32(0x40017500, "Memory");
+    fltisr    = __readMemory32(0x40017508, "Memory");
+    fltfcr    = __readMemory32(0x40017514, "Memory");
+    fltrdatar = __readMemory32(0x4001751C, "Memory");
+
+    /* ── SAI4 Block A ── */
+    sai4cr1   = __readMemory32(0x58005004, "Memory");
+    sai4slotr = __readMemory32(0x58005010, "Memory");
+    sai4sr    = __readMemory32(0x58005018, "Memory");
+    sai4dr    = __readMemory32(0x58005020, "Memory");
+    pdmcr     = __readMemory32(0x58005044, "Memory");
+    pdmdly    = __readMemory32(0x58005048, "Memory");
+
+    /* ── DMA1 Stream 1 ── */
+    dmacr   = __readMemory32(0x40020028, "Memory");
+    dmandtr = __readMemory32(0x4002002C, "Memory");
+    dmapar  = __readMemory32(0x40020030, "Memory");
+    dmam0ar = __readMemory32(0x40020034, "Memory");
+
+    /* ── GPIO ── */
+    gpioc_moder = __readMemory32(0x58020800, "Memory");
+    gpioc_afrl  = __readMemory32(0x58020820, "Memory");
+    gpioc_idr   = __readMemory32(0x58020810, "Memory");
+    gpioe_moder = __readMemory32(0x58021000, "Memory");
+    gpioe_afrl  = __readMemory32(0x58021020, "Memory");
+    gpioe_idr   = __readMemory32(0x58021010, "Memory");
+
+    /* ── Firmware state (from linker map) ── */
+    sampleCnt = __readMemory32(0x24037784, "Memory");
+    fileIdx   = __readMemory32(0x24037790, "Memory");
+    state     = __readMemory8(0x240377FE, "Memory");
+
+    /* ── Print ── */
+    __message "\n================================================================";
+    __message "  SNAPSHOT: ", tag;
+    __message "================================================================";
+
+    __message "RCC:  APB2ENR=0x", rcc_apb2:%X,
+              "  DFSDM1EN=", (rcc_apb2 >> 30) & 1:%d,
+              "  |  APB4ENR=0x", rcc_apb4:%X,
+              "  SAI4EN=", (rcc_apb4 >> 21) & 1:%d,
+              "  |  AHB1ENR DMA1EN=", rcc_ahb1 & 1:%d;
+
+    __message "CH0:  CHCFGR1=0x", ch0cfg1:%X,
+              "  DFSDMEN=", (ch0cfg1 >> 31) & 1:%d,
+              "  CKOUTDIV=", (ch0cfg1 >> 16) & 0xFF:%d;
+
+    __message "CH1:  CHCFGR1=0x", ch1cfg1:%X,
+              "  SITP=", ch1cfg1 & 3:%d,
+              "  SPICKSEL=", (ch1cfg1 >> 2) & 3:%d,
+              "  CHEN=", (ch1cfg1 >> 7) & 1:%d;
+    __message "      CHCFGR2=0x", ch1cfg2:%X,
+              "  DTRBS=", (ch1cfg2 >> 3) & 0x1F:%d;
+    __message "      CHDATINR=0x", __readMemory32(0x40017430, "Memory"):%X,
+              "  (non-zero = serial data flowing)";
+
+    __message "FLT0: CR1=0x", fltcr1:%X,
+              "  RCSEL=", (fltcr1 >> 24) & 7:%d,
+              "  RDMAEN=", (fltcr1 >> 21) & 1:%d,
+              "  DFEN=", fltcr1 & 1:%d,
+              "  RSWSTART=", (fltcr1 >> 17) & 1:%d;
+    __message "      FCR=0x", fltfcr:%X,
+              "  FORD=", (fltfcr >> 29) & 7:%d,
+              "  FOSR=", (fltfcr >> 16) & 0x3FF:%d;
+    __message "      ISR=0x", fltisr:%X,
+              "  CKABF=0x", (fltisr >> 16) & 0xFF:%X,
+              "  ROVRF=", (fltisr >> 3) & 1:%d,
+              "  REOCF=", (fltisr >> 1) & 1:%d;
+    __message "      RDATAR=0x", fltrdatar:%X,
+              "  DATA(>>8)=", fltrdatar >> 8:%d;
+
+    __message "SAI4: CR1=0x", sai4cr1:%X,
+              "  SAIEN=", (sai4cr1 >> 16) & 1:%d,
+              "  MCKDIV=", (sai4cr1 >> 20) & 0xF:%d,
+              "  MODE=", sai4cr1 & 3:%d;
+    __message "      SLOTR=0x", sai4slotr:%X,
+              "  SR=0x", sai4sr:%X,
+              "  DR=0x", sai4dr:%X;
+    __message "      PDMCR=0x", pdmcr:%X,
+              "  PDMEN=", pdmcr & 1:%d,
+              "  CKEN1=", (pdmcr >> 8) & 1:%d,
+              "  PDMDLY=0x", pdmdly:%X;
+
+    __message "DMA1: CR=0x", dmacr:%X,
+              "  EN=", dmacr & 1:%d,
+              "  CIRC=", (dmacr >> 8) & 1:%d,
+              "  NDTR=", dmandtr:%d;
+    __message "      PAR=0x", dmapar:%X,
+              "  M0AR=0x", dmam0ar:%X;
+    __message "      LISR=0x", __readMemory32(0x40020000, "Memory"):%X;
+
+    __message "GPIO: PC1 mode=", (gpioc_moder >> 2) & 3:%d,
+              "  AF=", (gpioc_afrl >> 4) & 0xF:%d,
+              "  level=", (gpioc_idr >> 1) & 1:%d;
+    __message "      PE2 mode=", (gpioe_moder >> 4) & 3:%d,
+              "  AF=", (gpioe_afrl >> 8) & 0xF:%d,
+              "  level=", (gpioe_idr >> 2) & 1:%d;
+
+    __message "STATE: g_State=", state:%d,
+              "  g_SampleCount=", sampleCnt:%d,
+              "  g_FileIndex=", fileIdx:%d;
+
+    /* ── g_dbg hub (18 words) ── */
+    __message "g_dbg: ch0_cfg1=0x", __readMemory32(0x24000050, "Memory"):%X,
+              "  flt0_cr1=0x", __readMemory32(0x24000058, "Memory"):%X,
+              "  last_raw=0x", __readMemory32(0x24000084, "Memory"):%X,
+              "  last_val=", __readMemory32(0x24000088, "Memory"):%d;
+
+    /* ── Live globals ── */
+    __message "LIVE:  sai4_cr1=0x", __readMemory32(0x240000E8, "Memory"):%X,
+              "  fltisr=0x", __readMemory32(0x240000EC, "Memory"):%X,
+              "  hal_ok=0x", __readMemory32(0x240000F0, "Memory"):%X,
+              "  fltcr1=0x", __readMemory32(0x240000F4, "Memory"):%X;
+
+    /* ── Buffer samples ── */
+    __message "BUF:   DfsdmBuf[0..3]=",
+              __readMemory32(0x30000000, "Memory"):%d, " ",
+              __readMemory32(0x30000004, "Memory"):%d, " ",
+              __readMemory32(0x30000008, "Memory"):%d, " ",
+              __readMemory32(0x3000000C, "Memory"):%d;
+    __message "       AudioBuf[0..3]=",
+              __readMemory32(0x30020000, "Memory"):%d, " ",
+              __readMemory32(0x30020004, "Memory"):%d, " ",
+              __readMemory32(0x30020008, "Memory"):%d, " ",
+              __readMemory32(0x3002000C, "Memory"):%d;
+
+    __message "================================================================\n";
+}
+
+execUserSetup()
+{
+    __message "\n*** dfsdm_runtime_check.mac — 4 timed snapshots, no breakpoints ***\n";
+
+    /* ── SNAP 1: At main — peripherals not yet initialized ── */
+    dfsdm_snapshot("1/4  BOOT (at main, before init)");
+
+    /* Let firmware run — MX_DFSDM1_Init, MX_SAI4_Init, FreeRTOS start */
+    __go();
+    __delay(8000);
+    __halt();
+
+    /* ── SNAP 2: Idle — firmware initialized, waiting for button ── */
+    dfsdm_snapshot("2/4  IDLE (8s after boot — firmware initialized)");
+
+    /* Software-trigger blue button: write EXTI_D1->SWIER1 bit13 */
+    __writeMemory32(0x00002000, 0x58000008, "Memory");
+    __message "\n>>> SOFTWARE TRIGGER: EXTI SWIER1 bit13 written <<<\n";
+
+    __go();
+    __delay(2000);
+    __halt();
+
+    /* ── SNAP 3: Mid-recording (2s after trigger) ── */
+    dfsdm_snapshot("3/4  RECORDING (2s after trigger)");
+
+    __go();
+    __delay(5000);
+    __halt();
+
+    /* ── SNAP 4: Post-recording (7s after trigger — recording should be done) ── */
+    dfsdm_snapshot("4/4  POST-RECORDING (7s after trigger)");
+
+    __message "\n*** ALL 4 SNAPSHOTS COMPLETE — check log for register deltas ***\n";
+    __message "KEY CHECKS:";
+    __message "  SNAP2: CH1 CHEN=1, SPICKSEL=3, SITP=1, SAI4 PDMEN=1 CKEN1=1";
+    __message "  SNAP3: DFEN=1, RDMAEN=1, RSWSTART=1, DMA EN=1, NDTR<32";
+    __message "         CHDATINR != 0 (data flowing), RDATAR changing";
+    __message "         g_State=1(rec), g_SampleCount increasing";
+    __message "  SNAP4: g_State=0(idle), g_SampleCount=48000, last_raw != 0xFF88CA00";
+    __message "\n";
+}

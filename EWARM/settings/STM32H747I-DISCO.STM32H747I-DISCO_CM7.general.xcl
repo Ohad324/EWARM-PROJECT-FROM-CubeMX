@@ -16,7 +16,7 @@
 
  "--device_macro=C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm/config/debugger/ST/STM32H7xx_TRACE.dmac"
 
- --macro=C:\TouchGFXProjects\MyApplication\EWARM\dfsdm_debug.mac
+ --macro=C:\TouchGFXProjects\MyApplication\EWARM\dfsdm_watch_all.mac
 
  
 

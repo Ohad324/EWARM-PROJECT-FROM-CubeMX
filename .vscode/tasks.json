@@ -11,10 +11,7 @@
                     "args": ["/c"]
                 }
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
+            "group": "build",
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",
@@ -32,7 +29,10 @@
                     "args": ["/c"]
                 }
             },
-            "group": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",
@@ -71,13 +71,15 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "new",
-                "clear": true
+                "clear": true,
+                "showReuseMessage": false,
+                "close": true
             },
             "problemMatcher": []
         },
         {
-            "label": "VOICE_REC_RESULT",
-            "detail": "Kill IAR, connect RTT, rebuild, flash, trigger EXTI13, print VoiceRec RTT result.",
+            "label": "Rebuild + Flash + Read RTT Log (after connect) - Tuesday 21:10",
+            "detail": "Rebuild CM7, flash firmware, connect RTT logger, and print captured log output.",
             "type": "shell",
             "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\voice_rec_result.bat\"",
             "options": {
@@ -90,7 +92,9 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "new",
-                "clear": true
+                "clear": true,
+                "showReuseMessage": false,
+                "close": true
             },
             "problemMatcher": []
         },
@@ -163,6 +167,26 @@
                 }
             },
             "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true,
+                "showReuseMessage": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "DFSDM Runtime Check (CSpyBat — 4 snapshots, no BPs)",
+            "detail": "Rebuild + Flash + CSpyBat: boots, waits 8s, SW-triggers button, takes 4 register snapshots",
+            "type": "shell",
+            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\dfsdm_runtime_check.bat\"",
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": ["/c"]
+                }
+            },
+            "group": "build",
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",

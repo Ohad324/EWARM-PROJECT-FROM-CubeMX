@@ -32,7 +32,7 @@
  *   SDWriteTask → f_open / f_write(WAV header + PCM) / f_close
  *
  * ── HARDWARE ─────────────────────────────────────────────────────────────────
- *   Architecture: SAI4 (front-end) + DFSDM1 Channel 0 (back-end)
+ *   Architecture: SAI4 (front-end) + DFSDM1 Channel 1 (back-end)
  *
  *   SAI4 drives the physical mic interface (4 pins — all on the board):
  *     PE2 (AF10=SAI4_CK1)   → PDM clock output to microphone

@@ -1,0 +1,10 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+mem32 0x5802080C 1
+w4 0x5802080C 0x00000004
+mem32 0x5802080C 1
+go
+exit

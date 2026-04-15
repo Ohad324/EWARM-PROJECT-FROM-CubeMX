@@ -280,7 +280,7 @@ hsai->Init.ClockStrobing       = SAI_CLOCKSTROBING_FALLINGEDGE;
 3. Call `PDM_Filter_Init()` + `PDM_Filter_setConfig()` before **every** recording.
 4. One `PDM_Filter()` call per DMA half — feed `(uint8_t*)pdmSrc`.
 5. **Never manually extract or block bits** — pass the raw DMA buffer, cast as `uint8_t*`.
-6. **LR=HIGH (SB43 open, R213 pull-up) → mic outputs on FALLING edge → DFSDM Channel 0 (SITP=01)**
+6. **LR=HIGH (SB43 open, R213 pull-up) → mic outputs on FALLING edge → DFSDM Channel 1 (SITP=01)**
    This was confirmed from the board schematic. Do NOT use Channel 1 or rising edge for this board.
 
 ### 6. Memory Placement — D3 SRAM for BDMA
@@ -298,7 +298,7 @@ PCM output buffer (`g_AudioBuf`) lives in AXI SRAM (D1, default `.bss`) — writ
 
 ## DFSDM Channel Selection — Hardware-Confirmed, Non-Negotiable
 
-### The active DFSDM channel is Channel 0 — NEVER Channel 1
+### The active DFSDM channel is Channel 1 — NEVER Channel 0
 
 ### *** THIS BOARD IS WIRED AS LR=HIGH (RIGHT CHANNEL) ***
 
@@ -308,21 +308,27 @@ This was confirmed by reading the board schematic (mb1248-h747i-d04-schematic.pd
 - **SB43 (LEFT SELECTION) = OPEN** — LR pin is NOT pulled to GND
 - **R213 (10K)** pulls LR up to the VDD/+3V3 rail
 - Therefore **LR = HIGH → RIGHT channel → PDM data on FALLING edge of CLK**
-- Required: **SITP=01 (falling edge), ch0_cfg1=0x8018008D** — NOT 0x8018008C
+- Required: **SITP=01 (falling edge), ch1_cfg1=0x0000008D**
 
-**DFSDM silicon routing (RM0399):**
-- Falling edge (D0) → **DFSDM1 Channel 0** ← correct channel (SITP=01)
-- Rising edge (D1) → DFSDM1 Channel 1 ← empty slot, no mic data
+**MP34DT05-A datasheet rule (confirmed in docs/DFSDM_Implementation_Notes.md):**
+- LR = LOW  → rising edge  → DFSDM Channel 0 (SITP=00) ← empty on this board
+- LR = HIGH → **falling edge → DFSDM Channel 1 (SITP=01)** ← our mic
 
 **Required register configuration:**
 | Register | Field | Value | Meaning |
 |----------|-------|-------|---------|
-| `DFSDM1_Channel0->CHCFGR1` | SITP[1:0] | `01` | Falling edge — matches LR=HIGH |
-| `DFSDM1_Channel0->CHCFGR1` | SPICKSEL[3:2] | `11` | SAI4 internal bridge as clock/data source |
-| `DFSDM1_Channel0->CHCFGR1` | CHEN | `1` | Channel enabled |
-| `DFSDM1_Channel0->CHCFGR1` | Expected full value | `0x0000008D` | CHEN + SPICKSEL=11 + SITP=01 |
-| `DFSDM1_Channel0->CHCFGR2` | DTRBS[4:0] | `6` | Right-shift 6: Sinc3 OSR=125 max ±30,517 fits int16_t |
-| `DFSDM1_Filter0->FLTCR1` | RCSEL | CH0 | Regular filter reads Channel 0 |
+| `DFSDM1_Channel1->CHCFGR1` | SITP[1:0] | `01` | Falling edge — matches LR=HIGH |
+| `DFSDM1_Channel1->CHCFGR1` | SPICKSEL[3:2] | `11` | SAI4 internal bridge as clock/data source |
+| `DFSDM1_Channel1->CHCFGR1` | CHEN | `1` | Channel enabled |
+| `DFSDM1_Channel1->CHCFGR1` | Expected full value | `0x0000008D` | CHEN + SPICKSEL=11 + SITP=01 |
+| `DFSDM1_Channel1->CHCFGR2` | DTRBS[4:0] | `6` | Right-shift 6: Sinc3 OSR=125 max ±30,517 fits int16_t |
+| `DFSDM1_Filter0->FLTCR1` | RCSEL | CH1 | Regular filter reads Channel 1 |
+
+**Filter selection — Non-Negotiable:**
+- Use **DFSDM1 Filter 0** — NEVER Filter 1, 2, or 3.
+- `HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_1, DFSDM_CONTINUOUS_CONV_ON)`
+- `HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0, g_DfsdmBuf, DFSDM_BUF_TOTAL)`
+- Expected FLTCR1 = `0x21240001` (RCHSEL=1, FAST=1, RDMAEN=1, RCONT=1, DFEN=1)
 
 **Why DTRBS must be 6, not 5:**
 - Sinc3 OSR=125 maximum output = 125³ = 1,953,125 (21 bits)
@@ -336,14 +342,15 @@ This was confirmed by reading the board schematic (mb1248-h747i-d04-schematic.pd
 - Sinc3 filter on all-zeros → negative full-scale output = -30518 (DC garbage)
 - Fix: SITP=01 (falling) → captures actual mic data
 
-**Global clock (Channel 0 is also the clock master):**
+**Global clock (Channel 0 is the clock master — separate from the data channel):**
 - `DFSDM1_Channel0->CHCFGR1` bit 31 = DFSDMEN = 1 (global enable)
 - bits 22:16 = CKOUTDIV = 24 → CKOUT = APB2(100MHz) / (2×25) = 2.0 MHz ✓
-- Expected Ch0 CHCFGR1 full value with global bits: `0x8018008D`
+- Expected Ch0 CHCFGR1 full value with global bits: `0x80180000` (no CHEN on Ch0 — Ch0 is clock master only)
+- Expected Ch1 CHCFGR1 full value: `0x0000008D` (CHEN + SPICKSEL=11 + SITP=01)
 
 **SAI4 mic clock:**
 - PE2 (SAI4_CK1) → 2.048 MHz to mic (PLL2P/24 = 49.14MHz/24)
-- SAI4 provides the bit-clock to DFSDM CH0 via internal silicon bridge (SPICKSEL=11)
+- SAI4 provides the bit-clock to DFSDM CH1 via internal silicon bridge (SPICKSEL=11)
 - `SAI4->PDMCR` must = `0x00000101` (PDMEN + CKEN1) before `__HAL_SAI_ENABLE`
 
 **Mic power:**

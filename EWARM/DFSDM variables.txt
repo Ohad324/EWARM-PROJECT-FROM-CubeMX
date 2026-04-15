@@ -1,6 +1,6 @@
 ; ═══════════════════════════════════════════════════════════════════════════════
 ; DFSDM Audio Pipeline — Variable & Register Reference
-; Updated: 2026-04-14  (CH0 confirmed correct — hardware-verified from schematic)
+; Updated: 2026-04-15  (CH1 confirmed correct — LR=HIGH = falling edge = Channel 1)
 ; Branch: fix/voice-recorder-pdm-clean
 ; ═══════════════════════════════════════════════════════════════════════════════
 ;
@@ -23,90 +23,126 @@
 ; ══════════════════════════════════════════════════════════════════════════════
 ;
 ; Source: Board schematic mb1248-h747i-d04.pdf, sheet U21 (MP34DT05-A)
+;         MP34DT05-A datasheet: LR=HIGH → RIGHT channel → FALLING edge
+;         docs/DFSDM_Implementation_Notes.md Section 3 + 9
 ;
 ;   SB43 (LEFT SELECTION) = OPEN — LR is NOT pulled to GND
 ;   R213 (10K) pulls LR up to VDD/+3V3 rail
-;   Therefore: LR = HIGH → RIGHT channel → PDM data on RISING edge of CLK
+;   Therefore: LR = HIGH → RIGHT channel → PDM data on FALLING edge of CLK
 ;
-; DFSDM silicon routing (RM0399 Table, SAI4 MicPair1):
-;   Rising  edge (D0) → DFSDM1_Channel0  ← CORRECT — this is our mic
-;   Falling edge (D1) → DFSDM1_Channel1  ← wrong edge, empty slot, no data
+; MP34DT05-A datasheet rule:
+;   LR = LOW  → rising  edge → DFSDM1_Channel0 (SITP=00) ← empty on this board
+;   LR = HIGH → FALLING edge → DFSDM1_Channel1 (SITP=01) ← OUR MIC
 ;
-; ACTIVE CHANNEL: DFSDM1_Channel0 (SITP=00, rising edge)
-; DO NOT use Channel 1. Do not use falling edge. This is hardware-confirmed.
+; ACTIVE CHANNEL: DFSDM1_Channel1 (SITP=01, falling edge)
+; DO NOT use Channel 0 for data. Channel 0 is CLOCK MASTER ONLY (DFSDMEN + CKOUTDIV).
+;
+; SPICKSEL: SAI4_CK1 (PE2) is the mic clock — NOT CKOUT (PD3).
+;   PD3 (CKOUT) is NOT routed to the mic on this board.
+;   Required: SPICKSEL=11 (SAI4 internal silicon bridge).
+;   HAL sets SPICKSEL=01 — must be overridden with CHEN clear/restore dance after
+;   HAL_DFSDM_ChannelInit(). This fix is now permanently in MX_DFSDM1_Init (main.c).
+;
+; Clock master (Channel 0):
+;   DFSDM1_Channel0->CHCFGR1 must have:
+;     bit31 DFSDMEN=1  (global DFSDM enable)
+;     bits[22:16] CKOUTDIV=24 → CKOUT = APB2(100MHz) / (2×25) = 2.0 MHz
+;     CHEN=0  (Channel 0 is clock master only — no data role)
+;   Expected Ch0 CHCFGR1 = 0x80180000
 ;
 ; Mic power: VDD = +3V3 via SB42 (closed solder bridge) — always on from CN2 USB.
 ;            SB41 = open (STPMIC1 MICBIAS path bypassed — no STPMIC1 init needed).
-;
-; Why CH1 produced CKABF (clock absence):
-;   CH1 expects falling edge. The mic never outputs on falling edge when LR=HIGH.
-;   PC1 appears stuck LOW from DFSDM's perspective → CKABF flag set.
-;   CH0 (rising edge) sees real PDM transitions → no CKABF.
-;
-; Why DC=4501 was seen even on CH0:
-;   DTRBS=5 → Sinc3 OSR=125 max output = ±61,035 → overflows int16_t (±32,767)
-;   -61,035 cast to int16_t wraps: -61,035 + 65,536 = 4,501 (false DC, not real signal)
-;   Fix: DTRBS=6 → max ±30,517 → fits int16_t cleanly. Code >> 8 shift then correct.
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
 ; PERIPHERAL BASE ADDRESSES
 ; ══════════════════════════════════════════════════════════════════════════════
 ;
-;   DFSDM1 base     = 0x40017000
+;   DFSDM1 base      = 0x40017000
 ;   Channel0 CHCFGR1 @ 0x40017000   (Channel N base = 0x40017000 + N×0x20)
 ;   Channel1 CHCFGR1 @ 0x40017020
-;   Channel2 CHCFGR1 @ 0x40017040
-;   Channel3 CHCFGR1 @ 0x40017060
+;   Channel1 CHCFGR2 @ 0x40017024
+;   Channel1 CHDATINR @ 0x40017030  ← raw serial PDM input data register
 ;   Filter0  FLTCR1  @ 0x40017100
 ;   Filter0  FLTRDATAR @ 0x4001711C  (DMA PAR target — confirmed by JLink)
 ;
 ;   DMA1 Stream1 base = 0x40020028
-;   SAI4  base       = 0x58005400
-;   SAI4  PDMCR      @ 0x58005444
+;   SAI4  base        = 0x58005400
+;   SAI4  PDMCR       @ 0x58005444
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 1. DFSDM CHANNEL 0 — ACTIVE MIC CHANNEL
+; 1. DFSDM CHANNEL 0 — CLOCK MASTER ONLY (no data, no CHEN)
 ; ══════════════════════════════════════════════════════════════════════════════
 
-; Expression:  DFSDM1_Channel0->CHCFGR1
-; IAR cast:    ((DFSDM_Channel_TypeDef*)0x40017000)->CHCFGR1
-
-; [EXPECT] Target value after code fix: 0x8018008C
-;   Bit 31    [DFSDMEN]      = 1   → DFSDM globally enabled (CH0 is the global clock master)
-;   Bits[23:16][CKOUTDIV]    = 24  → CKOUT = APB2(100 MHz) / (2×25) = 2.0 MHz ✓
-;   Bit  7    [CHEN]         = 1   → Channel 0 enabled
-;   Bits[3:2] [SPICKSEL=11]  = 3   → SAI4 internal bridge as clock+data source
-;   Bits[1:0] [SITP=00]      = 0   → Rising edge — matches LR=HIGH (RIGHT mic) ✓
+; Expression:  ((DFSDM_Channel_TypeDef*)0x40017000)->CHCFGR1
+; Expected:    0x80180000
+;   Bit 31    [DFSDMEN]       = 1   → DFSDM globally enabled
+;   Bits[22:16][CKOUTDIV=24] = 24  → CKOUT = APB2(100MHz)/(2×25) = 2.0 MHz ✓
+;   Bit  4    [CHEN]          = 0   → Channel 0 NOT enabled (data role = Channel 1)
 ;
-; Note: SPICKSEL must be set by direct register write AFTER HAL_DFSDM_ChannelInit,
-;       because HAL always resets it to 0. Sequence:
-;         HAL_DFSDM_ChannelInit(&hdfsdm1_channel0);
-;         DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
-;         DFSDM1_Channel0->CHCFGR1  = (val & ~0x0Cu) | 0x0Cu;  // SPICKSEL=11
-;         DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_CHEN;
+; Status: [PEND] — verify on next flash
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 2. DFSDM CHANNEL 1 — ACTIVE MIC CHANNEL
+; ══════════════════════════════════════════════════════════════════════════════
+
+; ── CHCFGR1 ─────────────────────────────────────────────────────────────────
+
+; Expression:  DFSDM1_Channel1->CHCFGR1
+; IAR cast:    ((DFSDM_Channel_TypeDef*)0x40017020)->CHCFGR1
+
+; [EXPECT] Target value after SPICKSEL fix: 0x0000008D
+;   Bit  7    [CHEN]          = 1   → Channel 1 enabled
+;   Bits[3:2] [SPICKSEL=11]   = 3   → SAI4 internal silicon bridge (NOT CKOUT/PD3)
+;   Bits[1:0] [SITP=01]       = 1   → Falling edge — matches LR=HIGH (RIGHT mic) ✓
 ;
-; Status: [EXPECT] — code fix (CH1→CH0) pending flash
+; Fix applied in MX_DFSDM1_Init (main.c): CHEN clear/restore dance after HAL_DFSDM_ChannelInit
+; to override HAL's default SPICKSEL=01 → SPICKSEL=11.
+;
+; Status: [FIXED] — SPICKSEL=11 + SITP=01 now permanently set in firmware
+
+; Also visible via g_dbg struct (0x24000050 AXI SRAM):
+;   g_dbg.ch0_cfg1   — CH1 CHCFGR1 snapshot at init    expect 0x0000008D
+;   g_dbg.spicksel   — bits[3:2] of above               expect 3  (= SAI4 bridge)
+;   g_dbg.sitp       — bits[1:0] of above               expect 1  (= falling)
 
 
-; ── DFSDM CHANNEL 0 — CHCFGR2 (output shift + offset) ──────────────────────
+; ── CHCFGR2 ─────────────────────────────────────────────────────────────────
 
-; Expression:  DFSDM1_Channel0->CHCFGR2
-; IAR cast:    ((DFSDM_Channel_TypeDef*)0x40017000)->CHCFGR2
+; Expression:  DFSDM1_Channel1->CHCFGR2
+; IAR cast:    ((DFSDM_Channel_TypeDef*)0x40017020)->CHCFGR2
 
 ; [EXPECT] Target value: 0x00000030
 ;   Bits[7:3] [DTRBS=6]  = 6  → right-shift Sinc3 output by 6 bits
 ;                               Sinc3 OSR=125: max = 125³ = 1,953,125
 ;                               1,953,125 >> 6 = 30,517 → fits int16_t (±32,767) ✓
-;                               Previous DTRBS=5 → max ±61,035 → int16_t overflow → DC=4501 bug
+;                               DTRBS=5 bug: max ±61,035 → int16_t overflow → wraps to DC=4501
 ;   Bits[31:8][OFFSET]   = 0  → no DC offset compensation
 ;
-; Status: [EXPECT] — DTRBS fix (5→6) pending flash
+; Also visible via: g_dbg.ch0_cfg2 (snapshot at init), g_dbg.dtrbs (decoded field, expect 6)
+; Status: [EXPECT] — verify after next flash
+
+
+; ── CHDATINR (raw serial data input) ────────────────────────────────────────
+
+; Expression:  ((DFSDM_Channel_TypeDef*)0x40017020)->CHDATINR
+; IAR cast:    ((uint32_t*)0x40017030)[0]
+;
+; This shows the raw PDM bit-patterns being received on PC1 (SAI4_D1 / DFSDM_DATIN1).
+; Pipeline Step 1 verification: read this register with DMA recording active.
+;
+; Interpretation:
+;   Constant value (e.g. 0x00000000 or 0xFFFFFFFF) = no PDM data → clock not reaching mic
+;     → check SPICKSEL=11, SAI4 PDMCR=0x101, SAIEN bit16=1
+;   Constantly varying (e.g. 0x5959 8E8E 5959 8E8E...) = PDM data flowing ✓ mic is clocked
+;
+; Note: Read this WHILE recording (after blue button press). It will read 0 before DMA starts.
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 2. DFSDM FILTER 0
+; 3. DFSDM FILTER 0
 ; ══════════════════════════════════════════════════════════════════════════════
 
 ; ── FLTCR1 ──────────────────────────────────────────────────────────────────
@@ -114,15 +150,16 @@
 ; Expression:  hdfsdm1_filter0.Instance->FLTCR1
 ; IAR cast:    ((DFSDM_Filter_TypeDef*)0x40017100)->FLTCR1
 
-; [EXPECT] Target value: 0x20240001
-;   Bit 29    [FAST]         = 1   → fast mode enabled
-;   Bits[27:24][RCSEL]       = 0   → Channel 0 feeds the regular filter ← KEY
-;   Bit 21    [RDMAEN]       = 1   → DMA requests enabled (set by force before DMA start)
-;   Bit 18    [RCONT]        = 1   → continuous conversion
-;   Bit  0    [DFEN]         = 1   → filter enabled
+; [EXPECT] Target value: 0x21240001
+;   Bit 29     [FAST]          = 1   → fast mode enabled
+;   Bits[27:24][RCSEL=1]       = 1   → Channel 1 feeds the regular filter ← KEY
+;   Bit 21     [RDMAEN]        = 1   → DMA requests enabled
+;   Bit 18     [RCONT]         = 1   → continuous conversion
+;   Bit  0     [DFEN]          = 1   → filter enabled
 ;
 ; During recording: RDMAEN is force-set in voice_recorder.c before HAL_DFSDM_FilterRegularStart_DMA.
-; Status: [EXPECT] — RCSEL change (1→0) pending flash
+; Also visible via: g_dbg.flt0_cr1 (snapshot at init)
+; Status: [EXPECT] — RCSEL=1 (CH1) now set via HAL_DFSDM_FilterConfigRegChannel(... DFSDM_CHANNEL_1 ...)
 
 ; ── FLTCR2 ──────────────────────────────────────────────────────────────────
 
@@ -145,13 +182,15 @@
 ; IAR cast:    ((DFSDM_Filter_TypeDef*)0x40017100)->FLTISR
 
 ; Bit decode:
-;   Bits[23:16] [CKABF[7:0]] — clock absence per channel. Must be 0 when CH0 is correct.
-;                               0xFF here = all channels clock absent = wrong edge or SAI4 not running.
+;   Bits[23:16] [CKABF[7:0]] — clock absence per channel. Must be 0 for CH1 when running.
+;                               CKABF is STICKY — set at boot before SAI4 starts.
+;                               It CLEARS automatically once DMA recording begins and clock is detected.
+;                               0xFF at boot = normal. 0xFF during recording = clock problem.
 ;   Bit 3       [ROVRF]      — regular overrun. Must be 0. Non-zero = audio gaps.
 ;   Bit 1       [REOCF]      — regular end-of-conversion (toggles during recording, OK)
 ;
-; Previous observation: 0x00FF0000 (CKABF=0xFF) when using CH1 (falling edge).
-; [EXPECT] After switch to CH0 (rising edge): 0x00000000 during recording.
+; Also visible via: g_dbg.flt0_isr (snapshot at init), g_dbg_live_fltisr (captured after DMA start)
+; [EXPECT] During recording with CH1 + SPICKSEL=11 + SAI4 running: CKABF should clear to 0.
 ; Status: [PEND] — verify on next flash
 
 ; ── FLTRDATAR (last converted sample) ────────────────────────────────────────
@@ -160,23 +199,25 @@
 ; IAR cast:    ((DFSDM_Filter_TypeDef*)0x40017100)->FLTRDATAR  @ 0x4001711C
 
 ; Register layout:
-;   Bits[31:8]  — 24-bit signed PCM result (already right-shifted by DTRBS in hardware)
-;   Bits[7:4]   — channel ID that produced this result (expect 0 = CH0)
+;   Bits[31:8]  — 24-bit signed PCM result (right-shifted by DTRBS in hardware)
+;   Bits[7:4]   — channel ID that produced this result (expect 1 = CH1)
 ;   Bits[3:0]   — channel ID lower nibble
 ;
-; Interpretation table:
-;   0x00EE6B00  = +61,035 = Sinc3 all-1s saturation  (DTRBS=5: data line stuck HIGH)
-;   0xFF119500  = -61,035 = Sinc3 all-0s saturation  (DTRBS=5: data line stuck LOW or wrong edge)
-;   0x00779500  = +30,517 = Sinc3 all-1s saturation  (DTRBS=6: max positive — correct scaling)
-;   0xFF886B00  = -30,517 = Sinc3 all-0s saturation  (DTRBS=6: data stuck LOW)
-;   varying     = real PDM audio — speech/noise
+; Pipeline Step 2: watch this register during recording. Should vary with audio.
 ;
-; With DTRBS=6 and correct CH0: expect varying values during speech, near-zero during silence.
+; Interpretation table (DTRBS=6, SPICKSEL=11, CH1 falling edge):
+;   0x00779600  = +30,518 = Sinc3 all-1s saturation   (data line stuck HIGH)
+;   0xFF886B00  = -30,517 = Sinc3 all-0s saturation   (data line stuck LOW or wrong edge)
+;   0xFF88CA00  = ~ -30,518 silence value              (observed DC constant = wrong path)
+;   varying     = real PDM audio — speech/noise ✓
+;
+; Previous DC constant: 0xFF119500 with SPICKSEL=01 (CKOUT not connected).
+; With SPICKSEL=11 (SAI4 bridge) + CH1 + SITP=01: expect varying values during speech.
 ; Status: [PEND] — verify on next flash
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 3. DMA1 STREAM 1
+; 4. DMA1 STREAM 1
 ; ══════════════════════════════════════════════════════════════════════════════
 
 ; Expression:  ((DMA_Stream_TypeDef*)0x40020028)->CR
@@ -201,7 +242,7 @@
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 4. SAI4 REGISTERS
+; 5. SAI4 REGISTERS
 ; ══════════════════════════════════════════════════════════════════════════════
 
 ; ── SAI4 PDMCR ───────────────────────────────────────────────────────────────
@@ -214,7 +255,7 @@
 ;   Bit 8  [CKEN1]  = 1  → Clock1 output (CK1 on PE2) enabled
 ;
 ; CRITICAL: PDMCR must be 0x00000101 BEFORE __HAL_SAI_ENABLE() is called.
-;           If CKEN1=0, PE2 does not toggle → no clock to mic → CKABF on DFSDM CH0.
+;           If CKEN1=0, PE2 does not toggle → no clock to mic → CKABF on DFSDM CH1.
 
 ; ── SAI4 Block A CR1 ─────────────────────────────────────────────────────────
 
@@ -227,20 +268,44 @@
 ;   Bit  17    [NODIV]     = 0   → clock divider active
 ;   Bit  4     [DS=4]      = 4   → data size 8-bit (PDM mode)
 ; MCKDIV=12 is forced by register override after HAL_SAI_Init (HAL computes 11 — wrong).
+; During recording: bit 16 [SAIEN] = 1 ← must be 1 or mic has no clock.
 
 ; ── SAI4 Clock math ──────────────────────────────────────────────────────────
 ;
 ;   PLL2P = HSE/M × N/P = (25/25) × 344/7 = 49,142,857 Hz
 ;   SAI4 CK1 = PLL2P / (2 × MCKDIV) = 49,142,857 / 24 = 2.048 MHz   (to mic PE2)
-;   DFSDM CKOUT = APB2 / (2×(CKOUTDIV+1)) = 100 MHz / 50 = 2.000 MHz (to filter)
-;   Difference = 2.4% — acceptable for voice recording
+;   DFSDM CKOUT = APB2 / (2×(CKOUTDIV+1)) = 100 MHz / 50 = 2.000 MHz (to filter, via PD3)
+;   SAI4 CK1 and DFSDM CKOUT are INDEPENDENT clocks — 2.4% difference, acceptable.
 ;   PCM rate = CKOUT / OSR = 2.000 MHz / 125 = 16,000 Hz ✓
+;   Note: SPICKSEL=11 means DFSDM samples data using the SAI4 clock (2.048 MHz), not CKOUT.
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 5. FIRMWARE DEBUG GLOBALS (AXI SRAM — always readable in IAR Watch)
+; 6. FIRMWARE DEBUG GLOBALS (AXI SRAM — always readable in IAR Watch)
 ; ══════════════════════════════════════════════════════════════════════════════
 
+; g_dbg struct at 0x24000050 (18 × uint32_t = 72 bytes)
+; J-Link command: mem32 0x24000050 18
+;
+;   g_dbg.ch0_cfg1        [0]  CH1 CHCFGR1 at init       expect 0x0000008D
+;   g_dbg.ch0_cfg2        [1]  CH1 CHCFGR2 at init       expect 0x00000030
+;   g_dbg.flt0_cr1        [2]  Filter0 FLTCR1 at init    expect 0x21240001
+;   g_dbg.flt0_cr2        [3]  Filter0 FLTCR2 at init    expect 0x00000000
+;   g_dbg.flt0_fcr        [4]  Filter0 FLTFCR at init    expect 0x607C0000
+;   g_dbg.flt0_isr        [5]  Filter0 FLTISR at init    expect 0x00FF0000 (CKABF sticky, clears on DMA)
+;   g_dbg.sai4_pdm        [6]  SAI4 PDMCR at init        expect 0x00000101
+;   g_dbg.dma_cr          [7]  DMA1_S1 CR at init        expect 0x00035500
+;   g_dbg.dma_ndtr        [8]  DMA1_S1 NDTR at init      expect 32
+;   g_dbg.dma_m0ar        [9]  DMA1_S1 M0AR at init      expect 0x30000000
+;   g_dbg.sitp            [10] bits[1:0] of CH1CFGR1     expect 1 (falling)
+;   g_dbg.spicksel        [11] bits[3:2] of CH1CFGR1     expect 3 (SAI4 bridge)
+;   g_dbg.dtrbs           [12] bits[7:3] of CH1CFGR2     expect 6
+;   g_dbg.last_raw        [13] raw FLTRDATAR (uint32_t)  varies during recording
+;   g_dbg.last_val        [14] (int32_t)FLTRDATAR>>8     expect ±values, not constant
+;   g_dbg.uptime_ticks    [15] increments every 200ms    proves RTTLogTask alive
+;   g_dbg.ref_lr_low      [16] SITP=00 rising ref        0x0000008C
+;   g_dbg.ref_lr_high     [17] SITP=01 falling ref       0x0000008D ← THIS BOARD
+;
 ; g_dbg_sai4_cr1    — SAI4 Block A CR1 captured at MX_SAI4_Init exit
 ;                     Expect: 0x00C10040 (MCKDIV=12, SAIEN=0)
 ;
@@ -251,17 +316,17 @@
 ;                       Bit 16 (SAIEN) MUST be 1. If 0 → enable failed → no CK1.
 ;
 ; g_dbg_live_fltisr   — DFSDM FLTISR captured immediately after DMA start
-;                       Bits[23:16] (CKABF) should be 0 for CH0 with SAI4 running.
-;                       If 0xFF → clock not detected → wrong channel or SAI4 not running.
+;                       Bits[23:16] (CKABF) should clear to 0 during recording with CH1+SPICKSEL=11.
+;                       If still 0xFF → clock not detected → check SAI4 running or SPICKSEL.
 ;
 ; g_dbg_live_fltcr1   — FLTCR1 captured before DMA start (after RDMAEN force)
-;                       Expect: 0x20240001 (RCSEL=0 for CH0, RDMAEN=1, DFEN=1)
+;                       Expect: 0x21240001 (RCSEL=1 for CH1, RDMAEN=1, DFEN=1)
 ;
 ; g_dbg_live_hal_ok   — 0x00000000 = DMA start OK, 0xFFFFFFFF = HAL_ERROR
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 6. AUDIO BUFFER
+; 7. AUDIO BUFFER
 ; ══════════════════════════════════════════════════════════════════════════════
 
 ; g_DfsdmBuf[32] — int32_t, DMA destination, @ 0x30000000 (D2 SRAM1)
@@ -271,36 +336,71 @@
 ;
 ; g_AudioBuf[48000] — int16_t, accumulated PCM @ 0x30020000 (D2 SRAM2)
 ;   StoreDmaChunk: g_AudioBuf[i] = (int16_t)(src32[i] >> 8)
-;   With DTRBS=6: max value = 30,517 — correct, fits int16_t ✓
+;   With DTRBS=6: max value = ±30,517 — correct, fits int16_t ✓
 ;   3 seconds × 16,000 Hz = 48,000 samples = 96,000 bytes
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 7. RTT LIVE HEALTH (every 5 seconds, RTT channel 0)
+; 8. RTT LIVE HEALTH (every 200ms, RTT channel 0)
 ; ══════════════════════════════════════════════════════════════════════════════
 ;
 ; [DFSDM] line 1 — config registers (static after init):
-;   Ch0CFG1  expect [OK] = 0x8018008C  (DFSDMEN+CKOUTDIV+CHEN+SPICKSEL=11+SITP=00)
-;   Ch0CFG2  expect [OK] = 0x00000030  (DTRBS=6)
-;   FLTFCR   expect [OK] = 0x607C0000  (SINC3, OSR=125)
-;   SAI4PDMCR expect [OK]= 0x00000101  (PDMEN+CKEN1)
+;   Ch1CFG1   expect = 0x0000008D  (CHEN + SPICKSEL=11 + SITP=01)
+;   Ch1CFG2   expect = 0x00000030  (DTRBS=6)
+;   FLTFCR    expect = 0x607C0000  (SINC3, OSR=125)
+;   SAI4PDMCR expect = 0x00000101  (PDMEN+CKEN1)
 ;
 ; [DFSDM] line 2 — runtime status (changes during recording):
-;   FLTCR1   expect [OK] = bit0=1 (DFEN)
-;   FLTCR2   expect [OK] = 0x00000000
-;   FLTISR   expect [OK] = 0x00000000  (no CKABF, no ROVRF)
-;   DMA_CR   expect [OK] = 0x00035500 idle / 0x00035501 recording
+;   FLTCR1    expect = 0x21240001  (RCSEL=1=CH1, RDMAEN=1, DFEN=1)
+;   FLTCR2    expect = 0x00000000
+;   FLTISR    expect = 0x00000000 during recording (CKABF clears once clock detected)
+;   DMA_CR    expect = 0x00035500 idle / 0x00035501 recording
 
 
 ; ══════════════════════════════════════════════════════════════════════════════
-; 8. CHANNEL HISTORY (for reference — do not revert)
+; 9. PIPELINE STEP-BY-STEP VERIFICATION CHECKLIST
+; ══════════════════════════════════════════════════════════════════════════════
+;
+; Step 1 — Mic clock and data (CHDATINR):
+;   Read ((uint32_t*)0x40017030)[0] while recording (after blue button press).
+;   Pass: value changes every read (PDM bit-patterns vary) ✓
+;   Fail: stuck at 0x00000000 → SAI4_CK1 (PE2) not reaching mic → check PDMCR / SAIEN
+;   Fail: stuck constant (e.g. all 0s/1s) → SPICKSEL wrong → check g_dbg.spicksel = 3
+;
+; Step 2 — Sinc3 filter output (FLTRDATAR):
+;   Read ((DFSDM_Filter_TypeDef*)0x40017100)->FLTRDATAR while recording.
+;   Pass: value varies with speech/silence ✓
+;   Fail: constant 0xFF88CA00 (or similar) → DC = no real PDM input → re-check Step 1
+;
+; Step 3 — DMA buffer (g_DfsdmBuf @ 0x30000000):
+;   mem32 0x30000000 32 in IAR Memory view during recording.
+;   Pass: values vary, not all identical ✓
+;   Fail: all identical → filter stuck → re-check FLTCR1 RCSEL=1 and RCONT=1
+;
+; Step 4 — PCM accumulation (g_AudioBuf @ 0x30020000):
+;   After 3s recording completes, read first 32 int16_t values.
+;   Pass: values vary in range ±30,517, not all zeros ✓
+;
+; Step 5 — WAV file on SD card:
+;   Open REC_XXX.wav in Audacity / PC player.
+;   Pass: audible speech at 16 kHz mono ✓
+
+
+; ══════════════════════════════════════════════════════════════════════════════
+; 10. CHANNEL HISTORY (for reference — do not revert)
 ; ══════════════════════════════════════════════════════════════════════════════
 ;
 ;   CH3 (falling, SPICKSEL=11) → PC7 pulled HIGH → all-1s saturation (+61,035)
-;   CH1 (falling, SPICKSEL=11) → wrong edge (LR=HIGH mic) → CKABF → all-0s (-61,035)
-;   CH0 (rising,  SPICKSEL=11, DTRBS=5) → correct edge but shift overflow → DC=4501
-;   CH0 (rising,  SPICKSEL=11, DTRBS=6) → CORRECT ← TARGET STATE
+;   CH0 (rising,  SPICKSEL=11, DTRBS=5) → DTRBS overflow → DC=4501 (int16_t wrap)
+;   CH1 (falling, SPICKSEL=01) → CKOUT/PD3 not connected → constant DC 0xFF119500
+;   CH1 (falling, SPICKSEL=11, DTRBS=6) → CORRECT TARGET STATE ← current firmware
 ;
-; The DC=4501 seen with CH0+DTRBS=5 was NOT a channel problem.
-; It was int16_t overflow: -61,035 + 65,536 = 4,501.
-; The mic WAS producing real data. The shift was wrong.
+; Key lessons:
+;   1. CKOUT (PD3) is NOT the mic clock on this board. SAI4_CK1 (PE2) is.
+;      Always use SPICKSEL=11 (SAI4 bridge). SPICKSEL=01 gives dead DC output.
+;   2. DC=4501 is NOT a channel problem. It is int16_t overflow from DTRBS=5.
+;      Fix: DTRBS=6. The mic was alive; the shift was wrong.
+;   3. CKABF=0xFF at boot is HARMLESS. It is a sticky flag set before SAI4 starts.
+;      It clears automatically once DMA recording is running with correct clock.
+;   4. LR=HIGH (R213 pull-up, SB43 open) = RIGHT channel = FALLING edge = Channel 1.
+;      Never revert to Channel 0 for data. Channel 0 = clock master only.

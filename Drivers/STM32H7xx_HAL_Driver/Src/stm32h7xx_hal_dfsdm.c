@@ -514,7 +514,7 @@ HAL_StatusTypeDef HAL_DFSDM_ChannelDeInit(DFSDM_Channel_HandleTypeDef *hdfsdm_ch
 #else /* DFSDM2_Channel0 */
   channelCounterPtr  = &v_dfsdm1ChannelCounter;
   channelHandleTable = a_dfsdm1ChannelHandle;
-  channel0Instance   = DFSDM1_Channel0;
+  channel0Instance   = 0;
 #endif /* DFSDM2_Channel0 */
 
   /* Check that channel has not been already deinitialized */

@@ -1,0 +1,185 @@
+// ================================================================
+// dfsdm_watch_all.jlink — Complete DFSDM audio pipeline register dump
+// STM32H747I-DISCO CM7 | MP34DT05-A PDM mic | SAI4→DFSDM1 bridge
+//
+// Usage:  JLink.exe -NoGui 1 -device STM32H747XI_M7 -if SWD
+//         -speed 4000 -autoconnect 1 -CommandFile dfsdm_watch_all.jlink
+//
+// NOTE: Target is HALTED during reads (required for D2/D3 peripheral
+//       registers which return 0x00000000 while running via SWD AP).
+//       Target is resumed at exit.
+// ================================================================
+
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+
+// ================================================================
+// 1. RCC — CLOCK ENABLES
+//    Without these, peripheral registers read as 0x00000000
+// ================================================================
+// RCC->APB2ENR  @ 0x580244F0  — bit30=DFSDM1EN
+//   Also: RCC_C1->APB2ENR @ 0x58024590 — CM7 core gate
+// RCC->APB4ENR  @ 0x580244F8  — bit21=SAI4EN
+// RCC->AHB1ENR  @ 0x580244D8  — bit1=DMA1EN
+// RCC->AHB4ENR  @ 0x580244E0  — bit2=GPIOCEN, bit4=GPIOEN
+mem32 0x580244F0 1
+mem32 0x58024590 1
+mem32 0x580244F8 1
+mem32 0x580244D8 1
+mem32 0x580244E0 1
+
+// ================================================================
+// 2. DFSDM1 CHANNEL 0 — Clock master (DFSDMEN + CKOUTDIV)
+//    Base: 0x40017400
+//    CHCFGR1 @ +0x00   expect 0x80180000 (DFSDMEN=1, CKOUTDIV=24, CHEN=0)
+//    CHCFGR2 @ +0x04
+// ================================================================
+mem32 0x40017400 2
+
+// ================================================================
+// 3. DFSDM1 CHANNEL 1 — Data channel (SAI4 bridge D1, LR=HIGH mic)
+//    Base: 0x40017420
+//    CHCFGR1 @ +0x00   expect 0x0000008D (CHEN+SPICKSEL=11+SITP=01)
+//      bit0     SITP[0]     1=falling (LR=HIGH mic)
+//      bit1     SITP[1]     0
+//      bit2-3   SPICKSEL    11=SAI4 internal bridge
+//      bit7     CHEN        1=enabled
+//    CHCFGR2 @ +0x04   expect 0x00000030 (DTRBS=6, bits[7:3])
+//    CHAWSCDR@ +0x08
+//    CHWDATAR@ +0x0C
+//    CHDATINR@ +0x10   raw serial data input register
+// ================================================================
+mem32 0x40017420 5
+
+// ================================================================
+// 4. DFSDM1 FILTER 0 — Sinc3 decimation filter
+//    Base: 0x40017500
+//    FLTCR1   @ +0x00   expect 0x21240001 (RCSEL=1=CH1, RDMAEN, DFEN)
+//      bits[27:24]  RCSEL   1=Channel1
+//      bit21        RDMAEN  1=DMA enabled
+//      bit0         DFEN    1=filter enabled
+//    FLTCR2   @ +0x04   expect 0x00000000 (no IT enables)
+//    FLTISR   @ +0x08   bits[23:16]=CKABF (sticky), bit3=ROVRF
+//    FLTICR   @ +0x0C   write-1-to-clear
+//    FLTJCHGR @ +0x10
+//    FLTFCR   @ +0x14   expect 0x607C0000 (FORD=3=Sinc3, FOSR=124=OSR-1)
+//      bits[31:29]  FORD    3=Sinc3
+//      bits[25:16]  FOSR    124 (OSR=125)
+//    FLTJDATAR@ +0x18
+//    FLTRDATAR@ +0x1C   live conversion result (check during recording)
+// ================================================================
+mem32 0x40017500 8
+
+// ================================================================
+// 5. SAI4 — PDM clock source + bridge to DFSDM
+//    SAI4_Block_A base: 0x58005004
+//    CR1   @ 0x58005004   expect 0x00C10041 (MCKDIV=12, SAIEN=1, MODE=RX)
+//      bits[23:20]  MCKDIV  12
+//      bit16        SAIEN   1=enabled (after recording start)
+//      bits[1:0]    MODE    01=master RX
+//    CR2   @ 0x58005008
+//    FRCR  @ 0x5800500C   frame config
+//    SLOTR @ 0x58005010   expect 0x00010000 (SLOTEN0, 1 slot in PDM mode)
+//    IMR   @ 0x58005014
+//    SR    @ 0x58005018   status (bit1=FREQ, bit2=WCKCFG errors)
+//    CLRFR @ 0x5800501C
+//    DR    @ 0x58005020   data register (raw PDM words)
+// ================================================================
+mem32 0x58005004 8
+
+// SAI4 PDMCR @ 0x58005044   expect 0x00000101 (PDMEN=1, CKEN1=1)
+//   bit0      PDMEN    1=PDM mode enabled
+//   bit8      CKEN1    1=clock enable for pair 1 (PE2/PC1)
+// SAI4 PDMDLY @ 0x58005048  delay config
+mem32 0x58005044 2
+
+// ================================================================
+// 6. DMA1 STREAM 1 — DFSDM→SRAM transfer
+//    DMA1 base: 0x40020000, Stream1 offset: 0x28
+//    CR    @ 0x40020028   expect 0x0003551F (active) or 0x00035500 (idle)
+//      bit0   EN       1=stream enabled
+//      bit4   TCIE     transfer complete IE
+//      bit8   CIRC     circular mode
+//    NDTR  @ 0x4002002C   remaining count (decrements during recording)
+//    PAR   @ 0x40020030   expect 0x4001751C (DFSDM1_Flt0->FLTRDATAR)
+//    M0AR  @ 0x40020034   expect 0x30000000 (g_DfsdmBuf in D2 SRAM)
+//    M1AR  @ 0x40020038   (double-buffer, if used)
+//    FCR   @ 0x4002003C   FIFO control
+// ================================================================
+mem32 0x40020028 6
+
+// DMA1 LISR/HISR — interrupt status flags
+//   LISR @ 0x40020000  Stream0/1 flags (bits[11:6]=Stream1: TCIF,HTIF,TEIF,DMEIF,FEIF)
+//   HISR @ 0x40020004  Stream4-7
+mem32 0x40020000 2
+
+// ================================================================
+// 7. GPIO — Pin mux and levels
+// ================================================================
+// GPIOC (0x58020800) — PC1 = SAI4_D1 (PDM data from mic)
+//   MODER   @ +0x00  bits[3:2]=pin1 mode → expect 10=AF
+//   OTYPER  @ +0x04
+//   OSPEEDR @ +0x08  bits[3:2]=pin1 speed
+//   PUPDR   @ +0x0C  bits[3:2]=pin1 pull → expect 00=none
+//   IDR     @ +0x10  bit1=PC1 level → idle should be 1 (mic pulls high)
+//   AFRL    @ +0x20  bits[7:4]=pin1 AF → expect 0xA=AF10=SAI4_D1
+mem32 0x58020800 5
+mem32 0x58020820 1
+
+// GPIOE (0x58021000) — PE2=SAI4_CK1 (clock), PE4=SAI4_FS_A, PE5=SAI4_SCK_A
+//   MODER   @ +0x00  PE2 bits[5:4]=10=AF, PE4 bits[9:8]=10=AF, PE5 bits[11:10]=10=AF
+//   IDR     @ +0x10  bit2=PE2 level (toggles when clock running)
+//   AFRL    @ +0x20  PE2 bits[11:8]=0xA=AF10, PE4 bits[19:16]=0x8=AF8, PE5 bits[23:20]=0x8=AF8
+mem32 0x58021000 1
+mem32 0x58021010 1
+mem32 0x58021020 1
+
+// ================================================================
+// 8. g_dbg STRUCT — firmware debug hub at 0x24000050 (18 words)
+//    AXI SRAM — always readable, no halt needed
+//    Captures register snapshots at init + each recording
+// ================================================================
+mem32 0x24000050 18
+
+// ================================================================
+// 9. LIVE GLOBALS — updated by VoiceRecTask each recording
+//    g_dbg_live_sai4_cr1 @ 0x240000E8
+//    g_dbg_live_fltisr   @ 0x240000EC
+//    g_dbg_live_hal_ok   @ 0x240000F0  (0=OK, 0xFFFFFFFF=FAIL)
+//    g_dbg_live_fltcr1   @ 0x240000F4
+// ================================================================
+mem32 0x240000E8 4
+
+// ================================================================
+// 10. BUFFER SAMPLES — first 8 raw DFSDM + first 8 PCM
+//     g_DfsdmBuf @ 0x30000000 (D2 SRAM1) — int32 raw filter output
+//     g_AudioBuf @ 0x30020000 (D2 SRAM2) — int16 PCM after shift
+// ================================================================
+mem32 0x30000000 8
+mem32 0x30020000 4
+
+// ================================================================
+// 11. STATE / COUNTERS
+//    g_SampleCount @ 0x24037784  (uint32_t — total PCM samples stored)
+//    g_FileIndex   @ 0x24037790  (uint32_t — current WAV file index)
+//    g_State       @ 0x240377FE  (uint8_t — 0=idle 1=rec 2=save)
+// ================================================================
+mem32 0x24037784 1
+mem32 0x24037790 1
+mem8 0x240377FE 1
+
+// ================================================================
+// 12. EXTI — Blue button (PC13) pending/trigger status
+//    EXTI_D1 PR1 @ 0x58000088  bit13=PC13 pending
+//    EXTI SWIER1 @ 0x58000008  (write 0x2000 to software-trigger)
+// ================================================================
+mem32 0x58000088 1
+
+// ================================================================
+// RESUME TARGET
+// ================================================================
+g
+exit

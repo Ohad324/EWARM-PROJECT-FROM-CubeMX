@@ -1,0 +1,463 @@
+/*
+ * dfsdm_watch_all.mac — IAR C-SPY macro: full DFSDM pipeline register dump
+ * STM32H747I-DISCO CM7 | MP34DT05-A PDM mic | SAI4→DFSDM1 bridge
+ *
+ * Usage in IAR:  Debug → Macros → Load...  →  dfsdm_watch_all.mac
+ *                Then call dfsdm_dump() from the macro window or a breakpoint.
+ *
+ * Also auto-runs at startup via execUserSetup() if loaded as a setup macro.
+ *
+ * Correct base addresses (stm32h747xx.h):
+ *   DFSDM1_BASE        = 0x40017000  (D2_APB2PERIPH_BASE=0x40010000 + 0x7000)
+ *   DFSDM1_Channel0    = 0x40017000  (+0x00)
+ *   DFSDM1_Channel1    = 0x40017020  (+0x20)
+ *   DFSDM1_Filter0     = 0x40017100  (+0x100)
+ *   SAI4_BASE          = 0x58005400  (D3_APB1PERIPH_BASE=0x58000000 + 0x5400)
+ *   SAI4_Block_A       = 0x58005404  (+0x004)
+ *   DMA1_BASE          = 0x40020000
+ *   DMA1_Stream1       = 0x40020028  (stream offset = 0x18 + stream*0x18 = 0x28 for stream1)
+ *   RCC_APB2ENR_DFSDM1EN = bit 28 (NOT bit 30)
+ */
+
+dfsdm_dump()
+{
+    __var ch0cfg1, ch1cfg1, ch1cfg2, fltcr1, fltfcr, fltisr, fltrdatar;
+    __var sai4cr1, sai4slotr, sai4sr, pdmcr, pdmdly;
+    __var dmacr, dmandtr, dmapar, dmam0ar;
+    __var gpioc_moder, gpioc_pupdr, gpioc_idr, gpioc_afrl;
+    __var gpioe_moder, gpioe_idr, gpioe_afrl;
+    __var rcc_apb2, rcc_c1apb2, rcc_apb4, rcc_ahb1, rcc_ahb4;
+
+    /* ── 1. RCC Clock Enables ─────────────────────────────────────── */
+    rcc_apb2   = __readMemory32(0x580244F0, "Memory");
+    rcc_c1apb2 = __readMemory32(0x58024590, "Memory");
+    rcc_apb4   = __readMemory32(0x580244F8, "Memory");
+    rcc_ahb1   = __readMemory32(0x580244D8, "Memory");
+    rcc_ahb4   = __readMemory32(0x580244E0, "Memory");
+
+    __message "\n══════════════════════════════════════════════════════";
+    __message "  DFSDM AUDIO PIPELINE — FULL REGISTER DUMP";
+    __message "══════════════════════════════════════════════════════\n";
+
+    __message "── 1. RCC CLOCK ENABLES ──────────────────────────────";
+    __message "  APB2ENR      = 0x", rcc_apb2:%X,
+              "  DFSDM1EN(bit28)= ", (rcc_apb2 >> 28) & 1:%d;
+    __message "  C1_APB2ENR   = 0x", rcc_c1apb2:%X,
+              "  CM7 gate(bit28)= ", (rcc_c1apb2 >> 28) & 1:%d;
+    __message "  APB4ENR      = 0x", rcc_apb4:%X,
+              "  SAI4EN(bit21)  = ", (rcc_apb4 >> 21) & 1:%d;
+    __message "  AHB1ENR      = 0x", rcc_ahb1:%X,
+              "  DMA1EN(bit0)   = ", rcc_ahb1 & 1:%d;
+    __message "  AHB4ENR      = 0x", rcc_ahb4:%X,
+              "  GPIOCEN(bit2)  = ", (rcc_ahb4 >> 2) & 1:%d,
+              "  GPIOEEN(bit4)  = ", (rcc_ahb4 >> 4) & 1:%d;
+
+    /* ── 2. DFSDM1 Channel 0 — clock master (0x40017000) ──────────── */
+    /* DFSDM1_Channel0_BASE = DFSDM1_BASE + 0x00 = 0x40017000          */
+    ch0cfg1 = __readMemory32(0x40017000, "Memory");
+
+    __message "\n── 2. DFSDM1 CHANNEL 0 (clock master, 0x40017000) ────";
+    __message "  CHCFGR1      = 0x", ch0cfg1:%X;
+    __message "    DFSDMEN(bit31) = ", (ch0cfg1 >> 31) & 1:%d,
+              "  CKOUTDIV[22:16] = ", (ch0cfg1 >> 16) & 0x7F:%d,
+              "  CHEN(bit7) = ", (ch0cfg1 >> 7) & 1:%d;
+
+    /* ── 3. DFSDM1 Channel 1 — data channel (0x40017020) ──────────── */
+    /* DFSDM1_Channel1_BASE = DFSDM1_BASE + 0x20 = 0x40017020          */
+    ch1cfg1 = __readMemory32(0x40017020, "Memory");
+    ch1cfg2 = __readMemory32(0x40017024, "Memory");
+
+    __message "\n── 3. DFSDM1 CHANNEL 1 (data, 0x40017020) ────────────";
+    __message "  CHCFGR1      = 0x", ch1cfg1:%X;
+    __message "    SITP[1:0]    = ", ch1cfg1 & 3:%d,
+              "  (0=rising, 1=falling)";
+    __message "    SPICKSEL[3:2]= ", (ch1cfg1 >> 2) & 3:%d,
+              "  (1=CKOUT ✓, 3=SAI4 bridge)";
+    __message "    CHEN(bit7)   = ", (ch1cfg1 >> 7) & 1:%d;
+    __message "  CHCFGR2      = 0x", ch1cfg2:%X;
+    __message "    DTRBS[7:3]   = ", (ch1cfg2 >> 3) & 0x1F:%d,
+              "  (expect 6)";
+    __message "  CHDATINR     = 0x", __readMemory32(0x40017030, "Memory"):%X,
+              "  (raw serial data)";
+
+    /* ── 4. DFSDM1 Filter 0 (0x40017100) ──────────────────────────── */
+    /* DFSDM1_Filter0_BASE = DFSDM1_BASE + 0x100 = 0x40017100          */
+    fltcr1   = __readMemory32(0x40017100, "Memory");
+    fltisr   = __readMemory32(0x40017108, "Memory");
+    fltfcr   = __readMemory32(0x40017114, "Memory");
+    fltrdatar = __readMemory32(0x4001711C, "Memory");
+
+    __message "\n── 4. DFSDM1 FILTER 0 (0x40017100) ──────────────────";
+    __message "  FLTCR1       = 0x", fltcr1:%X;
+    __message "    RCSEL[27:24] = ", (fltcr1 >> 24) & 0xF:%d,
+              "  (channel select — expect 1=CH1)";
+    __message "    RDMAEN(bit21)= ", (fltcr1 >> 21) & 1:%d;
+    __message "    DFEN(bit0)   = ", fltcr1 & 1:%d;
+    __message "    RSWSTART(bit17)= ", (fltcr1 >> 17) & 1:%d;
+    __message "  FLTCR2       = 0x", __readMemory32(0x40017104, "Memory"):%X;
+    __message "  FLTISR       = 0x", fltisr:%X;
+    __message "    CKABF[23:16] = 0x", (fltisr >> 16) & 0xFF:%X,
+              "  ROVRF(bit3)= ", (fltisr >> 3) & 1:%d,
+              "  REOCF(bit1)= ", (fltisr >> 1) & 1:%d;
+    __message "  FLTFCR       = 0x", fltfcr:%X;
+    __message "    FORD[31:29]  = ", (fltfcr >> 29) & 7:%d,
+              "  (3=Sinc3)  FOSR[25:16]= ", (fltfcr >> 16) & 0x3FF:%d,
+              "  (124 = OSR-1 → OSR=125)";
+    __message "  FLTRDATAR    = 0x", fltrdatar:%X,
+              "  RDATACH[2:0]= ", fltrdatar & 7:%d,
+              "  DATA[31:8]= ", fltrdatar >> 8:%d;
+
+    /* ── 5. SAI4 Block A (0x58005404) ─────────────────────────────── */
+    /* SAI4_BASE = D3_APB1PERIPH_BASE(0x58000000) + 0x5400 = 0x58005400 */
+    /* SAI4_Block_A_BASE = SAI4_BASE + 0x004 = 0x58005404               */
+    sai4cr1   = __readMemory32(0x58005404, "Memory");
+    sai4slotr = __readMemory32(0x58005410, "Memory");
+    sai4sr    = __readMemory32(0x58005418, "Memory");
+    pdmcr     = __readMemory32(0x58005444, "Memory");
+    pdmdly    = __readMemory32(0x58005448, "Memory");
+
+    __message "\n── 5. SAI4 BLOCK A (0x58005404) ─────────────────────";
+    __message "  CR1          = 0x", sai4cr1:%X;
+    __message "    SAIEN(bit16)  = ", (sai4cr1 >> 16) & 1:%d;
+    __message "    MCKDIV[23:20] = ", (sai4cr1 >> 20) & 0xF:%d;
+    __message "    MODE[1:0]     = ", sai4cr1 & 3:%d,
+              "  (1=master RX)";
+    __message "  CR2          = 0x", __readMemory32(0x58005408, "Memory"):%X;
+    __message "  FRCR         = 0x", __readMemory32(0x5800540C, "Memory"):%X;
+    __message "  SLOTR        = 0x", sai4slotr:%X,
+              "  (expect 0x00010000 = SLOTEN0, 1 slot)";
+    __message "  SR           = 0x", sai4sr:%X,
+              "  FREQ(bit1)= ", (sai4sr >> 1) & 1:%d,
+              "  WCKCFG(bit2)= ", (sai4sr >> 2) & 1:%d;
+    __message "  DR           = 0x", __readMemory32(0x58005420, "Memory"):%X,
+              "  (raw PDM data word)";
+    __message "  PDMCR        = 0x", pdmcr:%X;
+    __message "    PDMEN(bit0)   = ", pdmcr & 1:%d,
+              "  CKEN1(bit8)= ", (pdmcr >> 8) & 1:%d;
+    __message "  PDMDLY       = 0x", pdmdly:%X;
+
+    /* ── 6. DMA1 Stream 1 (0x40020028) ────────────────────────────── */
+    /* DMA1_BASE = 0x40020000, Stream1 CR offset = 0x028               */
+    dmacr   = __readMemory32(0x40020028, "Memory");
+    dmandtr = __readMemory32(0x4002002C, "Memory");
+    dmapar  = __readMemory32(0x40020030, "Memory");
+    dmam0ar = __readMemory32(0x40020034, "Memory");
+
+    __message "\n── 6. DMA1 STREAM 1 (0x40020028) ────────────────────";
+    __message "  CR           = 0x", dmacr:%X;
+    __message "    EN(bit0)     = ", dmacr & 1:%d,
+              "  CIRC(bit8)  = ", (dmacr >> 8) & 1:%d,
+              "  TCIE(bit4)  = ", (dmacr >> 4) & 1:%d,
+              "  HTIE(bit3)  = ", (dmacr >> 3) & 1:%d;
+    __message "  NDTR         = ", dmandtr:%d,
+              "  (expect 32 idle, decrements during rec)";
+    __message "  PAR          = 0x", dmapar:%X,
+              "  (expect 0x4001711C = FLTRDATAR)";
+    __message "  M0AR         = 0x", dmam0ar:%X,
+              "  (expect 0x30000000 = g_DfsdmBuf)";
+    __message "  M1AR         = 0x", __readMemory32(0x40020038, "Memory"):%X;
+    __message "  FCR          = 0x", __readMemory32(0x4002003C, "Memory"):%X;
+    __message "  LISR         = 0x", __readMemory32(0x40020000, "Memory"):%X,
+              "  (Stream1 flags: bits[11:6])";
+
+    /* ── 7. GPIO — Pin Mux ───────────────────────────────────────── */
+    gpioc_moder = __readMemory32(0x58020800, "Memory");
+    gpioc_pupdr = __readMemory32(0x5802080C, "Memory");
+    gpioc_idr   = __readMemory32(0x58020810, "Memory");
+    gpioc_afrl  = __readMemory32(0x58020820, "Memory");
+    gpioe_moder = __readMemory32(0x58021000, "Memory");
+    gpioe_idr   = __readMemory32(0x58021010, "Memory");
+    gpioe_afrl  = __readMemory32(0x58021020, "Memory");
+
+    __message "\n── 7. GPIO PIN MUX ───────────────────────────────────";
+    __message "  GPIOC MODER  = 0x", gpioc_moder:%X,
+              "  PC1 mode[3:2]= ", (gpioc_moder >> 2) & 3:%d,
+              "  (2=AF)";
+    __message "  GPIOC PUPDR  = 0x", gpioc_pupdr:%X,
+              "  PC1 pull[3:2]= ", (gpioc_pupdr >> 2) & 3:%d,
+              "  (0=none, 1=up, 2=down)";
+    __message "  GPIOC IDR    = 0x", gpioc_idr:%X,
+              "  PC1 level    = ", (gpioc_idr >> 1) & 1:%d;
+    __message "  GPIOC AFRL   = 0x", gpioc_afrl:%X,
+              "  PC1 AF[7:4]  = ", (gpioc_afrl >> 4) & 0xF:%d,
+              "  (10=AF10=SAI4_D1)";
+    __message "  GPIOE MODER  = 0x", gpioe_moder:%X,
+              "  PE2 mode[5:4]= ", (gpioe_moder >> 4) & 3:%d,
+              "  PE4[9:8]= ", (gpioe_moder >> 8) & 3:%d,
+              "  PE5[11:10]= ", (gpioe_moder >> 10) & 3:%d;
+    __message "  GPIOE IDR    = 0x", gpioe_idr:%X,
+              "  PE2(CK1)= ", (gpioe_idr >> 2) & 1:%d;
+    __message "  GPIOE AFRL   = 0x", gpioe_afrl:%X,
+              "  PE2 AF[11:8]= ", (gpioe_afrl >> 8) & 0xF:%d,
+              "  PE4[19:16]= ", (gpioe_afrl >> 16) & 0xF:%d,
+              "  PE5[23:20]= ", (gpioe_afrl >> 20) & 0xF:%d;
+
+    /* ── 8. g_dbg struct at 0x24000050 (18 words) ────────────────── */
+    __message "\n── 8. g_dbg FIRMWARE DEBUG HUB (0x24000050) ──────────";
+    __message "  [0]  ch0_cfg1     = 0x", __readMemory32(0x24000050, "Memory"):%X;
+    __message "  [1]  ch0_cfg2     = 0x", __readMemory32(0x24000054, "Memory"):%X;
+    __message "  [2]  flt0_cr1     = 0x", __readMemory32(0x24000058, "Memory"):%X;
+    __message "  [3]  flt0_cr2     = 0x", __readMemory32(0x2400005C, "Memory"):%X;
+    __message "  [4]  flt0_fcr     = 0x", __readMemory32(0x24000060, "Memory"):%X;
+    __message "  [5]  flt0_isr     = 0x", __readMemory32(0x24000064, "Memory"):%X;
+    __message "  [6]  sai4_pdm     = 0x", __readMemory32(0x24000068, "Memory"):%X;
+    __message "  [7]  dma_cr       = 0x", __readMemory32(0x2400006C, "Memory"):%X;
+    __message "  [8]  dma_ndtr     = 0x", __readMemory32(0x24000070, "Memory"):%X;
+    __message "  [9]  dma_m0ar     = 0x", __readMemory32(0x24000074, "Memory"):%X;
+    __message "  [10] sitp         = ", __readMemory32(0x24000078, "Memory"):%d;
+    __message "  [11] spicksel     = ", __readMemory32(0x2400007C, "Memory"):%d;
+    __message "  [12] dtrbs        = ", __readMemory32(0x24000080, "Memory"):%d;
+    __message "  [13] last_raw     = 0x", __readMemory32(0x24000084, "Memory"):%X;
+    __message "  [14] last_val     = ", __readMemory32(0x24000088, "Memory"):%d;
+    __message "  [15] uptime_ticks = ", __readMemory32(0x2400008C, "Memory"):%d;
+    __message "  [16] ref_lr_low   = 0x", __readMemory32(0x24000090, "Memory"):%X;
+    __message "  [17] ref_lr_high  = 0x", __readMemory32(0x24000094, "Memory"):%X;
+
+    /* ── 9. LIVE GLOBALS (from VoiceRecTask, linker-placed) ──────── */
+    __message "\n── 9. LIVE GLOBALS ───────────────────────────────────";
+    __message "  g_dbg_live_sai4_cr1 @ 0x240000E8 = 0x",
+              __readMemory32(0x240000E8, "Memory"):%X;
+    __message "  g_dbg_live_fltisr   @ 0x240000EC = 0x",
+              __readMemory32(0x240000EC, "Memory"):%X;
+    __message "  g_dbg_live_hal_ok   @ 0x240000F0 = 0x",
+              __readMemory32(0x240000F0, "Memory"):%X,
+              "  (0=OK, FFFFFFFF=FAIL)";
+    __message "  g_dbg_live_fltcr1   @ 0x240000F4 = 0x",
+              __readMemory32(0x240000F4, "Memory"):%X;
+
+    /* ── 10. STATE / COUNTERS ────────────────────────────────────── */
+    __message "\n── 10. STATE / COUNTERS ──────────────────────────────";
+    __message "  g_SampleCount  @ 0x24037784 = ",
+              __readMemory32(0x24037784, "Memory"):%d;
+    __message "  g_FileIndex    @ 0x24037790 = ",
+              __readMemory32(0x24037790, "Memory"):%d;
+    __message "  g_State        @ 0x240377FE = ",
+              __readMemory8(0x240377FE, "Memory"):%d,
+              "  (0=idle, 1=rec, 2=save)";
+
+    /* ── 11. Buffer samples — first 8 raw ───────────────────────── */
+    __message "\n── 11. BUFFER SAMPLES ────────────────────────────────";
+    __message "  g_DfsdmBuf[0..7] (raw int32 @ 0x30000000):";
+    __message "    ", __readMemory32(0x30000000, "Memory"):%d,
+              "  ", __readMemory32(0x30000004, "Memory"):%d,
+              "  ", __readMemory32(0x30000008, "Memory"):%d,
+              "  ", __readMemory32(0x3000000C, "Memory"):%d;
+    __message "    ", __readMemory32(0x30000010, "Memory"):%d,
+              "  ", __readMemory32(0x30000014, "Memory"):%d,
+              "  ", __readMemory32(0x30000018, "Memory"):%d,
+              "  ", __readMemory32(0x3000001C, "Memory"):%d;
+
+    __message "\n══════════════════════════════════════════════════════";
+    __message "  DUMP COMPLETE";
+    __message "══════════════════════════════════════════════════════\n";
+}
+
+/*
+ * spicksel_set_sai4() — switch Channel 1 SPICKSEL to 11 (SAI4 internal bridge)
+ *
+ * CHEN=1 write-protects SPICKSEL per RM0399.
+ * Sequence:
+ *   1. Disable DMA stream (EN=0) — prevents HAL from re-writing CHCFGR1 mid-sequence
+ *   2. Disable DFSDM filter (DFEN=0) — stops conversions
+ *   3. Clear CHEN=0 — unlocks SPICKSEL
+ *   4. Write SPICKSEL=11, SITP=01, CHEN=0
+ *   5. Set CHEN=1 — locks new SPICKSEL in
+ *   6. Re-enable filter (DFEN=1) + DMA (RDMAEN=1)
+ *   7. Re-enable DMA stream (EN=1)
+ *
+ * DMA1_Stream1 CR  @ 0x40020028  bit0=EN
+ * DFSDM Flt0 CR1  @ 0x40017100  bit0=DFEN, bit21=RDMAEN
+ * Ch1 CHCFGR1     @ 0x40017020
+ */
+spicksel_set_sai4()
+{
+    __var before, after, dma_cr, flt_cr1;
+
+    before  = __readMemory32(0x40017020, "Memory");
+    dma_cr  = __readMemory32(0x40020028, "Memory");
+    flt_cr1 = __readMemory32(0x40017100, "Memory");
+    __message "spicksel_set_sai4: CHCFGR1 before = 0x", before:%X;
+    __message "  DMA CR before  = 0x", dma_cr:%X;
+    __message "  FLT CR1 before = 0x", flt_cr1:%X;
+
+    /* Step 1: disable DMA stream EN */
+    __writeMemory32(dma_cr & ~0x1, 0x40020028, "Memory");
+
+    /* Step 2: disable filter (DFEN=0, RDMAEN=0) */
+    __writeMemory32(flt_cr1 & ~0x00200001, 0x40017100, "Memory");
+
+    /* Step 3: clear CHEN — unlocks SPICKSEL */
+    __writeMemory32(0x0000000D, 0x40017020, "Memory");
+
+    /* Step 4+5: write SPICKSEL=11 + SITP=01, then CHEN=1 */
+    __writeMemory32(0x0000000D, 0x40017020, "Memory");
+    __writeMemory32(0x0000008D, 0x40017020, "Memory");
+
+    /* Step 6: restore filter (DFEN=1, RDMAEN=1) */
+    __writeMemory32(flt_cr1 | 0x00200001, 0x40017100, "Memory");
+
+    /* Step 7: restore DMA stream EN */
+    __writeMemory32(dma_cr | 0x1, 0x40020028, "Memory");
+
+    after = __readMemory32(0x40017020, "Memory");
+    __message "spicksel_set_sai4: CHCFGR1 after  = 0x", after:%X;
+    __message "  SPICKSEL[3:2] = ", (after >> 2) & 3:%d, "  (expect 3)";
+    __message "  CHEN(bit7)    = ", (after >> 7) & 1:%d, "  (expect 1)";
+    if (((after >> 2) & 3) == 3)
+        __message "  *** SPICKSEL=11 SET OK ***";
+    else
+        __message "  *** FAIL: SPICKSEL did not stick — value = 0x", after:%X;
+}
+
+/*
+ * spicksel_restore_ckout() — revert Channel 1 SPICKSEL back to 01 (CKOUT)
+ *
+ * Same stop/write/restart sequence as spicksel_set_sai4().
+ */
+spicksel_restore_ckout()
+{
+    __var before, after, dma_cr, flt_cr1;
+
+    before  = __readMemory32(0x40017020, "Memory");
+    dma_cr  = __readMemory32(0x40020028, "Memory");
+    flt_cr1 = __readMemory32(0x40017100, "Memory");
+    __message "spicksel_restore_ckout: CHCFGR1 before = 0x", before:%X;
+
+    __writeMemory32(dma_cr & ~0x1,        0x40020028, "Memory");
+    __writeMemory32(flt_cr1 & ~0x00200001, 0x40017100, "Memory");
+    __writeMemory32(0x00000005,            0x40017020, "Memory");
+    __writeMemory32(0x00000085,            0x40017020, "Memory");
+    __writeMemory32(flt_cr1 | 0x00200001,  0x40017100, "Memory");
+    __writeMemory32(dma_cr | 0x1,          0x40020028, "Memory");
+
+    after = __readMemory32(0x40017020, "Memory");
+    __message "spicksel_restore_ckout: CHCFGR1 after  = 0x", after:%X;
+    __message "  SPICKSEL[3:2] = ", (after >> 2) & 3:%d, "  (expect 1)";
+    __message "  CHEN(bit7)    = ", (after >> 7) & 1:%d, "  (expect 1)";
+}
+
+/*
+ * test_spicksel_sai4() — full SPICKSEL=11 (SAI4 bridge) live test
+ *
+ * What it does:
+ *   1. Switches SPICKSEL from 01 (CKOUT) to 11 (SAI4 bridge)
+ *   2. Waits for you to press the blue button (PC13) to start recording
+ *   3. Polls g_State until recording completes
+ *   4. Reads last_raw and first 8 DMA buffer samples
+ *   5. Prints PASS (last_raw != 0xFF88CA00) or FAIL with verdict
+ *
+ * After the test the register is LEFT at SPICKSEL=11.
+ * Call spicksel_restore_ckout() to revert if needed.
+ *
+ * g_State  @ 0x240377FE  (uint8: 0=IDLE, 1=REC, 2=SAVE)
+ * last_raw @ 0x24000084  (uint32 — stuck at 0xFF88CA01 with SPICKSEL=01)
+ */
+test_spicksel_sai4()
+{
+    __var state, last_raw, i, s0, s1, s2, s3, s4, s5, s6, s7;
+
+    __message "\n╔══════════════════════════════════════════════════╗";
+    __message "║  SPICKSEL=11 (SAI4 bridge) LIVE TEST             ║";
+    __message "╚══════════════════════════════════════════════════╝\n";
+
+    /* ── Step 1: switch SPICKSEL to SAI4 bridge ──────────────────────── */
+    spicksel_set_sai4();
+
+    /* ── Step 2: wait for idle (make sure we're not mid-recording) ───── */
+    state = __readMemory8(0x240377FE, "Memory");
+    if (state != 0)
+    {
+        __message "WARN: g_State=", state:%d, " — not idle. Wait for current recording to finish.";
+        i = 0;
+        while (state != 0 && i < 200)
+        {
+            __delay(100);
+            state = __readMemory8(0x240377FE, "Memory");
+            i = i + 1;
+        }
+        if (state != 0)
+        {
+            __message "ABORT: still not idle after 20s. Call test_spicksel_sai4() again.";
+            __return;
+        }
+    }
+
+    __message "\n>>> READY — press the blue button (PC13) to start recording <<<\n";
+
+    /* ── Step 3: wait for recording to start (g_State → 1) ──────────── */
+    i = 0;
+    state = __readMemory8(0x240377FE, "Memory");
+    while (state == 0 && i < 600)
+    {
+        __delay(100);
+        state = __readMemory8(0x240377FE, "Memory");
+        i = i + 1;
+    }
+    if (state == 0)
+    {
+        __message "ABORT: button not pressed within 60s. Reverting SPICKSEL.";
+        spicksel_restore_ckout();
+        __return;
+    }
+    __message "Recording started (g_State=", state:%d, ") — waiting for completion...";
+
+    /* ── Step 4: wait for recording to finish (g_State → 0) ─────────── */
+    i = 0;
+    while (state != 0 && i < 100)
+    {
+        __delay(100);
+        state = __readMemory8(0x240377FE, "Memory");
+        i = i + 1;
+    }
+    if (state != 0)
+    {
+        __message "WARN: recording did not finish within 10s. Reading results anyway.";
+    }
+
+    /* ── Step 5: read results ─────────────────────────────────────────── */
+    last_raw = __readMemory32(0x24000084, "Memory");
+    s0 = __readMemory32(0x30000000, "Memory");
+    s1 = __readMemory32(0x30000004, "Memory");
+    s2 = __readMemory32(0x30000008, "Memory");
+    s3 = __readMemory32(0x3000000C, "Memory");
+    s4 = __readMemory32(0x30000010, "Memory");
+    s5 = __readMemory32(0x30000014, "Memory");
+    s6 = __readMemory32(0x30000018, "Memory");
+    s7 = __readMemory32(0x3000001C, "Memory");
+
+    __message "\n── RESULTS ───────────────────────────────────────────";
+    __message "  last_raw     = 0x", last_raw:%X;
+    __message "  g_DfsdmBuf[0..7]:";
+    __message "    ", s0:%d, "  ", s1:%d, "  ", s2:%d, "  ", s3:%d;
+    __message "    ", s4:%d, "  ", s5:%d, "  ", s6:%d, "  ", s7:%d;
+
+    /* ── Step 6: verdict ─────────────────────────────────────────────── */
+    __message "";
+    if (last_raw == 0xFF88CA01 || last_raw == 0xFF88CA00)
+    {
+        __message "╔══════════════════════════════════════════════════╗";
+        __message "║  FAIL: last_raw still stuck at -30518 (DC)       ║";
+        __message "║  DFSDM sees all-zeros even with SPICKSEL=11.     ║";
+        __message "║  Next: check SAI4 SAIEN, PDMCR, PLL2, PE2 AF.   ║";
+        __message "╚══════════════════════════════════════════════════╝";
+    }
+    else
+    {
+        __message "╔══════════════════════════════════════════════════╗";
+        __message "║  PASS: last_raw changed — SAI4 bridge is live!   ║";
+        __message "║  Update firmware: SPICKSEL=11 in main.c.         ║";
+        __message "╚══════════════════════════════════════════════════╝";
+    }
+
+    __message "\nRegister left at SPICKSEL=11. Call spicksel_restore_ckout() to revert.\n";
+}
+
+execUserSetup()
+{
+    __message "dfsdm_watch_all.mac loaded.";
+    __message "  dfsdm_dump()             — full register dump";
+    __message "  spicksel_set_sai4()      — switch SPICKSEL to 11 (SAI4 bridge)";
+    __message "  spicksel_restore_ckout() — revert SPICKSEL to 01 (CKOUT)";
+    __message "  test_spicksel_sai4()     — full automated test (set + wait + verdict)";
+    dfsdm_dump();
+}

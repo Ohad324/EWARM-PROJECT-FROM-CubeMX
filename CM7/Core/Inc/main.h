@@ -55,14 +55,14 @@ extern "C" {
  * easy reading — no bit-math needed in the debugger.
  */
 typedef struct {
-    /* ── DFSDM Channel 0 registers ─────────────────────────────────── */
-    /* [0]  CH0CFGR1  Expect 0x8018008D (DFSDMEN+CKOUTDIV=24+CHEN+SPICKSEL=11+SITP=01) */
+    /* ── DFSDM Channel 1 registers ─────────────────────────────────── */
+    /* [0]  CH1CFGR1  Expect 0x0000008D (CHEN=1, SPICKSEL=11, SITP=01 falling) */
     uint32_t ch0_cfg1;
-    /* [1]  CH0CFGR2  Expect 0x00000030 (DTRBS=6 → bits[7:3]=0x06) */
+    /* [1]  CH1CFGR2  Expect 0x00000030 (DTRBS=6 → bits[7:3]=0x06) */
     uint32_t ch0_cfg2;
 
     /* ── DFSDM Filter 0 registers ──────────────────────────────────── */
-    /* [2]  FLTCR1    Expect 0x20240001 (RCSEL=0=CH0, RDMAEN=1, DFEN=1) */
+    /* [2]  FLTCR1    Expect 0x21240001 (RCSEL=1=CH1, RDMAEN=1, DFEN=1) */
     uint32_t flt0_cr1;
     /* [3]  FLTCR2    Expect 0x00000000 (no interrupt enables) */
     uint32_t flt0_cr2;

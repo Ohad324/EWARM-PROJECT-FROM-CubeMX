@@ -543,16 +543,18 @@ static void MX_DFSDM1_Init(void)
   DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 
-  /* ── Step 1: Channel 1 — DFSDM_CKOUT clock, falling edge (LR=HIGH mic) ──
+  /* ── Step 1: Channel 1 — SAI4 bridge clock, falling edge (LR=HIGH mic) ──
    * Hardware-confirmed from schematic mb1248-h747i-d04:
    *   SB43 (LEFT SELECTION) = OPEN → LR pulled HIGH via R213(10K) to VDD
    *   LR=HIGH → RIGHT channel → PDM data on FALLING edge of CLK
-   * RM0399 p1158: data always comes from DATINy pin for all SPICKSEL values.
-   * RM0399 p1182: SPICKSEL=01 = internal CKOUT, SITP controls sampling edge.
-   *               SPICKSEL=11 = internal CKOUT/2, samples on 2nd rising edge (WRONG for us).
-   * Correct: SPICKSEL=01 (CKOUT) + SITP=01 (falling) → HAL sets this directly.
-   * Channel 1 data pin: DATIN1 = PC1 (AF10 = SAI4_D1, but here used as DFSDM_DATIN1).
-   * Channel 0 provides CKOUT clock to mic via PE2 (CKOUTDIV=24 → 2.0 MHz).
+   * Clock source: SPICKSEL=11 = SAI4 internal silicon bridge (NOT CKOUT/PD3).
+   *   PD3 (CKOUT) is NOT routed to the mic on this board → SPICKSEL=01 gives no data.
+   *   SAI4_CK1 (PE2) drives the mic → DFSDM receives clock+data via internal bridge.
+   * SITP=01 (falling): LR=HIGH mic sends PDM data on falling edge of CLK.
+   * SPICKSEL=11 is write-protected when CHEN=1. HAL sets CHEN during ChannelInit,
+   *   so we must override CHCFGR1 after init with CHEN clear/restore dance below.
+   * Channel 1 data pin: DATIN1 = PC1 (AF10 = SAI4_D1 / DFSDM1_DATIN1).
+   * Channel 0 holds global DFSDMEN + CKOUTDIV=24 (clock master only, no CHEN).
    * RightBitShift=6: Sinc3 OSR=125 max = 125³ = 1,953,125 → >>6 = 30,517 fits int16_t. */
   hdfsdm1_channel1.Instance                        = DFSDM1_Channel1;
   hdfsdm1_channel1.Init.OutputClock.Activation     = DISABLE;  /* CKOUT managed by Ch0 */
@@ -562,7 +564,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel1.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
   hdfsdm1_channel1.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
   hdfsdm1_channel1.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_FALLING;  /* SITP=01: falling edge = LR=HIGH mic data */
-  hdfsdm1_channel1.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;  /* SPICKSEL=01: CKOUT clock */
+  hdfsdm1_channel1.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL_DIV2_RISING;  /* SPICKSEL=11: SAI4 internal bridge (NOT CKOUT/PD3) */
   hdfsdm1_channel1.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel1.Init.Awd.Oversampling           = 10u;
   hdfsdm1_channel1.Init.Offset                     = 0;
@@ -570,7 +572,7 @@ static void MX_DFSDM1_Init(void)
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel1) != HAL_OK) { Error_Handler(); }
 
   /* ── Snapshot into g_dbg (0x24000050) — visible in IAR Live Watch ─── */
-  g_dbg.ch0_cfg1    = DFSDM1_Channel1->CHCFGR1;  /* expect 0x0000008D (CHEN+SPICKSEL=01+SITP=01) */
+  g_dbg.ch0_cfg1    = DFSDM1_Channel1->CHCFGR1;  /* expect 0x0000008D (CHEN+SPICKSEL=11+SITP=01) */
   g_dbg.ch0_cfg2    = DFSDM1_Channel1->CHCFGR2;  /* expect 0x00000030 */
   g_dbg.sitp        = g_dbg.ch0_cfg1 & 0x3u;                   /* expect 1 = falling */
   g_dbg.spicksel    = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;           /* expect 1 = CKOUT */
@@ -599,7 +601,7 @@ static void MX_DFSDM1_Init(void)
                                         DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
   { Error_Handler(); }
 
-  g_dbg.flt0_cr1 = DFSDM1_Filter0->FLTCR1;    /* expect 0x20240001 (RCSEL=1=CH1) */
+  g_dbg.flt0_cr1 = DFSDM1_Filter0->FLTCR1;    /* expect 0x21240001 (RCSEL=1=CH1, RDMAEN=1, RCONT=1, DFEN=1) */
   g_dbg.flt0_cr2 = DFSDM1_Filter0->FLTCR2;    /* expect 0x00000000 (no IT enables) */
   g_dbg.flt0_fcr = DFSDM1_Filter0->FLTFCR;    /* expect 0x607C0000 (Sinc3, OSR=125) */
   g_dbg.flt0_isr = DFSDM1_Filter0->FLTISR;    /* expect 0x00000000 at boot (no CKABF yet) */
