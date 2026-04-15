@@ -31,7 +31,6 @@
 #include <stdbool.h>             /* bool, true, false in C */
 #include "ble_queue.h"
 #include "ble_uart.h"            /* DMA+IDLE driver, bleHistory, BLE_UART_Init() */
-#include "audio_rec.h"           /* button-triggered MEMS recording, AudioRec_Init() */
 #include "audio_sd.h"            /* SD card WAV recording — AudioSD_Init()           */
 #include "voice_recorder.h"      /* VoiceRec_ButtonInit(), VoiceRecTask, SDWriteTask  */
 #include "rtt_log_task.h"        /* RTTLogTask — deferred log queue drain             */
@@ -74,7 +73,7 @@
 CRC_HandleTypeDef hcrc;
 
 DFSDM_Filter_HandleTypeDef hdfsdm1_filter0;
-DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;  /* CH0 = SAI4 MicPair1 D0 (rising edge, LR=HIGH mic on PC1) — hardware-confirmed */
+DFSDM_Channel_HandleTypeDef hdfsdm1_channel1;  /* CH1 = SAI4 bridge D1 (falling-edge bits) — LR=HIGH mic data path */
 
 DMA2D_HandleTypeDef hdma2d;
 
@@ -111,7 +110,7 @@ const osThreadAttr_t videoTask_attributes = {
 /* USER CODE BEGIN PV */
 OTM8009A_Object_t OTM8009AObj;
 OTM8009A_IO_t IOCtx;
-UART_HandleTypeDef huart8;
+/* huart8 declared above in CubeMX-generated section — do not redeclare here */
 
 /* BLE UART queue — receives messages from UARTReceiveTask, consumed by Model::tick() */
 QueueHandle_t xBleQueue;
@@ -210,7 +209,7 @@ void TouchGFX_Task(void *argument);
 extern void videoTaskFunc(void *argument);
 
 /* USER CODE BEGIN PFP */
-static void MX_UART8_Init(void);
+/* MX_UART8_Init prototype declared above in CubeMX-generated section — not repeated here */
 static void UARTReceiveTask(void *argument);
 /* USER CODE END PFP */
 
@@ -321,10 +320,7 @@ Error_Handler();
   configASSERT(xLogQueue != NULL);
 
   BLE_UART_Init();
-  /* Full voice recorder init: button EXTI + DFSDM + DMA + RTOS objects.
-     audio_rec.c is excluded from build so no DMA/GPIO conflict. */
-  VoiceRec_Init();
-  // AudioRec_Init();   /* DISABLED — superseded by voice_recorder.c */
+  VoiceRec_Init(); /* button EXTI + DFSDM + DMA + RTOS objects */
   AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
 
   CommandHandler_Init(); /* create CMD: message queue                              */
@@ -366,12 +362,6 @@ Error_Handler();
 
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);
-  /* AudioRecTask: waits for button press, records mic via DFSDM DMA, sends PCM over UART8.
-     Stack 4096 bytes: needs ~1 KB for pcm16[] static buffer + FreeRTOS overhead.
-     Priority normal: same as TouchGFX — audio send is bursty, not latency-critical. */
-  /* AudioRec DISABLED — DFSDM/GPIO conflict crashes thumbnail pipeline.
-     Re-enable only after thumbnail display is stable. */
-  // xTaskCreate(AudioRec_TaskEntry, "AudioRec", 4096u, NULL, osPriorityNormal, NULL);
   /* CommandHandler: receives CMD: messages from NORA, dispatches to screen.
      Stack 1024 words.  Priority below normal: display updates are not time-critical. */
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1536u, NULL,
@@ -553,45 +543,37 @@ static void MX_DFSDM1_Init(void)
   DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 
-  /* ── Step 1: Channel 0 — SAI4 MicPair1 D0 (LR=HIGH mic on PC1, falling edge) ──
+  /* ── Step 1: Channel 1 — DFSDM_CKOUT clock, falling edge (LR=HIGH mic) ──
    * Hardware-confirmed from schematic mb1248-h747i-d04:
    *   SB43 (LEFT SELECTION) = OPEN → LR pulled HIGH via R213(10K) to VDD
    *   LR=HIGH → RIGHT channel → PDM data on FALLING edge of CLK
-   * Silicon routing (RM0399): SAI4 MicPair1 bridges to:
-   *   DFSDM1_Channel0 (falling edge = D0) ← mic on PC1, LR=HIGH  ← THIS PROJECT
-   *   DFSDM1_Channel1 (rising  edge = D1) ← empty slot (LR=HIGH mic never outputs here)
-   * SPICKSEL=11 routes SAI4 Block A internal bridge as clock+data source.
-   * SPICKSEL is write-protected when CHEN=1 → clear CHEN, write, restore.
-   * RightBitShift=6: Sinc3 OSR=125 max = 125³ = 1,953,125 → >>6 = 30,517 fits int16_t.
-   *   (DTRBS=5 produced max ±61,035 → int16_t overflow → false DC=4501.) */
-  hdfsdm1_channel0.Instance                        = DFSDM1_Channel0;
-  hdfsdm1_channel0.Init.OutputClock.Activation     = DISABLE;  /* CKOUT unused — SAI4 is clock source */
-  hdfsdm1_channel0.Init.OutputClock.Selection      = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
-  hdfsdm1_channel0.Init.OutputClock.Divider        = 2u;       /* irrelevant when Activation=DISABLE */
-  hdfsdm1_channel0.Init.Input.Multiplexer          = DFSDM_CHANNEL_EXTERNAL_INPUTS;
-  hdfsdm1_channel0.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
-  hdfsdm1_channel0.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
-  hdfsdm1_channel0.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_FALLING;  /* falling edge = LR=HIGH mic (SB43 open, LR pulled HIGH via R213) */
-  hdfsdm1_channel0.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;
-  hdfsdm1_channel0.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
-  hdfsdm1_channel0.Init.Awd.Oversampling           = 10u;
-  hdfsdm1_channel0.Init.Offset                     = 0;
-  hdfsdm1_channel0.Init.RightBitShift              = 6u;        /* DTRBS=6: max ±30,517 fits int16_t */
-  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel0) != HAL_OK) { Error_Handler(); }
-
-  /* ── Override SPICKSEL=11 on Channel 0 — SAI4 Block A internal bridge ──────
-   * HAL sets SPICKSEL=01 (DFSDM_CHANNEL_SPI_CLOCK_INTERNAL = CKOUT pin).
-   * We need SPICKSEL=11 so CH0 receives from SAI4 bridge, not DATIN0 pin. */
-  DFSDM1_Channel0->CHCFGR1 &= ~DFSDM_CHCFGR1_CHEN;
-  DFSDM1_Channel0->CHCFGR1  = (DFSDM1_Channel0->CHCFGR1 & ~DFSDM_CHCFGR1_SPICKSEL_Msk)
-                             | (DFSDM_CHCFGR1_SPICKSEL_0 | DFSDM_CHCFGR1_SPICKSEL_1); /* =11: SAI4-A → CH0 */
-  DFSDM1_Channel0->CHCFGR1 |=  DFSDM_CHCFGR1_CHEN;
+   * RM0399 p1158: data always comes from DATINy pin for all SPICKSEL values.
+   * RM0399 p1182: SPICKSEL=01 = internal CKOUT, SITP controls sampling edge.
+   *               SPICKSEL=11 = internal CKOUT/2, samples on 2nd rising edge (WRONG for us).
+   * Correct: SPICKSEL=01 (CKOUT) + SITP=01 (falling) → HAL sets this directly.
+   * Channel 1 data pin: DATIN1 = PC1 (AF10 = SAI4_D1, but here used as DFSDM_DATIN1).
+   * Channel 0 provides CKOUT clock to mic via PE2 (CKOUTDIV=24 → 2.0 MHz).
+   * RightBitShift=6: Sinc3 OSR=125 max = 125³ = 1,953,125 → >>6 = 30,517 fits int16_t. */
+  hdfsdm1_channel1.Instance                        = DFSDM1_Channel1;
+  hdfsdm1_channel1.Init.OutputClock.Activation     = DISABLE;  /* CKOUT managed by Ch0 */
+  hdfsdm1_channel1.Init.OutputClock.Selection      = DFSDM_CHANNEL_OUTPUT_CLOCK_SYSTEM;
+  hdfsdm1_channel1.Init.OutputClock.Divider        = 2u;       /* irrelevant when Activation=DISABLE */
+  hdfsdm1_channel1.Init.Input.Multiplexer          = DFSDM_CHANNEL_EXTERNAL_INPUTS;
+  hdfsdm1_channel1.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
+  hdfsdm1_channel1.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
+  hdfsdm1_channel1.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_FALLING;  /* SITP=01: falling edge = LR=HIGH mic data */
+  hdfsdm1_channel1.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;  /* SPICKSEL=01: CKOUT clock */
+  hdfsdm1_channel1.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
+  hdfsdm1_channel1.Init.Awd.Oversampling           = 10u;
+  hdfsdm1_channel1.Init.Offset                     = 0;
+  hdfsdm1_channel1.Init.RightBitShift              = 6u;        /* DTRBS=6: max ±30,517 fits int16_t */
+  if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel1) != HAL_OK) { Error_Handler(); }
 
   /* ── Snapshot into g_dbg (0x24000050) — visible in IAR Live Watch ─── */
-  g_dbg.ch0_cfg1    = DFSDM1_Channel0->CHCFGR1;  /* expect 0x8018008D */
-  g_dbg.ch0_cfg2    = DFSDM1_Channel0->CHCFGR2;  /* expect 0x00000030 */
+  g_dbg.ch0_cfg1    = DFSDM1_Channel1->CHCFGR1;  /* expect 0x0000008D (CHEN+SPICKSEL=01+SITP=01) */
+  g_dbg.ch0_cfg2    = DFSDM1_Channel1->CHCFGR2;  /* expect 0x00000030 */
   g_dbg.sitp        = g_dbg.ch0_cfg1 & 0x3u;                   /* expect 1 = falling */
-  g_dbg.spicksel    = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;           /* expect 3 = SAI4 bridge */
+  g_dbg.spicksel    = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;           /* expect 1 = CKOUT */
   g_dbg.dtrbs       = (g_dbg.ch0_cfg2 >> 3u) & 0x1Fu;          /* expect 6 */
   g_dbg.dma_cr      = DMA1_Stream1->CR;
   g_dbg.dma_ndtr    = DMA1_Stream1->NDTR;
@@ -599,8 +581,8 @@ static void MX_DFSDM1_Init(void)
   g_dbg.last_raw    = 0u;
   g_dbg.last_val    = 0;
   g_dbg.uptime_ticks = 0u;
-  g_dbg.ref_lr_low  = 0x8018008Cu;  /* LR=Low  (LEFT)  SITP=00 rising  edge */
-  g_dbg.ref_lr_high = 0x8018008Du;  /* LR=High (RIGHT) SITP=01 falling edge ← THIS BOARD */
+  g_dbg.ref_lr_low  = 0x0000008Cu;  /* LR=Low  (LEFT)  SITP=00 rising  — Ch1 ref */
+  g_dbg.ref_lr_high = 0x0000008Du;  /* LR=High (RIGHT) SITP=01 falling — Ch1 ref ← THIS BOARD */
 
   /* ── Step 2: Filter 0 ── */
   hdfsdm1_filter0.Instance                          = DFSDM1_Filter0;
@@ -613,11 +595,11 @@ static void MX_DFSDM1_Init(void)
   if (HAL_DFSDM_FilterInit(&hdfsdm1_filter0) != HAL_OK) { Error_Handler(); }
 
   /* ── Step 3: Assign channel to filter ── */
-  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_0,
+  if (HAL_DFSDM_FilterConfigRegChannel(&hdfsdm1_filter0, DFSDM_CHANNEL_1,
                                         DFSDM_CONTINUOUS_CONV_ON) != HAL_OK)
   { Error_Handler(); }
 
-  g_dbg.flt0_cr1 = DFSDM1_Filter0->FLTCR1;    /* expect 0x20240001 (RCSEL=0=CH0) */
+  g_dbg.flt0_cr1 = DFSDM1_Filter0->FLTCR1;    /* expect 0x20240001 (RCSEL=1=CH1) */
   g_dbg.flt0_cr2 = DFSDM1_Filter0->FLTCR2;    /* expect 0x00000000 (no IT enables) */
   g_dbg.flt0_fcr = DFSDM1_Filter0->FLTFCR;    /* expect 0x607C0000 (Sinc3, OSR=125) */
   g_dbg.flt0_isr = DFSDM1_Filter0->FLTISR;    /* expect 0x00000000 at boot (no CKABF yet) */

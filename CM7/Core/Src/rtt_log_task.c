@@ -61,8 +61,8 @@ static void DFSDM_BootCheck(void)
     int  n;
 
     /* Refresh all g_dbg fields from live registers */
-    g_dbg.ch0_cfg1     = DFSDM1_Channel0->CHCFGR1;
-    g_dbg.ch0_cfg2     = DFSDM1_Channel0->CHCFGR2;
+    g_dbg.ch0_cfg1     = DFSDM1_Channel1->CHCFGR1;  /* Ch1 = active data channel (SAI4 bridge D1, LR=HIGH mic) */
+    g_dbg.ch0_cfg2     = DFSDM1_Channel1->CHCFGR2;
     g_dbg.flt0_cr1     = DFSDM1_Filter0->FLTCR1;
     g_dbg.flt0_cr2     = DFSDM1_Filter0->FLTCR2;
     g_dbg.flt0_fcr     = DFSDM1_Filter0->FLTFCR;
@@ -107,22 +107,22 @@ static void DFSDM_BootCheck(void)
     /* 1. LR hardware — fixed by schematic (SB43=OPEN, R213 pullup) */
     n = snprintf(b, sizeof(b), "[BOOT]  1. LR hardware        : HIGH (RIGHT mic, SB43=OPEN, R213 pullup)  [HW-FIXED]\r\n"); RTT(b, n);
 
-    /* 2. DFSDM channel — confirm CH0 is active (RCSEL=0 in filter) */
-    n = snprintf(b, sizeof(b), "[BOOT]  2. DFSDM channel       : CH%u  (RCSEL bits[27:24])   [%s] expect 0\r\n",
-                 rcsel, PF(rcsel == 0u)); RTT(b, n);
+    /* 2. DFSDM channel — confirm CH1 is active (RCSEL=1 in filter) */
+    n = snprintf(b, sizeof(b), "[BOOT]  2. DFSDM channel       : CH%u  (RCSEL bits[27:24])   [%s] expect 1\r\n",
+                 rcsel, PF(rcsel == 1u)); RTT(b, n);
 
     /* 3. Edge selection — SITP=01 = falling edge (LR=HIGH mic drives data on falling CLK) */
     n = snprintf(b, sizeof(b), "[BOOT]  3. Edge (SITP)         : %s  (bits[1:0]=0x%02X)       [%s] expect 01=falling\r\n",
                  (sitp == 1u) ? "FALLING(01)" : "RISING (00)",
                  sitp, PF(sitp == 1u)); RTT(b, n);
 
-    /* 4. SPICKSEL — must be 11 (SAI4 bridge) */
-    n = snprintf(b, sizeof(b), "[BOOT]  4. SPICKSEL            : %u%u  (bits[3:2]=0x%02X)       [%s] expect 11=SAI4\r\n",
+    /* 4. SPICKSEL — must be 01 (internal CKOUT, SITP controls edge) — RM0399 p1182 */
+    n = snprintf(b, sizeof(b), "[BOOT]  4. SPICKSEL            : %u%u  (bits[3:2]=0x%02X)       [%s] expect 01=CKOUT\r\n",
                  (spicksel >> 1) & 1u, spicksel & 1u,
-                 spicksel, PF(spicksel == 3u)); RTT(b, n);
+                 spicksel, PF(spicksel == 1u)); RTT(b, n);
 
     /* 5. CHEN — channel enabled */
-    n = snprintf(b, sizeof(b), "[BOOT]  5. CHEN (CH0 enable)   : %u  (bit7)                  [%s] expect 1\r\n",
+    n = snprintf(b, sizeof(b), "[BOOT]  5. CHEN (CH1 enable)   : %u  (bit7)                  [%s] expect 1\r\n",
                  chen, PF(chen == 1u)); RTT(b, n);
 
     /* 6. DFSDMEN — global enable */
@@ -133,9 +133,9 @@ static void DFSDM_BootCheck(void)
     n = snprintf(b, sizeof(b), "[BOOT]  7. CKOUTDIV            : %u  (bits[22:16])           [%s] expect 24 -> 2.0 MHz\r\n",
                  ckoutdiv, PF(ckoutdiv == 24u)); RTT(b, n);
 
-    /* 8. Filter RCSEL — Channel 0 feeds regular filter */
-    n = snprintf(b, sizeof(b), "[BOOT]  8. RCSEL (filter->CH)  : %u  FLTCR1=0x%08lX      [%s] expect 0=CH0\r\n",
-                 rcsel, (unsigned long)fltcr1, PF(rcsel == 0u)); RTT(b, n);
+    /* 8. Filter RCSEL — Channel 1 feeds regular filter (CKOUT+falling edge, LR=HIGH mic) */
+    n = snprintf(b, sizeof(b), "[BOOT]  8. RCSEL (filter->CH)  : %u  FLTCR1=0x%08lX      [%s] expect 1=CH1\r\n",
+                 rcsel, (unsigned long)fltcr1, PF(rcsel == 1u)); RTT(b, n);
 
     /* 9. Filter mode — Sinc3, OSR=125 */
     n = snprintf(b, sizeof(b), "[BOOT]  9. Filter mode         : Sinc%u  OSR=%u  FLTFCR=0x%08lX  [%s]\r\n",
@@ -159,7 +159,7 @@ static void DFSDM_BootCheck(void)
                  (unsigned long)sai4pdmcr, PF(sai4pdmcr == 0x00000101u)); RTT(b, n);
 
     /* Summary */
-    uint8_t allOk = (rcsel == 0u) && (sitp == 1u) && (spicksel == 3u) &&
+    uint8_t allOk = (rcsel == 1u) && (sitp == 1u) && (spicksel == 1u) &&
                     (chen == 1u)  && (dfsdmen == 1u) && (ckoutdiv == 24u) &&
                     (ford == 3u)  && (osr == 125u)   && (dtrbs == 6u) &&
                     (dfen == 1u)  && (sai4pdmcr == 0x00000101u);
@@ -189,8 +189,8 @@ void RTTLogTask(void *arg)
          * Fields [0..8] updated here. Fields [9..10] (ref_lr_low/high) are
          * constant reference values written once in MX_DFSDM1_Init().
          * uptime_ticks increments each pass — proves this task is alive.       */
-        g_dbg.ch0_cfg1     = DFSDM1_Channel0->CHCFGR1;
-        g_dbg.ch0_cfg2     = DFSDM1_Channel0->CHCFGR2;
+        g_dbg.ch0_cfg1     = DFSDM1_Channel1->CHCFGR1;  /* Ch1 = active data channel (SAI4 bridge D1, LR=HIGH mic) */
+        g_dbg.ch0_cfg2     = DFSDM1_Channel1->CHCFGR2;
         g_dbg.flt0_cr1     = DFSDM1_Filter0->FLTCR1;
         g_dbg.flt0_cr2     = DFSDM1_Filter0->FLTCR2;
         g_dbg.flt0_fcr     = DFSDM1_Filter0->FLTFCR;
@@ -321,12 +321,12 @@ void RTTLogTask(void *arg)
 
                     /* Line 1 — channel config + SAI4 */
                     pn = snprintf(pbuf, sizeof(pbuf),
-                        "[T+%7lu ms] [DFSDM] Ch0CFG1=%08lX[%s] SITP=%lu(%s)[%s] SPICKSEL=%lu[%s] Ch0CFG2=%08lX DTRBS=%lu[%s] SAI4PDMCR=%08lX[%s]\r\n",
+                        "[T+%7lu ms] [DFSDM] Ch1CFG1=%08lX[%s] SITP=%lu(%s)[%s] SPICKSEL=%lu[%s] Ch1CFG2=%08lX DTRBS=%lu[%s] SAI4PDMCR=%08lX[%s]\r\n",
                         (unsigned long)HAL_GetTick(),
-                        (unsigned long)ch0cfg1,   (ch0cfg1   == 0x8018008Du)  ? "OK" : "FAIL",
+                        (unsigned long)ch0cfg1,   (ch0cfg1   == 0x0000008Du)  ? "OK" : "FAIL",
                         (unsigned long)sitp_val,  (sitp_val  == 1u) ? "FALL" : "RISE",
                                                   (sitp_val  == 1u)            ? "OK" : "FAIL",
-                        (unsigned long)spick_val, (spick_val == 3u)            ? "OK" : "FAIL",
+                        (unsigned long)spick_val, (spick_val == 1u)            ? "OK" : "FAIL",
                         (unsigned long)ch0cfg2,
                         (unsigned long)dtrbs_val, (dtrbs_val == 6u)            ? "OK" : "FAIL",
                         (unsigned long)sai4pdmcr, (sai4pdmcr == 0x00000101u)  ? "OK" : "FAIL");

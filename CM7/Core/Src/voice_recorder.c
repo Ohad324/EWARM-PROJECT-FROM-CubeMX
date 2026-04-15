@@ -40,9 +40,9 @@
  *     PE4 (AF8 =SAI4_FS_A)  → frame sync (unlocks SAI4 master clock tree)
  *     PE5 (AF8 =SAI4_SCK_A) → serial clock (SAI4 internal bit clock)
  *
- *   DFSDM1 Channel 3 receives PDM from SAI4 via the internal silicon bridge
- *   (SPICKSEL=11 in CHCFGR1 — set by direct register write after ChannelInit).
- *   No external DFSDM pins used: PD3/PC7 configured by CubeMX MSP but unused.
+ *   DFSDM1 Channel 1: SPICKSEL=01 (internal CKOUT), SITP=01 (falling edge).
+ *   Data from DATIN1=PC1. Clock from CKOUT=PE2 (Ch0 CKOUTDIV=24 → 2.0 MHz).
+ *   RM0399 p1158: data always from DATINy for all SPICKSEL values.
  *
  *   DFSDM1 Filter0: Sinc3, hardware decimation → 16-bit PCM output
  *   DMA1_Stream1 → g_DfsdmBuf in D2 SRAM (0x30000000)
@@ -137,7 +137,7 @@ typedef char _WavHdr512Check[(sizeof(WavHdr_t) == 512u) ? 1 : -1];
 
 /* ── Peripheral handles — owned by CubeMX (main.c), used here via extern ── */
 extern DFSDM_Filter_HandleTypeDef  hdfsdm1_filter0;
-extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel0;  /* CH0 = SAI4 MicPair1 D0 (rising edge, LR=HIGH mic) — hardware-confirmed */
+extern DFSDM_Channel_HandleTypeDef hdfsdm1_channel1;  /* CH1 = CKOUT+falling edge (SPICKSEL=01+SITP=01) — LR=HIGH mic data path */
 extern SAI_HandleTypeDef           hsai_BlockA4;
 
 /* ── Live debug globals — declared in main.c, captured here at recording time ─
@@ -358,7 +358,7 @@ void VoiceRecTask(void *arg)
         /* ── Enable SAI4 — drives the PDM clock to the microphone via PE2/SAI4_CK1.
          * In the DFSDM bridge path SAI4 provides clock only; no SAI4 DMA is used.
          * (hsai_BlockA4.hdmarx is NULL — BDMA is not wired for this path.)
-         * DFSDM1_Channel0 receives the PDM bitstream via internal silicon routing.
+         * DFSDM1_Channel1: SPICKSEL=01 (CKOUT), SITP=01 (falling) — data on DATIN1=PC1.
          * Startup order: SAI4 clock running → DFSDM DMA started. */
         __HAL_SAI_ENABLE(&hsai_BlockA4);
         g_dbg_live_sai4_cr1 = hsai_BlockA4.Instance->CR1;
@@ -797,7 +797,7 @@ static void DFSDM_DMA_Init(void)
      *
      * Architecture:
      *   SAI4 (PE2/PC1/PE4/PE5) → physical mic → internal silicon routing
-     *   DFSDM1 Channel 3 (SPICKSEL=11: SAI4 Block A bridge) → Sinc3 decimation → PCM
+     *   DFSDM1 Channel 1 (SPICKSEL=01+SITP=01: CKOUT+falling edge) → Sinc3 decimation → PCM
      *   DMA1 Stream1 → g_DfsdmBuf in D2 SRAM (0x30000000)
      *
      * DMA1/DMA2 can access D2 SRAM where g_DfsdmBuf lives.
@@ -952,8 +952,8 @@ static void AudioQuality_Report(void)
                                    "WARN: marginal -- may work, tune gain");
 
     /* ── [3] DFSDM + DMA1 registers ─────────────────────────────────────── */
-    QRPT("[REG]  DFSDM1_Ch0->CHCFGR1 = 0x%08lX  (active ch: DFSDMEN+CKOUTDIV+CHEN+SPICKSEL=11+SITP=00 expect 0x8018008C)", (unsigned long)DFSDM1_Channel0->CHCFGR1);
-    QRPT("[REG]  DFSDM1_Ch0->CHCFGR2 = 0x%08lX  (DTRBS=6 expect 0x00000030)",  (unsigned long)DFSDM1_Channel0->CHCFGR2);
+    QRPT("[REG]  DFSDM1_Ch1->CHCFGR1 = 0x%08lX  (active ch: CHEN+SPICKSEL=01+SITP=01 expect 0x0000008D)", (unsigned long)DFSDM1_Channel1->CHCFGR1);
+    QRPT("[REG]  DFSDM1_Ch1->CHCFGR2 = 0x%08lX  (DTRBS=6 expect 0x00000030)",  (unsigned long)DFSDM1_Channel1->CHCFGR2);
     QRPT("[REG]  DFSDM1_Flt0->FLTCR1 = 0x%08lX  (filter enable/DMA/trig)",  (unsigned long)DFSDM1_Filter0->FLTCR1);
     QRPT("[REG]  DFSDM1_Flt0->FLTCR2 = 0x%08lX  (IT enables)",              (unsigned long)DFSDM1_Filter0->FLTCR2);
     QRPT("[REG]  DFSDM1_Flt0->FLTISR = 0x%08lX  (status: bit3=ROVRF ovrun)",(unsigned long)DFSDM1_Filter0->FLTISR);
