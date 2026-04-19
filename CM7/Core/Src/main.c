@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "itm_log.h"   /* _itm_str(), _itm_u32() — direct ITM, no FreeRTOS */
 #include "FreeRTOS.h"
 #include "cmsis_os2.h"
 #include "libjpeg.h"
@@ -299,6 +300,9 @@ Error_Handler();
   MX_JPEG_Init();
   MX_LIBJPEG_Init();
   MX_SAI4_Init();
+  /* ITM: print SAIEN immediately after SAI4 init — expect 0 (not started yet) */
+  _itm_str("[SAI4] post-init CR1="); _itm_u32(SAI4_Block_A->CR1);
+  _itm_str("[SAI4] SAIEN=");         _itm_u32((SAI4_Block_A->CR1 >> 16u) & 1u);
   MX_UART8_Init();
   MX_DFSDM1_Init();
   MX_TouchGFX_Init();
@@ -543,17 +547,18 @@ static void MX_DFSDM1_Init(void)
   DFSDM1_Channel0->CHCFGR1 |= (24u << DFSDM_CHCFGR1_CKOUTDIV_Pos);  /* STEP 1: CKOUTDIV while DFSDMEN=0 */
   DFSDM1_Channel0->CHCFGR1 |= DFSDM_CHCFGR1_DFSDMEN;                 /* STEP 2: enable — locks CKOUTDIV */
 
-  /* ── Step 1: Channel 1 — SAI4 bridge clock, falling edge (LR=HIGH mic) ──
+  /* ── Step 1: Channel 1 — data channel, falling edge (LR=HIGH mic) ──────────
    * Hardware-confirmed from schematic mb1248-h747i-d04:
    *   SB43 (LEFT SELECTION) = OPEN → LR pulled HIGH via R213(10K) to VDD
    *   LR=HIGH → RIGHT channel → PDM data on FALLING edge of CLK
-   * Clock source: SPICKSEL=11 = SAI4 internal silicon bridge (NOT CKOUT/PD3).
-   *   PD3 (CKOUT) is NOT routed to the mic on this board → SPICKSEL=01 gives no data.
-   *   SAI4_CK1 (PE2) drives the mic → DFSDM receives clock+data via internal bridge.
    * SITP=01 (falling): LR=HIGH mic sends PDM data on falling edge of CLK.
-   * SPICKSEL=11 is write-protected when CHEN=1. HAL sets CHEN during ChannelInit,
-   *   so we must override CHCFGR1 after init with CHEN clear/restore dance below.
-   * Channel 1 data pin: DATIN1 = PC1 (AF10 = SAI4_D1 / DFSDM1_DATIN1).
+   * SPICKSEL=01: External clock source — channel latches data on the clock provided by SAI4 CK1 (PE2).
+   *   Target CHCFGR1 = 0x00000085 (CHEN|SPICKSEL=01|SITP=01). See CLAUDE.md §Essential Register Value.
+   *   Confirmed 2026-04-15: SPICKSEL=01 → CKABF clears during recording (clock detected).
+   *   SPICKSEL=11 (SAI4 bridge ÷2) was tried and broke it — CKABF never cleared.
+   *   DO NOT change to SPICKSEL=11 again without oscilloscope verification on PE2.
+   * Channel 1 data pin: DATIN1 = PC1 (AF6 = DFSDM1_DATIN1). DFSDM_CHANNEL_EXTERNAL_INPUTS requires this GPIO pin.
+   *   AF10 (SAI4_D1) was reverted — it routes data to SAI4 FIFO only; DFSDM sees nothing with DATMPX=00.
    * Channel 0 holds global DFSDMEN + CKOUTDIV=24 (clock master only, no CHEN).
    * RightBitShift=6: Sinc3 OSR=125 max = 125³ = 1,953,125 → >>6 = 30,517 fits int16_t. */
   hdfsdm1_channel1.Instance                        = DFSDM1_Channel1;
@@ -564,7 +569,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel1.Init.Input.DataPacking          = DFSDM_CHANNEL_STANDARD_MODE;
   hdfsdm1_channel1.Init.Input.Pins                 = DFSDM_CHANNEL_SAME_CHANNEL_PINS;
   hdfsdm1_channel1.Init.SerialInterface.Type       = DFSDM_CHANNEL_SPI_FALLING;  /* SITP=01: falling edge = LR=HIGH mic data */
-  hdfsdm1_channel1.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL_DIV2_RISING;  /* SPICKSEL=11: SAI4 internal bridge (NOT CKOUT/PD3) */
+  hdfsdm1_channel1.Init.SerialInterface.SpiClock   = DFSDM_CHANNEL_SPI_CLOCK_INTERNAL;  /* SPICKSEL=01: external SAI4 CK1 (PE2) — HAL name is misleading; bit pattern 01 routes the SAI4 clock into the DFSDM channel. CHCFGR1 target = 0x85 */
   hdfsdm1_channel1.Init.Awd.FilterOrder            = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel1.Init.Awd.Oversampling           = 10u;
   hdfsdm1_channel1.Init.Offset                     = 0;
@@ -572,10 +577,10 @@ static void MX_DFSDM1_Init(void)
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel1) != HAL_OK) { Error_Handler(); }
 
   /* ── Snapshot into g_dbg (0x24000050) — visible in IAR Live Watch ─── */
-  g_dbg.ch0_cfg1    = DFSDM1_Channel1->CHCFGR1;  /* expect 0x0000008D (CHEN+SPICKSEL=11+SITP=01) */
+  g_dbg.ch0_cfg1    = DFSDM1_Channel1->CHCFGR1;  /* expect 0x00000085 (CHEN+SPICKSEL=01+SITP=01) */
   g_dbg.ch0_cfg2    = DFSDM1_Channel1->CHCFGR2;  /* expect 0x00000030 */
   g_dbg.sitp        = g_dbg.ch0_cfg1 & 0x3u;                   /* expect 1 = falling */
-  g_dbg.spicksel    = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;           /* expect 1 = CKOUT */
+  g_dbg.spicksel    = (g_dbg.ch0_cfg1 >> 2u) & 0x3u;           /* expect 1 = SAI4 external (PE2) */
   g_dbg.dtrbs       = (g_dbg.ch0_cfg2 >> 3u) & 0x1Fu;          /* expect 6 */
   g_dbg.dma_cr      = DMA1_Stream1->CR;
   g_dbg.dma_ndtr    = DMA1_Stream1->NDTR;
@@ -583,8 +588,8 @@ static void MX_DFSDM1_Init(void)
   g_dbg.last_raw    = 0u;
   g_dbg.last_val    = 0;
   g_dbg.uptime_ticks = 0u;
-  g_dbg.ref_lr_low  = 0x0000008Cu;  /* LR=Low  (LEFT)  SITP=00 rising  — Ch1 ref */
-  g_dbg.ref_lr_high = 0x0000008Du;  /* LR=High (RIGHT) SITP=01 falling — Ch1 ref ← THIS BOARD */
+  g_dbg.ref_lr_low  = 0x00000084u;  /* LR=Low  (LEFT)  SITP=00 rising  — Ch1 ref  (CHEN|SPICKSEL=01|SITP=00) */
+  g_dbg.ref_lr_high = 0x00000085u;  /* LR=High (RIGHT) SITP=01 falling — Ch1 ref  (CHEN|SPICKSEL=01|SITP=01) ← THIS BOARD */
 
   /* ── Step 2: Filter 0 ── */
   hdfsdm1_filter0.Instance                          = DFSDM1_Filter0;
@@ -976,24 +981,45 @@ static void MX_SAI4_Init(void)
   /* USER CODE BEGIN SAI4_Init 1 */
 
   /* USER CODE END SAI4_Init 1 */
+  /* ╔══════════════════════════════════════════════════════════════════════╗
+   * ║  HOLY CODE — SAI4 INIT  (docs/Claude_story.md Summary Table)        ║
+   * ║  Steps 1, 2, 6 implemented here. Steps 3-5 in HAL_SAI_MspInit.      ║
+   * ║  Step 7 (DMA Circular activation) is triggered at button press.      ║
+   * ╚══════════════════════════════════════════════════════════════════════╝ */
   hsai_BlockA4.Instance = SAI4_Block_A;
   hsai_BlockA4.Init.Protocol = SAI_FREE_PROTOCOL;
+
+  /* ── [Step 6] Peripheral Mode: Master — SAI4 is the clock heartbeat for the PDM mic.
+   * NOTE: Holy code specifies SAI_MODEMASTER_TX. We keep SAI_MODEMASTER_RX because
+   * PDM mode (PdmInit below) requires RX — it is what drives CK1 (PE2/AF10).
+   * In TX mode, PE2 would be MCLK_A (AF8), not CK1 (AF10). Step 7 will resolve this. */
   hsai_BlockA4.Init.AudioMode = SAI_MODEMASTER_RX;
+
   hsai_BlockA4.Init.DataSize = SAI_DATASIZE_8;
   hsai_BlockA4.Init.FirstBit = SAI_FIRSTBIT_MSB;
   hsai_BlockA4.Init.ClockStrobing = SAI_CLOCKSTROBING_FALLINGEDGE;
   hsai_BlockA4.Init.Synchro = SAI_ASYNCHRONOUS;
   hsai_BlockA4.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
-  hsai_BlockA4.Init.NoDivider = SAI_MCK_OVERSAMPLING_DISABLE;
+
+  /* ── [Step 2] Clock Divider: MASTERDIVIDER_ENABLE — activates the MCKDIV path.
+   * Formula: CK1 = Source / (MCKDIV × 2) = 64 MHz / (16 × 2) = 2.000 MHz ✓ */
+  hsai_BlockA4.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
+
   hsai_BlockA4.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
   hsai_BlockA4.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
-  hsai_BlockA4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_16K;  /* 16 kHz → MCKDIV=12 → CK1=2.048 MHz ≈ DFSDM CKOUT 2.0 MHz */
+
+  /* ── [Step 2] MCKDIV=8 (TEST: was 16 — halved to check if scope frequency doubles).
+   * Replaces the previous AudioFrequency=16K + CR1 direct-write override hack.
+   * HAL uses Init.Mckdiv only when AudioFrequency == SAI_AUDIO_FREQUENCY_MCKDIV (0). */
+  hsai_BlockA4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_MCKDIV;
+  hsai_BlockA4.Init.Mckdiv = 8;
+
   hsai_BlockA4.Init.MonoStereoMode = SAI_STEREOMODE;
   hsai_BlockA4.Init.CompandingMode = SAI_NOCOMPANDING;
   hsai_BlockA4.Init.PdmInit.Activation = ENABLE;
   hsai_BlockA4.Init.PdmInit.MicPairsNbr = 1;
   hsai_BlockA4.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
-  hsai_BlockA4.FrameInit.FrameLength = 8;
+  hsai_BlockA4.FrameInit.FrameLength = 8;   /* 2026-04-15: reverted 32 → 8; FrameLength=32 killed SAI4→DFSDM bridge data path */
   hsai_BlockA4.FrameInit.ActiveFrameLength = 1;
   hsai_BlockA4.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
   hsai_BlockA4.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
@@ -1008,15 +1034,15 @@ static void MX_SAI4_Init(void)
   }
   /* USER CODE BEGIN SAI4_Init 2 */
 
-  /* ── Force MCKDIV=12 — HAL rounds down to 11 for PLL2P=49.14 MHz ──────────
-   * HAL formula: MCKDIV = floor(49142857 / (16000 × 256 × 1)) = floor(12.0) = 11
-   * CK1 at MCKDIV=11: 49142857 / 22 = 2.234 MHz — 11.7% faster than DFSDM CKOUT
-   * CK1 at MCKDIV=12: 49142857 / 24 = 2.048 MHz — only 2.4% from CKOUT=2.0 MHz ✓
-   * Write MCKDIV while SAIEN=0 (HAL_SAI_Init leaves SAIEN=0 until DMA start). */
-  hsai_BlockA4.Instance->CR1 = (hsai_BlockA4.Instance->CR1 & ~SAI_xCR1_MCKDIV) |
-                                (12u << SAI_xCR1_MCKDIV_Pos);
+  /* ── [Step 1] Kernel Clock: Force SAI4ASEL = PER_CK (HSI 64 MHz) ───────────
+   * D3CCIPR bits[23:21] = 100 → CLKP = HSI64 = 64 MHz.
+   * HAL_RCCEx_PeriphCLKConfig in MspInit sets this but does not always stick
+   * (D3 domain write not visible at runtime). MODIFY_REG bypasses HAL validation.
+   * RCC_D3CCIPR_SAI4ASEL_Pos=21, mask=0x00E00000, CLKP=0x00800000. [RM0399 P.598] */
+  MODIFY_REG(RCC->D3CCIPR, RCC_D3CCIPR_SAI4ASEL, RCC_SAI4ACLKSOURCE_CLKP);
 
   g_dbg.sai4_pdm = SAI4->PDMCR;                     /* expect 0x00000101 (PDMEN+CKEN1) */
+  g_dbg.d3ccipr  = RCC->D3CCIPR;                    /* expect 0x00800000 (SAI4ASEL=100=CLKP=HSI64) */
   /* SAI4 CR1 not in DebugHub — still readable at hsai_BlockA4.Instance->CR1 or 0x58005404 */
 
   /* USER CODE END SAI4_Init 2 */
@@ -1230,7 +1256,6 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         SEGGER_RTT_WriteString(0, "[ERROR] NORA: \"");
         SEGGER_RTT_Write(0, msg + 6, (len > 6u) ? len - 6u : 0u);
         SEGGER_RTT_WriteString(0, "\"\n");
-        printf("[ERROR] NORA: \"%.*s\"\n", (int)(len > 6u ? (int)len - 6 : 0), msg + 6);
 
         music_msg_t m;
         memset(&m, 0, sizeof(m));
@@ -1261,7 +1286,6 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         SEGGER_RTT_WriteString(0, "[CLOUD] UPLOAD_OK: \"");
         SEGGER_RTT_Write(0, msg + 10, len > 10u ? len - 10u : 0u);
         SEGGER_RTT_WriteString(0, "\"\n");
-        printf("[CLOUD] UPLOAD_OK: \"%.*s\"\n", (int)(len > 10u ? len - 10u : 0u), msg + 10);
     }
     else if (strncmp(msg, "UPLOAD:FAIL", 11) == 0)
     {
@@ -1270,7 +1294,6 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         SEGGER_RTT_WriteString(0, "[CLOUD] UPLOAD_FAIL: \"");
         SEGGER_RTT_Write(0, msg, len < 60u ? len : 60u);
         SEGGER_RTT_WriteString(0, "\"\n");
-        printf("[CLOUD] UPLOAD_FAIL: \"%.*s\"\n", (int)(len < 60u ? len : 60u), msg);
     }
     else if (strncmp(msg, "STT:OK:", 7) == 0)
     {
@@ -1279,14 +1302,12 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         SEGGER_RTT_WriteString(0, "[STT] TRANSCRIPT: \"");
         SEGGER_RTT_Write(0, msg + 7, len > 7u ? len - 7u : 0u);
         SEGGER_RTT_WriteString(0, "\"\n");
-        printf("[STT] TRANSCRIPT: \"%.*s\"\n", (int)(len > 7u ? len - 7u : 0u), msg + 7);
     }
     else if (strncmp(msg, "STT:FAIL", 8) == 0)
     {
         /* NORA: speech-to-text ran but produced no transcript */
         RLOG0("[STT] FAIL -- no transcript");
         SEGGER_RTT_WriteString(0, "[STT] FAIL -- no transcript (silence or noise)\n");
-        printf("[STT] FAIL -- no transcript (silence or noise)\n");
     }
     else
     {
@@ -1295,7 +1316,6 @@ static void routeAsciiMessage(const char *msg, uint16_t len)
         SEGGER_RTT_WriteString(0, "[ROUTE] UNKNOWN: \"");
         SEGGER_RTT_Write(0, msg, len < 60u ? len : 60u);
         SEGGER_RTT_WriteString(0, "\"\n");
-        printf("[ROUTE] UNKNOWN: \"%.*s\"\n", (int)(len < 60u ? len : 60u), msg);
     }
 }
 
@@ -1480,27 +1500,76 @@ void MPU_Config(void)
 {
   MPU_Region_InitTypeDef MPU_InitStruct = {0};
 
-  /* Disables the MPU */
   HAL_MPU_Disable();
 
-  /** Initializes and configures the Region and the memory to be protected
-  */
-  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.BaseAddress = 0x08000000;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_1MB;
+  /* --- REGION 0: Flash (0x08000000, 1 MB) ---
+   * Cacheable, read-only, executable. Original CubeMX default — keep. */
+  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER0;
+  MPU_InitStruct.BaseAddress      = 0x08000000;
+  MPU_InitStruct.Size             = MPU_REGION_SIZE_1MB;
   MPU_InitStruct.SubRegionDisable = 0x0;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL1;
+  MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL1;
   MPU_InitStruct.AccessPermission = MPU_REGION_PRIV_RO;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_NOT_SHAREABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_ENABLE;
+  MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
-  /* Enables the MPU */
-  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 
+  /* --- REGION 1: D2 SRAM1 (0x30000000, 128 KB) — DMA1 Landing Zone ---
+   * Contains s_DfsdmBuf (at 0x30004000). DMA1 writes here; CPU reads here.
+   * Non-Cacheable: CPU always reads directly from RAM — no SCB_InvalidateDCache needed.
+   * TEX=1, C=0, B=0 = Normal memory, Non-cacheable. [RM0399 Table 93] */
+  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER1;
+  MPU_InitStruct.BaseAddress      = 0x30000000;
+  MPU_InitStruct.Size             = MPU_REGION_SIZE_128KB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL1;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsShareable      = MPU_ACCESS_SHAREABLE;
+  MPU_InitStruct.IsCacheable      = MPU_ACCESS_NOT_CACHEABLE;
+  MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* --- REGION 2: D2 SRAM2 (0x30020000, 128 KB) — Audio Accumulation ---
+   * Contains g_AudioBuf (96 KB). CPU writes here (StoreDmaChunk); no DMA writes.
+   * Write-Back Cacheable: fast CPU access. Call SCB_CleanDCache_by_Addr
+   * before any SD/SDMMC IDMA read from this region.
+   * TEX=0, C=1, B=1 = Write-Back, Write-Allocate. */
+  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER2;
+  MPU_InitStruct.BaseAddress      = 0x30020000;
+  MPU_InitStruct.Size             = MPU_REGION_SIZE_128KB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsBufferable     = MPU_ACCESS_BUFFERABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* --- REGION 3: AXI SRAM (0x24000000, 512 KB) — SDMMC Bounce Buffer ---
+   * Contains s_pcmBounce. CPU fills it; SDMMC1 IDMA reads it.
+   * Write-Back Cacheable: call SCB_CleanDCache_by_Addr before each SDMMC transfer.
+   * TEX=0, C=1, B=1 = Write-Back, Write-Allocate. */
+  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER3;
+  MPU_InitStruct.BaseAddress      = 0x24000000;
+  MPU_InitStruct.Size             = MPU_REGION_SIZE_512KB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsBufferable     = MPU_ACCESS_BUFFERABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
 /**

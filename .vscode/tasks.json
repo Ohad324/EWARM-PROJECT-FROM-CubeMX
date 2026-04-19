@@ -1,199 +1,292 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "DFSDM Debug Cycle (Build + Flash + Trigger + Watch)",
-            "type": "shell",
-            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\dfsdm_debug_cycle.bat\"",
-            "options": {
-                "shell": {
-                    "executable": "cmd.exe",
-                    "args": ["/c"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "DFSDM Monitor Only (Trigger + Watch — no rebuild)",
-            "type": "shell",
-            "command": "\"C:\\Program Files\\SEGGER\\JLink\\JLink.exe\" -NoGui 1 -device STM32H747XI_M7 -if SWD -speed 4000 -autoconnect 1 -CommandFile \"C:\\TouchGFXProjects\\MyApplication\\EWARM\\jlink_dfsdm_monitor.jlink\"",
-            "options": {
-                "shell": {
-                    "executable": "cmd.exe",
-                    "args": ["/c"]
-                }
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Debug Run (Rebuild + Flash + Log BPs)",
-            "type": "shell",
-            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\debug_run.bat\"",
-            "options": {
-                "shell": {
-                    "executable": "cmd.exe",
-                    "args": ["/c"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Build + Flash + Blue Button Trigger + RTT_with_results",
-            "type": "shell",
-            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\blue_button_cycle.bat\"",
-            "options": {
-                "shell": {
-                    "executable": "cmd.exe",
-                    "args": ["/c"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new",
-                "clear": true,
-                "showReuseMessage": false,
-                "close": true
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Rebuild + Flash + Read RTT Log (after connect) - Tuesday 21:10",
-            "detail": "Rebuild CM7, flash firmware, connect RTT logger, and print captured log output.",
-            "type": "shell",
-            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\voice_rec_result.bat\"",
-            "options": {
-                "shell": {
-                    "executable": "cmd.exe",
-                    "args": ["/c"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new",
-                "clear": true,
-                "showReuseMessage": false,
-                "close": true
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Format SD Card (Build + Flash + Auto exFAT)",
-            "detail": "Close IAR + flash force-format mode, then auto-format the SD card in USB MSC.",
-            "type": "shell",
-            "command": "Start-Process cmd.exe -ArgumentList '/c \"C:\\TouchGFXProjects\\MyApplication\\EWARM\\format_flow.bat\"' -Verb RunAs -Wait",
-            "options": {
-                "shell": {
-                    "executable": "powershell.exe",
-                    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true,
-                "showReuseMessage": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Flash STM32 (JLink + ST-Link)",
-            "type": "shell",
-            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\FlashSTM32 (Jlink+stlink).bat\"",
-            "options": {
-                "shell": {
-                    "executable": "cmd.exe",
-                    "args": ["/c"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "SD Format Flow (Build + Flash + Format)",
-            "detail": "Fully automatic: close IAR → rebuild → flash with magic flag → format SD as exFAT. One UAC click, then done.",
-            "type": "shell",
-            "command": "Start-Process cmd.exe -ArgumentList '/c \"C:\\TouchGFXProjects\\MyApplication\\EWARM\\format_flow.bat\"' -Verb RunAs -Wait",
-            "options": {
-                "shell": {
-                    "executable": "powershell.exe",
-                    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true,
-                "showReuseMessage": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Format SD Card (USB MSC → exFAT)",
-            "detail": "Run this FIRST → then hold blue button 4s on board → plug CN1 → type YES in the popup window",
-            "type": "shell",
-            "command": "Start-Process python -ArgumentList \"${workspaceFolder}\\tools\\format_sd.py\" -Verb RunAs -Wait",
-            "options": {
-                "shell": {
-                    "executable": "powershell.exe",
-                    "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
-                }
-            },
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true,
-                "showReuseMessage": false
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "DFSDM Runtime Check (CSpyBat — 4 snapshots, no BPs)",
-            "detail": "Rebuild + Flash + CSpyBat: boots, waits 8s, SW-triggers button, takes 4 register snapshots",
-            "type": "shell",
-            "command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\dfsdm_runtime_check.bat\"",
-            "options": {
-                "shell": {
-                    "executable": "cmd.exe",
-                    "args": ["/c"]
-                }
-            },
-            "group": "build",
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true,
-                "showReuseMessage": false
-            },
-            "problemMatcher": []
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "DFSDM Debug Cycle (Build + Flash + Trigger + Watch)",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\dfsdm_debug_cycle.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "DFSDM Monitor Only (Trigger + Watch — no rebuild)",
+			"type": "shell",
+			"command": "\"C:\\Program Files\\SEGGER\\JLink\\JLink.exe\" -NoGui 1 -device STM32H747XI_M7 -if SWD -speed 4000 -autoconnect 1 -CommandFile \"C:\\TouchGFXProjects\\MyApplication\\EWARM\\jlink_dfsdm_monitor.jlink\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Debug Run (Rebuild + Flash + Log BPs)",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\debug_run.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Build + Flash + Blue Button Trigger + RTT_with_results",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\blue_button_cycle.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new",
+				"clear": true,
+				"showReuseMessage": false,
+				"close": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Rebuild + Flash + Read RTT Log (after connect) - Tuesday 21:10",
+			"detail": "Rebuild CM7, flash firmware, connect RTT logger, and print captured log output.",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\voice_rec_result.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new",
+				"clear": true,
+				"showReuseMessage": false,
+				"close": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Format SD Card (Build + Flash + Auto exFAT)",
+			"detail": "Close IAR + flash force-format mode, then auto-format the SD card in USB MSC.",
+			"type": "shell",
+			"command": "Start-Process cmd.exe -ArgumentList '/c \"C:\\TouchGFXProjects\\MyApplication\\EWARM\\format_flow.bat\"' -Verb RunAs -Wait",
+			"options": {
+				"shell": {
+					"executable": "powershell.exe",
+					"args": [
+						"-NoProfile",
+						"-ExecutionPolicy",
+						"Bypass",
+						"-Command"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Flash STM32 (JLink + ST-Link)",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\FlashSTM32 (Jlink+stlink).bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "SD Format Flow (Build + Flash + Format)",
+			"detail": "Fully automatic: close IAR → rebuild → flash with magic flag → format SD as exFAT. One UAC click, then done.",
+			"type": "shell",
+			"command": "Start-Process cmd.exe -ArgumentList '/c \"C:\\TouchGFXProjects\\MyApplication\\EWARM\\format_flow.bat\"' -Verb RunAs -Wait",
+			"options": {
+				"shell": {
+					"executable": "powershell.exe",
+					"args": [
+						"-NoProfile",
+						"-ExecutionPolicy",
+						"Bypass",
+						"-Command"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Format SD Card (USB MSC → exFAT)",
+			"detail": "Run this FIRST → then hold blue button 4s on board → plug CN1 → type YES in the popup window",
+			"type": "shell",
+			"command": "Start-Process python -ArgumentList \"${workspaceFolder}\\tools\\format_sd.py\" -Verb RunAs -Wait",
+			"options": {
+				"shell": {
+					"executable": "powershell.exe",
+					"args": [
+						"-NoProfile",
+						"-ExecutionPolicy",
+						"Bypass",
+						"-Command"
+					]
+				}
+			},
+			"group": "none",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "DFSDM Runtime Check (CSpyBat — 4 snapshots, no BPs)",
+			"detail": "Rebuild + Flash + CSpyBat: boots, waits 8s, SW-triggers button, takes 4 register snapshots",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\dfsdm_runtime_check.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "DFSDM 3-Dump Cycle (Build + Flash + 3×Dump)",
+			"detail": "Rebuild, flash, CSpyBat: dump at main, SW-trigger button, dump at 1.5s, dump at 5s. Log saved to EWARM/dfsdm_3dump_*.log",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\dfsdm_3dump_cycle.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Scope Clock Test (JLink — Flash + SW Button → PE2 live)",
+			"detail": "Flash firmware, wait 500ms, SW-trigger blue button, exit after 200ms. PE2 clock stays live for scope measurement. Probe SB45 for 2.000 MHz.",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\run_scope_clock.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": ["/c"]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Clock-to-Mic Test (JLink — Flash + 20 PRE + SW Button + 10 REC)",
+			"detail": "Flash firmware, 20 DAP reads pre-recording (5s), SW blue-button via EXTI_SWIER1, 10 live reads during recording. Log saved to EWARM/runs/clock_test_*.log",
+			"type": "shell",
+			"command": "\"C:\\TouchGFXProjects\\MyApplication\\EWARM\\run_clock_test.bat\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		}
+	]
 }

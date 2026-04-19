@@ -452,6 +452,61 @@ test_spicksel_sai4()
     __message "\nRegister left at SPICKSEL=11. Call spicksel_restore_ckout() to revert.\n";
 }
 
+/* ── auto_trigger_and_dump() ────────────────────────────────────────────────
+ * Simulates a blue button press via EXTI13 software trigger, waits 1.5 s
+ * for recording to start, dumps registers mid-recording, then waits for
+ * recording to finish and dumps again.
+ *
+ * STM32H7 EXTI registers:
+ *   EXTI_SWIER1 = 0x58000418  (software interrupt/event register, lines 0-31)
+ *   EXTI_PR1    = 0x58000488  (pending register — write 1 to clear)
+ *   Bit 13 = EXTI line 13 = PC13 (blue button)
+ *
+ * Usage: call auto_trigger_and_dump() from IAR macro window with target running.
+ */
+auto_trigger_and_dump()
+{
+    __var exti_swier1, exti_pr1, exti_c1imr1, g_state, i;
+
+    exti_swier1  = 0x58000418;
+    exti_pr1     = 0x58000488;
+    exti_c1imr1  = 0x58000500;
+
+    __message "\n[AUTO] Triggering blue button via EXTI13 SWIER...";
+
+    /* Clear any stale pending flag first */
+    __writeMemory32(1 << 13, exti_pr1, "Memory");
+
+    /* Unmask EXTI13 in CPU1 interrupt mask register (D3 domain —
+     * C-SPY __writeMemory32 can reach D3 unlike raw J-Link writes) */
+    __writeMemory32(__readMemory32(exti_c1imr1, "Memory") | (1 << 13), exti_c1imr1, "Memory");
+
+    /* Fire EXTI line 13 software trigger — same as pressing the blue button */
+    __writeMemory32(1 << 13, exti_swier1, "Memory");
+
+    /* Wait ~1.5 seconds for recording to start and stabilize */
+    __message "[AUTO] Waiting 1.5 s for recording to start...";
+    i = 0;
+    while (i < 15000000) { i = i + 1; }
+
+    /* Check g_State — dump mid-recording */
+    g_state = __readMemory8(__symbolAddress("g_State"), "Memory");
+    __message "[AUTO] g_State = ", g_state, " (1=recording, 2=saving, 0=idle)";
+
+    __message "\n[AUTO] === MID-RECORDING DUMP ===";
+    dfsdm_dump();
+
+    /* Wait another 2 seconds for recording to complete */
+    __message "\n[AUTO] Waiting 2 s for recording to finish...";
+    i = 0;
+    while (i < 20000000) { i = i + 1; }
+
+    __message "\n[AUTO] === POST-RECORDING DUMP ===";
+    dfsdm_dump();
+
+    __message "\n[AUTO] Done.";
+}
+
 execUserSetup()
 {
     __message "dfsdm_watch_all.mac loaded.";
@@ -459,5 +514,6 @@ execUserSetup()
     __message "  spicksel_set_sai4()      — switch SPICKSEL to 11 (SAI4 bridge)";
     __message "  spicksel_restore_ckout() — revert SPICKSEL to 01 (CKOUT)";
     __message "  test_spicksel_sai4()     — full automated test (set + wait + verdict)";
+    __message "  auto_trigger_and_dump()  — simulate button + mid-rec dump + post-rec dump";
     dfsdm_dump();
 }

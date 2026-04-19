@@ -5130,3 +5130,226 @@ Wed Apr 15, 2026 19:37:59:
 Wed Apr 15, 2026 19:37:59: ══════════════════════════════════════════════════════
 Wed Apr 15, 2026 19:37:59:   DUMP COMPLETE
 Wed Apr 15, 2026 19:37:59: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:30:   DFSDM AUDIO PIPELINE — FULL REGISTER DUMP
+Wed Apr 15, 2026 19:50:30: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:30: ── 1. RCC CLOCK ENABLES ──────────────────────────────
+Wed Apr 15, 2026 19:50:30:   APB2ENR      = 0x10000000  DFSDM1EN(bit28)= 1
+Wed Apr 15, 2026 19:50:30:   C1_APB2ENR   = 0x1fe0000  CM7 gate(bit28)= 0
+Wed Apr 15, 2026 19:50:30:   APB4ENR      = 0x0  SAI4EN(bit21)  = 0
+Wed Apr 15, 2026 19:50:30:   AHB1ENR      = 0x1  DMA1EN(bit0)   = 1
+Wed Apr 15, 2026 19:50:30:   AHB4ENR      = 0x20807ff  GPIOCEN(bit2)  = 1  GPIOEEN(bit4)  = 1
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 2. DFSDM1 CHANNEL 0 (clock master, 0x40017000) ────
+Wed Apr 15, 2026 19:50:30:   CHCFGR1      = 0x80180000
+Wed Apr 15, 2026 19:50:30:     DFSDMEN(bit31) = 1  CKOUTDIV[22:16] = 24  CHEN(bit7) = 0
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 3. DFSDM1 CHANNEL 1 (data, 0x40017020) ────────────
+Wed Apr 15, 2026 19:50:30:   CHCFGR1      = 0x8d
+Wed Apr 15, 2026 19:50:30:     SITP[1:0]    = 1  (0=rising, 1=falling)
+Wed Apr 15, 2026 19:50:30:     SPICKSEL[3:2]= 3  (1=CKOUT ✓, 3=SAI4 bridge)
+Wed Apr 15, 2026 19:50:30:     CHEN(bit7)   = 1
+Wed Apr 15, 2026 19:50:30:   CHCFGR2      = 0x30
+Wed Apr 15, 2026 19:50:30:     DTRBS[7:3]   = 6  (expect 6)
+Wed Apr 15, 2026 19:50:30:   CHDATINR     = 0x0  (raw serial data)
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 4. DFSDM1 FILTER 0 (0x40017100) ──────────────────
+Wed Apr 15, 2026 19:50:30:   FLTCR1       = 0x21240001
+Wed Apr 15, 2026 19:50:30:     RCSEL[27:24] = 1  (channel select — expect 1=CH1)
+Wed Apr 15, 2026 19:50:30:     RDMAEN(bit21)= 1
+Wed Apr 15, 2026 19:50:30:     DFEN(bit0)   = 1
+Wed Apr 15, 2026 19:50:30:     RSWSTART(bit17)= 0
+Wed Apr 15, 2026 19:50:30:   FLTCR2       = 0x0
+Wed Apr 15, 2026 19:50:30:   FLTISR       = 0xff4000
+Wed Apr 15, 2026 19:50:30:     CKABF[23:16] = 0xff  ROVRF(bit3)= 0  REOCF(bit1)= 0
+Wed Apr 15, 2026 19:50:30:   FLTFCR       = 0x607c0000
+Wed Apr 15, 2026 19:50:30:     FORD[31:29]  = 3  (3=Sinc3)  FOSR[25:16]= 124  (124 = OSR-1 → OSR=125)
+Wed Apr 15, 2026 19:50:30:   FLTRDATAR    = 0xff88ca01  RDATACH[2:0]= 1  DATA[31:8]= 16746698
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 5. SAI4 BLOCK A (0x58005404) ─────────────────────
+Wed Apr 15, 2026 19:50:30:   CR1          = 0xc10041
+Wed Apr 15, 2026 19:50:30:     SAIEN(bit16)  = 1
+Wed Apr 15, 2026 19:50:30:     MCKDIV[23:20] = 12
+Wed Apr 15, 2026 19:50:30:     MODE[1:0]     = 1  (1=master RX)
+Wed Apr 15, 2026 19:50:30:   CR2          = 0x0
+Wed Apr 15, 2026 19:50:30:   FRCR         = 0x7
+Wed Apr 15, 2026 19:50:30:   SLOTR        = 0x10000  (expect 0x00010000 = SLOTEN0, 1 slot)
+Wed Apr 15, 2026 19:50:30:   SR           = 0x50009  FREQ(bit1)= 0  WCKCFG(bit2)= 0
+Wed Apr 15, 2026 19:50:30:   DR           = 0x0  (raw PDM data word)
+Wed Apr 15, 2026 19:50:30:   PDMCR        = 0x101
+Wed Apr 15, 2026 19:50:30:     PDMEN(bit0)   = 1  CKEN1(bit8)= 1
+Wed Apr 15, 2026 19:50:30:   PDMDLY       = 0x0
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 6. DMA1 STREAM 1 (0x40020028) ────────────────────
+Wed Apr 15, 2026 19:50:30:   CR           = 0x3551f
+Wed Apr 15, 2026 19:50:30:     EN(bit0)     = 1  CIRC(bit8)  = 1  TCIE(bit4)  = 1  HTIE(bit3)  = 1
+Wed Apr 15, 2026 19:50:30:   NDTR         = 13  (expect 32 idle, decrements during rec)
+Wed Apr 15, 2026 19:50:30:   PAR          = 0x4001711c  (expect 0x4001711C = FLTRDATAR)
+Wed Apr 15, 2026 19:50:30:   M0AR         = 0x30000000  (expect 0x30000000 = g_DfsdmBuf)
+Wed Apr 15, 2026 19:50:30:   M1AR         = 0x0
+Wed Apr 15, 2026 19:50:30:   FCR          = 0x20
+Wed Apr 15, 2026 19:50:30:   LISR         = 0x0  (Stream1 flags: bits[11:6])
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 7. GPIO PIN MUX ───────────────────────────────────
+Wed Apr 15, 2026 19:50:30:   GPIOC MODER  = 0xf2aabffb  PC1 mode[3:2]= 2  (2=AF)
+Wed Apr 15, 2026 19:50:30:   GPIOC PUPDR  = 0x0  PC1 pull[3:2]= 0  (0=none, 1=up, 2=down)
+Wed Apr 15, 2026 19:50:30:   GPIOC IDR    = 0xf80  PC1 level    = 0
+Wed Apr 15, 2026 19:50:30:   GPIOC AFRL   = 0x400000a0  PC1 AF[7:4]  = 10  (10=AF10=SAI4_D1)
+Wed Apr 15, 2026 19:50:30:   GPIOE MODER  = 0xaaaabaea  PE2 mode[5:4]= 2  PE4[9:8]= 2  PE5[11:10]= 2
+Wed Apr 15, 2026 19:50:30:   GPIOE IDR    = 0xff90  PE2(CK1)= 0
+Wed Apr 15, 2026 19:50:30:   GPIOE AFRL   = 0xc0880acc  PE2 AF[11:8]= 10  PE4[19:16]= 8  PE5[23:20]= 8
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 8. g_dbg FIRMWARE DEBUG HUB (0x24000050) ──────────
+Wed Apr 15, 2026 19:50:30:   [0]  ch0_cfg1     = 0x8d
+Wed Apr 15, 2026 19:50:30:   [1]  ch0_cfg2     = 0x30
+Wed Apr 15, 2026 19:50:30:   [2]  flt0_cr1     = 0x21240001
+Wed Apr 15, 2026 19:50:30:   [3]  flt0_cr2     = 0x0
+Wed Apr 15, 2026 19:50:30:   [4]  flt0_fcr     = 0x607c0000
+Wed Apr 15, 2026 19:50:30:   [5]  flt0_isr     = 0xff4000
+Wed Apr 15, 2026 19:50:30:   [6]  sai4_pdm     = 0x101
+Wed Apr 15, 2026 19:50:30:   [7]  dma_cr       = 0x3551f
+Wed Apr 15, 2026 19:50:30:   [8]  dma_ndtr     = 0x7
+Wed Apr 15, 2026 19:50:30:   [9]  dma_m0ar     = 0x30000000
+Wed Apr 15, 2026 19:50:30:   [10] sitp         = 1
+Wed Apr 15, 2026 19:50:30:   [11] spicksel     = 3
+Wed Apr 15, 2026 19:50:30:   [12] dtrbs        = 6
+Wed Apr 15, 2026 19:50:30:   [13] last_raw     = 0xff88ca01
+Wed Apr 15, 2026 19:50:30:   [14] last_val     = 4294936778
+Wed Apr 15, 2026 19:50:30:   [15] uptime_ticks = 1930
+Wed Apr 15, 2026 19:50:30:   [16] ref_lr_low   = 0x8c
+Wed Apr 15, 2026 19:50:30:   [17] ref_lr_high  = 0x8d
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 9. LIVE GLOBALS ───────────────────────────────────
+Wed Apr 15, 2026 19:50:30:   g_dbg_live_sai4_cr1 @ 0x240000E8 = 0xc10041
+Wed Apr 15, 2026 19:50:30:   g_dbg_live_fltisr   @ 0x240000EC = 0xff4000
+Wed Apr 15, 2026 19:50:30:   g_dbg_live_hal_ok   @ 0x240000F0 = 0x0  (0=OK, FFFFFFFF=FAIL)
+Wed Apr 15, 2026 19:50:30:   g_dbg_live_fltcr1   @ 0x240000F4 = 0x21240001
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 10. STATE / COUNTERS ──────────────────────────────
+Wed Apr 15, 2026 19:50:30:   g_SampleCount  @ 0x24037784 = 43232
+Wed Apr 15, 2026 19:50:30:   g_FileIndex    @ 0x24037790 = 38
+Wed Apr 15, 2026 19:50:30:   g_State        @ 0x240377FE = 1  (0=idle, 1=rec, 2=save)
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ── 11. BUFFER SAMPLES ────────────────────────────────
+Wed Apr 15, 2026 19:50:30:   g_DfsdmBuf[0..7] (raw int32 @ 0x30000000):
+Wed Apr 15, 2026 19:50:30:     4287154689  4287154690  4287154689  4287154689
+Wed Apr 15, 2026 19:50:30:     4287154689  4287154689  4287154689  4287154689
+Wed Apr 15, 2026 19:50:30: 
+Wed Apr 15, 2026 19:50:30: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:30:   DUMP COMPLETE
+Wed Apr 15, 2026 19:50:30: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:59:   DFSDM AUDIO PIPELINE — FULL REGISTER DUMP
+Wed Apr 15, 2026 19:50:59: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:59: ── 1. RCC CLOCK ENABLES ──────────────────────────────
+Wed Apr 15, 2026 19:50:59:   APB2ENR      = 0x10000000  DFSDM1EN(bit28)= 1
+Wed Apr 15, 2026 19:50:59:   C1_APB2ENR   = 0x1fe0000  CM7 gate(bit28)= 0
+Wed Apr 15, 2026 19:50:59:   APB4ENR      = 0x0  SAI4EN(bit21)  = 0
+Wed Apr 15, 2026 19:50:59:   AHB1ENR      = 0x1  DMA1EN(bit0)   = 1
+Wed Apr 15, 2026 19:50:59:   AHB4ENR      = 0x20807ff  GPIOCEN(bit2)  = 1  GPIOEEN(bit4)  = 1
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 2. DFSDM1 CHANNEL 0 (clock master, 0x40017000) ────
+Wed Apr 15, 2026 19:50:59:   CHCFGR1      = 0x80180000
+Wed Apr 15, 2026 19:50:59:     DFSDMEN(bit31) = 1  CKOUTDIV[22:16] = 24  CHEN(bit7) = 0
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 3. DFSDM1 CHANNEL 1 (data, 0x40017020) ────────────
+Wed Apr 15, 2026 19:50:59:   CHCFGR1      = 0x8d
+Wed Apr 15, 2026 19:50:59:     SITP[1:0]    = 1  (0=rising, 1=falling)
+Wed Apr 15, 2026 19:50:59:     SPICKSEL[3:2]= 3  (1=CKOUT ✓, 3=SAI4 bridge)
+Wed Apr 15, 2026 19:50:59:     CHEN(bit7)   = 1
+Wed Apr 15, 2026 19:50:59:   CHCFGR2      = 0x30
+Wed Apr 15, 2026 19:50:59:     DTRBS[7:3]   = 6  (expect 6)
+Wed Apr 15, 2026 19:50:59:   CHDATINR     = 0x0  (raw serial data)
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 4. DFSDM1 FILTER 0 (0x40017100) ──────────────────
+Wed Apr 15, 2026 19:50:59:   FLTCR1       = 0x21240001
+Wed Apr 15, 2026 19:50:59:     RCSEL[27:24] = 1  (channel select — expect 1=CH1)
+Wed Apr 15, 2026 19:50:59:     RDMAEN(bit21)= 1
+Wed Apr 15, 2026 19:50:59:     DFEN(bit0)   = 1
+Wed Apr 15, 2026 19:50:59:     RSWSTART(bit17)= 0
+Wed Apr 15, 2026 19:50:59:   FLTCR2       = 0x0
+Wed Apr 15, 2026 19:50:59:   FLTISR       = 0xff0000
+Wed Apr 15, 2026 19:50:59:     CKABF[23:16] = 0xff  ROVRF(bit3)= 0  REOCF(bit1)= 0
+Wed Apr 15, 2026 19:50:59:   FLTFCR       = 0x607c0000
+Wed Apr 15, 2026 19:50:59:     FORD[31:29]  = 3  (3=Sinc3)  FOSR[25:16]= 124  (124 = OSR-1 → OSR=125)
+Wed Apr 15, 2026 19:50:59:   FLTRDATAR    = 0xff88ca01  RDATACH[2:0]= 1  DATA[31:8]= 16746698
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 5. SAI4 BLOCK A (0x58005404) ─────────────────────
+Wed Apr 15, 2026 19:50:59:   CR1          = 0xc00041
+Wed Apr 15, 2026 19:50:59:     SAIEN(bit16)  = 0
+Wed Apr 15, 2026 19:50:59:     MCKDIV[23:20] = 12
+Wed Apr 15, 2026 19:50:59:     MODE[1:0]     = 1  (1=master RX)
+Wed Apr 15, 2026 19:50:59:   CR2          = 0x0
+Wed Apr 15, 2026 19:50:59:   FRCR         = 0x7
+Wed Apr 15, 2026 19:50:59:   SLOTR        = 0x10000  (expect 0x00010000 = SLOTEN0, 1 slot)
+Wed Apr 15, 2026 19:50:59:   SR           = 0x1  FREQ(bit1)= 0  WCKCFG(bit2)= 0
+Wed Apr 15, 2026 19:50:59:   DR           = 0x0  (raw PDM data word)
+Wed Apr 15, 2026 19:50:59:   PDMCR        = 0x101
+Wed Apr 15, 2026 19:50:59:     PDMEN(bit0)   = 1  CKEN1(bit8)= 1
+Wed Apr 15, 2026 19:50:59:   PDMDLY       = 0x0
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 6. DMA1 STREAM 1 (0x40020028) ────────────────────
+Wed Apr 15, 2026 19:50:59:   CR           = 0x35500
+Wed Apr 15, 2026 19:50:59:     EN(bit0)     = 0  CIRC(bit8)  = 1  TCIE(bit4)  = 0  HTIE(bit3)  = 0
+Wed Apr 15, 2026 19:50:59:   NDTR         = 32  (expect 32 idle, decrements during rec)
+Wed Apr 15, 2026 19:50:59:   PAR          = 0x4001711c  (expect 0x4001711C = FLTRDATAR)
+Wed Apr 15, 2026 19:50:59:   M0AR         = 0x30000000  (expect 0x30000000 = g_DfsdmBuf)
+Wed Apr 15, 2026 19:50:59:   M1AR         = 0x0
+Wed Apr 15, 2026 19:50:59:   FCR          = 0x20
+Wed Apr 15, 2026 19:50:59:   LISR         = 0x0  (Stream1 flags: bits[11:6])
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 7. GPIO PIN MUX ───────────────────────────────────
+Wed Apr 15, 2026 19:50:59:   GPIOC MODER  = 0xf2aabffb  PC1 mode[3:2]= 2  (2=AF)
+Wed Apr 15, 2026 19:50:59:   GPIOC PUPDR  = 0x0  PC1 pull[3:2]= 0  (0=none, 1=up, 2=down)
+Wed Apr 15, 2026 19:50:59:   GPIOC IDR    = 0x1f80  PC1 level    = 0
+Wed Apr 15, 2026 19:50:59:   GPIOC AFRL   = 0x400000a0  PC1 AF[7:4]  = 10  (10=AF10=SAI4_D1)
+Wed Apr 15, 2026 19:50:59:   GPIOE MODER  = 0xaaaabaea  PE2 mode[5:4]= 2  PE4[9:8]= 2  PE5[11:10]= 2
+Wed Apr 15, 2026 19:50:59:   GPIOE IDR    = 0xffb0  PE2(CK1)= 0
+Wed Apr 15, 2026 19:50:59:   GPIOE AFRL   = 0xc0880acc  PE2 AF[11:8]= 10  PE4[19:16]= 8  PE5[23:20]= 8
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 8. g_dbg FIRMWARE DEBUG HUB (0x24000050) ──────────
+Wed Apr 15, 2026 19:50:59:   [0]  ch0_cfg1     = 0x8d
+Wed Apr 15, 2026 19:50:59:   [1]  ch0_cfg2     = 0x30
+Wed Apr 15, 2026 19:50:59:   [2]  flt0_cr1     = 0x21240001
+Wed Apr 15, 2026 19:50:59:   [3]  flt0_cr2     = 0x0
+Wed Apr 15, 2026 19:50:59:   [4]  flt0_fcr     = 0x607c0000
+Wed Apr 15, 2026 19:50:59:   [5]  flt0_isr     = 0xff0000
+Wed Apr 15, 2026 19:50:59:   [6]  sai4_pdm     = 0x101
+Wed Apr 15, 2026 19:50:59:   [7]  dma_cr       = 0x35500
+Wed Apr 15, 2026 19:50:59:   [8]  dma_ndtr     = 0x20
+Wed Apr 15, 2026 19:50:59:   [9]  dma_m0ar     = 0x30000000
+Wed Apr 15, 2026 19:50:59:   [10] sitp         = 1
+Wed Apr 15, 2026 19:50:59:   [11] spicksel     = 3
+Wed Apr 15, 2026 19:50:59:   [12] dtrbs        = 6
+Wed Apr 15, 2026 19:50:59:   [13] last_raw     = 0xff88ca01
+Wed Apr 15, 2026 19:50:59:   [14] last_val     = 4294936778
+Wed Apr 15, 2026 19:50:59:   [15] uptime_ticks = 2073
+Wed Apr 15, 2026 19:50:59:   [16] ref_lr_low   = 0x8c
+Wed Apr 15, 2026 19:50:59:   [17] ref_lr_high  = 0x8d
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 9. LIVE GLOBALS ───────────────────────────────────
+Wed Apr 15, 2026 19:50:59:   g_dbg_live_sai4_cr1 @ 0x240000E8 = 0xc10041
+Wed Apr 15, 2026 19:50:59:   g_dbg_live_fltisr   @ 0x240000EC = 0xff4000
+Wed Apr 15, 2026 19:50:59:   g_dbg_live_hal_ok   @ 0x240000F0 = 0x0  (0=OK, FFFFFFFF=FAIL)
+Wed Apr 15, 2026 19:50:59:   g_dbg_live_fltcr1   @ 0x240000F4 = 0x21240001
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 10. STATE / COUNTERS ──────────────────────────────
+Wed Apr 15, 2026 19:50:59:   g_SampleCount  @ 0x24037784 = 48000
+Wed Apr 15, 2026 19:50:59:   g_FileIndex    @ 0x24037790 = 39
+Wed Apr 15, 2026 19:50:59:   g_State        @ 0x240377FE = 0  (0=idle, 1=rec, 2=save)
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ── 11. BUFFER SAMPLES ────────────────────────────────
+Wed Apr 15, 2026 19:50:59:   g_DfsdmBuf[0..7] (raw int32 @ 0x30000000):
+Wed Apr 15, 2026 19:50:59:     4287154689  4287183503  4287154689  4287154689
+Wed Apr 15, 2026 19:50:59:     4287154689  4287154689  4287154689  4287154689
+Wed Apr 15, 2026 19:50:59: 
+Wed Apr 15, 2026 19:50:59: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 19:50:59:   DUMP COMPLETE
+Wed Apr 15, 2026 19:50:59: ══════════════════════════════════════════════════════
+Wed Apr 15, 2026 20:06:40: OnDisconnectTarget() start
+Wed Apr 15, 2026 20:06:40: Resetting used DBGMCU registers.
+Wed Apr 15, 2026 20:06:40: OnDisconnectTarget() end - Took 2.77ms
+Wed Apr 15, 2026 20:06:41: Loading the J-Link Driver driver
+Wed Apr 15, 2026 20:06:41: IAR Embedded Workbench 9.70.2 (C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\arm\bin\armproc.dll)

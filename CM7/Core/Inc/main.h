@@ -74,6 +74,8 @@ typedef struct {
     /* ── SAI4 ───────────────────────────────────────────────────────── */
     /* [6]  SAI4 PDMCR  Expect 0x00000101 (PDMEN=1, CKEN1=1) */
     uint32_t sai4_pdm;
+    /* [6b] SAI4 CR1    Bit 16 = SAIEN. Must be 1 during recording. 0 = PE2 flat. */
+    uint32_t sai4_cr1;
 
     /* ── DMA1 Stream 1 ──────────────────────────────────────────────── */
     /* [7]  DMA CR    bit0=EN. Expect 0x00035500 idle / 0x00035501 active */
@@ -106,6 +108,8 @@ typedef struct {
     uint32_t ref_lr_low;
     /* [17] LR=High (RIGHT) ch0_cfg1 with SITP=01 falling = 0x8018008D ← THIS BOARD */
     uint32_t ref_lr_high;
+    /* [18] D3CCIPR snapshot — bits[23:21]=SAI4ASEL. Expect 0x00800000 (SAI4ASEL=100=CLKP=HSI64) */
+    uint32_t d3ccipr;
 } DFSDM_Debug_Hub_t;
 
 /* Placed at 0x24000050 (AXI SRAM) — __no_init, startup does not zero it */

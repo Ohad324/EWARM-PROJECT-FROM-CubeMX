@@ -257,6 +257,24 @@
 ; CRITICAL: PDMCR must be 0x00000101 BEFORE __HAL_SAI_ENABLE() is called.
 ;           If CKEN1=0, PE2 does not toggle → no clock to mic → CKABF on DFSDM CH1.
 
+; ── SAI4 Block A FRCR (Frame Control Register) ──────────────────────────────
+
+; Expression:  SAI4_Block_A->FRCR
+; IAR cast:    ((uint32_t*)0x58005408)[0]
+;
+; [2026-04-15 19:50] Observed FRCR = 0x7 → FrameLength = bits[7:0]+1 = 8
+;   This caused AFSDET + LFSDET frame sync errors (SAI4 SR = 0x50009) during recording.
+;   SAI4 was generating frame sync every 8 bit-clocks — mic expects 32-bit alignment.
+;   Result: DR=0, CHDATINR=0, CKABF=0xFF, constant DC output 0xFF88CA01.
+;
+; Fix applied 2026-04-15: FrameLength changed 8 → 32
+;   32-bit frame = 1 slot × 32-bit word — aligns SAI4 to bus matrix word size.
+;   This is the correct value when SAI4 acts as bridge for DFSDM on STM32H7.
+;
+; [EXPECT] After fix: FRCR = 0x1F  (bits[7:0] = 31 → FrameLength = 31+1 = 32)
+;   SAI4 SR should clear AFSDET(bit4) and LFSDET(bit3) → SR = 0x0 during recording
+;   CKABF should clear → DFSDM starts receiving valid PDM data
+
 ; ── SAI4 Block A CR1 ─────────────────────────────────────────────────────────
 
 ; Expression:  SAI4_Block_A->CR1

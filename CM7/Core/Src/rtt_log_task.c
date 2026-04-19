@@ -37,14 +37,11 @@
 #define LED2_PORT        GPIOI
 #define LED2_PIN         GPIO_PIN_13
 
-/* Emit one formatted string to both RTT channel 0 and IAR Terminal I/O.
- * buf must already contain the formatted string with length n.
- * printf is safe here — RTTLogTask priority 1, preemptable by all real tasks. */
+/* Emit one formatted string to RTT channel 0. */
 static inline void emit(const char *buf, int n)
 {
     if (n <= 0) return;
     SEGGER_RTT_Write(0, buf, (unsigned)n);
-    printf("%s", buf);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -196,6 +193,7 @@ void RTTLogTask(void *arg)
         g_dbg.flt0_fcr     = DFSDM1_Filter0->FLTFCR;
         g_dbg.flt0_isr     = DFSDM1_Filter0->FLTISR;
         g_dbg.sai4_pdm     = SAI4->PDMCR;
+        g_dbg.sai4_cr1     = SAI4_Block_A->CR1;   /* bit 16 = SAIEN — must be 1 during recording */
         g_dbg.dma_cr       = DMA1_Stream1->CR;
         g_dbg.dma_ndtr     = DMA1_Stream1->NDTR;
         g_dbg.dma_m0ar     = DMA1_Stream1->M0AR;
@@ -319,39 +317,44 @@ void RTTLogTask(void *arg)
                     else if (ovr)          isrTag = "OVR!";
                     else                   isrTag = "OK";
 
-                    /* Line 1 — channel config + SAI4 */
+                    /* ── CLOCK CHECK — only what matters for PE2 reaching the mic ── */
+                    uint32_t sai4cr1   = g_dbg.sai4_cr1;
+                    uint32_t saien_bit = (sai4cr1 >> 16u) & 0x1u;   /* bit 16 = SAIEN */
+
+                    /* Line 1 — SAI4 clock status: is PE2 running? */
                     pn = snprintf(pbuf, sizeof(pbuf),
-                        "[T+%7lu ms] [DFSDM] Ch1CFG1=%08lX[%s] SITP=%lu(%s)[%s] SPICKSEL=%lu[%s] Ch1CFG2=%08lX DTRBS=%lu[%s] SAI4PDMCR=%08lX[%s]\r\n",
+                        "[T+%7lu ms] [CLK] SAI4PDMCR=%08lX[%s] SAI4CR1=%08lX SAIEN=%lu[%s] CKABF=%02X[%s]\r\n",
                         (unsigned long)HAL_GetTick(),
-                        (unsigned long)ch0cfg1,   (ch0cfg1   == 0x0000008Du)  ? "OK" : "FAIL",
-                        (unsigned long)sitp_val,  (sitp_val  == 1u) ? "FALL" : "RISE",
-                                                  (sitp_val  == 1u)            ? "OK" : "FAIL",
-                        (unsigned long)spick_val, (spick_val == 1u)            ? "OK" : "FAIL",
-                        (unsigned long)ch0cfg2,
-                        (unsigned long)dtrbs_val, (dtrbs_val == 6u)            ? "OK" : "FAIL",
-                        (unsigned long)sai4pdmcr, (sai4pdmcr == 0x00000101u)  ? "OK" : "FAIL");
+                        (unsigned long)sai4pdmcr, (sai4pdmcr == 0x00000101u) ? "OK" : "FAIL",
+                        (unsigned long)sai4cr1,
+                        (unsigned long)saien_bit, (saien_bit == 1u)           ? "OK" : "FAIL-PE2_FLAT",
+                        (unsigned)ckabf,          (ckabf     == 0u)           ? "OK" : "NO_CLK");
                     emit(pbuf, pn);
 
-                    /* Line 2 — filter + DMA runtime */
-                    pn = snprintf(pbuf, sizeof(pbuf),
-                        "[T+%7lu ms] [DFSDM] FLTCR1=%08lX[%s] FLTCR2=%08lX[%s] FLTFCR=%08lX[%s] FLTISR=%08lX[%s]\r\n",
-                        (unsigned long)HAL_GetTick(),
-                        (unsigned long)fltcr1, ((fltcr1 & 0x1u) == 0x1u)    ? "OK" : "FAIL",
-                        (unsigned long)fltcr2,  (fltcr2 == 0u)               ? "OK" : "WARN",
-                        (unsigned long)fltfcr,  (fltfcr == 0x607C0000u)      ? "OK" : "FAIL",
-                        (unsigned long)fltisr,  isrTag);
-                    emit(pbuf, pn);
+                    /* Line 2 — BDMA Channel1: draining SAI4 RX FIFO keeps PE2 alive.
+                     * CCR bit0=EN=1 means DMA active. CNDTR must be non-zero and
+                     * changing between pings — if it freezes, BDMA stalled. */
+                    {
+                        uint32_t bdma_ccr   = BDMA_Channel1->CCR;
+                        uint32_t bdma_cndtr = BDMA_Channel1->CNDTR;
+                        pn = snprintf(pbuf, sizeof(pbuf),
+                            "[T+%7lu ms] [BDMA] CCR=%08lX[%s] CNDTR=%lu\r\n",
+                            (unsigned long)HAL_GetTick(),
+                            (unsigned long)bdma_ccr,
+                            (bdma_ccr & 0x1u) ? "EN-OK" : "OFF-PE2_DEAD",
+                            (unsigned long)bdma_cndtr);
+                        emit(pbuf, pn);
+                    }
 
-                    /* Line 3 — DMA state + live audio sample */
+                    /* Lines 3 & 4 commented out — not relevant to clock check.
+                     * Re-enable after PE2 is confirmed alive on scope/ITM.
                     pn = snprintf(pbuf, sizeof(pbuf),
-                        "[T+%7lu ms] [DFSDM] DMA_CR=%08lX[%s] NDTR=%lu M0AR=%08lX[%s] last_raw=%08lX last_val=%ld\r\n",
-                        (unsigned long)HAL_GetTick(),
-                        (unsigned long)dma_cr,   ((dma_cr & ~0x1u) == (0x00035500u & ~0x1u)) ? "OK" : "FAIL",
-                        (unsigned long)ndtr,
-                        (unsigned long)m0ar,     (m0ar == 0x30000000u)                        ? "OK" : "FAIL",
-                        (unsigned long)last_raw,
-                        (long)last_val);
-                    emit(pbuf, pn);
+                        "[DFSDM] Ch1CFG1=%08lX SITP=%lu SPICKSEL=%lu Ch1CFG2=%08lX DTRBS=%lu\r\n", ...);
+                    pn = snprintf(pbuf, sizeof(pbuf),
+                        "[DFSDM] FLTCR1=%08lX FLTCR2=%08lX FLTFCR=%08lX\r\n", ...);
+                    pn = snprintf(pbuf, sizeof(pbuf),
+                        "[DFSDM] DMA_CR=%08lX NDTR=%lu M0AR=%08lX last_raw=%08lX last_val=%ld\r\n", ...);
+                    */
                 }
             }
         }

@@ -27,6 +27,7 @@
 #include "queue.h"
 #include <string.h>         /* strncmp, strlen, strncpy, tolower */
 #include <stdio.h>          /* snprintf                          */
+#include "SEGGER_RTT.h"
 #include <ctype.h>          /* tolower                           */
 
 /* ── Internal types ──────────────────────────────────────────────────────── */
@@ -164,8 +165,9 @@ int CommandHandler_Post(const char *msg)
     const char *payload = msg;
     if (strncmp(msg, "CMD:", 4) == 0) payload = msg + 4;
 
-    printf("[CMD-POST] msg=[%s] payload=[%s]\n", msg, payload);
-    fflush(stdout);
+    SEGGER_RTT_WriteString(0, "[CMD-POST] msg=[");
+    SEGGER_RTT_WriteString(0, msg);
+    SEGGER_RTT_WriteString(0, "]\n");
 
     CmdSlot_t slot;
     strncpy(slot, payload, CMD_MAX_LEN);
@@ -190,8 +192,9 @@ void CommandHandler_TaskEntry(void *arg)
         /* Block indefinitely until a command arrives */
         xQueueReceive(s_cmdQueue, payload, portMAX_DELAY);
 
-        printf("[CMD-DISPATCH] payload=[%s]\n", payload);
-        fflush(stdout);
+        SEGGER_RTT_WriteString(0, "[CMD-DISPATCH] payload=[");
+        SEGGER_RTT_WriteString(0, payload);
+        SEGGER_RTT_WriteString(0, "]\n");
 
         /* "UNKNOWN" is a special token sent by NORA when routing fails */
         if (strncmp(payload, "UNKNOWN", 7) == 0)

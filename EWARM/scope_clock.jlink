@@ -1,0 +1,25 @@
+/* scope_clock.jlink — minimal script for scope measurement of PE2 (2 MHz PDM clock).
+ *
+ * Sequence:
+ *   1. Flash firmware
+ *   2. Reset + run (CPU free)
+ *   3. Wait 500 ms for FreeRTOS tasks to start
+ *   4. Write EXTI_SWIER1 bit13 = software blue-button press → starts recording
+ *   5. Wait 200 ms — clock stabilises on PE2
+ *   6. Exit J-Link (CPU keeps running, PE2 clock stays live until firmware stops recording)
+ *
+ * Probe scope on PE2 / SB45.  Expect: 2.000 MHz square wave, 3.3V, 50% duty.
+ */
+
+r
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+
+sleep 500
+
+w4 0x58000008 0x00002000
+
+sleep 200
+
+exit

@@ -312,6 +312,16 @@ void EXTI15_10_IRQHandler(void)
 }
 
 /**
+ * BDMA_Channel1_IRQHandler — SAI4_A RX kick buffer (D3 domain).
+ * BDMA runs in circular mode, draining the SAI4 FIFO to keep PE2 clocking.
+ * No callbacks needed — HAL_DMA_IRQHandler clears flags and restarts circular. */
+void BDMA_Channel1_IRQHandler(void)
+{
+    extern DMA_HandleTypeDef hdma_sai4_a_rx;
+    HAL_DMA_IRQHandler(&hdma_sai4_a_rx);
+}
+
+/**
  * DMA1_Stream1_IRQHandler — handles DFSDM1 Filter0 DMA transfer events.
  * Fires on half-complete and complete (PCM data from DFSDM hardware filter ready).
  * Routed through VoiceRec_DMA_IRQHandler() to keep the DMA handle private
