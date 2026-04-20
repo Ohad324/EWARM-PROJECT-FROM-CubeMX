@@ -1001,25 +1001,25 @@ static void MX_SAI4_Init(void)
   hsai_BlockA4.Init.Synchro = SAI_ASYNCHRONOUS;
   hsai_BlockA4.Init.OutputDrive = SAI_OUTPUTDRIVE_DISABLE;
 
-  /* ── [Step 2] Clock Divider: MASTERDIVIDER_ENABLE — activates the MCKDIV path.
-   * Formula: CK1 = Source / (MCKDIV × 2) = 64 MHz / (16 × 2) = 2.000 MHz ✓ */
-  hsai_BlockA4.Init.NoDivider = SAI_MASTERDIVIDER_ENABLE;
+  /* ── [Step 2] Path B: NoDivider=DISABLE → NODIV=1. MCKDIV is the ONLY divider.
+   * RM0399 §54.4.8: FSCK_A = FMCLK_A = kernel / MCKDIV = 64 MHz / 16 = 4.000 MHz.
+   * PDM block ÷2 on top → PE2/CK1 = 2.000 MHz. Bypasses 256/(FRL+1) factor. */
+  hsai_BlockA4.Init.NoDivider = SAI_MASTERDIVIDER_DISABLE;
 
   hsai_BlockA4.Init.MckOverSampling = SAI_MCK_OVERSAMPLING_DISABLE;
   hsai_BlockA4.Init.FIFOThreshold = SAI_FIFOTHRESHOLD_EMPTY;
 
-  /* ── [Step 2] MCKDIV=8 (TEST: was 16 — halved to check if scope frequency doubles).
-   * Replaces the previous AudioFrequency=16K + CR1 direct-write override hack.
+  /* MCKDIV=16 → 64/16 = 4 MHz SCK. PDM ÷2 → 2.000 MHz on PE2.
    * HAL uses Init.Mckdiv only when AudioFrequency == SAI_AUDIO_FREQUENCY_MCKDIV (0). */
   hsai_BlockA4.Init.AudioFrequency = SAI_AUDIO_FREQUENCY_MCKDIV;
-  hsai_BlockA4.Init.Mckdiv = 8;
+  hsai_BlockA4.Init.Mckdiv = 16;
 
   hsai_BlockA4.Init.MonoStereoMode = SAI_STEREOMODE;
   hsai_BlockA4.Init.CompandingMode = SAI_NOCOMPANDING;
   hsai_BlockA4.Init.PdmInit.Activation = ENABLE;
   hsai_BlockA4.Init.PdmInit.MicPairsNbr = 1;
   hsai_BlockA4.Init.PdmInit.ClockEnable = SAI_PDM_CLOCK1_ENABLE;
-  hsai_BlockA4.FrameInit.FrameLength = 8;   /* 2026-04-15: reverted 32 → 8; FrameLength=32 killed SAI4→DFSDM bridge data path */
+  hsai_BlockA4.FrameInit.FrameLength = 16;  /* Path B: FRL=15 satisfies WCKCFG validity (power-of-2, in [8,256]). */
   hsai_BlockA4.FrameInit.ActiveFrameLength = 1;
   hsai_BlockA4.FrameInit.FSDefinition = SAI_FS_STARTFRAME;
   hsai_BlockA4.FrameInit.FSPolarity = SAI_FS_ACTIVE_LOW;
