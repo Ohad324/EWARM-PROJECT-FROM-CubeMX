@@ -1,0 +1,431 @@
+/* mic_data_test.jlink — Verify PDM data arriving at DFSDM filter output
+ *
+ * PIPELINE (docs/CLAUDE.md):
+ *   MP34DT05-A mic → PE2 (2.0 MHz SAI4 CK1) + PC1 (PDM data AF6 DFSDM1_DATIN1)
+ *     → DFSDM1 Filter0 (Sinc3, OSR=125) → DMA1_Stream1 (Circular)
+ *     → s_DfsdmBuf[128] @ 0x30004000 (D2 SRAM1)
+ *
+ * ADDRESS NOTE (2026-04-23):
+ *   DFSDM1_BASE = 0x40017000 (stm32h747xx.h:2407, RM0399 Table 259)
+ *   Filter0 @ +0x100  →  FLT0CR1=0x40017100, FLT0ISR=0x40017108,
+ *                        FLT0FCR=0x40017114, FLT0RDATAR=0x4001711C
+ *   Channel0 @ +0x00, Channel1 @ +0x20
+ *   (Previous script used 0x40017500/0x40017508 — Filter-4 range, past last filter.)
+ *
+ * LIVE DAP — CPU runs free, NO halts, 250 ms pre / 200 ms rec cadence.
+ *
+ * STATIC CONFIG DUMP (once after flash, before trigger):
+ *   0x58024550 : RCC_C1_APB2ENR          bit 4=DFSDM1EN on CM7 gate
+ *   0x40017000 : DFSDM1_CH0->CHCFGR1     bit31=DFSDMEN, bits[23:16]=CKOUTDIV
+ *   0x40017020 : DFSDM1_CH1->CHCFGR1     bit7=CHEN, bits[3:2]=SPICKSEL, bits[1:0]=SITP
+ *   0x40017114 : DFSDM1_Flt0->FLTFCR     bits[31:29]=FORD, bits[25:16]=FOSR
+ *
+ * PER-BLOCK CAPTURE (s_DfsdmBuf + live regs):
+ *   0x30004000 : s_DfsdmBuf[0..31]         32 × int32_t PCM samples
+ *   0x40017100 : DFSDM1_Flt0->FLTCR1       bit0=DFEN, bit21=RDMAEN, bits[26:24]=RCSEL
+ *   0x40017108 : DFSDM1_Flt0->FLTISR       bits[19:16]=CKABF, bit4=ROVRF, bit2=RDATAAVL
+ *   0x4001711C : DFSDM1_Flt0->FLTRDATAR    live 24-bit PCM (left-justified)
+ *   0x40020028 : DMA1_Stream1->CR          bit0=EN, bit8=CIRC
+ *   0x4002002C : DMA1_Stream1->NDTR        live remaining-count
+ *   0x58005404 : SAI4_BlockA->CR1          bit16=SAIEN (must stay 1)
+ *   0x58005444 : SAI4_BlockA->PDMCR        bit0=PDMEN, bit8=CKEN1
+ *   0x58020810 : GPIOC->IDR                bit1=PC1 level (PDM line)
+ *   0x58024828 : PWR->WKUPEPR              bit5=WKUPEN6 MUST be 0 — else WKUP6
+ *                                          hijacks PC1 as deep-sleep wakeup input,
+ *                                          overrides AF6 sampling, CKABF[1] asserts,
+ *                                          and DFSDM output sticks at a DC value.
+ *                                          (Docs: docs/CLAUDE.md — "GOTCHA — PC1 is also WKUP6")
+ */
+
+r
+erase
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+sleep 200
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * STATIC CONFIG — captured once, immediately after startup runs MX_DFSDM1_Init
+ * ════════════════════════════════════════════════════════════════════════════ */
+
+mem32 0x58024550 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x40017114 1
+mem32 0x58024828 1
+
+sleep 100
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * PRE-TRIGGER: 5 reads × 250 ms — baseline, buffer should be all zeros
+ * ════════════════════════════════════════════════════════════════════════════ */
+
+/* pre 1 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 250
+
+/* pre 2 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 250
+
+/* pre 3 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 250
+
+/* pre 4 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 250
+
+/* pre 5 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 250
+
+/* ── SW blue-button trigger via EXTI_D1 SWIER1 bit 13 ── */
+w4 0x58000008 0x00002000
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * RECORDING: 15 reads × 200 ms — s_DfsdmBuf should fill with non-zero PCM
+ * ════════════════════════════════════════════════════════════════════════════ */
+
+sleep 100
+
+/* rec 1 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 2 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 3 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 4 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 5 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 6 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 7 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 8 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 9 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 10 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 11 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 12 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 13 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 14 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+sleep 200
+
+/* rec 15 */
+mem32 0x30004000 32
+mem32 0x40017100 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x40017114 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x58024550 1
+mem32 0x58024450 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x58005404 1
+mem32 0x58005444 1
+mem32 0x58020810 1
+mem32 0x58024828 1
+
+exit
