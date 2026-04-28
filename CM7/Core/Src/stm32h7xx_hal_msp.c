@@ -241,7 +241,26 @@ void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef* hdfsdm_channel)
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     /* USER CODE BEGIN DFSDM1_MspInit 1 */
+    /* Path C-PC2: PC1 = DFSDM1_DATIN1 (mic data input, AF6).
+     * Originally configured in HAL_SAI_MspInit, moved here so it survives the
+     * retirement of SAI4 in Path C-PC2. */
+    GPIO_InitStruct.Pin       = GPIO_PIN_1;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_PULLUP;          /* keeps line HIGH during clock idle phases */
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF6_DFSDM1;       /* AF6 = DFSDM1_DATIN1 */
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+    /* Path C-PC2: PC2 = DFSDM1_CKOUT (mic clock output, AF6).
+     * H747 datasheet Table 9 row PC2: AF6 = DFSDM1_CKOUT. Drives 2 MHz back
+     * along the flying wire (PC2 → STMod+ P2.3 → SB36 → PE2 net → SB45 → mic).
+     * SAI4 retired: PE2 stays in reset Analog/high-Z so no driver contention. */
+    GPIO_InitStruct.Pin       = GPIO_PIN_2;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;  /* 2 MHz square — keep edges clean */
+    GPIO_InitStruct.Alternate = GPIO_AF6_DFSDM1;            /* AF6 = DFSDM1_CKOUT on PC2 */
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
     /* USER CODE END DFSDM1_MspInit 1 */
 
   DFSDM1_Init++;
@@ -873,11 +892,14 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
 
   GPIO_InitTypeDef GPIO_InitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-/* ╔══════════════════════════════════════════════════════════════════════╗
- * ║  HOLY CODE — HAL_SAI_MspInit  (docs/Claude_story.md Summary Table)  ║
- * ║  Steps 3, 4, 5 implemented here. Steps 1, 2, 6 in MX_SAI4_Init.     ║
- * ║  Step 7 (DMA Circular activation) is triggered at button press.      ║
- * ╚══════════════════════════════════════════════════════════════════════╝ */
+/* ╔══════════════════════════════════════════════════════════════════════════╗
+ * ║  HOLY CODE — HAL_SAI_MspInit                                            ║
+ * ║  Validated 2026-04-20: 2.000 MHz on PE2 across 20 flash+run cycles.     ║
+ * ║  Every line marked [HOLY] is LOCKED. Do NOT change any value without    ║
+ * ║  explicit user approval AND scope re-verification on SB45/PE2.          ║
+ * ║  Evidence: EWARM/runs/sai4_pe2_clock_validation_2026-04-20/             ║
+ * ║  Policy: docs/CLAUDE.md § "Holy Code Policy".                            ║
+ * ╚══════════════════════════════════════════════════════════════════════════╝ */
 /* SAI4 */
     if(hsai->Instance==SAI4_Block_A)
     {
@@ -890,8 +912,8 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
    * 64 MHz / (2 × MCKDIV=16) = 2.000 MHz on PE2 — exact, 0% error ✓
    * Previous PLL2-based config produced 150 MHz → MCKDIV=37 → 2.027 MHz (workable
    * but non-integer divide). CLKP is simpler and gives a cleaner clock. */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI4A;
-    PeriphClkInitStruct.Sai4AClockSelection  = RCC_SAI4ACLKSOURCE_CLKP;
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SAI4A;          /* [HOLY] */
+    PeriphClkInitStruct.Sai4AClockSelection  = RCC_SAI4ACLKSOURCE_CLKP;      /* [HOLY — HSI 64 MHz] */
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
       Error_Handler();
@@ -899,7 +921,7 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
 
     if (SAI4_client == 0)
     {
-       __HAL_RCC_SAI4_CLK_ENABLE();
+       __HAL_RCC_SAI4_CLK_ENABLE();                                          /* [HOLY] APB4ENR bit 21 */
     }
     SAI4_client ++;
 
@@ -908,25 +930,25 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
      * BDMA can only access D3 SRAM (0x38000000). The kick buffer in
      * voice_recorder.c is placed there. Without this, SAIEN=1 alone does NOT
      * activate the SAI4 serial clock — PE2 stays flat. */
-    __HAL_RCC_BDMA_CLK_ENABLE();
+    __HAL_RCC_BDMA_CLK_ENABLE();                                             /* [HOLY] AHB4ENR bit 21 */
     extern DMA_HandleTypeDef hdma_sai4_a_rx;
-    hdma_sai4_a_rx.Instance                 = BDMA_Channel1;
-    hdma_sai4_a_rx.Init.Request             = BDMA_REQUEST_SAI4_A;
-    hdma_sai4_a_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
-    hdma_sai4_a_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
-    hdma_sai4_a_rx.Init.MemInc              = DMA_MINC_ENABLE;
-    hdma_sai4_a_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-    hdma_sai4_a_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
-    hdma_sai4_a_rx.Init.Mode                = DMA_CIRCULAR;
-    hdma_sai4_a_rx.Init.Priority            = DMA_PRIORITY_LOW;
-    hdma_sai4_a_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
+    hdma_sai4_a_rx.Instance                 = BDMA_Channel1;                 /* [HOLY] */
+    hdma_sai4_a_rx.Init.Request             = BDMA_REQUEST_SAI4_A;           /* [HOLY] */
+    hdma_sai4_a_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;          /* [HOLY] */
+    hdma_sai4_a_rx.Init.PeriphInc           = DMA_PINC_DISABLE;              /* [HOLY] */
+    hdma_sai4_a_rx.Init.MemInc              = DMA_MINC_ENABLE;               /* [HOLY] */
+    hdma_sai4_a_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;       /* [HOLY] */
+    hdma_sai4_a_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;       /* [HOLY] */
+    hdma_sai4_a_rx.Init.Mode                = DMA_CIRCULAR;                  /* [HOLY] — circular drain keeps SAIEN latched */
+    hdma_sai4_a_rx.Init.Priority            = DMA_PRIORITY_LOW;              /* [HOLY] */
+    hdma_sai4_a_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;          /* [HOLY] */
     if (HAL_DMA_Init(&hdma_sai4_a_rx) != HAL_OK) { Error_Handler(); }
     __HAL_LINKDMA(hsai, hdmarx, hdma_sai4_a_rx);
 
     /* NVIC for BDMA_Channel1 — required by HAL_SAI_Receive_DMA (uses DMA_Start_IT).
      * Without this, TC/HT interrupts never fire → BDMA stalls → PE2 dies. */
-    HAL_NVIC_SetPriority(BDMA_Channel1_IRQn, 6u, 0u);  /* below FreeRTOS max (5) */
-    HAL_NVIC_EnableIRQ(BDMA_Channel1_IRQn);
+    HAL_NVIC_SetPriority(BDMA_Channel1_IRQn, 6u, 0u);  /* [HOLY] — below FreeRTOS max (5) */
+    HAL_NVIC_EnableIRQ(BDMA_Channel1_IRQn);                                  /* [HOLY] */
 
     /**SAI4_A_Block_A GPIO Configuration
     PE2     ------> SAI4_CK1       (AF10: PDM clock output to mic)
@@ -940,36 +962,39 @@ void HAL_SAI_MspInit(SAI_HandleTypeDef* hsai)
      * AF10 is mandatory for CK1 (PDM clock). AF8 gives MCLK_A, not CK1. */
     /* ── [Step 5] GPIO Speed: VERY_HIGH ─────────────────────────────────────────
      * Prevents rounding of the 2.0 MHz square wave. Mic loses sync if slew is slow. */
-    GPIO_InitStruct.Pin = GPIO_PIN_2;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;          /* [Step 5] */
-    GPIO_InitStruct.Alternate = GPIO_AF10_SAI4;                 /* [Step 4] */
-    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_2;                           /* [HOLY] — PE2 is the scope pin */
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;                     /* [HOLY] */
+    GPIO_InitStruct.Pull = GPIO_NOPULL;                         /* [HOLY] */
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;          /* [HOLY — Step 5 — keeps 2 MHz square-wave edges clean] */
+    GPIO_InitStruct.Alternate = GPIO_AF10_SAI4;                 /* [HOLY — Step 4 — AF10 = SAI4_CK1 (PDM clock). AF8 would give MCLK_A instead, breaking the mic] */
+    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);                     /* [HOLY] */
 
-    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_4;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF8_SAI4;
-    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_4;                /* [HOLY] */
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;                     /* [HOLY] */
+    GPIO_InitStruct.Pull = GPIO_NOPULL;                         /* [HOLY] */
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;                /* [HOLY] */
+    GPIO_InitStruct.Alternate = GPIO_AF8_SAI4;                  /* [HOLY] */
+    HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);                     /* [HOLY] */
 
-    GPIO_InitStruct.Pin = GPIO_PIN_8;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF8_SAI4;
-    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = GPIO_PIN_8;                           /* [HOLY] */
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;                     /* [HOLY] */
+    GPIO_InitStruct.Pull = GPIO_NOPULL;                         /* [HOLY] */
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;                /* [HOLY] */
+    GPIO_InitStruct.Alternate = GPIO_AF8_SAI4;                  /* [HOLY] */
+    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);                     /* [HOLY] */
 
-    GPIO_InitStruct.Pin = GPIO_PIN_1;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;  /* PC1=DFSDM1_DATIN1: pull-up keeps line HIGH during SAI4 clock idle phases */
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF6_DFSDM1;  /* AF6=DFSDM1_DATIN1 — mic PDM data goes DIRECTLY to DFSDM Channel 1.
+    GPIO_InitStruct.Pin = GPIO_PIN_1;                           /* [HOLY] */
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;                     /* [HOLY] */
+    GPIO_InitStruct.Pull = GPIO_PULLUP;                         /* [HOLY] — PC1=DFSDM1_DATIN1: pull-up keeps line HIGH during SAI4 clock idle phases */
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;                /* [HOLY] */
+    GPIO_InitStruct.Alternate = GPIO_AF6_DFSDM1;  /* [HOLY] AF6=DFSDM1_DATIN1 — mic PDM data goes DIRECTLY to DFSDM Channel 1.
                                                     * DFSDM is configured EXTERNAL_INPUTS (DATMPX=00): data MUST come from this GPIO pin.
                                                     * AF10 (SAI4_D1) routes data to SAI4 FIFO only — DFSDM sees nothing → -30518.
                                                     * SAI4 still generates the PDM clock on PE2 (AF10); only PC1 data path changes. */
-    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);                     /* [HOLY] */
+
+    /* Path C-PC2: PC2 init moved to HAL_DFSDM_ChannelMspInit (AF6 = CKOUT).
+     * SAI4 retired; this MSP body kept for revert. */
 
     }
 }
@@ -992,6 +1017,7 @@ void HAL_SAI_MspDeInit(SAI_HandleTypeDef* hsai)
     PE4     ------> SAI4_FS_A      (AF8:  SAI4 frame sync)
     PF8     ------> SAI4_SCK_B     (AF8:  SAI4 block B clock)
     PC1     ------> DFSDM1_DATIN1  (AF6:  PDM data direct to DFSDM filter — NOT SAI4_D1/AF10)
+    Note: PC1/PC2 DeInit removed — those pins now owned by HAL_DFSDM_ChannelMsp* in Path C-PC2.
     */
     HAL_GPIO_DeInit(GPIOE, GPIO_PIN_2|GPIO_PIN_5|GPIO_PIN_4);
 
