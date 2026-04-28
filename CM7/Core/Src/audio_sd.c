@@ -309,10 +309,15 @@ void AudioSD_WriteFrame(const int32_t *src32, uint32_t nSamples)
 {
     if (!s_fileOpen) return;
 
-    /* Convert int32 DFSDM → int16 PCM directly into the fill buffer */
+    /* Convert int32 DFSDM → int16 PCM directly into the fill buffer.
+     * 4x volume: shift by 6 (= /64) instead of 8 (= /256) quadruples amplitude.
+     * Sinc3 OSR=125 + DTRBS=6 max output is +/-30,517; 4x = +/-122,068 which
+     * exceeds int16 by ~3.7x. __SSAT(_, 16) clamps to int16 range so peaks
+     * clip cleanly. Voice (typically +/-5000 raw) lands at +/-20,000 = clean,
+     * loud sounds (clap/shout) clip but STT engines tolerate that fine. */
     int16_t *dst = &s_wbuf[s_wFillIdx][s_wbufFill / sizeof(int16_t)];
     for (uint32_t i = 0; i < nSamples; i++)
-        dst[i] = (int16_t)(src32[i] >> 8);
+        dst[i] = (int16_t)__SSAT(src32[i] >> 6, 16);
 
     s_wbufFill += nSamples * sizeof(int16_t);   /* += 1024 bytes */
 
@@ -841,6 +846,12 @@ DRESULT disk_read(BYTE pdrv, BYTE *buff, DWORD sector, UINT count)
             if (retryResult != HAL_OK)
             {
                 SD_LOG("DISK_READ_RETRY_FAIL_ERR=", s_hsd1.ErrorCode);
+                /* Cycle notification: disk_read -> AudioSD_Remount -> f_mount ->
+                 * (move_window/sync_window -> disk_write/disk_read).  Axivion CY
+                 * finding — logged to RTT + ITM before the re-entrant call. */
+                _itm_str("[CYCLE] disk_read->Remount\n");
+                STAGE("[CYCLE] disk_read->Remount");
+                SD_LOG0("CYCLE_DISK_READ_TO_REMOUNT");
                 if (!AudioSD_Remount())
                 {
                     SD_LOG0("DISK_READ_REMOUNT_FAIL");
@@ -936,6 +947,12 @@ DRESULT disk_write(BYTE pdrv, const BYTE *buff, DWORD sector, UINT count)
                 SD_LOG("DISK_WRITE_RETRY_FAIL_ERR=", s_hsd1.ErrorCode);
                 /* Lightweight DPSM reset insufficient — HAL state machine still stuck.
                  * Full DeInit+reinit as last resort (costs ~200ms but recovers correctly). */
+                /* Cycle notification: disk_write -> AudioSD_Remount -> f_mount ->
+                 * (sync_window -> disk_write).  Axivion CY finding — logged to
+                 * RTT + ITM before the re-entrant call. */
+                _itm_str("[CYCLE] disk_write->Remount\n");
+                STAGE("[CYCLE] disk_write->Remount");
+                SD_LOG0("CYCLE_DISK_WRITE_TO_REMOUNT");
                 if (!AudioSD_Remount())
                 {
                     SD_LOG0("DISK_WRITE_REMOUNT_FAIL");

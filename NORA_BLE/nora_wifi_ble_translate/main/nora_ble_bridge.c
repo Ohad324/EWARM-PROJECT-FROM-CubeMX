@@ -8,6 +8,7 @@
  */
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -321,17 +322,19 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
                                int32_t event_id, void *event_data)
 {
     if (base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
+        /* Auto-connect disabled — wifi_init() does an explicit scan first,
+         * then calls esp_wifi_connect() manually after the scan completes. */
+        ESP_LOGI(TAG, "STA_START received (deferring connect for scan)");
 
     } else if (base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        if (s_wifi_retry < WIFI_MAX_RETRY) {
-            s_wifi_retry++;
-            ESP_LOGW(TAG, "Wi-Fi disconnected, retry %d/%d", s_wifi_retry, WIFI_MAX_RETRY);
-            esp_wifi_connect();
-        } else {
-            ESP_LOGE(TAG, "Wi-Fi: giving up after %d retries", WIFI_MAX_RETRY);
-            uart_write_bytes(UART_PORT, "ERROR:wifi failed\n", 18);
-        }
+        wifi_event_sta_disconnected_t *d = (wifi_event_sta_disconnected_t *)event_data;
+        s_wifi_retry++;
+        ESP_LOGW(TAG, "Wi-Fi disconnected reason=%d ssid=\"%.*s\" rssi=%d, retry %d (always retry)",
+                 d->reason, d->ssid_len, d->ssid, d->rssi, s_wifi_retry);
+        /* Never give up — keep trying like a phone does. Marginal RSSI drops
+         * the link transiently; without persistent retry, the second recording
+         * cycle has no Wi-Fi and the WAV never reaches GCS. */
+        esp_wifi_connect();
 
     } else if (base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *ev = (ip_event_got_ip_t *)event_data;
@@ -340,6 +343,47 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
         uart_write_bytes(UART_PORT, "READY\n", 6);
     }
+}
+
+/* Run a passive scan and dump every visible AP. Helps diagnose
+ * "reason=201 NO_AP_FOUND" — if the target SSID is missing here but the
+ * laptop sees it, the AP is on a band/channel NORA can't reach (NORA-W10
+ * is 2.4 GHz only) or NORA's antenna is dead. */
+static void wifi_scan_dump(void)
+{
+    wifi_scan_config_t scan_cfg = { 0 };  /* scan all channels, all SSIDs */
+    ESP_LOGI(TAG, "[scan] starting active scan...");
+    esp_err_t err = esp_wifi_scan_start(&scan_cfg, true /* block until done */);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "[scan] esp_wifi_scan_start failed: %s", esp_err_to_name(err));
+        return;
+    }
+
+    uint16_t n = 0;
+    esp_wifi_scan_get_ap_num(&n);
+    ESP_LOGI(TAG, "[scan] found %u APs", n);
+    if (n == 0) return;
+
+    if (n > 32) n = 32;
+    wifi_ap_record_t *aps = calloc(n, sizeof(*aps));
+    if (!aps) return;
+    esp_wifi_scan_get_ap_records(&n, aps);
+
+    for (uint16_t i = 0; i < n; i++) {
+        const char *auth =
+            aps[i].authmode == WIFI_AUTH_OPEN              ? "OPEN" :
+            aps[i].authmode == WIFI_AUTH_WEP               ? "WEP"  :
+            aps[i].authmode == WIFI_AUTH_WPA_PSK           ? "WPA"  :
+            aps[i].authmode == WIFI_AUTH_WPA2_PSK          ? "WPA2" :
+            aps[i].authmode == WIFI_AUTH_WPA_WPA2_PSK      ? "WPA/WPA2" :
+            aps[i].authmode == WIFI_AUTH_WPA2_ENTERPRISE   ? "WPA2-EAP" :
+            aps[i].authmode == WIFI_AUTH_WPA3_PSK          ? "WPA3" :
+            aps[i].authmode == WIFI_AUTH_WPA2_WPA3_PSK     ? "WPA2/WPA3" :
+                                                              "OTHER";
+        ESP_LOGI(TAG, "[scan] ch=%-2u rssi=%-4d auth=%-9s ssid=\"%s\"",
+                 aps[i].primary, aps[i].rssi, auth, aps[i].ssid);
+    }
+    free(aps);
 }
 
 static void wifi_init(void)
@@ -368,7 +412,14 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_cfg));
     ESP_ERROR_CHECK(esp_wifi_start());
 
+    /* Driver settling delay before scan — STA_START event is in flight. */
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    /* Diagnostic: dump every visible AP before attempting to connect. */
+    wifi_scan_dump();
+
     ESP_LOGI(TAG, "Wi-Fi init done, connecting to \"%s\"...", WIFI_SSID);
+    esp_wifi_connect();   /* explicit — auto-connect on STA_START is disabled */
 }
 
 /* ── URL encoder ────────────────────────────────────────────────────────── *
