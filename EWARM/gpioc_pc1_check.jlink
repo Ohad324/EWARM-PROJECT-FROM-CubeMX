@@ -1,0 +1,36 @@
+/* gpioc_pc1_check.jlink — verify PC1 actually programmed AF6 + readback live IDR
+ *
+ * GPIOC base 0x58020800
+ *   MODER    +0x00 = 0x58020800 — bits[3:2] PC1 mode (10 = AF)
+ *   OTYPER   +0x04 = 0x58020804
+ *   OSPEEDR  +0x08 = 0x58020808
+ *   PUPDR    +0x0C = 0x5802080C — bits[3:2] PC1 pull (00=none, 01=PU, 10=PD)
+ *   IDR      +0x10 = 0x58020810
+ *   ODR      +0x14 = 0x58020814
+ *   AFRL     +0x20 = 0x58020820 — bits[7:4] PC1 AF, bits[11:8] PC2 AF
+ *   AFRH     +0x24 = 0x58020824
+ */
+
+mem32 0x58020800 1     /* MODER */
+mem32 0x5802080C 1     /* PUPDR */
+mem32 0x58020820 1     /* AFRL — verify PC1=AF6 (bits[7:4]=0x6), PC2=AF6 (bits[11:8]=0x6) */
+mem32 0x58020810 1     /* IDR snapshot */
+
+/* live PC1 toggle test — 16 reads at ~5 ms */
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+
+q

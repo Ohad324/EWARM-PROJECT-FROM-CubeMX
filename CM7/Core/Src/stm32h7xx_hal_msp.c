@@ -241,14 +241,17 @@ void HAL_DFSDM_ChannelMspInit(DFSDM_Channel_HandleTypeDef* hdfsdm_channel)
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     /* USER CODE BEGIN DFSDM1_MspInit 1 */
-    /* Path C-PC2: PC1 = DFSDM1_DATIN1 (mic data input, AF6).
-     * Originally configured in HAL_SAI_MspInit, moved here so it survives the
-     * retirement of SAI4 in Path C-PC2. */
+    /* Path C-PC2-corrected (2026-04-28): PC1 = DFSDM1_DATIN0 at AF3.
+     * Three independent sources (Linux kernel pinctrl, ST wiki, ST community
+     * H747I-DISCO MP34DT05 thread) confirm PC1/AF3 = DFSDM1_DATIN0.
+     * Both prior values (AF6 from project docs, AF4 from Gemini) were wrong.
+     * AF6 routes to DATIN4 (unused), AF4 routes to I2C3_SCL — neither is the
+     * DFSDM data path. AF3 is the only correct mapping for PC1 → DATIN0. */
     GPIO_InitStruct.Pin       = GPIO_PIN_1;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull      = GPIO_PULLUP;          /* keeps line HIGH during clock idle phases */
+    GPIO_InitStruct.Pull      = GPIO_NOPULL;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF6_DFSDM1;       /* AF6 = DFSDM1_DATIN1 */
+    GPIO_InitStruct.Alternate = GPIO_AF3_DFSDM1;       /* AF3 = DFSDM1_DATIN0 */
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     /* Path C-PC2: PC2 = DFSDM1_CKOUT (mic clock output, AF6).

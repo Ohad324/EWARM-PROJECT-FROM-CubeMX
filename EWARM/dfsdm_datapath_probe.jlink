@@ -1,0 +1,99 @@
+/* dfsdm_datapath_probe.jlink — Path C-PC2 discriminator
+ *
+ * Goal: figure out why FLT0RDATAR is stuck at 0xFF88CA01 and s_DfsdmBuf is stale,
+ *       even though PC1 IDR toggles (mic produces PDM) and DMA NDTR wraps.
+ *
+ * Two theories:
+ *   A. DMA M0AR/PAR wrong — DMA writes elsewhere, buffer at 0x30004000 is stale
+ *   B. CKABF latched — DFSDM data-ready strobe never fires, NDTR variation is artifact
+ *
+ * Discriminator: read DMA M0AR/PAR + DFSDM CH1 CKABEN, then write 0x00FF0000 to
+ * FLT0ICR to clear CKABF and watch RDATAR/buffer for change.
+ *
+ * Flow:
+ *   1. flash + run
+ *   2. wait 2 s (user verifies 2.000 MHz on PC2 with scope)
+ *   3. trigger blue button (SWIER1 bit13)
+ *   4. snapshot DMA + DFSDM regs + buffer
+ *   5. clear CKABF, sleep 100 ms, re-snapshot
+ *   6. final reads
+ *
+ * Register map:
+ *   DMA1_Stream1: CR=0x40020028, NDTR=0x4002002C, PAR=0x40020030, M0AR=0x40020034
+ *   DMAMUX1_C1CR=0x40020804 (DFSDM1_FLT0 = req 102 = 0x66)
+ *   DFSDM1_FLT0: CR1=0x40017100, CR2=0x40017104, ISR=0x40017108, ICR=0x4001710C, RDATAR=0x4001711C
+ *   DFSDM1_CH1:  CFGR1=0x40017020, CFGR2=0x40017024
+ *   DFSDM1_CH0:  CFGR1=0x40017000  (CKOUTDIV=50, CKOUTSRC, DFSDMEN)
+ *   PC1 IDR=0x58020810 bit1
+ *   PWR_WKUPEPR=0x58024828
+ */
+
+r
+erase
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+
+/* Static config — captured immediately after MX_DFSDM1_Init */
+sleep 200
+mem32 0x40017000 1     /* CH0 CFGR1: DFSDMEN=bit31, CKOUTDIV bits[23:16], CKOUTSRC bit30 */
+mem32 0x40017020 1     /* CH1 CFGR1: CHEN bit7, SPICKSEL bits[3:2], SITP bits[1:0], CKABEN bit15 */
+mem32 0x40017024 1     /* CH1 CFGR2 */
+
+/* USER: verify scope shows 2.000 MHz on PC2 during this 2-second window */
+sleep 2000
+
+/* PC1 live samples — confirm mic is producing PDM */
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+
+/* SW blue-button trigger — start recording, DFSDM filter starts, DMA armed */
+w4 0x58000008 0x00002000
+sleep 200
+
+/* ─────────── PRE-CLEAR snapshot ─────────── */
+/* DMA: must show CR.EN=1, PAR=0x4001711C, M0AR=0x30004000 */
+mem32 0x40020028 8     /* CR, NDTR, PAR, M0AR, M1AR, FCR + 2 */
+mem32 0x40020804 1     /* DMAMUX1 C1CR — must be 102 (0x66) */
+
+/* DFSDM filter + channel state */
+mem32 0x40017100 4     /* FLTCR1, FLTCR2, FLTISR, FLTICR */
+mem32 0x40017020 2     /* CH1 CFGR1, CFGR2 */
+
+/* Buffer */
+mem32 0x30004000 32
+
+/* WKUP6 sanity */
+mem32 0x58024828 1
+
+/* ─────────── CLEAR CKABF (write-1-to-clear bits[23:16] of FLT0ICR) ─────────── */
+w4 0x4001710C 0x00FF0000
+sleep 100
+
+/* ─────────── POST-CLEAR snapshot ─────────── */
+mem32 0x40017100 4     /* CKABF should be 0; RDATAAVL bit2 of ISR should toggle */
+mem32 0x40020028 4     /* NDTR should advance further if DMA is actually flowing */
+mem32 0x4001711C 1     /* RDATAR — should NOT be 0xFF88CA01 anymore */
+mem32 0x30004000 32
+
+sleep 300
+
+/* ─────────── FINAL snapshot ─────────── */
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x4002002C 1
+mem32 0x30004000 32
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+
+q
