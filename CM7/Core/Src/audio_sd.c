@@ -310,15 +310,15 @@ void AudioSD_WriteFrame(const int32_t *src32, uint32_t nSamples)
     if (!s_fileOpen) return;
 
     /* Convert int32 DFSDM → int16 PCM directly into the fill buffer.
-     * 8x volume: shift by 5 (= /32) instead of 8 (= /256). Sinc3 OSR=125 +
-     * DTRBS=6 max output is +/-30,517; 8x = +/-244,000 which exceeds int16
-     * by ~7.5x. __SSAT(_, 16) clamps loud peaks at +/-32767 — normal speech
-     * (+/-5000 raw) lands at +/-40,000 → clamped to +/-32,767 for the loudest
-     * syllables, so consonants get hard-limited but the body of the audio
-     * is much louder for cloud playback and STT. */
+     * 4x volume: shift by 6 (= /64) instead of 8 (= /256) quadruples amplitude.
+     * Sinc3 OSR=125 + DTRBS=6 max output is +/-30,517; 4x = +/-122,068 which
+     * exceeds int16 by ~3.7x. __SSAT(_, 16) clamps to int16 range so peaks
+     * clip cleanly. Voice (typically +/-5000 raw) lands at +/-20,000 = clean,
+     * loud sounds (clap/shout) clip but STT engines tolerate that fine.
+     * Tested 8x (>> 5) and STT failed — too much clipping garbled audio. */
     int16_t *dst = &s_wbuf[s_wFillIdx][s_wbufFill / sizeof(int16_t)];
     for (uint32_t i = 0; i < nSamples; i++)
-        dst[i] = (int16_t)__SSAT(src32[i] >> 5, 16);
+        dst[i] = (int16_t)__SSAT(src32[i] >> 6, 16);
 
     s_wbufFill += nSamples * sizeof(int16_t);   /* += 1024 bytes */
 
