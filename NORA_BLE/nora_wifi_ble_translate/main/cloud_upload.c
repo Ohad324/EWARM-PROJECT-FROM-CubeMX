@@ -293,9 +293,21 @@ bool CloudUpload_Transcribe(const char *filename,
 }
 
 /* ── CloudUpload_StreamWav ───────────────────────────────────────────────────
- * Stream WAV directly from UART to GCS — no large buffer needed.
- * Reads UART in 1 KB chunks and writes each chunk straight into the HTTP PUT
- * body. Peak memory: STREAM_CHUNK_SIZE bytes on stack only.
+ * BUFFERED upload: drain UART entirely into heap RAM first (frees STM32
+ * immediately), then upload to GCS at whatever pace WiFi allows.
+ *
+ * Why this beats streaming-through-HTTP:
+ *   The previous design wrote each UART chunk directly to esp_http_client_write.
+ *   At marginal RSSI (~-90 dBm), HTTP writes block for seconds, the UART read
+ *   loop stalls, NORA's UART RX buffer fills, ESP32 driver silently drops bytes,
+ *   STM32 thinks all 96 KB went out but NORA only got ~85-95 KB → timeout.
+ *
+ *   Decoupling: read UART -> heap (fast, no HTTPS in the loop = no back-pressure
+ *   = no buffer overflow possible). Once all 96 KB is in RAM, STM32 is free to
+ *   move on. Then upload the buffer to GCS at whatever speed the link supports.
+ *
+ * Memory: NORA has ~250 KB free heap; 96 KB recording uses ~38%. Bumped against
+ * AUDIO_FILE_MAX_BYTES (4 MB) sanity cap defined in nora_ble_bridge.c.
  *
  *   filename : GCS object name (e.g. "REC_001.wav")
  *   uart_port: UART port receiving WAV bytes from STM32
@@ -305,6 +317,50 @@ bool CloudUpload_Transcribe(const char *filename,
  * ─────────────────────────────────────────────────────────────────────────── */
 bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSize)
 {
+    if (fileSize == 0 || fileSize > 1024u * 1024u)
+    {
+        ESP_LOGE(TAG, "StreamWav: invalid fileSize=%lu", (unsigned long)fileSize);
+        SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
+        return false;
+    }
+
+    uint8_t *buf = (uint8_t *)malloc(fileSize);
+    if (!buf)
+    {
+        ESP_LOGE(TAG, "StreamWav: malloc(%lu) failed", (unsigned long)fileSize);
+        SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
+        return false;
+    }
+
+    /* Tell STM32 to start streaming NOW. No HTTP yet — STM32's bytes go
+     * straight from UART RX FIFO into our heap buffer at full UART speed. */
+    SendUart("AUDIO:READY\n");
+    ESP_LOGI(TAG, "StreamWav: AUDIO:READY sent — buffering %lu bytes from UART",
+             (unsigned long)fileSize);
+
+    uint32_t got_total = 0;
+    while (got_total < fileSize)
+    {
+        uint32_t toRead = fileSize - got_total;
+        if (toRead > STREAM_CHUNK_SIZE) toRead = STREAM_CHUNK_SIZE;
+
+        int got = uart_read_bytes(uart_port, buf + got_total, (size_t)toRead,
+                                  pdMS_TO_TICKS(30000));
+        if (got <= 0)
+        {
+            ESP_LOGE(TAG, "StreamWav: UART timeout at %lu/%lu",
+                     (unsigned long)got_total, (unsigned long)fileSize);
+            free(buf);
+            SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
+            return false;
+        }
+        got_total += (uint32_t)got;
+    }
+    ESP_LOGI(TAG, "StreamWav: %lu bytes buffered — opening GCS HTTPS",
+             (unsigned long)got_total);
+
+    /* All bytes are now in RAM. STM32's UART transfer is finished — it's free
+     * to handle the next button press while we upload to GCS. */
     char url[256];
     snprintf(url, sizeof(url), GCS_UPLOAD_URL_FMT, CLOUD_GCS_BUCKET, filename);
 
@@ -321,63 +377,45 @@ bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSiz
     if (!client)
     {
         ESP_LOGE(TAG, "StreamWav: http_client_init failed");
-        SendUart("UPLOAD:FAIL:");
-        SendUart(filename);
-        SendUart("\n");
+        free(buf);
+        SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
         return false;
     }
 
     esp_http_client_set_header(client, "Content-Type", "audio/wav");
 
-    /* Open connection — tell GCS the exact content length upfront */
     esp_err_t err = esp_http_client_open(client, (int)fileSize);
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "StreamWav: open failed: %s", esp_err_to_name(err));
         esp_http_client_cleanup(client);
-        SendUart("UPLOAD:FAIL:");
-        SendUart(filename);
-        SendUart("\n");
+        free(buf);
+        SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
         return false;
     }
 
-    /* ACK: tell STM32 to start sending WAV bytes now.
-     * STM32 waits for this before streaming — avoids UART buffer overflow
-     * during the TLS handshake (which can take 3-5 s). */
-    SendUart("AUDIO:READY\n");
-    ESP_LOGI(TAG, "StreamWav: HTTP open OK — sent AUDIO:READY to STM32");
-
-    /* Stream: receive UART chunk → write to HTTP body */
-    uint8_t  chunk[STREAM_CHUNK_SIZE];
-    uint32_t sent = 0;
-    bool     ok   = true;
-
-    while (sent < fileSize)
+    uint32_t up_sent = 0;
+    bool     ok      = true;
+    while (up_sent < fileSize)
     {
-        uint32_t toRead = fileSize - sent;
-        if (toRead > STREAM_CHUNK_SIZE) toRead = STREAM_CHUNK_SIZE;
+        uint32_t toWrite = fileSize - up_sent;
+        if (toWrite > STREAM_CHUNK_SIZE) toWrite = STREAM_CHUNK_SIZE;
 
-        int got = uart_read_bytes(uart_port, chunk, (size_t)toRead,
-                                  pdMS_TO_TICKS(30000));  /* 30 s — SD reinit can stall ~10 s */
-        if (got <= 0)
-        {
-            ESP_LOGE(TAG, "StreamWav: UART timeout at %lu/%lu", (unsigned long)sent, (unsigned long)fileSize);
-            ok = false;
-            break;
-        }
-
-        int written = esp_http_client_write(client, (const char *)chunk, got);
+        int written = esp_http_client_write(client,
+                                            (const char *)(buf + up_sent),
+                                            (int)toWrite);
         if (written < 0)
         {
-            ESP_LOGE(TAG, "StreamWav: HTTP write failed at %lu/%lu", (unsigned long)sent, (unsigned long)fileSize);
+            ESP_LOGE(TAG, "StreamWav: HTTP write failed at %lu/%lu",
+                     (unsigned long)up_sent, (unsigned long)fileSize);
             ok = false;
             break;
         }
-
-        sent += (uint32_t)got;
+        up_sent += (uint32_t)written;
     }
 
-    /* Fetch response */
+    free(buf);   /* release RAM as soon as upload body is sent */
+
     int status = 0;
     if (ok)
     {
@@ -385,23 +423,18 @@ bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSiz
         status = esp_http_client_get_status_code(client);
         ok = (status >= 200 && status < 300);
     }
-
     esp_http_client_cleanup(client);
 
     if (!ok)
     {
-        ESP_LOGE(TAG, "StreamWav: failed — sent=%lu/%lu HTTP=%d",
-                 (unsigned long)sent, (unsigned long)fileSize, status);
-        SendUart("UPLOAD:FAIL:");
-        SendUart(filename);
-        SendUart("\n");
+        ESP_LOGE(TAG, "StreamWav: failed — uploaded=%lu/%lu HTTP=%d",
+                 (unsigned long)up_sent, (unsigned long)fileSize, status);
+        SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
         return false;
     }
 
-    ESP_LOGI(TAG, "StreamWav: OK — %lu bytes streamed to GCS, HTTP %d",
-             (unsigned long)sent, status);
-    SendUart("UPLOAD:OK:");
-    SendUart(filename);
-    SendUart("\n");
+    ESP_LOGI(TAG, "StreamWav: OK — %lu bytes uploaded to GCS, HTTP %d",
+             (unsigned long)up_sent, status);
+    SendUart("UPLOAD:OK:"); SendUart(filename); SendUart("\n");
     return true;
 }
