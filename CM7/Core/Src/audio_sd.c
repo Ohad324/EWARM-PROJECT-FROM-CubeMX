@@ -70,7 +70,7 @@ PARTITION VolToPart[FF_VOLUMES] = {
 #define AUDIO_SD_SAMPLES_PER_FRAME  512u
 #define AUDIO_SD_UART_CHUNK         1024u
 #define AUDIO_SD_MAX_REC_NUM        999u
-#define AUDIO_SD_SAMPLE_RATE        31250u
+#define AUDIO_SD_SAMPLE_RATE        16000u  /* DFSDM CKOUT 2 MHz / Sinc3 OSR 125 / IntOSR 1 = 16 kHz */
 #define AUDIO_SD_BITS_PER_SAMPLE    16u
 #define AUDIO_SD_CHANNELS           1u
 
