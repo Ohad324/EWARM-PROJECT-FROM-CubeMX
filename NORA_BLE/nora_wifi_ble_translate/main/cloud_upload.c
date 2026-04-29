@@ -37,6 +37,12 @@
 
 #define STREAM_CHUNK_SIZE  1024u   /* UART read + HTTP write chunk size */
 
+/* Static WAV receive buffer — sized for the largest recording the firmware
+ * is allowed to send. 128 KB covers a 4-second 16 kHz mono 16-bit recording
+ * (= 128000 bytes) with a small margin. Lives in BSS — zero malloc churn. */
+#define WAV_RX_BUF_SIZE   (128u * 1024u)
+static uint8_t s_wavRxBuf[WAV_RX_BUF_SIZE];
+
 static const char *TAG = "cloud_upload";
 
 /* UART port that connects to STM32 (same as the rest of nora_ble_bridge.c) */
@@ -317,23 +323,16 @@ bool CloudUpload_Transcribe(const char *filename,
  * ─────────────────────────────────────────────────────────────────────────── */
 bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSize)
 {
-    if (fileSize == 0 || fileSize > 1024u * 1024u)
+    if (fileSize == 0 || fileSize > WAV_RX_BUF_SIZE)
     {
-        ESP_LOGE(TAG, "StreamWav: invalid fileSize=%lu", (unsigned long)fileSize);
-        SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
-        return false;
-    }
-
-    uint8_t *buf = (uint8_t *)malloc(fileSize);
-    if (!buf)
-    {
-        ESP_LOGE(TAG, "StreamWav: malloc(%lu) failed", (unsigned long)fileSize);
+        ESP_LOGE(TAG, "StreamWav: invalid fileSize=%lu (max %u)",
+                 (unsigned long)fileSize, WAV_RX_BUF_SIZE);
         SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
         return false;
     }
 
     /* Tell STM32 to start streaming NOW. No HTTP yet — STM32's bytes go
-     * straight from UART RX FIFO into our heap buffer at full UART speed. */
+     * straight from UART RX FIFO into the static buffer at full UART speed. */
     SendUart("AUDIO:READY\n");
     ESP_LOGI(TAG, "StreamWav: AUDIO:READY sent — buffering %lu bytes from UART",
              (unsigned long)fileSize);
@@ -344,13 +343,12 @@ bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSiz
         uint32_t toRead = fileSize - got_total;
         if (toRead > STREAM_CHUNK_SIZE) toRead = STREAM_CHUNK_SIZE;
 
-        int got = uart_read_bytes(uart_port, buf + got_total, (size_t)toRead,
+        int got = uart_read_bytes(uart_port, s_wavRxBuf + got_total, (size_t)toRead,
                                   pdMS_TO_TICKS(30000));
         if (got <= 0)
         {
             ESP_LOGE(TAG, "StreamWav: UART timeout at %lu/%lu",
                      (unsigned long)got_total, (unsigned long)fileSize);
-            free(buf);
             SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
             return false;
         }
@@ -377,7 +375,6 @@ bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSiz
     if (!client)
     {
         ESP_LOGE(TAG, "StreamWav: http_client_init failed");
-        free(buf);
         SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
         return false;
     }
@@ -389,7 +386,6 @@ bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSiz
     {
         ESP_LOGE(TAG, "StreamWav: open failed: %s", esp_err_to_name(err));
         esp_http_client_cleanup(client);
-        free(buf);
         SendUart("UPLOAD:FAIL:"); SendUart(filename); SendUart("\n");
         return false;
     }
@@ -402,7 +398,7 @@ bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSiz
         if (toWrite > STREAM_CHUNK_SIZE) toWrite = STREAM_CHUNK_SIZE;
 
         int written = esp_http_client_write(client,
-                                            (const char *)(buf + up_sent),
+                                            (const char *)(s_wavRxBuf + up_sent),
                                             (int)toWrite);
         if (written < 0)
         {
@@ -413,8 +409,6 @@ bool CloudUpload_StreamWav(const char *filename, int uart_port, uint32_t fileSiz
         }
         up_sent += (uint32_t)written;
     }
-
-    free(buf);   /* release RAM as soon as upload body is sent */
 
     int status = 0;
     if (ok)
