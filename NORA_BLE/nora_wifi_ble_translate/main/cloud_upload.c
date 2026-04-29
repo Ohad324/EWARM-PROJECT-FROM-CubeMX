@@ -37,10 +37,16 @@
 
 #define STREAM_CHUNK_SIZE  1024u   /* UART read + HTTP write chunk size */
 
-/* Static WAV receive buffer — sized for the largest recording the firmware
- * is allowed to send. 128 KB covers a 4-second 16 kHz mono 16-bit recording
- * (= 128000 bytes) with a small margin. Lives in BSS — zero malloc churn. */
-#define WAV_RX_BUF_SIZE   (128u * 1024u)
+/* Static WAV receive buffer — sized for the recording the firmware actually
+ * sends today (96512 bytes = 3 sec at 16 kHz mono 16-bit) with a small margin.
+ * Lives in BSS — zero malloc churn.
+ *
+ * Why exactly 96 KB and not larger: the ESP32-S3 BLE controller needs ~37 KB
+ * of free heap at init time. With 251 KB total app RAM, reserving 128 KB here
+ * left only 123 KB for BLE which is below its threshold and bricks BLE init
+ * (BLE_INIT: Malloc failed -> r_assert_param panic). 96 KB leaves 155 KB free,
+ * matching the known-good footprint of the previous malloc-based version. */
+#define WAV_RX_BUF_SIZE   (96u * 1024u)
 static uint8_t s_wavRxBuf[WAV_RX_BUF_SIZE];
 
 static const char *TAG = "cloud_upload";
