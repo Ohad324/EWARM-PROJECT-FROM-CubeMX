@@ -72,6 +72,13 @@ extern "C" {
             handle->ErrorCode = HAL_DMA2D_ERROR_NONE;
             handle->State     = HAL_DMA2D_STATE_READY;
         }
+
+        /* Signal TouchGFX that this DMA "completed" — without this, the framework
+         * waits forever for completion of the faulted blit. The HAL render loop
+         * stalls, Model::tick() stops running, Music_Poll() never drains
+         * xMusicQueue, and new thumbnails get dropped with "xMusicQueue full"
+         * — visible as the LCD stuck on the previously-rendered image. */
+        HAL::getInstance()->signalDMAInterrupt();
     }
 }
 

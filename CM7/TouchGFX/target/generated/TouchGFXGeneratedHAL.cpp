@@ -57,9 +57,13 @@ using namespace touchgfx;
 
 namespace
 {
-// Use the section "TouchGFX_Framebuffer" in the linker script to specify the placement of the buffer
+// Use the section "TouchGFX_Framebuffer" in the linker script to specify the placement of the buffer.
+// Framebuffer is 832 wide (visible 800 + 32 padding) to match the LTDC line pitch
+// hardcoded as `832 * 3` bytes in TouchGFXHAL::HAL_DSI_EndOfRefreshCallback. If the
+// allocation is the visible 800 (stride 2400) but LTDC walks rows with stride 2496,
+// each row drifts 96 bytes and the screen renders as offset/striped fragments.
 LOCATION_PRAGMA_NOLOAD("TouchGFX_Framebuffer")
-uint32_t frameBuf[(800 * 480 * 3 + 3) / 4] LOCATION_ATTRIBUTE_NOLOAD("TouchGFX_Framebuffer");
+uint32_t frameBuf[(832 * 480 * 3 + 3) / 4] LOCATION_ATTRIBUTE_NOLOAD("TouchGFX_Framebuffer");
 }
 
 void TouchGFXGeneratedHAL::initialize()
@@ -67,6 +71,10 @@ void TouchGFXGeneratedHAL::initialize()
     HAL::initialize();
     registerEventListener(*(Application::getInstance()));
     setFrameBufferStartAddresses((void*)frameBuf, (void*)0, (void*)0);
+    /* Match TouchGFX's internal stride to the 832-wide framebuffer so its
+     * advanceFrameBufferToRect() math agrees with the LTDC line pitch. The
+     * extra 32 columns are padding that LTDC skips by walking the stride. */
+    setFrameBufferSize(832, 480);
 
     /*
      * Add DMA2D to hardware decoder

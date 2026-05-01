@@ -1594,6 +1594,31 @@ void MPU_Config(void)
   MPU_InitStruct.IsBufferable     = MPU_ACCESS_BUFFERABLE;
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
+  /* --- REGION 4: SDRAM (0xD0000000, 32 MB) — TouchGFX Framebuffer + assets ---
+   * Contains TouchGFX_Framebuffer (LTDC scans this), Video_RGB_Buffer, .sdram_bss.
+   *
+   * Write-Through Cacheable (TEX=0, C=1, B=0):
+   *   • CPU writes go IMMEDIATELY to SDRAM — LTDC sees fresh pixels without
+   *     needing SCB_CleanDCache_by_Addr() before every refresh.
+   *   • CPU reads stay cached for fast access (asset blits, JPEG read).
+   *
+   * Without this region SDRAM uses the default Cortex-M7 attribute for
+   * 0xC0000000-0xDFFFFFFF, producing visible cache coherency artifacts:
+   * stale rows / color drift / stuck old-frame contents when LTDC reads
+   * while D-cache still holds the latest CPU writes. */
+  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER4;
+  MPU_InitStruct.BaseAddress      = 0xD0000000;
+  MPU_InitStruct.Size             = MPU_REGION_SIZE_32MB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;   /* Write-Through */
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
