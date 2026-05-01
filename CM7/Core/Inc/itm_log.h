@@ -160,11 +160,32 @@ static const char * const s_itmLabels[ITM_TOKEN_COUNT] = {
 };
 
 /* ─────────────────────────────────────────────────────────────────────────
- * DIAGNOSTIC: ITM macros disabled (no-ops) to test whether ITM busy-wait
- * loops on ITM->PORT[0].u32 are interfering with TouchGFX/DMA2D timing.
- * To re-enable: revert this section to the original (ITM_STAGE writing
- * label+cycles, STAGE writing RTT, STAGE_CYCLES writing PORT[0]).
+ * RELEASE_BUILD compiles ITM macros out completely.
+ * Otherwise (debug): ITM_STAGE writes label+cycle count to PORT[0],
+ *                    STAGE writes RTT, STAGE_CYCLES writes PORT[0].
  * ─────────────────────────────────────────────────────────────────────── */
-#define ITM_STAGE(token)         do { (void)(token); } while (0)
-#define STAGE(msg)               do { (void)(msg);   } while (0)
-#define STAGE_CYCLES(label)      do { (void)(label); } while (0)
+#ifdef RELEASE_BUILD
+#  define ITM_STAGE(token)         do { (void)(token); } while (0)
+#  define STAGE(msg)               do { (void)(msg);   } while (0)
+#  define STAGE_CYCLES(label)      do { (void)(label); } while (0)
+#else
+#define ITM_STAGE(token)                                        \
+    do {                                                        \
+        if (((ITM->TCR & ITM_TCR_ITMENA_Msk) != 0UL) &&       \
+            ((ITM->TER & 1UL               ) != 0UL)) {        \
+            _itm_str(s_itmLabels[(int)(token)]);                \
+            _itm_str(" cyc=");                                  \
+            _itm_u32hex(DWT->CYCCNT);                          \
+        }                                                       \
+    } while (0)
+
+/* ── STAGE — RTT only ────────────────────────────────────────────────────── */
+#define STAGE(msg)   SEGGER_RTT_WriteString(0, msg "\n")
+
+/* ── STAGE_CYCLES — PORT[0] label + decimal cycle count ─────────────────── */
+#define STAGE_CYCLES(label)          \
+    do {                             \
+        _itm_str(label " cyc=");     \
+        _itm_u32(DWT->CYCCNT);       \
+    } while (0)
+#endif /* RELEASE_BUILD */

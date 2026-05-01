@@ -51,6 +51,12 @@ extern volatile uint32_t g_logDropped;
  *  • If queue still full after timeout, increments g_logDropped (no block). */
 static inline void Log_ToQueue(const char *pcMsg, uint32_t val)
 {
+#ifdef RELEASE_BUILD
+    /* Release build: all runtime logging compiled out — every RLOG/SD_LOG/BLE_LOG/
+     * RTT_LOG/Log_ToQueue call site becomes a no-op. The compiler optimizes the
+     * empty body away. Define RELEASE_BUILD in IAR Project Options to enable. */
+    (void)pcMsg; (void)val;
+#else
     /* Never call from ISR — use SEGGER_RTT_WriteString() there instead.
      * Guard: if somehow called from ISR, drop silently rather than assert. */
     if (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) { g_logDropped++; return; }
@@ -67,6 +73,7 @@ static inline void Log_ToQueue(const char *pcMsg, uint32_t val)
         if (xQueueSend(xLogQueue, &e, waitTicks) != pdTRUE)
             g_logDropped++;   /* queue still full — count the drop, never block further */
     }
+#endif
 }
 
 /* ── RLOG — timestamped log entry via queue ─────────────────────────────── *
@@ -79,8 +86,13 @@ static inline void Log_ToQueue(const char *pcMsg, uint32_t val)
 
 /* ── Legacy macros — for early-boot code before RTOS starts ─────────────── *
  * These call printf() directly (SWO Terminal I/O).  Safe only before        *
- * vTaskStartScheduler() when no real-time tasks are running.                 */
-
+ * vTaskStartScheduler() when no real-time tasks are running.                 *
+ * All compile out when RELEASE_BUILD is defined.                             */
+#ifdef RELEASE_BUILD
+#  define LOG(fmt, ...)        do { } while (0)
+#  define LOG_TS(fmt, ...)     do { } while (0)
+#  define RTT_TS(msg)          do { } while (0)
+#else
 /* LOG — printf-style to Terminal I/O AND RTT (no timestamp). */
 #define LOG(fmt, ...) do {                                                  \
     char _lb[256];                                                          \
@@ -104,6 +116,7 @@ static inline void Log_ToQueue(const char *pcMsg, uint32_t val)
     SEGGER_RTT_WriteString(0, (msg));                                       \
     printf("[T+%7lu] %s", (unsigned long)HAL_GetTick(), (msg));            \
 } while (0)
+#endif /* RELEASE_BUILD */
 
 #ifdef __cplusplus
 }

@@ -47,10 +47,10 @@ extern "C" {
 
     static void DMA2D_XferErrorCallback(DMA2D_HandleTypeDef* handle)
     {
-        /* TODO[REMOVE-NEXT-SESSION]: log DMA2D fault state via RTT and recover.
-         * Replaces the original infinite-loop trap so the system keeps running
-         * and we can see exactly which transfer failed. */
         DMA2D_TypeDef *d = handle ? handle->Instance : DMA2D;
+#ifndef RELEASE_BUILD
+        /* Debug: log DMA2D fault state via RTT so we can see exactly which
+         * transfer failed. Release build skips the format+RTT write entirely. */
         char dbg[256];
         std::snprintf(dbg, sizeof(dbg),
             "[DMA2D ERR] ISR=0x%08X CR=0x%08X "
@@ -63,8 +63,9 @@ extern "C" {
             handle ? (unsigned)handle->ErrorCode : 0u,
             handle ? (unsigned)handle->State     : 0u);
         SEGGER_RTT_WriteString(0, dbg);
+#endif /* RELEASE_BUILD */
 
-        /* Clear all error flags so the next transfer can proceed */
+        /* Clear all error flags so the next transfer can proceed (both builds) */
         d->IFCR = DMA2D_FLAG_TE | DMA2D_FLAG_CE | DMA2D_FLAG_CAE
                 | DMA2D_FLAG_TW | DMA2D_FLAG_TC | DMA2D_FLAG_CTC;
         if (handle) {

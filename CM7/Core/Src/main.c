@@ -235,7 +235,9 @@ int main(void)
 /* USER CODE END Boot_Mode_Sequence_0 */
 
   /* MPU Configuration--------------------------------------------------------*/
+  _itm_cycles_enable();  /* arm DWT cycle counter before first ITM_STAGE */
   MPU_Config();
+  ITM_STAGE(ITM_INIT_MPU_DONE);
 
   /* Enable the CPU Cache */
 
@@ -267,6 +269,7 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
+  ITM_STAGE(ITM_INIT_CLOCKS_DONE);
 /* USER CODE BEGIN Boot_Mode_Sequence_2 */
 /* When system initialization is finished, Cortex-M7 will release Cortex-M4 by means of
 HSEM notification */
@@ -310,7 +313,9 @@ Error_Handler();
   _itm_str("[SAI4] SAIEN=");         _itm_u32((SAI4_Block_A->CR1 >> 16u) & 1u);
 #endif
   MX_UART8_Init();
+  ITM_STAGE(ITM_INIT_UART8_DONE);
   MX_DFSDM1_Init();
+  ITM_STAGE(ITM_INIT_DFSDM_DONE);
   MX_TouchGFX_Init();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
@@ -330,8 +335,11 @@ Error_Handler();
   configASSERT(xLogQueue != NULL);
 
   BLE_UART_Init();
+  ITM_STAGE(ITM_INIT_BLEuart_DONE);
   VoiceRec_Init(); /* button EXTI + DFSDM + DMA + RTOS objects */
+  ITM_STAGE(ITM_INIT_VOICEREC_DONE);
   AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
+  ITM_STAGE(ITM_INIT_AUDIOSD_DONE);
 
   CommandHandler_Init(); /* create CMD: message queue                              */
   /* USER CODE END 2 */
@@ -372,14 +380,21 @@ Error_Handler();
 
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);
+  ITM_STAGE(ITM_INIT_TASK_UART);
   /* CommandHandler: receives CMD: messages from NORA, dispatches to screen.
      Stack 1024 words.  Priority below normal: display updates are not time-critical. */
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1536u, NULL,
               osPriorityBelowNormal, NULL);
+  ITM_STAGE(ITM_INIT_TASK_CMDHANDLER);
   /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
   xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
+  ITM_STAGE(ITM_INIT_TASK_VOICEREC);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
+  ITM_STAGE(ITM_INIT_TASK_SDWRITE);
+#ifndef RELEASE_BUILD
   xTaskCreate(RTTLogTask,    "RTTLogTask",    1024u, NULL,        1u, NULL);
+  ITM_STAGE(ITM_INIT_TASK_RTTLOG);
+#endif /* RELEASE_BUILD — strip diagnostic log task in release */
   /* HealthMonTask removed — health logged by SDWriteTask after each f_close() */
   /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
   RtosTrace_Init();
@@ -394,6 +409,7 @@ Error_Handler();
   /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
+  ITM_STAGE(ITM_INIT_KERNEL_START);
   osKernelStart();
 
   /* We should never get here as control is now taken by the scheduler */
