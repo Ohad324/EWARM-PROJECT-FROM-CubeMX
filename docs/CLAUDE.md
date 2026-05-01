@@ -1,5 +1,11 @@
 # CLAUDE.md — STM32H747I-DISCO Voice Recorder
 
+## STRICT RULES — NO EXCEPTIONS
+- **NEVER use malloc() or heap_caps_malloc() anywhere — not on NORA ESP32, not on STM32.**
+  On NORA: heap is fragmented at runtime after WiFi+BLE+HTTP init — malloc always fails for large buffers.
+  On STM32: heap is not used; all buffers must be statically allocated.
+  Use static BSS buffers only on both sides.
+
 ## Project Identity
 - Board: STM32H747I-DISCO
 - Active core: Cortex-M7

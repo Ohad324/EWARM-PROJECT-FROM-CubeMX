@@ -26,6 +26,8 @@
 #include "esp_crt_bundle.h"
 #include "cJSON.h"
 
+#include "esp_bt.h"   /* esp_bt_controller_mem_release — BLE permanently off */
+
 #include "nimble/nimble_port.h"
 #include "nimble/nimble_port_freertos.h"
 #include "host/ble_hs.h"
@@ -60,8 +62,8 @@
 #define BLE_DEFAULT_LANGPAIR "en|he"
 
 /* Wi-Fi credentials — change before flashing */
-#define WIFI_SSID        "Sightsys_SEC24"
-#define WIFI_PASSWORD    "0542584033"
+#define WIFI_SSID        "Ohad2.4"
+#define WIFI_PASSWORD    "paypal324"
 #define WIFI_MAX_RETRY   5
 
 /* ── Google Translate response buffer ───────────────────────────────────── */
@@ -176,6 +178,7 @@ static int nus_rx_access(uint16_t conn_handle, uint16_t attr_handle,
 }
 
 /* ── GATT service table ─────────────────────────────────────────────────── */
+__attribute__((unused))
 static const struct ble_gatt_svc_def gatt_svcs[] = {
     {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
@@ -757,10 +760,44 @@ static void uart_cmd_task(void *param)
     }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * TODO[REMOVE-NEXT-SESSION]: temporary heap diagnostic.
+ * Added to determine whether NORA-W106 has PSRAM available and how much
+ * internal SRAM is free at runtime. Once we decide between static-BSS vs
+ * PSRAM placement for s_wavRxBuf, delete heap_diag(), heap_monitor_task(),
+ * and all heap_diag(...) call sites in app_main(). Also delete the
+ * heap_monitor_task xTaskCreate call below.
+ * ─────────────────────────────────────────────────────────────────────── */
+static void heap_diag(const char *stage)
+{
+    multi_heap_info_t internalInfo, spiramInfo;
+    heap_caps_get_info(&internalInfo, MALLOC_CAP_INTERNAL);
+    heap_caps_get_info(&spiramInfo,   MALLOC_CAP_SPIRAM);
+    ESP_LOGI("HEAP", "[%s] INT free=%u largest=%u min_ever=%u alloc=%u | PSRAM free=%u largest=%u alloc=%u",
+             stage,
+             (unsigned)internalInfo.total_free_bytes,
+             (unsigned)internalInfo.largest_free_block,
+             (unsigned)internalInfo.minimum_free_bytes,
+             (unsigned)internalInfo.total_allocated_bytes,
+             (unsigned)spiramInfo.total_free_bytes,
+             (unsigned)spiramInfo.largest_free_block,
+             (unsigned)spiramInfo.total_allocated_bytes);
+}
+
+static void heap_monitor_task(void *arg)
+{
+    (void)arg;
+    while (1) {
+        vTaskDelay(pdMS_TO_TICKS(5000));
+        heap_diag("5s");
+    }
+}
+
 /* ── Entry point ────────────────────────────────────────────────────────── */
 void app_main(void)
 {
     ESP_LOGI(TAG, "app_main() started");
+    heap_diag("boot");                         /* TODO[REMOVE-NEXT-SESSION] */
 
     /* NVS required by BLE stack */
     esp_err_t ret = nvs_flash_init();
@@ -779,39 +816,26 @@ void app_main(void)
     CommandRouter_Init();
 
     uart_init();
-    wifi_init();
+    heap_diag("after-uart");                   /* TODO[REMOVE-NEXT-SESSION] */
 
-    /* Wait for Wi-Fi to associate before starting BLE so the coexistence
-     * arbiter does not starve the 4-way handshake.  If Wi-Fi never connects
-     * we proceed anyway after the retry timeout so BLE still works.       */
+    wifi_init();
+    heap_diag("after-wifi");                   /* TODO[REMOVE-NEXT-SESSION] */
+
+    /* Wait for Wi-Fi to associate before continuing. */
     xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT,
                         pdFALSE, pdTRUE, pdMS_TO_TICKS(35000));
 
-    /* NimBLE init */
-    ESP_ERROR_CHECK(nimble_port_init());
-    ble_hs_cfg.sync_cb  = on_sync;
-    ble_hs_cfg.reset_cb = on_reset;
+    /* BLE permanently disabled — release controller memory back to heap.
+     * Frees ~71 KB so the 96 KB static WAV buffer fits without OOM.
+     * To re-enable BLE later: remove this release and restore the NimBLE
+     * init block that previously lived here. */
+    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_BTDM));
 
-    /* Register GATT services */
-    ble_svc_gap_init();
-    ble_svc_gatt_init();
-    int rc = ble_gatts_count_cfg(gatt_svcs);
-    assert(rc == 0);
-    rc = ble_gatts_add_svcs(gatt_svcs);
-    assert(rc == 0);
+    heap_diag("after-ble-released");           /* TODO[REMOVE-NEXT-SESSION] */
 
-    /* Set device name visible in GAP */
-    ble_svc_gap_device_name_set(DEVICE_NAME);
-
-    /* BLE→translate queue (8 words deep) — must exist before BLE stack starts */
-    s_ble_queue = xQueueCreate(8, BLE_WORD_MAX);
-    assert(s_ble_queue);
-
-    nimble_port_freertos_init(ble_host_task);
-
-    /* Start tasks */
-    xTaskCreate(ble_translate_task, "ble_xlat", 12288, NULL, 5, NULL);
-    xTaskCreate(uart_cmd_task,      "uart_cmd", 12288, NULL, 5, NULL);
+    /* Start tasks (no BLE translate task — BLE is off) */
+    xTaskCreate(uart_cmd_task,     "uart_cmd", 12288, NULL, 5, NULL);
+    xTaskCreate(heap_monitor_task, "heap_mon", 4096,  NULL, 1, NULL); /* TODO[REMOVE-NEXT-SESSION]: 4 KB stack — ESP_LOGI overflows 2 KB */
 
     ESP_LOGI(TAG, "NORA Wi-Fi+BLE Translate Bridge started");
 }
