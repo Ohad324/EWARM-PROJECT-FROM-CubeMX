@@ -13,6 +13,7 @@
  */
 #include "music_task.h"
 #include "nora_ble_bridge.h"
+#include "pc_discovery.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -25,6 +26,12 @@
 #include "esp_crt_bundle.h"
 #include "cJSON.h"
 
+/* Build "http://<ip>:<port>/play" into a caller-supplied buffer */
+static void pc_player_url(char *buf, size_t buflen)
+{
+    snprintf(buf, buflen, "http://%s:%u/play", pc_get_ip(), pc_get_port());
+}
+
 /* ── Configuration ──────────────────────────────────────────────────────── */
 #define MUSIC_TAG              "MUSIC"
 #define YOUTUBE_API_KEY        ""  /* leave empty to skip direct API and use PC fallback */
@@ -33,7 +40,7 @@
 #define THUMB_STREAM_CHUNK     512  /* bytes per UART write during streaming */
 #define THUMB_MIN_BYTES        5000 /* below this → YouTube placeholder image */
 #define UART_MUTEX_TIMEOUT_MS  5000
-#define PC_PLAYER_URL          "http://10.100.102.7:5000/play"
+/* PC_PLAYER_URL built at runtime via pc_discovery — see pc_player_url() */
 
 /* ── Request struct ─────────────────────────────────────────────────────── */
 typedef struct {
@@ -294,8 +301,10 @@ static void post_to_pc_player(const char *video_id, const char *title, const cha
              "{\"videoId\":\"%s\",\"title\":\"%s\",\"artist\":\"%s\"}",
              video_id, title, artist);
 
+    char url[64];
+    pc_player_url(url, sizeof(url));
     esp_http_client_config_t cfg = {
-        .url        = PC_PLAYER_URL,
+        .url        = url,
         .timeout_ms = 1000,
     };
     esp_http_client_handle_t client = esp_http_client_init(&cfg);
@@ -339,8 +348,10 @@ static bool search_via_pc(const char *query)
     char body[256];
     int  blen = snprintf(body, sizeof(body), "{\"query\":\"%s\"}", query);
 
+    char url[64];
+    pc_player_url(url, sizeof(url));
     esp_http_client_config_t cfg = {
-        .url        = PC_PLAYER_URL,
+        .url        = url,
         .timeout_ms = 15000,   /* PC scrapes YouTube — allow up to 15 s */
     };
     esp_http_client_handle_t client = esp_http_client_init(&cfg);
@@ -436,15 +447,18 @@ static void music_task(void *param)
          * Once we have the videoId + thumbnail URL the rest of the flow
          * is the same regardless of which option succeeded.
          */
-        bool found = false;
+        bool found            = false;
+        bool used_pc_fallback = false;  /* PC already opened Chrome → skip second POST */
 
         /* Try the YouTube API only if a key has been configured */
         if (strlen(YOUTUBE_API_KEY) > 0)
             found = youtube_search();   /* fills s_video_id_buf, s_url_buf on success */
 
         /* If API is not configured or returned an error — ask the PC */
-        if (!found)
+        if (!found) {
             found = search_via_pc(s_query_buf);  /* PC opens Chrome, returns videoId */
+            used_pc_fallback = found;
+        }
 
         /* Step B: send result to STM32 over UART.
          * This is independent of the PC — happens whether or not the PC is still busy. */
@@ -485,8 +499,9 @@ static void music_task(void *param)
 
         /* Step C: tell the PC player to open Chrome with this video — AFTER STM32 is done.
          * Only needed when the YouTube API path was used (Option 1 above).
-         * When the PC fallback (Option 2) was used, Chrome is already open — skip this. */
-        if (found && s_video_id_buf[0] != '\0')
+         * When the PC fallback (Option 2) was used, Chrome is already open — skip,
+         * otherwise the second POST kills the running Chrome and replays. */
+        if (found && !used_pc_fallback && s_video_id_buf[0] != '\0')
             post_to_pc_player(s_video_id_buf, s_title_buf, s_channel_buf);
     }
 }

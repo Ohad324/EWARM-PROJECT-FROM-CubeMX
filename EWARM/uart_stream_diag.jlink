@@ -1,0 +1,93 @@
+// uart_stream_diag.jlink
+// Automated UART stream diagnostic — triggers one full recording cycle
+// and dumps all health/state variables after the pipeline completes.
+//
+// Addresses from STM32H747I-DISCO_CM7.map (rebuild if map changes):
+//   g_UartHealth      0x2402D71C  (7x uint32 = 28 bytes)
+//     +0x00  tx_retries
+//     +0x04  tx_hard_fails
+//     +0x08  tx_last_err_code   (ORE=8, FE=4, NE=2, PE=1)
+//     +0x0C  tx_last_declared   (bytes announced to NORA)
+//     +0x10  tx_last_sent       (bytes actually transmitted)
+//     +0x14  tx_transfer_count
+//     +0x18  rx_overruns
+//
+//   g_AudioHealth     0x24038398  (4x uint32 = 16 bytes)
+//     +0x00  dfsdm_overruns
+//     +0x04  sd_write_max_ms
+//     +0x08  buffer_misses
+//     +0x0C  total_bytes_written
+//
+//   g_State           0x240383A8  (uint8:  0=IDLE 1=RECORDING 2=SAVING)
+//   g_SampleCount     0x240383AC  (uint32)
+//   g_sdFreeKB        0x240383B0  (uint32)
+//   g_FileIndex       0x240383B8  (uint32)
+//   s_dmaQueueOverflow 0x240383C4 (uint32)
+
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// ── Step 1: verify CPU is running ──────────────────────────────────────────
+echo "=== uart_stream_diag: connected ==="
+echo "--- g_State before trigger (expect 0=IDLE) ---"
+mem8 0x240383A8 1
+
+// ── Step 2: trigger recording via EXTI SWIER (blue button PC13) ────────────
+echo "--- triggering recording ---"
+w4 0x58000008 0x00002000
+sleep 200
+
+echo "--- g_State after trigger (expect 1=RECORDING) ---"
+mem8 0x240383A8 1
+
+// ── Step 3: wait for full pipeline to complete ──────────────────────────────
+// 3s record + ~1s SD write + ~2s UART stream + 5s NORA GCS upload margin
+sleep 120000
+
+// ── Step 4: verify back to IDLE ────────────────────────────────────────────
+echo "--- g_State after pipeline (expect 0=IDLE) ---"
+mem8 0x240383A8 1
+
+// ── Step 5: dump UART health ────────────────────────────────────────────────
+echo "=== g_UartHealth (0x2402D71C) ==="
+echo "--- [+00] tx_retries ---"
+mem32 0x2402D71C 1
+echo "--- [+04] tx_hard_fails ---"
+mem32 0x2402D720 1
+echo "--- [+08] tx_last_err_code (ORE=8 FE=4 NE=2 PE=1) ---"
+mem32 0x2402D724 1
+echo "--- [+0C] tx_last_declared (bytes announced) ---"
+mem32 0x2402D728 1
+echo "--- [+10] tx_last_sent (bytes actually sent) ---"
+mem32 0x2402D72C 1
+echo "--- [+14] tx_transfer_count ---"
+mem32 0x2402D730 1
+echo "--- [+18] rx_overruns ---"
+mem32 0x2402D734 1
+
+// ── Step 6: dump audio health ───────────────────────────────────────────────
+echo "=== g_AudioHealth (0x24038398) ==="
+echo "--- [+00] dfsdm_overruns (must be 0) ---"
+mem32 0x24038398 1
+echo "--- [+04] sd_write_max_ms ---"
+mem32 0x2403839C 1
+echo "--- [+08] buffer_misses ---"
+mem32 0x240383A0 1
+echo "--- [+0C] total_bytes_written ---"
+mem32 0x240383A4 1
+
+// ── Step 7: dump pipeline state ─────────────────────────────────────────────
+echo "=== Pipeline state ==="
+echo "--- g_SampleCount ---"
+mem32 0x240383AC 1
+echo "--- g_sdFreeKB ---"
+mem32 0x240383B0 1
+echo "--- g_FileIndex ---"
+mem32 0x240383B8 1
+echo "--- s_dmaQueueOverflow ---"
+mem32 0x240383C4 1
+
+echo "=== uart_stream_diag: DONE ==="
+exit

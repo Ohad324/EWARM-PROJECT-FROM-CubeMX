@@ -1,0 +1,31 @@
+// run_5_recordings.jlink — fire 5 blue-button presses via EXTI SWIER1 bit13.
+// Spacing: 30 s between presses (record 3 s + SD + UART + NORA upload + STM32 thumbnail render).
+// CPU runs free — no halts.
+
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+echo === recording 1/5 ===
+w4 0x58000008 0x00002000
+sleep 30000
+
+echo === recording 2/5 ===
+w4 0x58000008 0x00002000
+sleep 30000
+
+echo === recording 3/5 ===
+w4 0x58000008 0x00002000
+sleep 30000
+
+echo === recording 4/5 ===
+w4 0x58000008 0x00002000
+sleep 30000
+
+echo === recording 5/5 ===
+w4 0x58000008 0x00002000
+sleep 30000
+
+echo === all 5 recordings triggered ===
+exit

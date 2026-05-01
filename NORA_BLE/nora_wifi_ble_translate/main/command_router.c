@@ -23,24 +23,21 @@
 #include "command_router.h"
 #include "cloud_upload.h"
 #include "music_task.h"
+#include "pc_discovery.h"
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include "driver/uart.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <strings.h>  /* strncasecmp */
 
 static const char *TAG = "cmd_router";
 
 /* UART port shared with the rest of the bridge */
 #define ROUTER_UART_PORT    UART_NUM_1
 
-/* PC server endpoint */
-#define PC_SERVER_URL  "http://" PC_IP ":" STRINGIFY(PC_PORT) "/command"
-
-/* Stringify helper for PC_PORT integer → string in URL */
-#define STRINGIFY_(x) #x
-#define STRINGIFY(x)  STRINGIFY_(x)
+/* PC server endpoint — IP/port discovered at runtime via pc_discovery */
 
 /* ── Keyword tables ──────────────────────────────────────────────────────── */
 
@@ -102,8 +99,10 @@ static void RouteToPC(const char *transcript)
 
     ESP_LOGI(TAG, "Rule A → PC: %s", body);
 
+    char url[64];
+    snprintf(url, sizeof(url), "http://%s:%u/command", pc_get_ip(), pc_get_port());
     esp_http_client_config_t cfg = {
-        .url        = PC_SERVER_URL,
+        .url        = url,
         .method     = HTTP_METHOD_POST,
         .timeout_ms = 5000,
     };
@@ -156,7 +155,7 @@ static void RouteUnknown(const char *transcript)
 
 void CommandRouter_Init(void)
 {
-    ESP_LOGI(TAG, "command_router ready (PC=%s:%d)", PC_IP, PC_PORT);
+    ESP_LOGI(TAG, "command_router ready (PC will be discovered at runtime)");
 }
 
 /* ── CommandRouter_Route ─────────────────────────────────────────────────── */
@@ -172,9 +171,22 @@ void CommandRouter_Route(const char *transcript)
 
     if (ContainsKeyword(transcript, "play"))
     {
-        /* Rule A1 — "play X": YouTube search via music_task (voice path) */
-        ESP_LOGI(TAG, "Rule A1 → music_request: %s", transcript);
-        music_request(transcript);
+        /* Rule A1 — "play X": find "play " anywhere in the transcript and
+         * forward only the part after it. Handles "hey Noah play Beatles"
+         * → "Beatles". Falls back to full transcript if "play " not found
+         * as a word boundary. */
+        const char *q   = transcript;
+        const char *hit = NULL;
+        for (const char *p = transcript; *p; p++) {
+            if ((p == transcript || p[-1] == ' ') &&
+                strncasecmp(p, "play ", 5) == 0) {
+                hit = p + 5;
+                break;
+            }
+        }
+        if (hit && *hit) q = hit;
+        ESP_LOGI(TAG, "Rule A1 → music_request: %s", q);
+        music_request(q);
     }
     else if (MatchesAny(transcript, PLAYBACK_CONTROL_KEYWORDS))
     {

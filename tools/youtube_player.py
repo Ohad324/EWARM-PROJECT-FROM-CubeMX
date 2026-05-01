@@ -455,11 +455,35 @@ class Handler(BaseHTTPRequestHandler):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
+# ── UDP discovery responder ───────────────────────────────────────────────────
+# NORA broadcasts "NORA_HELLO" on UDP port 5001 at boot; we reply with our IP.
+DISCOVERY_PORT = 5001
+
+def discovery_responder(local_ip: str, http_port: int):
+    """Background thread: reply to NORA's UDP broadcast with our IP+port."""
+    import socket, threading
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind(("0.0.0.0", DISCOVERY_PORT))
+    print(f"[disc]   UDP discovery listening on :{DISCOVERY_PORT}")
+    while True:
+        try:
+            data, addr = sock.recvfrom(64)
+            msg = data.decode("ascii", errors="replace").strip()
+            if msg == "NORA_HELLO":
+                reply = f"PLAYER:{local_ip}:{http_port}".encode("ascii")
+                sock.sendto(reply, addr)
+                print(f"[disc]   NORA_HELLO from {addr[0]} → replied {reply.decode()}")
+        except Exception as e:
+            print(f"[disc]   error: {e}")
+
+
 if __name__ == "__main__":
     server = HTTPServer(("0.0.0.0", PORT), Handler)
 
     # Print the local IP so NORA knows where to POST
-    import socket
+    import socket, threading
     # Detect local IP by briefly connecting to an external address (no data is sent)
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -471,6 +495,13 @@ if __name__ == "__main__":
 
     # Advertise as nora-player.local so NORA can find us without a hardcoded IP
     zeroconf = register_mdns(local_ip, PORT)
+
+    # Start UDP discovery responder in a daemon thread
+    threading.Thread(
+        target=discovery_responder,
+        args=(local_ip, PORT),
+        daemon=True,
+    ).start()
 
     print(f"[player] Listening on http://0.0.0.0:{PORT}/play")
     print(f"[player] mDNS hostname:  http://nora-player.local:{PORT}/play")

@@ -267,6 +267,53 @@
 			"problemMatcher": []
 		},
 		{
+			"label": "Auto-trigger 5 Recordings (JLink SWIER)",
+			"detail": "Simulates 5 blue-button presses, 30 s apart. Watch NORA monitor + STM32 RTT to see which cycles complete.",
+			"type": "shell",
+			"command": "\"C:\\Program Files\\SEGGER\\JLink_V930a\\JLink.exe\" -device STM32H747XI_M7 -if SWD -speed 4000 -autoconnect 1 -CommandFile \"${workspaceFolder}\\EWARM\\run_5_recordings.jlink\"",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"group": "test",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "Start NORA Music Player (Python @ :5000)",
+			"detail": "Kills any process holding ports 5000/5001, then launches tools/youtube_player.py.",
+			"type": "shell",
+			"command": "Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Get-NetUDPEndpoint -LocalPort 5001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; python \"${workspaceFolder}\\tools\\youtube_player.py\"",
+			"options": {
+				"shell": {
+					"executable": "powershell.exe",
+					"args": [
+						"-NoProfile",
+						"-ExecutionPolicy",
+						"Bypass",
+						"-Command"
+					]
+				}
+			},
+			"isBackground": true,
+			"group": "none",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
 			"label": "Clock-to-Mic Test (JLink — Flash + 20 PRE + SW Button + 10 REC)",
 			"detail": "Flash firmware, 20 DAP reads pre-recording (5s), SW blue-button via EXTI_SWIER1, 10 live reads during recording. Log saved to EWARM/runs/clock_test_*.log",
 			"type": "shell",

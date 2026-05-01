@@ -38,6 +38,7 @@
 #include "music_task.h"
 #include "cloud_upload.h"
 #include "command_router.h"
+#include "pc_discovery.h"
 
 /* Maximum WAV file size accepted from STM32 — sanity check only */
 #define AUDIO_FILE_MAX_BYTES  (4u * 1024u * 1024u)
@@ -784,14 +785,7 @@ static void heap_diag(const char *stage)
              (unsigned)spiramInfo.total_allocated_bytes);
 }
 
-static void heap_monitor_task(void *arg)
-{
-    (void)arg;
-    while (1) {
-        vTaskDelay(pdMS_TO_TICKS(5000));
-        heap_diag("5s");
-    }
-}
+/* heap_monitor_task removed — was logging every 5 s and cluttering output */
 
 /* ── Entry point ────────────────────────────────────────────────────────── */
 void app_main(void)
@@ -825,6 +819,9 @@ void app_main(void)
     xEventGroupWaitBits(s_wifi_event_group, WIFI_CONNECTED_BIT,
                         pdFALSE, pdTRUE, pdMS_TO_TICKS(35000));
 
+    /* Discover PC player on the LAN via UDP broadcast (best-effort, 3 s). */
+    pc_discovery_run(3000);
+
     /* BLE permanently disabled — release controller memory back to heap.
      * Frees ~71 KB so the 96 KB static WAV buffer fits without OOM.
      * To re-enable BLE later: remove this release and restore the NimBLE
@@ -835,7 +832,7 @@ void app_main(void)
 
     /* Start tasks (no BLE translate task — BLE is off) */
     xTaskCreate(uart_cmd_task,     "uart_cmd", 12288, NULL, 5, NULL);
-    xTaskCreate(heap_monitor_task, "heap_mon", 4096,  NULL, 1, NULL); /* TODO[REMOVE-NEXT-SESSION]: 4 KB stack — ESP_LOGI overflows 2 KB */
+    /* heap_monitor_task removed (was every-5s noise). Boot-time heap_diag calls remain. */
 
     ESP_LOGI(TAG, "NORA Wi-Fi+BLE Translate Bridge started");
 }

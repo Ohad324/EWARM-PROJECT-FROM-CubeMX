@@ -23,6 +23,8 @@
 #include <cassert>
 #include <touchgfx/hal/HAL.hpp>
 #include <touchgfx/hal/Paint.hpp>
+#include "SEGGER_RTT.h"   /* TODO[REMOVE-NEXT-SESSION]: DMA2D fault diagnostic */
+#include <cstdio>
 
 /* Makes touchgfx specific types and variables visible to this file */
 using namespace touchgfx;
@@ -45,10 +47,29 @@ extern "C" {
 
     static void DMA2D_XferErrorCallback(DMA2D_HandleTypeDef* handle)
     {
-        (void)handle; // Unused argument
-        while (1)
-        {
+        /* TODO[REMOVE-NEXT-SESSION]: log DMA2D fault state via RTT and recover.
+         * Replaces the original infinite-loop trap so the system keeps running
+         * and we can see exactly which transfer failed. */
+        DMA2D_TypeDef *d = handle ? handle->Instance : DMA2D;
+        char dbg[256];
+        std::snprintf(dbg, sizeof(dbg),
+            "[DMA2D ERR] ISR=0x%08X CR=0x%08X "
+            "FGMAR=0x%08X BGMAR=0x%08X OMAR=0x%08X NLR=0x%08X "
+            "FGPFCCR=0x%08X BGPFCCR=0x%08X OPFCCR=0x%08X "
+            "ErrorCode=0x%08X State=%u\n",
+            (unsigned)d->ISR,    (unsigned)d->CR,
+            (unsigned)d->FGMAR,  (unsigned)d->BGMAR, (unsigned)d->OMAR, (unsigned)d->NLR,
+            (unsigned)d->FGPFCCR,(unsigned)d->BGPFCCR,(unsigned)d->OPFCCR,
+            handle ? (unsigned)handle->ErrorCode : 0u,
+            handle ? (unsigned)handle->State     : 0u);
+        SEGGER_RTT_WriteString(0, dbg);
 
+        /* Clear all error flags so the next transfer can proceed */
+        d->IFCR = DMA2D_FLAG_TE | DMA2D_FLAG_CE | DMA2D_FLAG_CAE
+                | DMA2D_FLAG_TW | DMA2D_FLAG_TC | DMA2D_FLAG_CTC;
+        if (handle) {
+            handle->ErrorCode = HAL_DMA2D_ERROR_NONE;
+            handle->State     = HAL_DMA2D_STATE_READY;
         }
     }
 }
