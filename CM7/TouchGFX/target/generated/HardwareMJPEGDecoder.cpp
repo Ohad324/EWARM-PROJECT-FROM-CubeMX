@@ -48,6 +48,7 @@ uint32_t MCU_TotalNb = 0;
 touchgfx::DMA_Interface* DMA2D_reference;
 volatile uint32_t JPEG_OUT_Write_BufferIndex = 0;
 uint32_t FrameBufferWidth;
+volatile bool s_mjpeg_decode_active = false; /* true only while decodeMJPEGFrame DMA loop runs */
 }
 
 #define MCU_WIDTH_PIXELS            ((uint32_t)16)
@@ -413,9 +414,11 @@ void HardwareMJPEGDecoder::decodeMJPEGFrame(const uint8_t* const mjpgdata, const
 
         FrameBufferWidth = bufferStride / 3;
         FrameBufferAddress = outputBuffer;
+        DMA2D_reference = dma;   /* Set BEFORE JPEG_Decode_DMA so the first MCU
+                                  * callback never sees DMA2D_reference==nullptr. */
+        s_mjpeg_decode_active = true;
 
         JPEG_Decode_DMA(&hjpeg, const_cast<uint8_t*>(mjpgdata), length, outputBuffer);
-        DMA2D_reference = dma;
         do
         {
             JpegProcessing_End = JPEG_OutputHandler(&hjpeg);
@@ -427,6 +430,7 @@ void HardwareMJPEGDecoder::decodeMJPEGFrame(const uint8_t* const mjpgdata, const
             }
         } while (JpegProcessing_End != 1);
 
+        s_mjpeg_decode_active = false;
         /* reset flag */
         Jpeg_HWDecodingEnd = 0;
         DMA2D_CopyBufferEnd = 0;
@@ -616,6 +620,20 @@ extern "C"
      */
     void HAL_JPEG_DataReadyCallback(JPEG_HandleTypeDef* hjpeg, uint8_t* pDataOut, uint32_t OutDataLength)
     {
+        /* Guard: HAL_JPEG_Decode() (polling mode) fires this callback for every
+         * decode — including thumbnail/music paths that never call decodeMJPEGFrame().
+         * DMA2D_reference persists non-null after the first MJPEG video frame, so
+         * a nullptr check is insufficient.  s_mjpeg_decode_active is true only for
+         * the exact duration of decodeMJPEGFrame()'s DMA loop, making it the correct
+         * gate.  Without this guard, Jpeg_OUT_BufferTab is marked FULL during a
+         * thumbnail decode, the next DMA2D TC ISR calls externalJobExecute(), which
+         * completes and calls SEM_POST(semDecodingDone) from ISR context —
+         * osSemaphoreRelease() is not ISR-safe → FreeRTOS corruption → crash. */
+        if (!s_mjpeg_decode_active)
+        {
+            return;
+        }
+
         Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].State = JPEG_BUFFER_FULL;
         Jpeg_OUT_BufferTab[JPEG_OUT_Write_BufferIndex].DataBufferSize = OutDataLength;
         const uint32_t MCU = MCU_BlockIndex;
