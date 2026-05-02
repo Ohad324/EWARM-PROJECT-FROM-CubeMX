@@ -22,6 +22,9 @@ extern "C"
 {
 #include <string.h>
 #include <stm32h7xx_hal.h>
+#ifndef RELEASE_BUILD
+#include "SEGGER_RTT.h"   /* DMA2D NULLDST diagnostic — Debug only */
+#endif
 
     uint32_t JPEG_Decode_DMA(JPEG_HandleTypeDef* hjpeg, uint8_t* input, uint32_t chunkSizeIn, uint8_t* output);
     uint32_t JPEG_OutputHandler(JPEG_HandleTypeDef* hjpeg);
@@ -701,6 +704,34 @@ uint32_t JPEG_OutputHandler(JPEG_HandleTypeDef* hjpeg)
  */
 void DMA2D_CopyBuffer(JPEG_Data_BufferTypeDef& job)
 {
+#ifndef RELEASE_BUILD
+    /* Diagnostic + null-guard for the OMAR=0 / NLR PL=0 NL=16 fault.
+     *
+     * Root cause: this function is part of the MJPEG (video) decode path.
+     * `FrameBufferAddress` is a file-scope global (line 37) only set inside
+     * `decodeNextFrame()`. For a STILL JPEG decode (which uses
+     * `JPEG_GetDecodeColorConvertFunc` directly from jpeg_decoder.c, NOT
+     * this video pipeline), FrameBufferAddress stays at its .bss-zero
+     * default. Yet `JPEG_OutputHandler()` at line 682 still fires a
+     * `DMA2D_reference->start()` whenever a leftover `Jpeg_OUT_BufferTab`
+     * slot reports `JPEG_BUFFER_FULL` from a previous decode — that calls
+     * back here with `FrameBufferAddress=NULL`, OMAR is written as 0, and
+     * the hardware raises a Configuration Error.
+     *
+     * The fix: skip the transfer AND clear the stuck FULL state so the
+     * dispatcher doesn't keep retrying every TouchGFX frame.            */
+    if (FrameBufferAddress == 0)
+    {
+        SEGGER_RTT_WriteString(0,
+            "[DMA2D NULLDST DMA2D_CopyBuffer] FrameBufferAddress=NULL "
+            "(no MJPEG video active) - skipping & clearing stuck job\n");
+        job.State          = JPEG_BUFFER_EMPTY;   /* free this slot */
+        job.DataBufferSize = 0;
+        DMA2D_CopyBufferEnd = 1;                  /* mark dispatcher done */
+        return;
+    }
+#endif
+
     uint32_t yRef, refline;
     yRef = ((job.MCU_index * MCU_WIDTH_PIXELS) / JPEG_ConvertorParams.WidthExtend) * MCU_WIDTH_PIXELS;
     refline = JPEG_ConvertorParams.ScaledWidth * yRef;

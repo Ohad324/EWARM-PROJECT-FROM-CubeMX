@@ -295,6 +295,38 @@ bool TouchGFXHAL::beginFrame()
 void TouchGFXHAL::endFrame()
 {
     TouchGFXGeneratedHAL::endFrame();
+#ifndef RELEASE_BUILD
+    /* Bug Y diagnostic — count endFrame() calls + how many had
+     * frameBufferUpdatedThisFrame == true. If `updated` stops growing after
+     * press 1, the HAL precompiled flushFrameBuffer never set the flag for
+     * subsequent renders → H1. Logged once per ~60 frames (~1 s @ 60 Hz). */
+    static uint32_t ef_total   = 0;
+    static uint32_t ef_updated = 0;
+    ++ef_total;
+    if (frameBufferUpdatedThisFrame) { ++ef_updated; }
+    if ((ef_total % 60u) == 0u)
+    {
+        LOG("[LCD-EF] frames=%lu updated=%lu fbUp=%u\n",
+            (unsigned long)ef_total, (unsigned long)ef_updated,
+            (unsigned)frameBufferUpdatedThisFrame);
+        /* Bug Y / FMC-conflict probe per Gemini hint — dump the latched HW
+         * status registers. Sticky flags survive until cleared via ICR, so
+         * one dump per second catches any underrun / DMA transfer error /
+         * bus fault that fired any time before now.
+         *
+         * What to look for:
+         *   LTDC.ISR bit 1 (FUIF) → LTDC FIFO underrun (SDRAM starvation)
+         *   LTDC.ISR bit 2 (TERRIF) → LTDC transfer error
+         *   DMA1/2 LISR/HISR — TEIF bits → DMA transfer errors
+         *   SCB.CFSR bit 8/9 (IBUSERR/PRECISERR) + BFAR → CPU bus fault. */
+        LOG("[LCD-HW] LTDC.ISR=0x%08lX D1L=0x%08lX D1H=0x%08lX D2L=0x%08lX D2H=0x%08lX "
+            "CFSR=0x%08lX BFAR=0x%08lX\n",
+            (unsigned long)LTDC->ISR,
+            (unsigned long)DMA1->LISR, (unsigned long)DMA1->HISR,
+            (unsigned long)DMA2->LISR, (unsigned long)DMA2->HISR,
+            (unsigned long)SCB->CFSR, (unsigned long)SCB->BFAR);
+    }
+#endif
     if (frameBufferUpdatedThisFrame)
     {
         refreshRequested = true;
@@ -425,6 +457,23 @@ extern "C" {
         // actually intend to update the display in this frame.
         HAL::getInstance()->lockDMAToFrontPorch(refreshRequested);
 
+#ifndef RELEASE_BUILD
+        /* Bug Y diagnostic — count TE ticks + skipped (refresh not started)
+         * + log refreshRequested / displayRefreshing state. If TE keeps
+         * ticking but refresh never starts, displayRefreshing is stuck (H3)
+         * or refreshRequested is stuck false (H1 root cause). */
+        static uint32_t te_count   = 0;
+        static uint32_t te_skipped = 0;
+        ++te_count;
+        if (!(refreshRequested && !displayRefreshing)) { ++te_skipped; }
+        if ((te_count % 600u) == 0u)
+        {
+            LOG("[LCD-TE] ticks=%lu skipped=%lu refReq=%u dispRef=%u\n",
+                (unsigned long)te_count, (unsigned long)te_skipped,
+                (unsigned)refreshRequested, (unsigned)displayRefreshing);
+        }
+#endif
+
         if (refreshRequested && !displayRefreshing)
         {
 
@@ -444,6 +493,26 @@ extern "C" {
 
     void HAL_DSI_EndOfRefreshCallback(DSI_HandleTypeDef* hdsi)
     {
+#ifndef RELEASE_BUILD
+        /* Bug Y diagnostic — count left/right/stale EOR firings. If TE keeps
+         * ticking but EOR-right stops growing after press 1, DSI stalled
+         * mid-refresh and displayRefreshing is stuck true (H3). Stale = EOR
+         * fired while displayRefreshing was already false (out-of-order). */
+        static uint32_t eor_left  = 0;
+        static uint32_t eor_right = 0;
+        static uint32_t eor_stale = 0;
+        if (!displayRefreshing)         { ++eor_stale; }
+        else if (updateRegion == 0)     { ++eor_left;  }
+        else                            { ++eor_right; }
+        if (((eor_left + eor_right + eor_stale) % 60u) == 0u)
+        {
+            LOG("[LCD-EOR] left=%lu right=%lu stale=%lu region=%d dispRef=%u\n",
+                (unsigned long)eor_left, (unsigned long)eor_right,
+                (unsigned long)eor_stale, updateRegion,
+                (unsigned)displayRefreshing);
+        }
+#endif
+
         if (displayRefreshing)
         {
             if (updateRegion == 0)

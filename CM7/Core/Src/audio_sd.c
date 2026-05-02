@@ -443,6 +443,7 @@ bool AudioSD_SendFileToUART(const char *filename)
                            filename, (unsigned long)fileSize);
     HAL_UART_Transmit(&huart8, (uint8_t *)hdrMsg, (uint16_t)hdrLen, 200);
     STAGE("STREAM1 PASS");   /* header sent to NORA */
+    ITM_STAGE(ITM_STREAM1_HDR);
 
     /* Wait for NORA to send "AUDIO:READY" — signals TLS done + GCS HTTP PUT open.
      * Replaces the old fixed 1 s delay: the flag is set by AudioSD_NotifyReady()
@@ -455,6 +456,7 @@ bool AudioSD_SendFileToUART(const char *filename)
         if ((HAL_GetTick() - t0) >= 10000u)
         {
             RLOG0("STREAM2 FAIL");
+            ITM_STAGE(ITM_ERR_STREAM2_TMO);
             SD_LOG0("AUDIO_READY_TIMEOUT");
             s_sdBusy = false;
             return false;
@@ -463,6 +465,7 @@ bool AudioSD_SendFileToUART(const char *filename)
     }
     RLOG0("STREAM2 PASS");
     SD_LOG0("AUDIO_READY_RCVD");
+    ITM_STAGE(ITM_STREAM2_READY);
 
     /* Open file AFTER the 2s delay — keeps f_open fresh immediately before
      * reading.  Holding the file open during vTaskDelay allows other tasks
@@ -531,8 +534,8 @@ bool AudioSD_SendFileToUART(const char *filename)
          * ability to drain (reads 1 KB, writes to GCS HTTP, loops). */
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-    if (ok) RLOG0("STREAM3 PASS");
-    else    RLOG0("STREAM3 FAIL");
+    if (ok) { RLOG0("STREAM3 PASS"); ITM_STAGE(ITM_STREAM3_DONE); }
+    else    { RLOG0("STREAM3 FAIL"); ITM_STAGE(ITM_ERR_STREAM3);  }
     g_UartHealth.tx_last_sent = sentTotal;
     g_UartHealth.tx_transfer_count++;
     SD_LOG("STREAM_DONE_BYTES=", sentTotal);

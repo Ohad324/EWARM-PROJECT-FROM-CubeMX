@@ -1,0 +1,162 @@
+/*
+ * bug_y_debug.mac — IAR C-SPY macro for Bug Y diagnosis (LCD doesn't update on
+ *                   second voice press)
+ *
+ * Usage:
+ *   Project Options > Debugger > Setup > Use macro file(s) > add bug_y_debug.mac
+ *   Start a Debug session (Project > Download and Debug)
+ *   Press the blue button TWICE with proper pacing:
+ *     - 1st press: say "play X", wait for NORA "THUMB sent" + STM32 [Bug-Y] #1
+ *     - Wait 5+ seconds
+ *     - 2nd press: say "play Y", wait for [Bug-Y] #2 marker
+ *   Watch the IAR Debug Log for [BUGY-*] lines printed at each breakpoint hit.
+ *
+ * Breakpoints registered (J-Link Ultra — unlimited HW BPs):
+ *   BUGY-BP1  MusicScreenView.cpp:114    Just after imgThumbnail.invalidate()
+ *   BUGY-BP2  MusicScreenView.cpp:106    Entry to setThumbnail (pre-invalidate)
+ *   BUGY-BP3  TouchGFXHAL.cpp:298        endFrame() — fbUp flag check
+ *   BUGY-BP4  TouchGFXHAL.cpp:436        TE callback — refresh-start gate
+ *
+ * What to look for in the Debug Log between press 1 and press 2:
+ *   BUGY-BP1 hits with refReq=0 dispRef=0 BEFORE invalidate, then
+ *   BUGY-BP3 hits with fbUp=true on press 1, fbUp=false on press 2.
+ *   That confirms hypothesis H2: the dirty-rect merger short-circuits.
+ *
+ * If you want a breakpoint to stop and let you single-step, change its
+ * condition from "0" to "1" or remove the action and inspect Watch view.
+ *
+ * Variables visible to the action expressions:
+ *   refreshRequested      file-scope volatile bool in TouchGFXHAL.cpp
+ *   displayRefreshing     file-scope volatile bool in TouchGFXHAL.cpp
+ *   updateRegion          file-scope int in TouchGFXHAL.cpp
+ *   currFbBase            file-scope uint16_t* in TouchGFXHAL.cpp
+ */
+
+execUserSetup()
+{
+    __var bp1, bp2;
+
+    /* BP2: entry to setThumbnail at the first LOG() (line 114 currently).
+     * Stops here on every voice-press that produces a thumbnail. From here,
+     * type Q() in Macro Quicklaunch to dump pre-invalidate state, then F5
+     * (Go) to continue to BP1. */
+    bp2 = __setCodeBreak("{MusicScreenView.cpp}.114", 0, "1", "TRUE", "");
+
+    /* BP1: right after imgThumbnail.invalidate() returns (line 130 currently).
+     * Stops here so you can Q() the post-invalidate state. The diff between
+     * Q() at BP2 and Q() at BP1 tells us exactly what invalidate() did. */
+    bp1 = __setCodeBreak("{MusicScreenView.cpp}.130", 0, "1", "TRUE", "");
+
+    /* NOTE: BP3 (endFrame) and BP4 (TE callback) intentionally REMOVED.
+     * They fire at 60 Hz and IAR's "silent BP" condition does not actually
+     * silence them in this version — they would halt the device every
+     * 16 ms making any test impossible. The Q() macro reads the same state
+     * those BPs would have logged, so we don't lose anything. */
+
+    __message "============================================\n";
+    __message "  Bug Y debug macro loaded.\n";
+    __message "  2 STOPPING BPs set:\n";
+    __message "    BP2: MusicScreenView.cpp:114 (setThumbnail entry)\n";
+    __message "    BP1: MusicScreenView.cpp:130 (post-invalidate)\n";
+    __message "  Use Q() in Macro Quicklaunch when stopped.\n";
+    __message "============================================\n";
+}
+
+/* ─── Quick-watch helpers ──────────────────────────────────────────────────
+ * Open View > Macro Quicklaunch (or use C-SPY Debug Log "Eval" entry).
+ * Type the macro name + () and press Enter — output prints to Debug Log
+ * WITHOUT stopping execution.
+ *
+ * Usage examples:
+ *   > Q()         full snapshot (most useful)
+ *   > QTE()       Tearing-Effect callback state only
+ *   > QHW()       hardware sticky-flag registers (LTDC.ISR / DMA / SCB)
+ *   > QFB()       framebuffer base + LTDC layer config
+ */
+
+/* Q — quick, all-in-one snapshot. Most useful single command.
+ * Uses __readMemory32 to read peripheral registers by raw address (works
+ * across IAR versions where the #PERIPH.REG syntax may not). Addresses
+ * from STM32H747 reference manual RM0399. */
+Q()
+{
+    __var ltdc_isr;
+    __var dma1_lisr; __var dma1_hisr;
+    __var dma2_lisr; __var dma2_hisr;
+    __var scb_cfsr;  __var scb_bfar;
+
+    ltdc_isr  = __readMemory32(0x50001000, "Memory");  /* LTDC + 0x000 */
+    dma1_lisr = __readMemory32(0x40020000, "Memory");
+    dma1_hisr = __readMemory32(0x40020004, "Memory");
+    dma2_lisr = __readMemory32(0x40020400, "Memory");
+    dma2_hisr = __readMemory32(0x40020404, "Memory");
+    scb_cfsr  = __readMemory32(0xE000ED28, "Memory");
+    scb_bfar  = __readMemory32(0xE000ED38, "Memory");
+
+    __message "===== BugY Quick Snapshot =====\n";
+    __message "  refreshRequested  = ", refreshRequested, "\n";
+    __message "  displayRefreshing = ", displayRefreshing, "\n";
+    __message "  updateRegion      = ", updateRegion, "\n";
+    __message "  currFbBase        = ", currFbBase, "\n";
+    __message "  LTDC.ISR          = ", ltdc_isr, "\n";
+    __message "  DMA1.LISR/HISR    = ", dma1_lisr, " / ", dma1_hisr, "\n";
+    __message "  DMA2.LISR/HISR    = ", dma2_lisr, " / ", dma2_hisr, "\n";
+    __message "  SCB.CFSR/BFAR     = ", scb_cfsr, " / ", scb_bfar, "\n";
+    __message "===============================\n";
+}
+
+/* QTE — TE-callback state. Compact one-liner. */
+QTE()
+{
+    __message "[QTE] refReq=", refreshRequested, "  dispRef=", displayRefreshing,
+              "  updReg=", updateRegion, "\n";
+}
+
+/* QHW — hardware sticky-flag registers. Catches latched faults. */
+QHW()
+{
+    __var ltdc_isr;
+    __var dma1_lisr; __var dma1_hisr;
+    __var dma2_lisr; __var dma2_hisr;
+    __var scb_cfsr;  __var scb_bfar;
+
+    ltdc_isr  = __readMemory32(0x50001000, "Memory");
+    dma1_lisr = __readMemory32(0x40020000, "Memory");
+    dma1_hisr = __readMemory32(0x40020004, "Memory");
+    dma2_lisr = __readMemory32(0x40020400, "Memory");
+    dma2_hisr = __readMemory32(0x40020404, "Memory");
+    scb_cfsr  = __readMemory32(0xE000ED28, "Memory");
+    scb_bfar  = __readMemory32(0xE000ED38, "Memory");
+
+    __message "[QHW] LTDC=", ltdc_isr,
+              " D1L=", dma1_lisr, " D1H=", dma1_hisr,
+              " D2L=", dma2_lisr, " D2H=", dma2_hisr,
+              " CFSR=", scb_cfsr, " BFAR=", scb_bfar, "\n";
+}
+
+/* QFB — framebuffer base + LTDC layer 1 config (Layer1 is layer 0 in HAL). */
+QFB()
+{
+    __var l1_cfbar; __var l1_cfblr; __var l1_cfblnr;
+    /* LTDC Layer1 base = LTDC + 0x84, registers per RM0399 */
+    l1_cfbar  = __readMemory32(0x500010AC, "Memory");  /* CFBAR */
+    l1_cfblr  = __readMemory32(0x500010B0, "Memory");  /* CFBLR */
+    l1_cfblnr = __readMemory32(0x500010B4, "Memory");  /* CFBLNR */
+
+    __message "[QFB] currFbBase=", currFbBase,
+              " CFBAR=", l1_cfbar, " CFBLR=", l1_cfblr, " CFBLNR=", l1_cfblnr, "\n";
+}
+
+/* Legacy name kept for backwards compatibility. */
+BugY_Snapshot()
+{
+    Q();
+}
+
+/* Helper: re-arm BPs (use after a Reset that may have cleared them).
+ * Usage: > BugY_RearmBPs() from C-SPY console. */
+BugY_RearmBPs()
+{
+    __message "Re-arming Bug Y breakpoints...\n";
+    execUserSetup();
+}

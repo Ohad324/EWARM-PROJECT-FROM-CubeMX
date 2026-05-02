@@ -432,6 +432,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
                                   UART_CLEAR_IDLEF);
     huart->ErrorCode = HAL_UART_ERROR_NONE;
     huart->RxState   = HAL_UART_STATE_READY;
+    huart->gState    = HAL_UART_STATE_READY;  /* unblock TX after FE/ORE clears gState */
 
     if (HAL_UARTEx_ReceiveToIdle_DMA(huart, s_dma_rx_buf, BLE_DMA_BUF_SIZE) != HAL_OK)
     {

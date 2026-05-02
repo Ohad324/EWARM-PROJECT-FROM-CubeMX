@@ -50,18 +50,39 @@ extern "C" {
         DMA2D_TypeDef *d = handle ? handle->Instance : DMA2D;
 #ifndef RELEASE_BUILD
         /* Debug: log DMA2D fault state via RTT so we can see exactly which
-         * transfer failed. Release build skips the format+RTT write entirely. */
+         * transfer failed. Release build skips the format+RTT write entirely.
+         *
+         * MISRA C:2012 Rule 13.2 — read each volatile peripheral register
+         * into a const local FIRST, before any function call. C++ leaves the
+         * evaluation order of function arguments unspecified, so passing
+         * `d->ISR`, `d->OMAR`, etc. directly to snprintf would let the
+         * compiler interleave the volatile reads in any order. For DMA2D
+         * status registers the order matters — the captured snapshot must
+         * be coherent and reproducible across compiler/optimizer changes.
+         * Statement-level sequence points between the assignments below
+         * force the compiler to honor the listed read order.            */
+        const uint32_t isr     = d->ISR;
+        const uint32_t cr      = d->CR;
+        const uint32_t fgmar   = d->FGMAR;
+        const uint32_t bgmar   = d->BGMAR;
+        const uint32_t omar    = d->OMAR;
+        const uint32_t nlr     = d->NLR;
+        const uint32_t fgpfccr = d->FGPFCCR;
+        const uint32_t bgpfccr = d->BGPFCCR;
+        const uint32_t opfccr  = d->OPFCCR;
+        const uint32_t err     = handle ? handle->ErrorCode      : 0u;
+        const uint32_t state   = handle ? (uint32_t)handle->State : 0u;
+
         char dbg[256];
         std::snprintf(dbg, sizeof(dbg),
             "[DMA2D ERR] ISR=0x%08X CR=0x%08X "
             "FGMAR=0x%08X BGMAR=0x%08X OMAR=0x%08X NLR=0x%08X "
             "FGPFCCR=0x%08X BGPFCCR=0x%08X OPFCCR=0x%08X "
             "ErrorCode=0x%08X State=%u\n",
-            (unsigned)d->ISR,    (unsigned)d->CR,
-            (unsigned)d->FGMAR,  (unsigned)d->BGMAR, (unsigned)d->OMAR, (unsigned)d->NLR,
-            (unsigned)d->FGPFCCR,(unsigned)d->BGPFCCR,(unsigned)d->OPFCCR,
-            handle ? (unsigned)handle->ErrorCode : 0u,
-            handle ? (unsigned)handle->State     : 0u);
+            (unsigned)isr,     (unsigned)cr,
+            (unsigned)fgmar,   (unsigned)bgmar, (unsigned)omar, (unsigned)nlr,
+            (unsigned)fgpfccr, (unsigned)bgpfccr, (unsigned)opfccr,
+            (unsigned)err, (unsigned)state);
         SEGGER_RTT_WriteString(0, dbg);
 #endif /* RELEASE_BUILD */
 
@@ -204,6 +225,57 @@ BlitOperations STM32DMA::getBlitCaps()
  */
 void STM32DMA::setupDataCopy(const BlitOp& blitOp)
 {
+#ifndef RELEASE_BUILD
+    /* Bug Y diagnostic — count successful DMA2D blit invocations. Logged
+     * once per 60 blits. If this stops growing after press 1, render walk
+     * never reached imgThumbnail.draw() (H2: invalidate ineffective). If
+     * this DOES grow but [LCD-EF] updated stays at 2, the HAL precompiled
+     * flushFrameBuffer didn't set frameBufferUpdatedThisFrame (H1). */
+    {
+        static uint32_t dma2d_blit_count = 0;
+        ++dma2d_blit_count;
+        if ((dma2d_blit_count % 60u) == 0u)
+        {
+            char db[64];
+            std::snprintf(db, sizeof(db),
+                "[DMA2D blits] count=%lu lastOp=%u\n",
+                (unsigned long)dma2d_blit_count, (unsigned)blitOp.operation);
+            SEGGER_RTT_WriteString(0, db);
+        }
+    }
+#endif
+#ifndef RELEASE_BUILD
+    /* Pre-write null guard / diagnostic — log the BlitOp BEFORE we hand
+     * pDst to OMAR. The ErrorCallback log fires AFTER the hardware rejects
+     * the transfer, by which point we only see the register state. Here we
+     * also see blitOp.operation (COPY / COPY_A4 / FILL / etc.), nSteps,
+     * nLoops, and srcFormat — enough to identify which widget produced it. */
+    if (blitOp.pDst == 0)
+    {
+        char dbg[192];
+        std::snprintf(dbg, sizeof(dbg),
+            "[DMA2D NULLDST] op=%u srcFmt=%u dstFmt=%u nSteps=%u nLoops=%u "
+            "pSrc=%p srcStride=%u dstStride=%u alpha=%u color=0x%08X\n",
+            (unsigned)blitOp.operation,
+            (unsigned)blitOp.srcFormat,
+            (unsigned)blitOp.dstFormat,
+            (unsigned)blitOp.nSteps,
+            (unsigned)blitOp.nLoops,
+            (void*)blitOp.pSrc,
+            (unsigned)blitOp.srcLoopStride,
+            (unsigned)blitOp.dstLoopStride,
+            (unsigned)blitOp.alpha,
+            (unsigned)blitOp.color);
+        SEGGER_RTT_WriteString(0, dbg);
+        /* Skip configuring the transfer — pDst=NULL would CE-fault DMA2D
+         * anyway, and the recovery path in DMA2D_XferErrorCallback would
+         * still run. By returning early we avoid even arming the transfer:
+         * no CE interrupt fires, RTT log shows ONE line per faulty blit
+         * instead of TWO (this guard + the ErrorCallback recovery). */
+        return;
+    }
+#endif
+
     uint32_t dma2dForegroundColorMode = getChromARTInputFormat(static_cast<Bitmap::BitmapFormat>(blitOp.srcFormat));
     uint32_t dma2dBackgroundColorMode = getChromARTInputFormat(static_cast<Bitmap::BitmapFormat>(blitOp.dstFormat));
     uint32_t dma2dOutputColorMode = getChromARTOutputFormat(static_cast<Bitmap::BitmapFormat>(blitOp.dstFormat));
@@ -371,6 +443,22 @@ void STM32DMA::setupDataCopy(const BlitOp& blitOp)
  */
 void STM32DMA::setupDataFill(const BlitOp& blitOp)
 {
+#ifndef RELEASE_BUILD
+    if (blitOp.pDst == 0)
+    {
+        char dbg[160];
+        std::snprintf(dbg, sizeof(dbg),
+            "[DMA2D NULLDST setupDataFill] op=%u dstFmt=%u nSteps=%u nLoops=%u "
+            "dstStride=%u alpha=%u color=0x%08X\n",
+            (unsigned)blitOp.operation, (unsigned)blitOp.dstFormat,
+            (unsigned)blitOp.nSteps, (unsigned)blitOp.nLoops,
+            (unsigned)blitOp.dstLoopStride, (unsigned)blitOp.alpha,
+            (unsigned)blitOp.color);
+        SEGGER_RTT_WriteString(0, dbg);
+        return;
+    }
+#endif
+
     uint32_t dma2dOutputColorMode = getChromARTOutputFormat(static_cast<Bitmap::BitmapFormat>(blitOp.dstFormat));
 
     /* DMA2D OPFCCR register configuration */
@@ -491,6 +579,9 @@ namespace rgb888
  */
 void lineFromColor(uint8_t* const ptr, const unsigned count, const uint32_t color, const uint8_t alpha)
 {
+#ifndef RELEASE_BUILD
+    if (ptr == 0) { SEGGER_RTT_WriteString(0, "[DMA2D NULLDST lineFromColor]\n"); return; }
+#endif
     /* Wait for DMA2D to finish last run */
     while ((READ_REG(DMA2D->CR) & DMA2D_CR_START) != 0U);
 
@@ -541,6 +632,9 @@ void lineFromColor(uint8_t* const ptr, const unsigned count, const uint32_t colo
 
 void lineFromRGB888(uint8_t* const ptr, const uint8_t* const data, const unsigned count, const uint8_t alpha)
 {
+#ifndef RELEASE_BUILD
+    if (ptr == 0 || data == 0) { SEGGER_RTT_WriteString(0, "[DMA2D NULLDST lineFromRGB888]\n"); return; }
+#endif
     /* Wait for DMA2D to finish last run */
     while ((READ_REG(DMA2D->CR) & DMA2D_CR_START) != 0U);
 
@@ -585,6 +679,9 @@ void lineFromRGB888(uint8_t* const ptr, const uint8_t* const data, const unsigne
 
 void lineFromARGB8888(uint8_t* const ptr, const uint32_t* const data, const unsigned count, const uint8_t alpha)
 {
+#ifndef RELEASE_BUILD
+    if (ptr == 0 || data == 0) { SEGGER_RTT_WriteString(0, "[DMA2D NULLDST lineFromARGB8888]\n"); return; }
+#endif
     /* Wait for DMA2D to finish last run */
     while ((READ_REG(DMA2D->CR) & DMA2D_CR_START) != 0U);
 
@@ -618,6 +715,9 @@ void lineFromARGB8888(uint8_t* const ptr, const uint32_t* const data, const unsi
 
 void lineFromL8RGB888(uint8_t* const ptr, const uint8_t* const data, const unsigned count, const uint8_t alpha)
 {
+#ifndef RELEASE_BUILD
+    if (ptr == 0 || data == 0) { SEGGER_RTT_WriteString(0, "[DMA2D NULLDST lineFromL8RGB888]\n"); return; }
+#endif
     /* wait for DMA2D to finish last run */
     while ((READ_REG(DMA2D->CR) & DMA2D_CR_START) != 0U);
 
@@ -683,6 +783,9 @@ void lineFromL8RGB888(uint8_t* const ptr, const uint8_t* const data, const unsig
 
 void lineFromL8ARGB8888(uint8_t* const ptr, const uint8_t* const data, const unsigned count, const uint8_t alpha)
 {
+#ifndef RELEASE_BUILD
+    if (ptr == 0 || data == 0) { SEGGER_RTT_WriteString(0, "[DMA2D NULLDST lineFromL8ARGB8888]\n"); return; }
+#endif
     /* wait for DMA2D to finish last run */
     while ((READ_REG(DMA2D->CR) & DMA2D_CR_START) != 0U);
 

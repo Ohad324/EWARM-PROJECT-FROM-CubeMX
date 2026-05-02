@@ -4,11 +4,35 @@
 #include "timing_log.h"    /* TLOG(), T_US() */
 #include "itm_log.h"       /* STAGE() — ITM PORT[0] + RTT WriteString, zero printf */
 #include "main.h"          /* huart8 */
+#include "stm32h7xx.h"     /* LTDC, DMA1, DMA2, SCB peripheral handles */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "timers.h"
 #include <string.h>
 #include <stdio.h>
+
+#ifndef RELEASE_BUILD
+/* Bug Y / FMC-conflict probe per Gemini hint — sticky-flag register snapshot
+ * called at each TGFX stage. Catches the exact moment a flag flips (LTDC FIFO
+ * underrun, DMA transfer error, CPU bus fault). Bits to look for:
+ *   LTDC.ISR  bit 1 (FUIF)    SDRAM starvation → Gemini's theory
+ *   LTDC.ISR  bit 2 (TERRIF)  LTDC transfer error
+ *   DMA*.LISR/HISR TEIF bits  DMA transfer errors
+ *   SCB.CFSR  bit 8 IBUSERR / bit 9 PRECISERR  CPU bus fault
+ *   SCB.BFAR  faulting address (in 0xD0000000 range = SDRAM bank 2)         */
+#define LCD_STAGE_DUMP(label)                                                     \
+    do {                                                                          \
+        LOG("[%s] LTDC.ISR=0x%08lX D1L=0x%08lX D1H=0x%08lX D2L=0x%08lX "          \
+            "D2H=0x%08lX CFSR=0x%08lX BFAR=0x%08lX\n",                            \
+            (label),                                                              \
+            (unsigned long)LTDC->ISR,                                             \
+            (unsigned long)DMA1->LISR, (unsigned long)DMA1->HISR,                 \
+            (unsigned long)DMA2->LISR, (unsigned long)DMA2->HISR,                 \
+            (unsigned long)SCB->CFSR, (unsigned long)SCB->BFAR);                  \
+    } while (0)
+#else
+#define LCD_STAGE_DUMP(label) ((void)0)
+#endif
 
 /* DWT timestamps set by UARTReceiveTask (main.c) */
 extern volatile uint32_t g_t_track;
@@ -59,6 +83,7 @@ void Music_Poll(void)
     /* ── MSG_TRACK ──────────────────────────────────────────────── */
     case MSG_TRACK:
         STAGE("TGFX1 PASS");
+        LCD_STAGE_DUMP("HW@TGFX1");
         done.type = MUSIC_DONE_TRACK;
         strncpy(done.track.title,   raw.track.title,
                 sizeof(done.track.title)   - 1u);
@@ -75,6 +100,7 @@ void Music_Poll(void)
         else
         {
             STAGE("TGFX2 PASS");
+            LCD_STAGE_DUMP("HW@TGFX2");
             LOG("[4] Track sent to screen: \"%s\" by \"%s\""
                 "  [%lu ms from track received]\n",
                 raw.track.title, raw.track.artist,
@@ -87,6 +113,7 @@ void Music_Poll(void)
     {
         uint32_t w = 0u, h = 0u;
         STAGE("TGFX3 PASS");
+        LCD_STAGE_DUMP("HW@TGFX3");
         uint32_t t_dec_start = DWT_SNAP();
         HAL_StatusTypeDef st =
             JPEG_Decode(raw.thumb.data, raw.thumb.size, &w, &h);
@@ -95,6 +122,7 @@ void Music_Poll(void)
         if (st == HAL_OK)
         {
             STAGE("TGFX4 PASS");
+            LCD_STAGE_DUMP("HW@TGFX4");
             done.type         = MUSIC_DONE_THUMB;
             done.thumb.rgb888 = JPEG_GetRGB888Buffer();
             done.thumb.width  = w;
@@ -108,6 +136,7 @@ void Music_Poll(void)
             else
             {
                 STAGE("TGFX5 PASS");
+                LCD_STAGE_DUMP("HW@TGFX5");
                 LOG("[4] Thumbnail sent to screen: %lu x %lu px"
                     "  [decode: %lu ms  |  total: %lu ms]\n",
                     w, h, DWT_MS(dec_cycles),

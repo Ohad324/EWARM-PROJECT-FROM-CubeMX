@@ -540,6 +540,7 @@ void SDWriteTask(void *arg)
 
         g_FileIndex++;   /* only increment after successful f_open */
         STAGE("SD1 PASS");
+        ITM_STAGE(ITM_SD1_OPEN);
 
         /* Pre-allocate contiguous clusters before writing.
          * Without this, every f_write triggers a FAT cluster search (tens of ms on exFAT)
@@ -559,7 +560,7 @@ void SDWriteTask(void *arg)
                 /* Fallback: f_lseek forces cluster chain allocation non-contiguously */
                 f_lseek(&file, prealloc);
             }
-            else { STAGE("SD2 PASS"); }
+            else { STAGE("SD2 PASS"); ITM_STAGE(ITM_SD2_ALLOC); }
             f_lseek(&file, 0);  /* return to start for WAV header write */
         }
 
@@ -574,6 +575,7 @@ void SDWriteTask(void *arg)
             goto done;
         }
         STAGE("SD3 PASS");
+        ITM_STAGE(ITM_SD3_HDR);
 
         /* Write PCM via AXI SRAM bounce buffer.
          * g_AudioBuf is in D2 SRAM2 (0x30020000). SDMMC IDMA accesses memory via
@@ -594,6 +596,7 @@ void SDWriteTask(void *arg)
             uint32_t offset    = 0u;
             FRESULT  frPcm     = FR_OK;
             STAGE("SD4 PASS");
+            ITM_STAGE(ITM_SD4_PCM_START);
             while (remaining > 0u && frPcm == FR_OK)
             {
                 uint32_t chunk = (remaining < sizeof(s_pcmBounce)) ? remaining
@@ -638,6 +641,7 @@ void SDWriteTask(void *arg)
             goto done;
         }
         STAGE("SD5 PASS");
+        ITM_STAGE(ITM_SD5_CLOSED);
 
         /* ── Free-space snapshot ─────────────────────────────────────────────
          * Called here (after f_close, DMA stopped) — never during recording. */
@@ -649,11 +653,18 @@ void SDWriteTask(void *arg)
         }
 
         /* Stage 2 — stream WAV file to NORA over UART8. */
+        ITM_STAGE(ITM_UART_SEND);
         if (!AudioSD_SendFileToUART(filename))
+        {
             RLOG0("[SD] UART_STREAM_FAIL");
+            ITM_STAGE(ITM_ERR_UART_STREAM);
+        }
         else
+        {
             RLOG0("[SD] UART_STREAM_OK");
+        }
         AudioSD_Remount();
+        ITM_STAGE(ITM_PIPELINE_DONE);
 
 done:
         /* ── Audio quality + health — always printed, even on error ─────────

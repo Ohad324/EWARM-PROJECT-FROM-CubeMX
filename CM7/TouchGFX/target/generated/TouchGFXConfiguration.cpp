@@ -21,6 +21,9 @@
 #include <gui/common/FrontendHeap.hpp>
 #include <BitmapDatabase.hpp>
 #include <touchgfx/VectorFontRendererImpl.hpp>
+#ifndef RELEASE_BUILD
+#include <touchgfx/canvas_widget_renderer/CanvasWidgetRenderer.hpp>
+#endif
 #include <platform/driver/lcd/LCD24bpp.hpp>
 #include <STM32DMA.hpp>
 #include <TouchGFXHAL.hpp>
@@ -36,6 +39,15 @@ static STM32DMA dma;
 static LCD24bpp display;
 static VectorFontRendererImpl vectorFontRenderer;
 
+#ifndef RELEASE_BUILD
+/* Scratch buffer for the vector font rasterizer (CanvasWidgetRenderer).
+ * Restored from dea8b27 (working LCD baseline) — TouchGFX Generator 4.26.1
+ * dropped this setup, suspected cause of LCD freeze in current build.
+ * 180pt Hebrew glyphs with nikud require a large cell array.
+ * 30 KB covers the most complex combining character outlines. */
+static uint8_t canvasBuffer[30 * 1024];
+#endif
+
 static ApplicationFontProvider fontProvider;
 static Texts texts;
 static TouchGFXHAL hal(dma, display, tc, 800, 480);
@@ -46,6 +58,9 @@ void touchgfx_init()
     TypedText::registerTexts(&texts);
     Texts::setLanguage(0);
 
+#ifndef RELEASE_BUILD
+    CanvasWidgetRenderer::setupBuffer(canvasBuffer, sizeof(canvasBuffer));
+#endif
     display.setVectorFontRenderer(&vectorFontRenderer);
 
     FontManager::setFontProvider(&fontProvider);
