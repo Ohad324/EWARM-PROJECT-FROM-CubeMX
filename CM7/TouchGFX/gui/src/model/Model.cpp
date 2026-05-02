@@ -1,7 +1,7 @@
 #include <gui/model/Model.hpp>
 #include <gui/model/ModelListener.hpp>
 #include "ble_queue.h"           /* xBleQueue, BLE_MSG_LEN */
-#include "music_display_task.h"  /* xMusicDoneQueue, music_done_msg_t, Music_Poll() */
+#include "music_display_task.h"  /* xMusicDoneQueue, music_done_msg_t */
 #include "log_mutex.h"           /* LOG() -- mutex-guarded printf */
 #include <string.h>
 
@@ -49,12 +49,6 @@ void Model::tick()
             LOG("[Model] WARNING: no modelListener attached!\n");
         }
     }
-
-    /* ── Drain xMusicQueue — decode JPEG / forward track+error ─────────
-     * Music_Poll() is non-blocking (timeout=0). MSG_THUMB blocks here
-     * for ~200–500 ms while JPEG_Decode() runs — accepted trade-off
-     * for running all display work in one task (TouchGFXTask, prio 16). */
-    Music_Poll();
 
     /* ── Poll music done queue ───────────────────────────────────────── */
     if (modelListener == 0)

@@ -99,8 +99,8 @@ UART_HandleTypeDef huart8;
 osThreadId_t TouchGFXTaskHandle;
 const osThreadAttr_t TouchGFXTask_attributes = {
   .name = "TouchGFXTask",
-  .stack_size = 5120 * 4,   /* was 3048 — enlarged for JPEG decode stack (Music_Poll) */
-  .priority = (osPriority_t) osPriorityBelowNormal,  /* was Normal(24) → BelowNormal(16) < SDWriteTask(20) */
+  .stack_size = 3048 * 4,   /* pre-merge value — JPEG decode now runs in JpegDisplayTask */
+  .priority = (osPriority_t) osPriorityNormal,  /* pre-merge — JpegDisplayTask handles decode @ priority 16 */
 };
 /* Definitions for videoTask */
 osThreadId_t videoTaskHandle;

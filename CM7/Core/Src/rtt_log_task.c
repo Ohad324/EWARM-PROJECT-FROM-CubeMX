@@ -317,7 +317,12 @@ void RTTLogTask(void *arg)
                     else if (ovr)          isrTag = "OVR!";
                     else                   isrTag = "OK";
 
-                    /* ── CLOCK CHECK — only what matters for PE2 reaching the mic ── */
+#ifndef BUG_Y_DISABLE_SAI4_DIAG
+                    /* ── CLOCK CHECK — only what matters for PE2 reaching the mic ──
+                     * Bug Y empirical test: define BUG_Y_DISABLE_SAI4_DIAG to skip
+                     * these periodic SAI4/BDMA register reads. They're pure CPU-side
+                     * reads (don't drive peripherals) but the user wants to verify
+                     * they don't cause cross-domain interference with LTDC. */
                     uint32_t sai4cr1   = g_dbg.sai4_cr1;
                     uint32_t saien_bit = (sai4cr1 >> 16u) & 0x1u;   /* bit 16 = SAIEN */
 
@@ -345,6 +350,7 @@ void RTTLogTask(void *arg)
                             (unsigned long)bdma_cndtr);
                         emit(pbuf, pn);
                     }
+#endif /* !BUG_Y_DISABLE_SAI4_DIAG */
 
                     /* Lines 3 & 4 commented out — not relevant to clock check.
                      * Re-enable after PE2 is confirmed alive on scope/ITM.

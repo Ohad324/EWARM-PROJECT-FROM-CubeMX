@@ -4,8 +4,7 @@
  *
  * Data flow:
  *   UARTReceiveTask  -->  xMusicQueue     (raw  music_msg_t)
- *   Music_Poll()     <--  xMusicQueue     (called from Model::tick())
- *   Music_Poll()     -->  xMusicDoneQueue (done music_done_msg_t)
+ *   JpegDisplayTask -->  xMusicDoneQueue (done music_done_msg_t)
  *   Model::tick()    <--  xMusicDoneQueue
  */
 #ifndef MUSIC_DISPLAY_TASK_H
@@ -79,17 +78,9 @@ extern QueueHandle_t xMusicDoneQueue;
 
 /* ── Public API ──────────────────────────────────────────────────────── */
 
-/** Create xMusicQueue and xMusicDoneQueue.
+/** Create xMusicQueue, xMusicDoneQueue, and start JpegDisplayTask.
  *  Call from main() after osKernelInitialize(), before osKernelStart(). */
 void Music_Init(void);
-
-/** Non-blocking poll — call from Model::tick() every TouchGFX frame.
- *  Checks xMusicQueue (timeout=0); if a message is waiting, processes it:
- *    MSG_TRACK/MSG_ERROR  → forwarded to xMusicDoneQueue immediately.
- *    MSG_THUMB            → JPEG_Decode() called (blocks ~200–500 ms),
- *                           result posted to xMusicDoneQueue.
- *  Returns immediately when the queue is empty. */
-void Music_Poll(void);
 
 /** Phase 2 stub: send CTRL:<action>\n over UART8 TX to NORA.
  *  Defined but NOT called in Phase 1. Uncomment transmit in Phase 2. */
