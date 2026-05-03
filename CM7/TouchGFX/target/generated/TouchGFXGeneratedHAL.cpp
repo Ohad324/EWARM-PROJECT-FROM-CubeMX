@@ -59,7 +59,16 @@ namespace
 {
 // Use the section "TouchGFX_Framebuffer" in the linker script to specify the placement of the buffer
 LOCATION_PRAGMA_NOLOAD("TouchGFX_Framebuffer")
+#ifndef RELEASE_BUILD
+/* DEBUG — width 832 (panel 800 + 32-px alignment cushion) to match the LTDC
+ * CFBLR pitch of 832*3=2496 bytes/row in TouchGFXHAL.cpp:530/549. Without
+ * this the buffer is allocated at 800*3=2400 bytes/row while LTDC reads
+ * with stride 2496, drifting +32 px per row -> stacked/sliced image (Bug X).
+ * Originally fixed in 3f2e6ef and lost during a Designer regen. */
+uint32_t frameBuf[(832 * 480 * 3 + 3) / 4] LOCATION_ATTRIBUTE_NOLOAD("TouchGFX_Framebuffer");
+#else
 uint32_t frameBuf[(800 * 480 * 3 + 3) / 4] LOCATION_ATTRIBUTE_NOLOAD("TouchGFX_Framebuffer");
+#endif
 }
 
 void TouchGFXGeneratedHAL::initialize()
