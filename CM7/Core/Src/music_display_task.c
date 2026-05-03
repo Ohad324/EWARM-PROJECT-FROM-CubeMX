@@ -9,6 +9,17 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifndef RELEASE_BUILD
+#include "test_thumb_jpeg.h"   /* kTestThumbJpeg[] -- offline PNG-as-thumbnail fixture */
+#include "stm32h7xx.h"         /* SCB_CleanDCache_by_Addr */
+
+/* SDRAM-resident landing pad for the test JPEG. JPEG_Decode() requires its
+ * input in SDRAM (DMA/MDMA accessible). Sized 16 KB -- fits the 10 KB fixture
+ * with margin, far cheaper than placing kTestThumbJpeg itself in SDRAM. */
+static uint8_t s_testThumbSdram[16384u]
+    __attribute__((section(".sdram_bss"), aligned(32)));
+#endif
+
 /* DWT timestamps set by UARTReceiveTask (main.c) */
 extern volatile uint32_t g_t_track;
 extern volatile uint32_t g_t_thumb;
@@ -65,6 +76,34 @@ void Music_ProgressTimerCallback(TimerHandle_t xTimer)
     /* Phase 2: increment elapsed seconds, update progressFill width */
 }
 
+/* ── Test-only injection ───────────────────────────────────────────────── */
+
+#ifndef RELEASE_BUILD
+/**
+ * Synthesize a MSG_THUMB carrying the embedded test JPEG and push it to
+ * xMusicQueue, exactly as if it had arrived from NORA over UART. Lets us
+ * exercise the full thumbnail pipeline (HW JPEG decode -> scale 800x480
+ * -> DMA2D -> LTDC) with no WiFi connection.
+ */
+static void Music_InjectTestThumb(void)
+{
+    memcpy(s_testThumbSdram, kTestThumbJpeg, TEST_THUMB_JPEG_SIZE);
+    SCB_CleanDCache_by_Addr((uint32_t *)s_testThumbSdram,
+                             (int32_t)((TEST_THUMB_JPEG_SIZE + 31u) & ~31u));
+
+    music_msg_t raw;
+    raw.type        = MSG_THUMB;
+    raw.thumb.data  = s_testThumbSdram;
+    raw.thumb.size  = TEST_THUMB_JPEG_SIZE;
+
+    if (xQueueSend(xMusicQueue, &raw, pdMS_TO_TICKS(100)) != pdTRUE)
+        LOG("[TEST-INJECT] xMusicQueue full -- test thumb dropped\n");
+    else
+        LOG("[TEST-INJECT] Test thumb pushed to xMusicQueue (%u bytes)\n",
+            (unsigned)TEST_THUMB_JPEG_SIZE);
+}
+#endif
+
 /* ── Task body ─────────────────────────────────────────────────────────── */
 
 static void JpegDisplayTask(void *argument)
@@ -73,6 +112,14 @@ static void JpegDisplayTask(void *argument)
     LOG("[MUSIC] JpegDisplayTask started\n");
 
     JPEG_Init();    /* initialise colour-conversion lookup tables once */
+
+#ifndef RELEASE_BUILD
+    /* One-shot fixture injection ~3 s after task start, giving MusicScreen
+     * time to activate. Result is cached in Model::pendingThumb until the
+     * screen comes up, then setThumbnail() fires from the presenter. */
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    Music_InjectTestThumb();
+#endif
 
     music_msg_t      raw;
     music_done_msg_t done;
