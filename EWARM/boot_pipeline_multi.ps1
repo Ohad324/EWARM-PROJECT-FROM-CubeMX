@@ -48,8 +48,13 @@ $CHECKPOINTS = @(
     'osKernelInitialize',           # 17. CMSIS-RTOS init
     'osThreadNew',                  # 18. task creation (guiTask)
     'vTaskStartScheduler',          # 19. END OF PHASE 1
-    # --- Phase 2: inside guiTask after scheduler dispatches ---
-    'TouchGFX_Task'                 # 20. PHASE 2 BEGIN -- guiTask entry
+    # --- Phase 2: AFTER scheduler dispatches, AFTER guiTask runs work ---
+    'TouchGFX_Task',                # 20. PHASE 2 BEGIN -- guiTask entry, body not yet run
+    'MX_DSIHOST_DSI_Init',          # 21. inside guiTask -- DSI init about to run
+    'MX_LTDC_Init',                 # 22. inside guiTask -- DSI done, LTDC about to come up
+    'MX_TouchGFX_Init',             # 23. inside guiTask -- LTDC up, framework about to start
+    'touchgfx_taskEntry',           # 24. framework main loop -- LTDC + DSI alive, ready to paint
+    'HAL_DSI_Refresh'               # 25. first display refresh (LEFT/RIGHT split scan)
 )
 
 # Strip --macro= from the IDE-generated general.xcl (we pass --macro on cmdline,

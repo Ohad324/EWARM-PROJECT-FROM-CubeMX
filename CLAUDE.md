@@ -920,3 +920,88 @@ If the log is empty: the macro probably has a syntax error. cspybat usually repo
 - **SDRAM unreadable pre-FMC-init:** reading `0xD0000000` before `MX_FMC_Init` runs returns a bus-fault from the DAP, which the macro engine reports as `Operation error` and aborts the session. Only read SDRAM at checkpoints AFTER `MX_FMC_Init`.
 - **`__hwRunToBreakpoint` driver support per UCSARM-26:** CMSIS-DAP, I-jet, J-Link/J-Trace, PE micro, ST-LINK, TI XDS. Confirmed working with J-Link Ultra V7 / J-Link Commander V9.34b on this project.
 - **Sequential RunToBp pattern is the working multi-checkpoint flow:** put the entire probe sequence inside `execUserSetup`. Each `__hwRunToBreakpoint(addr, timeout)` advances the CPU to the next checkpoint. After all checkpoints, the macro returns and the session ends cleanly.
+
+### LTDC reads alias when CPU halted post-init (chip-level behavior, NOT a probe bug)
+
+**Discovered 2026-05-04.** When the CPU is halted at any post-`MX_LTDC_Init` checkpoint (e.g., `MX_TouchGFX_Init` entry, `touchgfx_taskEntry` entry, `HAL_DSI_Refresh` entry), reads to ALL 11 LTDC layer registers return the same value (`0xC0002220` = the GCR register's value). DSI / DMA2D / RCC / FMC / MPU / NVIC / GPIO at the same halt point all read distinct values — only LTDC aliases.
+
+**Verified apples-to-apples** that this is not a cspybat artifact:
+- `boot_pipeline_cspy.bat` halts at `MX_TouchGFX_Init` entry via `__setCodeBreak` action, reads via `__readMemory32` → all 11 LTDC regs alias to `0xC0002220`
+- `boot_pipeline_jlink_compare.bat` halts at the *same* address (`0x08026EA8`) via J-Link Commander `setbp 0x08026EA8` + `g`, then `mem32` reads → **identical aliased values**
+- Both probes confirmed halting at the same PC by reading `regs` (PC=0x08026EA8 in both)
+
+**Root cause:** Both halts use the same M7 Debug-HALT primitive (`DHCSR.S_HALT=1`, set either by FPB match or by DAP write). The M7 core freezes, but **`DBGMCU` on STM32H7 has no freeze bit for LTDC** (per RM0399 §60.5) — LTDC keeps scanning during CPU halt. The active LTDC AHB-master traffic into APB3 register space contends with the DAP's read transaction, and the bus returns `0xC0002220` (the most-recent successful read) for subsequent register accesses.
+
+**Same probe at `MX_LTDC_Init` entry (BEFORE LTDC is enabled): reads cleanly — all 11 LTDC regs read `0`, distinctly.** The aliasing is only after LTDC is actively scanning.
+
+**Practical workarounds when probe needs accurate LTDC state post-init:**
+
+1. **Read the configuration via C-side variables, not the live LTDC registers.** TouchGFX/HAL keeps the configured values in RAM (e.g., `hltdc.Init.HorizontalSync`, `hltdc.LayerCfg[0].FBStartAdress`). Those are in DTCM/AXI SRAM and read cleanly while halted:
+   ```c
+   __readMemory32(&hltdc.Init.HorizontalSync, "Memory")    // works
+   __readMemory32(&hltdc.LayerCfg[0].FBStartAdress, "Memory") // works
+   ```
+2. **Use `boot_pipeline.bat` (J-Link Commander, free-running)** for the LTDC live state. mem32 with the target running succeeds because there's no halt-vs-LTDC bus contention.
+3. **Stop LTDC first**, then halt — write `LTDC.GCR.LTDCEN = 0` from the macro before sampling. But this changes peripheral state and breaks any concurrent operation, so it's a destructive last resort.
+
+### cspybat / C-SPY vs J-Link Commander — division of labor
+
+| Capability | cspybat + C-SPY macros | J-Link Commander |
+|---|---|---|
+| BP at function entry by name | `__setCodeBreak("MX_LTDC_Init", ...)` | Look up `0x08024C70` in `.map` first |
+| BP at source line | `__setCodeBreak("{TouchGFXHAL.cpp}.388", ...)` | Impossible — line numbers not visible |
+| BP at function offset | `__setCodeBreak("main+0x10", ...)` | Manual decimal-add to function address |
+| Read variable by name | `__readMemory32(&g_state, "Memory")` or just `g_state` | Manual address lookup, then `mem32 <addr>` |
+| Resolves through optimization | Yes — debug info follows inlining/folding | No — re-extract addresses every build |
+| Free-running mem32 sample | ⚠️ Needs explicit halt logic | ✅ `mem32` while target runs |
+| Halt-mode register read | ✅ but subject to LTDC-aliasing chip behavior | ✅ with same chip-level limit |
+| Symbol table awareness | ✅ from .out/ELF | ❌ |
+
+**Best-tool-for-the-job split in this project:**
+
+| Use case | Tool |
+|---|---|
+| Boot stage verification (clocks, MPU, peripheral inits, task dispatch) | **`boot_pipeline_multi.bat`** — cspybat 25 checkpoints x 3 lifecycle hooks |
+| Quick "is FUIF firing right now?" / framebuffer painted check | **`boot_pipeline.bat`** — JLink Commander free-running mem32 |
+| Snapshot at one early checkpoint | **`boot_pipeline_cspy.bat`** — single cspybat call, fast |
+| Apples-to-apples cspybat-vs-JLink debug | **`boot_pipeline_jlink_compare.bat`** — diagnostic only |
+
+### Using cspybat + C-SPY macros to debug the LCD half-blue/half-green bug
+
+The Gated Multitasking probe verified Phase 1 silent boot is clean. The remaining LCD bug (half-blue/half-green at the 400-pixel split) is post-Phase-2, during DMA2D blit + LTDC scan. The cspybat tooling we built can probe these stages by setting BPs at:
+
+| BP target | What it tells us |
+|---|---|
+| `MX_LTDC_Init` final line (just before return) | Verify the `hltdc` struct in RAM matches the expected 800×480 RGB888 config. RAM reads work fine — no aliasing issue. |
+| `HAL_DSI_Refresh` entry | Capture state right before each panel refresh. DSI state, framebuffer first row, DMA2D state. Run multiple times to see frame-to-frame consistency. |
+| `HAL_DSI_EndOfRefreshCallback` entry | LEFT/RIGHT split happens here. Probe `currFbBase`, `updateRegion`, `displayRefreshing` flags. |
+| `LCD16bpp_lineFromRGB888` (or `LCD24bpp_*`) entry | Capture every DMA2D blit's source/dest/length params. If destination address falls outside `0xD0000000-0xD012C000`, that's a bug. |
+| `LTDC_ER_IRQHandler` entry | Fires on FUIF/TERRIF. Capture cycle counter, DMA2D state at moment of fault — pinpoints which DMA2D operation triggered the FIFO underrun. |
+| `DMA2D_IRQHandler` (any error path) | Catches Transfer Error or Config Error. |
+
+**Macro approach (extends `boot_pipeline_one_bp.mac.tpl`):**
+
+For each BP, the action macro reads:
+- DTCM/AXI variables (always work): `hltdc.Init.*`, `hdma2d.Init.*`, `frameBuf[0]`, `frameBuf[100*832*3]`
+- DMA2D registers (work at halt): `CR`, `ISR`, `NLR`, `OMAR`, `FGMAR`, `BGMAR`
+- DSI registers (work at halt): `CR`, `WCR`, `ISR0`, `IER0`, `VMCR`
+- DWT cycle counter for timing
+- AVOID reading LTDC layer registers at halt (use C-side struct instead)
+
+**Single-cspybat-invocation pattern (per LCD-debug session):**
+1. Set ONE BP at the suspect location
+2. Action macro dumps the relevant subsystem state
+3. cspybat exits (one-BP-per-invocation limit per CSpyBat 9.4.6.1706)
+4. Run again with a different BP for the next stage
+
+**Multi-checkpoint orchestration:**
+Reuse `boot_pipeline_multi.bat`'s pattern — list 5-10 LTDC/DMA2D probe points in `boot_pipeline_lcd.ps1`, generate per-iteration `.mac` from the same template, get a chronological dump across the rendering pipeline.
+
+**Specific bug-narrowing protocol for the half-blue/half-green issue:**
+
+1. **Phase 1**: BP at `MX_LTDC_Init` final line → verify `hltdc.LayerCfg[0].FBStartAdress = 0xD0000000`, pixel format = `LTDC_PIXEL_FORMAT_RGB888`. Confirms TouchGFX is configured correctly.
+2. **Phase 2**: BP at `HAL_DSI_Refresh` entry → run 5 times, log cycle counter each time. Verify refresh fires at ~16.6ms intervals (60Hz). Check DMA2D `ISR.TEIF`/`CEIF` between refreshes.
+3. **Phase 3**: BP at `HAL_DSI_EndOfRefreshCallback` → check `currFbBase` and `updateRegion` values. The LEFT half should refresh from `frameBuf+0`, RIGHT from `frameBuf+1200`. If the values flip or stick on one side, that's the bug.
+4. **Phase 4**: BP at `LTDC_ER_IRQHandler` → if it fires, capture DMA2D state. Find which DMA2D blit was active at the moment of FUIF.
+
+The macro template already exists; for LCD debug we'd add a dedicated `boot_pipeline_lcd_one_bp.mac.tpl` with the LCD-specific register set, plus a `boot_pipeline_lcd.ps1` orchestrator listing the LCD-specific BP targets above.

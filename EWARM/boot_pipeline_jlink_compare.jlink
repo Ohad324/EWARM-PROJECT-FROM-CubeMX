@@ -1,0 +1,51 @@
+// boot_pipeline_jlink_compare.jlink -- apples-to-apples comparison probe.
+//
+// Halts the CPU at the EXACT SAME checkpoint (MX_TouchGFX_Init entry, address
+// 0x08026EA8) where cspybat halts via __setCodeBreak, then reads the same
+// LTDC register set. If J-Link Commander reads distinct values here while
+// cspybat reads aliased values at the SAME halt point, cspybat's macro engine
+// is at fault. If both alias, the LTDC peripheral itself is in a state that
+// causes register read aliasing (e.g., active scan, bus lock).
+//
+// JLink commander commands used:
+//   loadfile  -- flashes the .out to flash
+//   setbp     -- hardware FPB breakpoint at the given address
+//   r         -- reset chip with halt
+//   g         -- go (run); when a BP fires the CPU halts automatically
+//   sleep     -- wait host-side milliseconds (lets target run to BP)
+//   mem32     -- read 32-bit values via DAP (CPU stays halted)
+//   clrbp     -- remove the BP
+//   q         -- quit
+
+loadfile C:\TouchGFXProjects\MyApplication\EWARM\Release\Exe\STM32H747I-DISCO_CM7.out
+
+// Hardware BP at MX_TouchGFX_Init entry (the same point cspybat halts at)
+setbp 0x08026EA8
+
+r
+g
+
+// Wait for the CPU to reach the BP. Phase 1+2 boot to MX_TouchGFX_Init takes
+// roughly DWT cycle 0x04CD6B40 = ~80M cycles ~= 200 ms @ 400 MHz. 500 ms host
+// sleep is safe.
+sleep 500
+
+// At this point the CPU should be halted at 0x08026EA8. Read the same LTDC
+// register block cspybat read at this checkpoint, in the same order.
+mem32 0x50001018 1   // GCR
+mem32 0x50001038 1   // ISR  -- FUIF/TERRIF
+mem32 0x50001034 1   // IER
+mem32 0x5000102C 1   // BCCR -- background color
+mem32 0x50001040 1   // LIPCR
+mem32 0x50001088 1   // L1WHPCR -- window horizontal
+mem32 0x5000108C 1   // L1WVPCR -- window vertical
+mem32 0x50001094 1   // L1PFCR  -- pixel format
+mem32 0x500010AC 1   // L1CFBAR -- framebuffer base address
+mem32 0x500010B0 1   // L1CFBLR -- framebuffer line/pitch
+mem32 0x500010B4 1   // L1CFBLNR -- line count
+
+// Also dump CPU PC to confirm we are halted at the BP and not somewhere else
+regs
+
+clrbp 0x08026EA8
+q
