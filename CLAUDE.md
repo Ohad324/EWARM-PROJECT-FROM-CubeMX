@@ -454,3 +454,103 @@ RLOG("[REC] file=%s  size=%lu bytes", filename, size);
 - `SD_LOG` stays in audio_sd.c — do not replace it.
 - GUI/TouchGFX files may use `LOG()` for simple messages.
 
+
+---
+
+## LCD / DSI Command Mode / FUIF — Session Findings (2026-05-03)
+
+### The visible bug
+
+After fixing Bug X (832-cushion) and Bug Y (`s_mjpeg_decode_active` guard), the panel showed half-blue-correct / half-green-stale split exactly at the LEFT/RIGHT 400-pixel boundary.
+
+### Pipeline architecture (DSI Command Mode + GRAM)
+
+```
+[CPU/DMA2D writes] -> SDRAM framebuffer (0xD0000000, 832×480×3) ->
+LTDC reads (832-pitch) -> DSI host -> OTM8009A panel internal GRAM (split LEFT 0–399 / RIGHT 400–799) -> physical pixels
+```
+
+- **Single buffer** — `setFrameBufferStartAddresses(frameBuf, 0, 0)`. DMA2D writes the same buffer LTDC reads.
+- **GRAM panel** — OTM8009A retains image after one transfer; LTDC clock gates off between frames.
+- **LEFT/RIGHT split** — DSI Command Mode requires two DSI transactions per frame with CASET command between halves. Custom code in `TouchGFXHAL.cpp` orchestrates this via `HAL_DSI_EndOfRefreshCallback`.
+- **Inherited from ST** — the LEFT/RIGHT split logic comes from the official STM32H747I-DISCO TouchGFX Application Template.
+
+### Confirmed fixes (verified by RM0399 / docs)
+
+| Fix | File | Why |
+|---|---|---|
+| Framebuffer width 832 (was 800) | `TouchGFXGeneratedHAL.cpp:62` | Matches LTDC `CFBLR` pitch of 832×3 = 2496 B/row in `TouchGFXHAL.cpp:530`. Without it, LTDC drifts +32 px/row → diagonal slicing (Bug X). |
+| R↔B byte swap of `s_rgb888Scaled` | `jpeg_decoder.c` post-scale | Per RM0399 §33.7.18 Table 276, LTDC PF=RGB888 reads memory in `[B,G,R]` byte order; jpeg_utils writes `[R,G,B]`. Without swap, blue source → green panel. |
+| DSI/LTDC IRQ priority 7 → 5 | `stm32h7xx_hal_msp.c:435,629` | Was preempted by MDMA/SDMMC1/EXTI/JPEG/BDMA mid-handoff. Floor is `configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY = 5` — going lower (4 or below) breaks FreeRTOS API in EOR ISR. |
+| LTDC_ER ISR enabled + handler | `main.c` MX_LTDC_Init + `stm32h7xx_it.c` | Catches FUIF / TERRIF; without it those errors stay pending forever in NVIC because IER was 0. |
+
+### Root cause of remaining half-blue/half-green
+
+**LTDC FIFO Underrun (FUIF).** The peripheral-level error log via the `LTDC_ER_IRQHandler` shows FUIF firing 3-5 times per LEFT/RIGHT half during DMA2D blits. SDRAM cannot deliver pixels fast enough to LTDC's burst windows when DMA2D is concurrently writing the framebuffer. LTDC sends garbage to DSI mid-scan → corrupt panel GRAM → frozen until next clean transfer.
+
+### Per-second IRQ pattern (instrumented logger at 0x24008000)
+
+| Sec | DSI(123) | LTDC_ER(89) | DMA2D(90) | Notes |
+|---|---|---|---|---|
+| 0 | 61 | **16** | 1 | Boot frenzy: JPEG decode + DMA2D + first LTDC scans = saturated SDRAM |
+| 1 | 59 | 0 | 0 | Steady state — clean 60 Hz DSI, no FUIF |
+| 2 | 60 | 0 | 0 | Same |
+| 3 | 49 | **9** | 1 | Periodic re-inject's DMA2D blit triggers another FUIF burst |
+
+Conclusion: **FUIF correlates 1:1 with active DMA2D blits.** When DMA2D is idle, no FUIF.
+
+### Approaches tested and what works / doesn't
+
+| Lever | Effect | Verdict |
+|---|---|---|
+| MPU SDRAM region (Normal Non-Cacheable Bufferable) | None on FUIF | MPU is **CPU-only**; bus masters bypass it. |
+| FMC `RPIPE_DELAY` 0 → 1 | FUIF count slightly down | Marginal, low-risk hardening. |
+| NVIC priority bump DSI/LTDC 7 → 5 | Eliminates FreeRTOS-tier preemption | Keeps the EOR handoff atomic re: FreeRTOS ISRs but doesn't help bus contention. |
+| `lockDMAToFrontPorch(true)` always | DMA2D fully starved → LCD goes black | **Too aggressive.** With LTDC scanning continuously at 60 Hz there's no front-porch window. |
+| `lockDMAToFrontPorch(refreshRequested)` (default dynamic) | DMA2D runs, but FUIF still fires during contention | **Current setting.** Safer than full lock. |
+| `HAL_Delay` between LEFT and RIGHT EOR | None on FUIF | FUIF happens **mid-scan**, not between halves. |
+| Lower TIM6_DAC priority | Priority 15 → black screen (HAL_Delay deadlock in EOR ISR); priority 3 → no improvement | Don't touch. |
+| PLL3R clock divider | Bricks app at boot per `project_pll3r_change_bricks_app.md` | Forbidden lever. |
+| Move framebuffer to internal RAM | Doesn't fit (1.2 MB > 512 KB AXI SRAM max) | Not an option. |
+
+### Architectural fixes that would actually solve FUIF
+
+The single-buffer + DSI Command Mode + 800×480 RGB888 + AHB3 master sharing combination is at the bandwidth limit. To fully eliminate FUIF requires one of:
+
+1. **DSI Video Mode** — eliminates the LEFT/RIGHT split entirely; LTDC streams continuously with timing margin. Requires CubeMX DSI peripheral reconfig + LTDC timing change + OTM8009A re-init in video mode. ST community has a documented migration guide.
+2. **RGB565 instead of RGB888** — halves SDRAM bandwidth demand. Affects color quality minimally for thumbnails, but requires DMA2D / Bitmap format / panel format changes.
+3. **Partial framebuffer in internal RAM** — major refactor; no ST template support for STM32H747I-DISCO + GRAM panel.
+
+### Key memory addresses for live debugging
+
+| Region | Address | Notes |
+|---|---|---|
+| Framebuffer | `0xD0000000` | 832×480×3 ≈ 1.2 MB, single buffer |
+| `s_ycbcrBuf` | `0xD0124800` | JPEG decoder MCU output |
+| `s_rgb888Buf` | `0xD02E6800` | Post-color-convert intermediate |
+| `s_rgb888Scaled` | `0xD0589800` | 800×480 RGB888 source for DMA2D blit |
+| **IRQ logger ring** | **`0x24008000`** | 256-entry × 8 B (irq_num + cycle); read via `mem8 0x24008000 2048` |
+| **IRQ logger index** | **`0x24008800`** | running count of logged IRQs |
+
+### Confirmed-irrelevant theories (don't re-investigate)
+
+- **PE2/A23 hardware corruption from mic clock** — PE2 is in Analog mode (`GPIOE_MODER` bits[5:4] = `11`); IS42S32800J SDRAM only uses A0–A11; FMC's A23 isn't driven during SDRAM transactions.
+- **CM4 zombie interference** — `FLASH_OPTSR2_CUR` BCM4 bit = 0; CM4 doesn't boot. Verified via J-Link CM4 register read.
+- **MPU misconfiguration for SDRAM** — added MPU region 4, no effect on FUIF (bus masters bypass MPU).
+- **FreeRTOS TIM6 priority** — default works; priority 15 deadlocks `HAL_Delay()` in EOR ISR; priority 3 is no-op.
+- **NVIC pending IRQ pipe overflow** — at 100 ms sample intervals, NVIC pipe is consistently empty; no IRQ backlog.
+
+### Tools landed in this session (keep)
+
+- **LTDC_ER ISR + RTT log** (`stm32h7xx_it.c`) — captures FUIF/TERRIF in real time.
+- **DMA2D dimension logger** (`STM32DMA.cpp`) — logs every blit's `nSteps`, `nLoops`, strides, src/dst.
+- **EOR firing counter** (`TouchGFXHAL.cpp` `HAL_DSI_EndOfRefreshCallback`) — `[LCD-EOR] L=x R=y` per frame.
+- **NVIC IRQ ring buffer** (`stm32h7xx_it.c` at `0x24008000`) — ETM-substitute trace; 256 entries, no-wrap (captures only first 256 IRQs from boot for startup analysis).
+
+### Task-list pattern for future LCD debugging on this board
+
+1. **Read RM0399 §33 (LTDC) FIRST** — register byte order in Table 276 alone has caught this bug class twice.
+2. **Check `LTDC_ISR` (0x50001038)** for FUIF/TERRIF flags before assuming software bug.
+3. **Read `RCC_APB3ENR` (0x58024558)** — if 0, LTDC is gated off (normal in DSI Command Mode between transfers).
+4. **Capture IRQ ring buffer** at `0x24008000` for the actual interrupt timeline.
+5. **Don't touch PLL3** without explicit revalidation.

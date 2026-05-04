@@ -46,6 +46,40 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 
+#ifndef RELEASE_BUILD
+/* IRQ ring-buffer trace. ETM-substitute. Each ISR's first instruction
+ * appends (irq_num, DWT cycle count) into the ring. Buffer at fixed
+ * address 0x24008000 (top of AXI SRAM) so J-Link can read non-invasively
+ * via mem8/mem32 commands at any time. */
+typedef struct __attribute__((packed)) {
+    uint8_t  irq_num;
+    uint8_t  pad[3];
+    uint32_t cycle;
+} irq_log_entry_t;
+
+#define IRQ_LOG_SIZE 256u
+
+#pragma location = 0x24008000
+__root volatile irq_log_entry_t g_irq_log[IRQ_LOG_SIZE];
+#pragma location = 0x24008800
+__root volatile uint32_t        g_irq_idx = 0;   /* zero-init so reads are clean */
+
+static inline void Log_IRQ(uint8_t irq_num)
+{
+    /* No-wrap mode: capture only the first IRQ_LOG_SIZE events from boot
+     * so we can see startup behavior. Once full, ignore further IRQs. */
+    uint32_t i = g_irq_idx;
+    if (i < IRQ_LOG_SIZE)
+    {
+        g_irq_log[i].irq_num = irq_num;
+        g_irq_log[i].cycle   = DWT->CYCCNT;
+        g_irq_idx = i + 1u;
+    }
+}
+#else
+#define Log_IRQ(x) ((void)0)
+#endif
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -193,7 +227,8 @@ void DebugMon_Handler(void)
 void TIM6_DAC_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM6_DAC_IRQn 0 */
-
+  /* TIM6 fires at 1 kHz — would flood the 256-entry IRQ logger and
+   * overwrite LTDC_ER/DMA2D/DSI events of interest. Don't log. */
   /* USER CODE END TIM6_DAC_IRQn 0 */
   HAL_TIM_IRQHandler(&htim6);
   /* USER CODE BEGIN TIM6_DAC_IRQn 1 */
@@ -207,7 +242,7 @@ void TIM6_DAC_IRQHandler(void)
 void LTDC_IRQHandler(void)
 {
   /* USER CODE BEGIN LTDC_IRQn 0 */
-
+  Log_IRQ(88);
   /* USER CODE END LTDC_IRQn 0 */
   HAL_LTDC_IRQHandler(&hltdc);
   /* USER CODE BEGIN LTDC_IRQn 1 */
@@ -215,13 +250,35 @@ void LTDC_IRQHandler(void)
   /* USER CODE END LTDC_IRQn 1 */
 }
 
+#ifndef RELEASE_BUILD
+/**
+ * LTDC global ERROR interrupt — catches FIFO underrun (FUIF) and
+ * transfer error (TERRIF). Logs each error to RTT and clears the
+ * status flags via ICR so the next refresh can proceed cleanly.
+ * Without this handler an LTDC error would just leave IRQ 89 pending
+ * forever in NVIC and the CPU would never know.
+ */
+void LTDC_ER_IRQHandler(void)
+{
+    Log_IRQ(89);
+    extern LTDC_HandleTypeDef hltdc;
+    uint32_t isr = LTDC->ISR;
+    if (isr & LTDC_ISR_FUIF)
+        SEGGER_RTT_WriteString(0, "[LTDC-ERR] FUIF FIFO Underrun -- SDRAM bandwidth starvation\n");
+    if (isr & LTDC_ISR_TERRIF)
+        SEGGER_RTT_WriteString(0, "[LTDC-ERR] TERRIF Transfer Error -- AXI bus fault during read\n");
+    LTDC->ICR = (isr & (LTDC_ISR_FUIF | LTDC_ISR_TERRIF));
+    (void)hltdc;
+}
+#endif
+
 /**
   * @brief This function handles DMA2D global interrupt.
   */
 void DMA2D_IRQHandler(void)
 {
   /* USER CODE BEGIN DMA2D_IRQn 0 */
-
+  Log_IRQ(90);
   /* USER CODE END DMA2D_IRQn 0 */
   HAL_DMA2D_IRQHandler(&hdma2d);
   /* USER CODE BEGIN DMA2D_IRQn 1 */
@@ -235,7 +292,7 @@ void DMA2D_IRQHandler(void)
 void JPEG_IRQHandler(void)
 {
   /* USER CODE BEGIN JPEG_IRQn 0 */
-
+  Log_IRQ(121);
   /* USER CODE END JPEG_IRQn 0 */
   HAL_JPEG_IRQHandler(&hjpeg);
   /* USER CODE BEGIN JPEG_IRQn 1 */
@@ -249,7 +306,7 @@ void JPEG_IRQHandler(void)
 void MDMA_IRQHandler(void)
 {
   /* USER CODE BEGIN MDMA_IRQn 0 */
-
+  Log_IRQ(122);
   /* USER CODE END MDMA_IRQn 0 */
   HAL_MDMA_IRQHandler(&hmdma_jpeg_outfifo_th);
   HAL_MDMA_IRQHandler(&hmdma_jpeg_infifo_th);
@@ -264,7 +321,7 @@ void MDMA_IRQHandler(void)
 void DSI_IRQHandler(void)
 {
   /* USER CODE BEGIN DSI_IRQn 0 */
-
+  Log_IRQ(123);
   /* USER CODE END DSI_IRQn 0 */
   HAL_DSI_IRQHandler(&hdsi);
   /* USER CODE BEGIN DSI_IRQn 1 */

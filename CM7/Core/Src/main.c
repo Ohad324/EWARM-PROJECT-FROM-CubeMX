@@ -127,7 +127,7 @@ static uint8_t s_logQueueStorage[32u * sizeof(LogMsg_t)];
  * J-Link: mem32 0x24000050 10    IAR: pin address in Live Watch window.
  * RTTLogTask refreshes every 200 ms.  __no_init = startup does not zero it. */
 #pragma location = 0x24000050
-__no_init volatile DFSDM_Debug_Hub_t g_dbg;
+__root __no_init volatile DFSDM_Debug_Hub_t g_dbg;   /* __root keeps storage linked even when DFSDM init is gated out */
 
 /* ── LIVE debug snapshot — captured at VoiceRecTask recording-start time ────
  * Updated on each recording trigger (overwritten each time).
@@ -314,8 +314,11 @@ Error_Handler();
 #endif
   MX_UART8_Init();
   ITM_STAGE(ITM_INIT_UART8_DONE);
+#if 0   /* DEBUG ISOLATION Step 2 — disable DFSDM to silence PC2 2 MHz CKOUT
+         * (potential SDRAM crosstalk source). Restore by deleting #if 0/#endif. */
   MX_DFSDM1_Init();
   ITM_STAGE(ITM_INIT_DFSDM_DONE);
+#endif
   MX_TouchGFX_Init();
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
@@ -336,8 +339,10 @@ Error_Handler();
 
   BLE_UART_Init();
   ITM_STAGE(ITM_INIT_BLEuart_DONE);
+#if 0   /* DEBUG ISOLATION Step 2 — skip voice recorder init (DMA + EXTI + RTOS). */
   VoiceRec_Init(); /* button EXTI + DFSDM + DMA + RTOS objects */
   ITM_STAGE(ITM_INIT_VOICEREC_DONE);
+#endif
   AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
   ITM_STAGE(ITM_INIT_AUDIOSD_DONE);
 
@@ -387,10 +392,12 @@ Error_Handler();
               osPriorityBelowNormal, NULL);
   ITM_STAGE(ITM_INIT_TASK_CMDHANDLER);
   /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
+#if 0   /* DEBUG ISOLATION Step 2 — don't start voice/SD-write tasks. */
   xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   ITM_STAGE(ITM_INIT_TASK_VOICEREC);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
   ITM_STAGE(ITM_INIT_TASK_SDWRITE);
+#endif
 #ifndef RELEASE_BUILD
   xTaskCreate(RTTLogTask,    "RTTLogTask",    1024u, NULL,        1u, NULL);
   ITM_STAGE(ITM_INIT_TASK_RTTLOG);
@@ -907,9 +914,28 @@ static void MX_LTDC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN LTDC_Init 2 */
-  
+
+#ifndef RELEASE_BUILD
+  /* Enable FIFO Underrun (FUIE) and Transfer Error (TERRIE) so the
+   * LTDC_ER_IRQHandler in stm32h7xx_it.c can log them via RTT.
+   * Catches SDRAM-bandwidth starvation that would otherwise produce
+   * silent partial-frame transfers.
+   *
+   * LTDC_ER priority = 4 (above LTDC=5). At same priority, LTDC_ER
+   * couldn't preempt the LTDC ISR -> error flag stays pending -> next
+   * frame's LTDC starts on top of an unclear error state. The LTDC_ER
+   * handler only does RTT log + ICR write (no FreeRTOS API) so prio 4
+   * is safe (otherwise we'd hit the configMAX_SYSCALL=5 wall).         */
+  LTDC->IER |= (LTDC_IER_FUIE | LTDC_IER_TERRIE);
+  HAL_NVIC_SetPriority(LTDC_ER_IRQn, 4, 0);
+  HAL_NVIC_EnableIRQ(LTDC_ER_IRQn);
+
+  /* TIM6_DAC priority left at HAL default. Tested 3 (no improvement)
+   * and 15 (broke LCD via HAL_Delay deadlock). Don't touch. */
+#endif
+
       /* Configure DSI PHY HS2LP and LP2HS timings */
-    
+
   __HAL_LTDC_DISABLE(&hltdc);
   DSI_LPCmdTypeDef LPCmd;
   
@@ -1592,6 +1618,25 @@ void MPU_Config(void)
   MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
   MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
   MPU_InitStruct.IsBufferable     = MPU_ACCESS_BUFFERABLE;
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* Region 4 — SDRAM at 0xD0000000 (32 MB).
+   * Set as Normal Cacheable Write-Through (TEX=0, C=1, B=0): CPU writes
+   * go directly to SDRAM without dirty-cache-line eviction bursts that
+   * would otherwise hog the AXI bus and starve LTDC's FIFO -> FUIF.
+   * Tradeoff vs Write-Back: write performance lower, but LTDC reads stay
+   * uncontended. Cache READS still work (AN4861 SDRAM tuning notes). */
+  MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
+  MPU_InitStruct.Number           = MPU_REGION_NUMBER4;
+  MPU_InitStruct.BaseAddress      = 0xD0000000;
+  MPU_InitStruct.Size             = MPU_REGION_SIZE_32MB;
+  MPU_InitStruct.SubRegionDisable = 0x0;
+  MPU_InitStruct.TypeExtField     = MPU_TEX_LEVEL0;
+  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
+  MPU_InitStruct.DisableExec      = MPU_INSTRUCTION_ACCESS_DISABLE;
+  MPU_InitStruct.IsShareable      = MPU_ACCESS_NOT_SHAREABLE;
+  MPU_InitStruct.IsCacheable      = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsBufferable     = MPU_ACCESS_NOT_BUFFERABLE;
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);

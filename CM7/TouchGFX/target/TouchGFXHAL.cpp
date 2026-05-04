@@ -455,7 +455,12 @@ extern "C" {
 
         // In single buffering, only require that the system waits for display update to be finished if we
         // actually intend to update the display in this frame.
-        HAL::getInstance()->lockDMAToFrontPorch(refreshRequested);
+        // CLEVER LOCK: keep DMA2D blocked through the ENTIRE LEFT/RIGHT
+        // split (displayRefreshing stays true across both halves) — not
+        // just while a refresh is queued (refreshRequested gets cleared
+        // ~immediately after LEFT scan starts). Without the OR, DMA2D
+        // races against the RIGHT-half scan and produces FUIFs mid-frame.
+        HAL::getInstance()->lockDMAToFrontPorch(refreshRequested || displayRefreshing);
 
 #ifndef RELEASE_BUILD
         /* Bug Y diagnostic — count TE ticks + skipped (refresh not started)
@@ -504,9 +509,14 @@ extern "C" {
         if (!displayRefreshing)         { ++eor_stale; }
         else if (updateRegion == 0)     { ++eor_left;  }
         else                            { ++eor_right; }
-        if (((eor_left + eor_right + eor_stale) % 60u) == 0u)
+        /* DEBUG — log EVERY EOR for first 20 firings, then every 60.
+         * With test inject doing only 2 invalidates total, we'd never hit
+         * 60 firings. We need every event to see if eor_right fires after
+         * each eor_left or if the RIGHT-half transfer is being dropped. */
+        const uint32_t total_eor = eor_left + eor_right + eor_stale;
+        if (total_eor <= 20u || (total_eor % 60u) == 0u)
         {
-            LOG("[LCD-EOR] left=%lu right=%lu stale=%lu region=%d dispRef=%u\n",
+            LOG("[LCD-EOR] L=%lu R=%lu stale=%lu region=%d dispRef=%u\n",
                 (unsigned long)eor_left, (unsigned long)eor_right,
                 (unsigned long)eor_stale, updateRegion,
                 (unsigned)displayRefreshing);
@@ -533,6 +543,20 @@ extern "C" {
 
                 LCD_SetUpdateRegionRight(); //Set display column to 448-799
                 updateRegion = 1;
+
+                /* Wait for DSI host's Command FIFO and Payload Write FIFO
+                 * to drain (CASET long-write fully transmitted) before
+                 * re-arming LTDCEN. Without this poll, HAL_DSI_Refresh()'s
+                 * WCR.LTDCEN write can land while the CASET command is
+                 * still in the DSI host's command FIFO, mis-targeting the
+                 * subsequent LTDC pixel burst. Both FIFOs report Empty when
+                 * their respective bits are SET in GPSR. 100k-iteration cap
+                 * avoids ISR deadlock if a FIFO never empties. */
+                {
+                    const uint32_t empty_mask = DSI_GPSR_CMDFE | DSI_GPSR_PWRFE;
+                    uint32_t to = 100000u;
+                    while ((hdsi->Instance->GPSR & empty_mask) != empty_mask && --to) { __NOP(); }
+                }
 
                 HAL_DSI_Refresh(hdsi);
             }

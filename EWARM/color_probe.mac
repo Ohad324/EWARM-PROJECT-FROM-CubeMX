@@ -1,0 +1,138 @@
+/*
+ * color_probe.mac — Headless C-SPY probe for the JPEG -> framebuffer color
+ * pipeline. Identifies the byte order at every reachable stage so we can
+ * pinpoint where Blue (R=0,G=0,B=255 in the source PNG) becomes Green on
+ * the panel.
+ *
+ * Stages probed (after the test JPEG injection has rendered ~3 s into boot):
+ *   1. s_rgb888Buf      — output of jpeg_utils convertFn (pre-scale)
+ *   2. s_rgb888Scaled   — output of scale_rgb888 (pre-DMA2D)
+ *   3. 0xD0000000       — framebuffer (post-DMA2D blit, what LTDC reads)
+ *   4. LTDC L1 regs     — pixel format, pitch, base, line count
+ *
+ * Test image: flasher PNG letterboxed into 320x240 (white pad both sides),
+ * scaled to 800x480. After scale, expected approximate pixel positions:
+ *
+ *   col=  0..194 row=any                     -> WHITE pad           (FF FF FF)
+ *   col= 195..605 row=0..479                  -> flasher icon area
+ *   col=  ~270   row=20                       -> BLUE BORDER        (key)
+ *   col=  ~400   row=240                      -> white interior
+ *   col=  ~540   row=460                      -> BLUE BORDER (right)
+ *   col=606..799 row=any                      -> WHITE pad           (FF FF FF)
+ *
+ * Usage:
+ *   Run via color_probe.bat. The batch rebuilds + flashes Debug firmware,
+ *   waits for the inject, attaches via cspybat, runs this macro, prints
+ *   the dump to color_probe.log.
+ */
+
+DumpRgbBytes(tag, addr)
+{
+    __var b0, b1, b2;
+    b0 = __readMemory8(addr + 0, "Memory");
+    b1 = __readMemory8(addr + 1, "Memory");
+    b2 = __readMemory8(addr + 2, "Memory");
+    __message "  ", tag, " @0x", addr:%08X,
+              "  bytes=[", b0:%08X, " ", b1:%08X, " ", b2:%08X, "]",
+              "  [R,G,B]?(R=", b0:%3d, " G=", b1:%3d, " B=", b2:%3d, ")",
+              "  [B,G,R]?(B=", b0:%3d, " G=", b1:%3d, " R=", b2:%3d, ")\n";
+}
+
+DumpScaledBuf()
+{
+    /* &s_rgb888Scaled gives the buffer base; offsets computed from
+     * (row * 800 + col) * 3 because the scaled buffer is 800-wide. */
+    __var base;
+    base = &s_rgb888Scaled;
+
+    __message "===== s_rgb888Scaled (post-scale, pre-DMA2D, base=0x", base:%08X, ") =====\n";
+    DumpRgbBytes("white-pad   col=  0 row=  0", base + (  0 * 800 +   0) * 3);
+    DumpRgbBytes("white-pad   col=100 row=100", base + (100 * 800 + 100) * 3);
+    DumpRgbBytes("BLUE BORDER col=270 row= 20", base + ( 20 * 800 + 270) * 3);
+    DumpRgbBytes("BLUE BORDER col=270 row=200", base + (200 * 800 + 270) * 3);
+    DumpRgbBytes("white-int   col=400 row=240", base + (240 * 800 + 400) * 3);
+    DumpRgbBytes("BLUE BORDER col=540 row=460", base + (460 * 800 + 540) * 3);
+    DumpRgbBytes("white-pad   col=799 row=479", base + (479 * 800 + 799) * 3);
+}
+
+DumpFramebuf()
+{
+    /* Framebuffer is at 0xD0000000, 832-wide (with our cushion). LTDC reads
+     * from here at pitch 832*3=2496 B/row. DMA2D writes here. */
+    __message "===== framebuffer @ 0xD0000000 (post-DMA2D, pre-LTDC, 832-wide) =====\n";
+    DumpRgbBytes("white-pad   col=  0 row=  0", 0xD0000000 + (  0 * 832 +   0) * 3);
+    DumpRgbBytes("white-pad   col=100 row=100", 0xD0000000 + (100 * 832 + 100) * 3);
+    DumpRgbBytes("BLUE BORDER col=270 row= 20", 0xD0000000 + ( 20 * 832 + 270) * 3);
+    DumpRgbBytes("BLUE BORDER col=270 row=200", 0xD0000000 + (200 * 832 + 270) * 3);
+    DumpRgbBytes("white-int   col=400 row=240", 0xD0000000 + (240 * 832 + 400) * 3);
+    DumpRgbBytes("BLUE BORDER col=540 row=460", 0xD0000000 + (460 * 832 + 540) * 3);
+    DumpRgbBytes("RIGHT-half  col=600 row=240  (often-stale region)", 0xD0000000 + (240 * 832 + 600) * 3);
+    DumpRgbBytes("RIGHT-half  col=750 row=240  (often-stale region)", 0xD0000000 + (240 * 832 + 750) * 3);
+}
+
+DumpLtdc()
+{
+    __var pfcr, cfbar, cfblr, cfblnr, gcr;
+    pfcr   = __readMemory32(0x50001094, "Memory");  /* L1PFCR */
+    cfbar  = __readMemory32(0x500010AC, "Memory");
+    cfblr  = __readMemory32(0x500010B0, "Memory");
+    cfblnr = __readMemory32(0x500010B4, "Memory");
+    gcr    = __readMemory32(0x50001018, "Memory");
+    __message "===== LTDC Layer 1 + global =====\n";
+    __message "  GCR     = 0x", gcr:%08X,    " (bit0=LTDCEN, bit16=DEN, ...)\n";
+    __message "  L1PFCR  = 0x", pfcr:%08X,   " (0=ARGB8888, 1=RGB888, 2=RGB565, ...)\n";
+    __message "  L1CFBAR = 0x", cfbar:%08X,  "\n";
+    __message "  L1CFBLR = 0x", cfblr:%08X,  " (top16=pitch B, bot13=line len B)\n";
+    __message "  L1CFBLNR= 0x", cfblnr:%08X, " (active line count)\n";
+}
+
+DumpRuntime()
+{
+    __message "===== runtime state =====\n";
+    __message "  refreshRequested  = ", refreshRequested:%d,  "\n";
+    __message "  displayRefreshing = ", displayRefreshing:%d, "\n";
+    __message "  updateRegion      = ", updateRegion:%d,      "\n";
+    __message "  currFbBase        = 0x", currFbBase:%08X,    "\n";
+}
+
+Snapshot(tag)
+{
+    __message "\n=========================================\n";
+    __message "  SNAPSHOT: ", tag, "\n";
+    __message "=========================================\n";
+    DumpRuntime();
+    DumpLtdc();
+    DumpScaledBuf();
+    DumpFramebuf();
+}
+
+execUserConnect()
+{
+    __message "\n*** color_probe.mac — JPEG color pipeline byte-order probe ***\n";
+    __message "Target should already be running. Letting inject + render finish...\n";
+
+    /* 6 s = 3 s test-thumb delay + ~1 s decode + ~1 s render + margin. */
+    __go();
+    __delay(6000);
+    __stop();
+    Snapshot("T+6s post-boot (one frame after first inject render)");
+
+    __go();
+    __delay(2000);
+    __stop();
+    Snapshot("T+8s (steady state)");
+
+    __message "\n*** color_probe.mac DONE ***\n";
+    __message "How to read this:\n";
+    __message "  Compare the SAME pixel between s_rgb888Scaled and framebuffer.\n";
+    __message "  If bytes match -> DMA2D writes verbatim.\n";
+    __message "  If bytes differ -> DMA2D is permuting (FGPFCCR vs OPFCCR mismatch).\n";
+    __message "\n";
+    __message "  For a known-blue source pixel (R=0,G=0,B=255), the SCALED bytes:\n";
+    __message "    [00 00 FF] -> jpeg_utils wrote [R,G,B] order (software typical)\n";
+    __message "    [FF 00 00] -> jpeg_utils wrote [B,G,R] order (LTDC native)\n";
+    __message "    [00 FF 00] -> rotation [G,?,?] -> explains blue->green on panel\n";
+    __message "\n";
+    __message "  Check the RIGHT-half samples (col>=400) in the framebuffer:\n";
+    __message "    if they all read 00 00 00 or stale data -> DMA2D never wrote them.\n";
+}

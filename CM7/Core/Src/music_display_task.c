@@ -126,8 +126,17 @@ static void JpegDisplayTask(void *argument)
 
     for (;;)
     {
+#ifndef RELEASE_BUILD
+        /* Re-inject test thumb every 1 s for IRQ logger capture */
+        if (xQueueReceive(xMusicQueue, &raw, pdMS_TO_TICKS(1000)) != pdTRUE)
+        {
+            Music_InjectTestThumb();
+            continue;
+        }
+#else
         if (xQueueReceive(xMusicQueue, &raw, portMAX_DELAY) != pdTRUE)
             continue;
+#endif
 
         memset(&done, 0, sizeof(done));
 

@@ -432,7 +432,14 @@ void HAL_DSI_MspInit(DSI_HandleTypeDef* hdsi)
     HAL_GPIO_Init(GPIOJ, &GPIO_InitStruct);
 
     /* DSI interrupt Init */
-    HAL_NVIC_SetPriority(DSI_IRQn, 7, 0);
+    /* Priority 5 = configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY (highest
+     * FreeRTOS-safe). Was 7, but at 7 the EOR LEFT/RIGHT split-frame
+     * handoff was preempted by MDMA(5)/SDMMC1(5)/EXTI15_10(5)/JPEG(6)/
+     * BDMA(6) etc. mid-sequence, occasionally dropping the RIGHT-half
+     * DSI refresh and leaving the right side of the panel stale.
+     * Tested priority 4 (above syscall): broke FreeRTOS scheduler -> blank
+     * screen. ISR uses FreeRTOS API (signalVSync etc.) so 5 is the floor. */
+    HAL_NVIC_SetPriority(DSI_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(DSI_IRQn);
     /* USER CODE BEGIN DSI_MspInit 1 */
 
@@ -626,7 +633,9 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef* hltdc)
     /* Peripheral clock enable */
     __HAL_RCC_LTDC_CLK_ENABLE();
     /* LTDC interrupt Init */
-    HAL_NVIC_SetPriority(LTDC_IRQn, 7, 0);
+    /* Priority 5 same as DSI_IRQn so they don't preempt each other during
+     * the LEFT/RIGHT handoff. See DSI_IRQn comment above. */
+    HAL_NVIC_SetPriority(LTDC_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(LTDC_IRQn);
     /* USER CODE BEGIN LTDC_MspInit 1 */
 

@@ -234,12 +234,28 @@ void STM32DMA::setupDataCopy(const BlitOp& blitOp)
     {
         static uint32_t dma2d_blit_count = 0;
         ++dma2d_blit_count;
-        if ((dma2d_blit_count % 60u) == 0u)
+        /* DUMP EVERY BLIT for the first 30, then every 60 — proves whether
+         * imgThumbnail is dispatched as a single 800x480 blit or split into
+         * two 400x480 halves (or only one 400-wide half). Key fields:
+         *   nSteps  = pixels per row   (expect 800 for full-width thumb)
+         *   nLoops  = number of rows   (expect 480)
+         *   *Stride = bytes between rows in source/dest                    */
+        if (dma2d_blit_count <= 30u || (dma2d_blit_count % 60u) == 0u)
         {
-            char db[64];
+            char db[200];
             std::snprintf(db, sizeof(db),
-                "[DMA2D blits] count=%lu lastOp=%u\n",
-                (unsigned long)dma2d_blit_count, (unsigned)blitOp.operation);
+                "[DMA2D #%lu] op=%u srcFmt=%u dstFmt=%u nSteps=%u nLoops=%u "
+                "srcStr=%u dstStr=%u pSrc=%p pDst=%p\n",
+                (unsigned long)dma2d_blit_count,
+                (unsigned)blitOp.operation,
+                (unsigned)blitOp.srcFormat,
+                (unsigned)blitOp.dstFormat,
+                (unsigned)blitOp.nSteps,
+                (unsigned)blitOp.nLoops,
+                (unsigned)blitOp.srcLoopStride,
+                (unsigned)blitOp.dstLoopStride,
+                (void*)blitOp.pSrc,
+                (void*)blitOp.pDst);
             SEGGER_RTT_WriteString(0, db);
         }
     }

@@ -210,11 +210,10 @@ HAL_StatusTypeDef JPEG_Decode(const uint8_t *jpegData, uint32_t jpegSize,
     LOG("[JPEG] Stage6: scaling DONE  scaled=%p\n", (void *)s_rgb888Scaled);
 
 #ifndef RELEASE_BUILD
-    /* DEBUG — R<->B swap probe. STM32H7 LTDC PF=RGB888 reads memory in
-     * [B,G,R] byte order, but jpeg_utils writes [R,G,B]. Swap in place so
-     * the buffer LTDC sees has the channels lined up correctly.
-     * If the panel still shows wrong colors after this, the conversion
-     * function output order is different than assumed -- iterate. */
+    /* R<->B swap. Per RM0399 §33.7.18 Table 276, LTDC PF=RGB888 reads
+     * memory in [B,G,R] byte order, but jpeg_utils writes [R,G,B]. Swap
+     * aligns the buffer with what LTDC expects so source-blue displays
+     * as panel-blue. */
     {
         uint8_t *p = s_rgb888Scaled;
         const uint32_t pixels = DISPLAY_W * DISPLAY_H;
