@@ -98,33 +98,34 @@ RunToCheckpoint(addr, timeout_ms, label)
 
 execUserSetup()
 {
-    __var addr;
-
     __message "\n*** boot_pipeline.mac (sequential RunToBp) ***\n";
-    __message "    UCSARM-26 v9.50.x: __hwRunToBreakpoint(addr,timeout_ms)\n";
-    __message "    Symbols resolved via __symbolAddress (per docs).\n";
+    __message "    Using direct symbol reference (no __symbolAddress in v9.4.6)\n";
 
-    /* Phase 1 checkpoints (pre-osKernelStart) */
-    addr = __symbolAddress("main");                   RunToCheckpoint(addr, 5000, "main");
-    addr = __symbolAddress("MPU_Config");             RunToCheckpoint(addr, 5000, "MPU_Config");
-    addr = __symbolAddress("SystemClock_Config");     RunToCheckpoint(addr, 5000, "SystemClock_Config");
-    addr = __symbolAddress("MX_GPIO_Init");           RunToCheckpoint(addr, 5000, "MX_GPIO_Init");
-    addr = __symbolAddress("MX_MDMA_Init");           RunToCheckpoint(addr, 5000, "MX_MDMA_Init");
-    addr = __symbolAddress("MX_FMC_Init");            RunToCheckpoint(addr, 5000, "MX_FMC_Init");
-    addr = __symbolAddress("MX_DMA2D_Init");          RunToCheckpoint(addr, 5000, "MX_DMA2D_Init");
-    addr = __symbolAddress("MX_CRC_Init");            RunToCheckpoint(addr, 5000, "MX_CRC_Init");
-    addr = __symbolAddress("MX_JPEG_Init");           RunToCheckpoint(addr, 5000, "MX_JPEG_Init");
-    addr = __symbolAddress("MX_UART8_Init");          RunToCheckpoint(addr, 5000, "MX_UART8_Init");
-    addr = __symbolAddress("MX_QUADSPI_Init");        RunToCheckpoint(addr, 5000, "MX_QUADSPI_Init");
-    addr = __symbolAddress("MX_TouchGFX_PreOSInit");  RunToCheckpoint(addr, 5000, "MX_TouchGFX_PreOSInit");
-    addr = __symbolAddress("osKernelInitialize");     RunToCheckpoint(addr, 5000, "osKernelInitialize");
-    addr = __symbolAddress("osThreadNew");            RunToCheckpoint(addr, 5000, "osThreadNew");
-    addr = __symbolAddress("vTaskStartScheduler");    RunToCheckpoint(addr, 5000, "vTaskStartScheduler");
+    /* Direct symbol reference with address-of (&): in IAR C-SPY macros,
+     * a bare symbol name evaluates to the value AT that symbol; use &
+     * to get the address.  &main = address-of-main, etc. */
 
-    /* Phase 2 checkpoints (inside guiTask, post-scheduler-start) */
-    addr = __symbolAddress("TouchGFX_Task");          RunToCheckpoint(addr, 5000, "TouchGFX_Task entry (Phase 2 begin)");
-    addr = __symbolAddress("MX_DSIHOST_DSI_Init");    RunToCheckpoint(addr, 5000, "MX_DSIHOST_DSI_Init");
-    addr = __symbolAddress("MX_LTDC_Init");           RunToCheckpoint(addr, 5000, "MX_LTDC_Init");
+    /* Phase 1 checkpoints */
+    RunToCheckpoint(&main,                 5000, "main");
+    RunToCheckpoint(&MPU_Config,           5000, "MPU_Config");
+    RunToCheckpoint(&SystemClock_Config,   5000, "SystemClock_Config");
+    RunToCheckpoint(&MX_GPIO_Init,         5000, "MX_GPIO_Init");
+    RunToCheckpoint(&MX_MDMA_Init,         5000, "MX_MDMA_Init");
+    RunToCheckpoint(&MX_FMC_Init,          5000, "MX_FMC_Init");
+    RunToCheckpoint(&MX_DMA2D_Init,        5000, "MX_DMA2D_Init");
+    RunToCheckpoint(&MX_CRC_Init,          5000, "MX_CRC_Init");
+    RunToCheckpoint(&MX_JPEG_Init,         5000, "MX_JPEG_Init");
+    RunToCheckpoint(&MX_UART8_Init,        5000, "MX_UART8_Init");
+    RunToCheckpoint(&MX_QUADSPI_Init,      5000, "MX_QUADSPI_Init");
+    RunToCheckpoint(&MX_TouchGFX_PreOSInit,5000, "MX_TouchGFX_PreOSInit");
+    RunToCheckpoint(&osKernelInitialize,   5000, "osKernelInitialize");
+    RunToCheckpoint(&osThreadNew,          5000, "osThreadNew");
+    RunToCheckpoint(&vTaskStartScheduler,  5000, "vTaskStartScheduler");
+
+    /* Phase 2 checkpoints */
+    RunToCheckpoint(&TouchGFX_Task,        5000, "TouchGFX_Task entry (Phase 2 begin)");
+    RunToCheckpoint(&MX_DSIHOST_DSI_Init,  5000, "MX_DSIHOST_DSI_Init");
+    RunToCheckpoint(&MX_LTDC_Init,         5000, "MX_LTDC_Init");
 
     __message "\n*** boot_pipeline.mac DONE -- all checkpoints visited ***\n";
 }

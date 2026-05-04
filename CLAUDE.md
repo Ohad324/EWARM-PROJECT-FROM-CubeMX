@@ -767,7 +767,7 @@ __clearBreak(handle);
 
 `__setDataBreak` parameters:
 - `zone` — almost always `"Memory"`
-- `address` — integer (use `__symbolAddress()` to resolve)
+- `address` — integer (for a C symbol, use `&symbol` to get its address)
 - `size` — `1`, `2`, or `4` bytes
 - `accessType` — `"R"`, `"W"`, or `"RW"`
 - `condition`, `conditionType`, `action` — same as `__setCodeBreak`
@@ -791,10 +791,23 @@ Note argument order in writes: **value first, then address**.
 
 #### Symbol resolution
 
+In C-SPY macros, C symbols can be referenced **directly** as expressions. A bare symbol name evaluates to the *value* at that symbol; prefix with `&` to get the *address*. The debugger handles symbol-to-address resolution behind the scenes because it loaded the .out/ELF.
+
 ```c
-addr = __symbolAddress("g_state");        // Get runtime address of a symbol
-val  = __evaluate("expression");          // Evaluate a C expression
-defined = __isMacroSymbolDefined("name"); // Check if symbol exists
+val   = g_state;                              // Direct read: value of g_state
+addr  = &g_state;                             // Direct address-of: address of g_state
+val   = __readMemory32(&g_state, "Memory");   // Same value via memory read
+
+// For function symbols (used with __hwRunToBreakpoint, etc.):
+__hwRunToBreakpoint(&main, 5000);             // Run until main() entry
+
+// __symbolAddress("name") is NOT in IAR EW v9.4.6 -- use & directly.
+
+// Dynamic / string-based resolution:
+result = 0;
+__evaluate("g_state",  &result);              // result = value of g_state
+__evaluate("&g_state", &result);              // result = address of g_state
+defined = __isMacroSymbolDefined("name");     // True if symbol exists
 ```
 
 #### Execution control (use sparingly)
@@ -810,7 +823,7 @@ __hwResetRunToBp(strategy, address, timeout_ms);
 **Important:**
 - `__delay` does NOT halt the target — it pauses macro execution on the host. The target keeps running (or stays halted) — whatever it was doing continues.
 - `__hwRunToBreakpoint` returns: `>=0` time-to-hit, `-1` BP install failed, `-2` timeout
-- Address arguments to `__hwRunToBreakpoint` and `__hwResetRunToBp` must be **integers** — symbols are NOT accepted. Resolve via `__symbolAddress()` first.
+- Address arguments to `__hwRunToBreakpoint` and `__hwResetRunToBp` must be **integers**. For a C symbol, prefix with `&` (e.g. `__hwRunToBreakpoint(&main, 5000)`). The function `__symbolAddress()` is NOT available in IAR EW v9.4.6.
 
 #### File I/O (host side)
 
