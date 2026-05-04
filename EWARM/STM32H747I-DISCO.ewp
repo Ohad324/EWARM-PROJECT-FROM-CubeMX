@@ -2523,6 +2523,7 @@
                     <state>STM32H747xx</state>
                     <state>USE_BPP=24</state>
                     <state>USE_PWR_DIRECT_SMPS_SUPPLY</state>
+                    <state>RELEASE_BUILD</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
