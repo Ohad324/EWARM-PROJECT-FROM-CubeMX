@@ -1,21 +1,23 @@
 /*
- * boot_pipeline.mac -- BP-driven boot pipeline probe (UCSARM-26 v9.50.x).
+ * boot_pipeline.mac -- 20-BP boot probe up to TouchGFX_Task entry.
  *
- * Lifecycle: download flow (no --attach_to_running_target).
- *   1. cspybat downloads .out
- *   2. execUserSetup installs code breakpoints at peripheral-init entries
- *   3. CPU runs; each BP hit fires its action macro -> snapshot + clearBreak
- *   4. After all 4 BPs have hit and run their actions, the CPU continues
- *      free-running until execUserExit prints the final summary
+ * Per UCSARM-26 lifecycle:
+ *   execUserSetup    install 20 code breakpoints across the boot path
+ *   CPU runs         each BP fires its action -> log entry + cycle count
+ *                    -> __hwRunToBreakpoint() to explicitly resume
+ *   execUserExit     final banner
  *
- * Execution control: NO __go / __stop (not in IAR macro language). The
- * action-string mechanism on each BP runs the snapshot inline.
+ * Goals:
+ *   1. timeline of which boot stage runs at what cycle count
+ *   2. confirm Phase 1 (LTDC/DSI off) before scheduler start
+ *   3. confirm guiTask reaches Phase 2 peripheral inits
  *
- * IAR C-SPY macro quirks (see CLAUDE.md "C-SPY Macro Reference"):
- *   - no preprocessor (no #define), no struct, no enum
- *   - __var locals only; types implicit
- *   - __readMemory32(addr, "Memory")  zone always "Memory"
- *   - __setCodeBreak(loc, skip, cond, action, name) -- 5 args
+ * IAR C-SPY macro language quirks: no preprocessor, no struct/enum,
+ * no __go/__stop. Use __setCodeBreak + action strings + __hwRunToBreakpoint.
+ *
+ * Caveat: Cortex-M7 FPB has 8 hardware code breakpoints. If C-SPY can't
+ * place a software BP in flash (read-only) it'll fail. We log each
+ * handle so we can see which BPs actually installed.
  */
 
 /* --- helpers --- */
@@ -25,136 +27,167 @@ PrintHex32(label, v)
     __message "  ", label, " = 0x", v:%08X, "\n";
 }
 
-CheckBit(label, val, bit, expect_set)
+ReadCycle()
 {
-    __var got;
-    got = (val >> bit) & 1;
-    if (got == expect_set)
-        __message "  PASS ", label, "  bit", bit:%d, "=", got:%d, "\n";
-    else
-        __message "  FAIL ", label, "  bit", bit:%d, "=", got:%d, "  (expected ", expect_set:%d, ")\n";
+    __var c;
+    c = __readMemory32(0xE0001004, "Memory");   /* DWT->CYCCNT */
+    PrintHex32("DWT->CYCCNT", c);
 }
 
-DumpLtdcCore()
+DumpKeyRegs()
 {
-    __var gcr, l1pfcr, l1cfbar;
-    gcr     = __readMemory32(0x50001018, "Memory");
-    l1pfcr  = __readMemory32(0x50001094, "Memory");
-    l1cfbar = __readMemory32(0x500010AC, "Memory");
-    PrintHex32("LTDC GCR     ", gcr);
-    PrintHex32("LTDC L1PFCR  ", l1pfcr);
-    PrintHex32("LTDC L1CFBAR ", l1cfbar);
+    /* Comprehensive boot-state dump.  Peripheral apertures (RCC, FLASH,
+     * PWR, FMC, LTDC, DSI, MPU) are always alive on Cortex-M7 -- their
+     * registers can be read before initialization (most read 0).
+     *
+     * Do NOT read SDRAM (0xD0000000) here -- bus fault before FMC init
+     * aborts the macro session.
+     */
+    __var rcc_cr, rcc_cfgr, rcc_pllckselr, rcc_d1cfgr;
+    __var rcc_ahb1, rcc_ahb3, rcc_ahb4, rcc_apb2enr, rcc_apb3enr;
+    __var flash_acr, pwr_d3cr, pwr_csr1;
+    __var fmc_sdcr1, mpu_ctrl, scb_ccr;
+    __var ltdc_gcr, ltdc_isr, ltdc_l1pfcr, ltdc_l1cfbar;
+    __var dsi_cr, dsi_wcr, dsi_vr;
+    __var gpioe_moder, gpioc_moder;
+
+    rcc_cr        = __readMemory32(0x58024400, "Memory");   /* RCC_CR        */
+    rcc_cfgr      = __readMemory32(0x58024410, "Memory");   /* RCC_CFGR      */
+    rcc_pllckselr = __readMemory32(0x58024428, "Memory");   /* RCC_PLLCKSELR */
+    rcc_d1cfgr    = __readMemory32(0x58024418, "Memory");   /* RCC_D1CFGR    */
+    rcc_ahb1      = __readMemory32(0x580244D8, "Memory");   /* RCC_AHB1ENR   */
+    rcc_ahb3      = __readMemory32(0x580244D4, "Memory");   /* RCC_AHB3ENR   */
+    rcc_ahb4      = __readMemory32(0x580244E0, "Memory");   /* RCC_AHB4ENR   */
+    rcc_apb2enr   = __readMemory32(0x580244F0, "Memory");   /* RCC_APB2ENR   */
+    rcc_apb3enr   = __readMemory32(0x580244E4, "Memory");   /* RCC_APB3ENR   */
+    flash_acr     = __readMemory32(0x52002000, "Memory");   /* FLASH_ACR     */
+    pwr_d3cr      = __readMemory32(0x58024818, "Memory");   /* PWR_D3CR      */
+    pwr_csr1      = __readMemory32(0x58024804, "Memory");   /* PWR_CSR1      */
+    fmc_sdcr1     = __readMemory32(0x52004140, "Memory");   /* FMC SDCR1     */
+    mpu_ctrl      = __readMemory32(0xE000ED94, "Memory");   /* MPU CTRL      */
+    scb_ccr       = __readMemory32(0xE000ED14, "Memory");   /* SCB CCR (cache) */
+    ltdc_gcr      = __readMemory32(0x50001018, "Memory");
+    ltdc_isr      = __readMemory32(0x50001038, "Memory");
+    ltdc_l1pfcr   = __readMemory32(0x50001094, "Memory");
+    ltdc_l1cfbar  = __readMemory32(0x500010AC, "Memory");
+    dsi_cr        = __readMemory32(0x50000004, "Memory");
+    dsi_wcr       = __readMemory32(0x50000024, "Memory");
+    dsi_vr        = __readMemory32(0x50000000, "Memory");
+    gpioe_moder   = __readMemory32(0x58021000, "Memory");
+    gpioc_moder   = __readMemory32(0x58020800, "Memory");
+
+    __message "  --- clocks ---\n";
+    __message "  RCC.CR=0x", rcc_cr:%08X, "  RCC.CFGR=0x", rcc_cfgr:%08X, "  PLLCKSELR=0x", rcc_pllckselr:%08X, "  D1CFGR=0x", rcc_d1cfgr:%08X, "\n";
+    __message "  AHB1=0x", rcc_ahb1:%08X, "  AHB3=0x", rcc_ahb3:%08X, "  AHB4=0x", rcc_ahb4:%08X, "  APB2=0x", rcc_apb2enr:%08X, "  APB3=0x", rcc_apb3enr:%08X, "\n";
+    __message "  FLASH.ACR=0x", flash_acr:%08X, "  PWR.D3CR=0x", pwr_d3cr:%08X, "  PWR.CSR1=0x", pwr_csr1:%08X, "\n";
+    __message "  --- memory & cache ---\n";
+    __message "  FMC.SDCR1=0x", fmc_sdcr1:%08X, "  MPU.CTRL=0x", mpu_ctrl:%08X, "  SCB.CCR=0x", scb_ccr:%08X, "\n";
+    __message "  --- display ---\n";
+    __message "  LTDC.GCR=0x", ltdc_gcr:%08X, "  LTDC.ISR=0x", ltdc_isr:%08X, "  L1PFCR=0x", ltdc_l1pfcr:%08X, "  L1CFBAR=0x", ltdc_l1cfbar:%08X, "\n";
+    __message "  DSI.CR=0x",  dsi_cr:%08X,  "  DSI.WCR=0x", dsi_wcr:%08X, "  DSI.VR=0x", dsi_vr:%08X, "\n";
+    __message "  --- gpio ---\n";
+    __message "  GPIOE.MODER=0x", gpioe_moder:%08X, "  GPIOC.MODER=0x", gpioc_moder:%08X, "\n";
 }
 
-DumpDsiCore()
+LogHit(n, name)
 {
-    __var dsi_cr, dsi_wcr;
-    dsi_cr  = __readMemory32(0x50000004, "Memory");
-    dsi_wcr = __readMemory32(0x50000024, "Memory");
-    PrintHex32("DSI CR       ", dsi_cr);
-    PrintHex32("DSI WCR      ", dsi_wcr);
-}
-
-DumpFb4()
-{
-    __var fb0, fb1, fb_mid, fb_far;
-    fb0    = __readMemory32(0xD0000000, "Memory");
-    fb1    = __readMemory32(0xD0000000 +  100*2496 + 100*3, "Memory");
-    fb_mid = __readMemory32(0xD0000000 +  240*2496 + 400*3, "Memory");
-    fb_far = __readMemory32(0xD0000000 +  240*2496 + 750*3, "Memory");
-    PrintHex32("FB[0,0]      ", fb0);
-    PrintHex32("FB[100,100]  ", fb1);
-    PrintHex32("FB[240,400]  ", fb_mid);
-    PrintHex32("FB[240,750]  ", fb_far);
-}
-
-ReadCycleCounter()
-{
-    /* DWT->CYCCNT at 0xE0001004. CoreDebug DEMCR.TRCENA bit24 + DWT
-     * CYCCNTENA must be enabled by application (or by C-SPY at start). */
     __var c;
     c = __readMemory32(0xE0001004, "Memory");
-    PrintHex32("DWT->CYCCNT  ", c);
+    __message "[BP", n:%d, "] @cyc=0x", c:%08X, " ", name, "\n";
+    /* Drive the CPU forward.  __hwRunToBreakpoint takes one arg; passing
+     * 0 = "no specific destination, run until any next BP fires". */
+    __hwRunToBreakpoint(0);
 }
 
-/* --- BP action macros (called by C-SPY when each BP hits) --- */
+/* --- BP action macros --- */
+HitMain()                  { LogHit( 1, "main entry");                  }
+HitHalInit()               { LogHit( 2, "HAL_Init entry");              }
+HitSystemInit()            { LogHit( 3, "SystemInit entry");            }
+HitMpuConfig()             { LogHit( 4, "MPU_Config entry");            }
+HitSystemClockConfig()     { LogHit( 5, "SystemClock_Config entry");    }
+HitMxGpioInit()            { LogHit( 6, "MX_GPIO_Init entry");          }
+HitMxMdmaInit()            { LogHit( 7, "MX_MDMA_Init entry");          }
+HitMxFmcInit()             { LogHit( 8, "MX_FMC_Init entry");           }
+HitMxDma2dInit()           { LogHit( 9, "MX_DMA2D_Init entry");         }
+HitMxCrcInit()             { LogHit(10, "MX_CRC_Init entry");           }
+HitMxJpegInit()            { LogHit(11, "MX_JPEG_Init entry");          }
+HitMxUart8Init()           { LogHit(12, "MX_UART8_Init entry");         }
+HitMxQuadspiInit()         { LogHit(13, "MX_QUADSPI_Init entry");       }
+HitMxTouchGFXPreOSInit()   { LogHit(14, "MX_TouchGFX_PreOSInit entry"); }
+HitOsKernelInitialize()    { LogHit(15, "osKernelInitialize entry");    }
+HitOsThreadNew()           { LogHit(16, "osThreadNew entry");           }
+HitVTaskStartScheduler()   { LogHit(17, "vTaskStartScheduler entry");   }
+HitTouchGFXTask()          { LogHit(18, "TouchGFX_Task entry (Phase 2 begins)"); }
+HitMxDsiHostInit()         { LogHit(19, "MX_DSIHOST_DSI_Init entry");   }
+HitMxLtdcInit()            { LogHit(20, "MX_LTDC_Init entry");          }
 
-/* BP1: vTaskStartScheduler entry -- end of Phase 1, kernel about to start.
- * Expectation: LTDC + DSI both DISABLED (silent boot premise). */
-HitVTaskStartScheduler()
+/* --- BP handles (file-scope) --- */
+__var h01, h02, h03, h04, h05, h06, h07, h08, h09, h10;
+__var h11, h12, h13, h14, h15, h16, h17, h18, h19, h20;
+
+LogHandle(n, h, name)
 {
-    __message "\n--- BP1 hit: vTaskStartScheduler entry (end of Phase 1) ---\n";
-    DumpLtdcCore();
-    DumpDsiCore();
-    ReadCycleCounter();
-    CheckBit("Phase 1: LTDC DISABLED (GCR.LTDCEN=0)",
-             __readMemory32(0x50001018, "Memory"), 0, 0);
-    CheckBit("Phase 1: DSI host DISABLED (CR.EN=0)",
-             __readMemory32(0x50000004, "Memory"), 0, 0);
-    __clearBreak(bp_vstart);
+    if (h == 0)
+        __message "  [SETUP] BP", n:%d, " FAILED (handle=0): ", name, "\n";
+    else
+        __message "  [SETUP] BP", n:%d, " ok h=", h:%d, " : ", name, "\n";
 }
 
-/* BP2: MX_DSIHOST_DSI_Init entry -- guiTask reached Phase 2 start. */
-HitDsiInitEntry()
-{
-    __message "\n--- BP2 hit: MX_DSIHOST_DSI_Init entry (guiTask Phase 2 begin) ---\n";
-    DumpLtdcCore();
-    DumpDsiCore();
-    ReadCycleCounter();
-    __clearBreak(bp_dsi_init);
-}
-
-/* BP3: MX_LTDC_Init entry -- DSI just done, LTDC about to come up. */
-HitLtdcInitEntry()
-{
-    __message "\n--- BP3 hit: MX_LTDC_Init entry (DSI just done, LTDC next) ---\n";
-    DumpLtdcCore();
-    DumpDsiCore();
-    ReadCycleCounter();
-    CheckBit("After DSI init: DSI host enabled (CR.EN=1)",
-             __readMemory32(0x50000004, "Memory"), 0, 1);
-    __clearBreak(bp_ltdc_init);
-}
-
-/* BP4: MX_TouchGFX_Init entry -- LTDC config done, framework about to start. */
-HitTouchGFXInitEntry()
-{
-    __message "\n--- BP4 hit: MX_TouchGFX_Init entry (LTDC just configured) ---\n";
-    DumpLtdcCore();
-    ReadCycleCounter();
-    CheckBit("After LTDC init: Layer1 CFBAR=0xD0000000",
-             __readMemory32(0x500010AC, "Memory") == 0xD0000000 ? 1 : 0, 0, 1);
-    __clearBreak(bp_tgfx_init);
-}
-
-/* --- BP handles (file-scope so action macros can clear them) --- */
-__var bp_vstart;
-__var bp_dsi_init;
-__var bp_ltdc_init;
-__var bp_tgfx_init;
-
-/* --- entry: install BPs after firmware loaded --- */
 execUserSetup()
 {
-    __message "\n*** boot_pipeline.mac (BP-driven) -- UCSARM-26 lifecycle ***\n";
-    __message "    Hook: execUserSetup  (download flow, CPU @ reset vector)\n";
+    __message "\n*** boot_pipeline.mac (20-BP) -- UCSARM-26 download flow ***\n";
 
-    /* Each BP: location, count_to_skip=0, condition='1' (always),
-     * runs='TRUE', action='HitXxx()'. The action macro is called
-     * automatically by C-SPY when the BP hits, then execution resumes. */
-    bp_vstart    = __setCodeBreak("vTaskStartScheduler",     0, "1", "TRUE", "HitVTaskStartScheduler()");
-    bp_dsi_init  = __setCodeBreak("MX_DSIHOST_DSI_Init",     0, "1", "TRUE", "HitDsiInitEntry()");
-    bp_ltdc_init = __setCodeBreak("MX_LTDC_Init",            0, "1", "TRUE", "HitLtdcInitEntry()");
-    bp_tgfx_init = __setCodeBreak("MX_TouchGFX_Init",        0, "1", "TRUE", "HitTouchGFXInitEntry()");
+    h01 = __setCodeBreak("main",                   0, "1", "TRUE", "HitMain()");
+    h02 = __setCodeBreak("HAL_Init",               0, "1", "TRUE", "HitHalInit()");
+    h03 = __setCodeBreak("SystemInit",             0, "1", "TRUE", "HitSystemInit()");
+    h04 = __setCodeBreak("MPU_Config",             0, "1", "TRUE", "HitMpuConfig()");
+    h05 = __setCodeBreak("SystemClock_Config",     0, "1", "TRUE", "HitSystemClockConfig()");
+    h06 = __setCodeBreak("MX_GPIO_Init",           0, "1", "TRUE", "HitMxGpioInit()");
+    h07 = __setCodeBreak("MX_MDMA_Init",           0, "1", "TRUE", "HitMxMdmaInit()");
+    h08 = __setCodeBreak("MX_FMC_Init",            0, "1", "TRUE", "HitMxFmcInit()");
+    h09 = __setCodeBreak("MX_DMA2D_Init",          0, "1", "TRUE", "HitMxDma2dInit()");
+    h10 = __setCodeBreak("MX_CRC_Init",            0, "1", "TRUE", "HitMxCrcInit()");
+    h11 = __setCodeBreak("MX_JPEG_Init",           0, "1", "TRUE", "HitMxJpegInit()");
+    h12 = __setCodeBreak("MX_UART8_Init",          0, "1", "TRUE", "HitMxUart8Init()");
+    h13 = __setCodeBreak("MX_QUADSPI_Init",        0, "1", "TRUE", "HitMxQuadspiInit()");
+    h14 = __setCodeBreak("MX_TouchGFX_PreOSInit",  0, "1", "TRUE", "HitMxTouchGFXPreOSInit()");
+    h15 = __setCodeBreak("osKernelInitialize",     0, "1", "TRUE", "HitOsKernelInitialize()");
+    h16 = __setCodeBreak("osThreadNew",            0, "1", "TRUE", "HitOsThreadNew()");
+    h17 = __setCodeBreak("vTaskStartScheduler",    0, "1", "TRUE", "HitVTaskStartScheduler()");
+    h18 = __setCodeBreak("TouchGFX_Task",          0, "1", "TRUE", "HitTouchGFXTask()");
+    h19 = __setCodeBreak("MX_DSIHOST_DSI_Init",    0, "1", "TRUE", "HitMxDsiHostInit()");
+    h20 = __setCodeBreak("MX_LTDC_Init",           0, "1", "TRUE", "HitMxLtdcInit()");
 
-    __message "    BPs installed: vTaskStartScheduler, MX_DSIHOST_DSI_Init,\n";
-    __message "                   MX_LTDC_Init, MX_TouchGFX_Init\n";
-    __message "    CPU about to start running...\n\n";
+    LogHandle( 1, h01, "main");
+    LogHandle( 2, h02, "HAL_Init");
+    LogHandle( 3, h03, "SystemInit");
+    LogHandle( 4, h04, "MPU_Config");
+    LogHandle( 5, h05, "SystemClock_Config");
+    LogHandle( 6, h06, "MX_GPIO_Init");
+    LogHandle( 7, h07, "MX_MDMA_Init");
+    LogHandle( 8, h08, "MX_FMC_Init");
+    LogHandle( 9, h09, "MX_DMA2D_Init");
+    LogHandle(10, h10, "MX_CRC_Init");
+    LogHandle(11, h11, "MX_JPEG_Init");
+    LogHandle(12, h12, "MX_UART8_Init");
+    LogHandle(13, h13, "MX_QUADSPI_Init");
+    LogHandle(14, h14, "MX_TouchGFX_PreOSInit");
+    LogHandle(15, h15, "osKernelInitialize");
+    LogHandle(16, h16, "osThreadNew");
+    LogHandle(17, h17, "vTaskStartScheduler");
+    LogHandle(18, h18, "TouchGFX_Task");
+    LogHandle(19, h19, "MX_DSIHOST_DSI_Init");
+    LogHandle(20, h20, "MX_LTDC_Init");
+
+    __message "[SETUP] returning -- CPU starts running.\n\n";
 }
+
+execUserExecutionStarted()  { __message "[STARTED] CPU resumed.\n";  }
+execUserExecutionStopped()  { __message "[STOPPED] CPU halted.\n";   }
 
 execUserExit()
 {
     __message "\n=========================================================\n";
-    __message " boot_pipeline.mac DONE -- session ending, all BPs cleared\n";
+    __message "[EXIT] boot_pipeline.mac -- session ending\n";
     __message "=========================================================\n";
 }
