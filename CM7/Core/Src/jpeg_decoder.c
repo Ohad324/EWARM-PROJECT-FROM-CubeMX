@@ -6,6 +6,28 @@
 #include "SEGGER_RTT.h"     /* SEGGER_RTT_Write() for pixel buffer dump */
 #include "FreeRTOS.h"
 #include <string.h>
+#include <stdbool.h>
+
+#ifndef RELEASE_BUILD
+/* CPU yield helper: __WFI() halts the Cortex-M7 pipeline entirely while
+ * LTDC is mid-scan, so the CPU stops generating I-cache fetches and
+ * D-cache fills on the AXI bus. This gives LTDC 100% of SDRAM bandwidth
+ * during its FIFO-refill bursts -> eliminates FUIF.
+ *
+ * vs busy-wait: a polling loop still does instruction fetches and polls
+ * a volatile from cache -> still noisy on the bus. WFI is bus-silent.
+ *
+ * Wake event: any enabled IRQ (DSI EOR, TIM6 tick, etc.). The displayRefreshing
+ * check then re-evaluates; if still true (e.g. just woke from TIM6 mid-LEFT),
+ * back to WFI. */
+extern volatile bool displayRefreshing;
+static inline void wait_for_ltdc_idle(void)
+{
+    while (displayRefreshing) { __WFI(); }
+}
+#else
+static inline void wait_for_ltdc_idle(void) { }
+#endif
 
 #define DWT_MS(c)  ((c) / 480000UL)
 #define DWT_SNAP() (DWT->CYCCNT)
@@ -57,6 +79,10 @@ static void scale_rgb888(const uint8_t *src, uint32_t srcW, uint32_t srcH,
 
     for (uint32_t dy = 0u; dy < dstH; dy++)
     {
+        /* Yield EVERY row (was every 8). One row = 2.4 KB of cache traffic;
+         * checking each row catches mid-loop LTDC scan starts. */
+        wait_for_ltdc_idle();
+
         uint32_t       sy      = (dy * srcH) / dstH;
         const uint8_t *src_row = src + sy * srcW * 3u;
         uint8_t       *dst_row = dst + dy * dstW * 3u;
@@ -68,6 +94,11 @@ static void scale_rgb888(const uint8_t *src, uint32_t srcW, uint32_t srcH,
             dst_row[dp + 1u]     = src_row[sp + 1u];
             dst_row[dp + 2u]     = src_row[sp + 2u];
         }
+        /* Per-row cache clean: push this row to SDRAM so LTDC sees fresh
+         * data rather than dirty cache lines that the CPU might evict in
+         * a big burst later (which would block LTDC). One row = 2400 B,
+         * stride aligned to 32-byte cache line. */
+        SCB_CleanDCache_by_Addr((uint32_t *)dst_row, (int32_t)(dstW * 3u));
     }
 }
 
@@ -177,6 +208,9 @@ HAL_StatusTypeDef JPEG_Decode(const uint8_t *jpegData, uint32_t jpegSize,
     uint32_t t_conv = DWT_SNAP();
     for (uint32_t mcu = 0u; mcu < nMCUs; mcu++)
     {
+        /* Yield EVERY MCU (was every 16). Each MCU is ~700 us of work;
+         * tighter granularity catches LTDC scans starting mid-cluster. */
+        wait_for_ltdc_idle();
         if (mcu % 100u == 0u)
             LOG("[JPEG] MCU %lu/%lu\n", mcu, nMCUs);
 
@@ -213,16 +247,33 @@ HAL_StatusTypeDef JPEG_Decode(const uint8_t *jpegData, uint32_t jpegSize,
     /* R<->B swap. Per RM0399 §33.7.18 Table 276, LTDC PF=RGB888 reads
      * memory in [B,G,R] byte order, but jpeg_utils writes [R,G,B]. Swap
      * aligns the buffer with what LTDC expects so source-blue displays
-     * as panel-blue. */
+     * as panel-blue.
+     *
+     * Yield to LTDC every 6400 pixels (8 rows of 800). Each yield point
+     * checks displayRefreshing and __WFI()s if LTDC is mid-scan, so the
+     * swap loop's cache fills don't starve LTDC's pixel FIFO. */
     {
         uint8_t *p = s_rgb888Scaled;
         const uint32_t pixels = DISPLAY_W * DISPLAY_H;
-        for (uint32_t i = 0u; i < pixels; i++)
+        /* Process per-row chunks of 800 pixels (2.4 KB), yielding to LTDC
+         * between rows. Was: yield every 6400 pixels. Now: yield every 800. */
+        const uint32_t row_pixels = DISPLAY_W;
+        const uint32_t total_rows = DISPLAY_H;
+        uint8_t *row_start = p;
+        for (uint32_t row = 0u; row < total_rows; row++)
         {
-            uint8_t r = p[0];
-            p[0] = p[2];
-            p[2] = r;
-            p += 3;
+            wait_for_ltdc_idle();
+            row_start = p;
+            for (uint32_t col = 0u; col < row_pixels; col++)
+            {
+                uint8_t r = p[0];
+                p[0] = p[2];
+                p[2] = r;
+                p += 3;
+            }
+            /* Clean this row to SDRAM immediately (don't wait for cache
+             * eviction burst that would compete with LTDC). */
+            SCB_CleanDCache_by_Addr((uint32_t *)row_start, (int32_t)(row_pixels * 3u));
         }
     }
 #endif

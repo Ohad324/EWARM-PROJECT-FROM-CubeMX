@@ -554,3 +554,92 @@ The single-buffer + DSI Command Mode + 800×480 RGB888 + AHB3 master sharing com
 3. **Read `RCC_APB3ENR` (0x58024558)** — if 0, LTDC is gated off (normal in DSI Command Mode between transfers).
 4. **Capture IRQ ring buffer** at `0x24008000` for the actual interrupt timeline.
 5. **Don't touch PLL3** without explicit revalidation.
+
+### Recommended Late-Start initialization sequence (post 2026-05-04 Gemini guidance)
+
+Premise: the 15 boot-time FUIFs we couldn't eliminate fire **before** any rendering loop runs — during the simultaneous CPU work (memset zeroing the 1.2 MB framebuffer, JPEG decode, asset loads) AND the LTDC's first scans. If LTDC isn't enabled until those CPU-heavy tasks are done, FUIF is impossible (the FIFO doesn't exist yet).
+
+**Restructured init order** for `main.c` / RTOS startup task:
+
+1. **Fundamentals** — RCC clock tree, FMC/SDRAM init, GPIOs. Bus is quiet, no peripherals demanding pixels.
+2. **Noisy CPU tasks** — DO ALL of these BEFORE LTDC starts:
+   - Zero the 1.2 MB framebuffer at `0xD0000000` (memset or DMA2D Fill)
+   - JPEG decode (HW + convertFn)
+   - R↔B swap of `s_rgb888Scaled`
+   - Load static UI assets into SDRAM
+   - Any cache flushes / SCB_CleanInvalidateDCache
+3. **Quiet the bus** — short delay (~5 ms) to let any lingering MDMA / DMA2D / cache writebacks drain.
+4. **Start the conductor**:
+   - `MX_LTDC_Init()` (sets timing, enables Layer 1, but does NOT start scan — DSI Command Mode means scan happens only on `HAL_DSI_Refresh()`)
+   - `MX_DSI_Init()` (DSI host config)
+   - `HAL_DSI_Start()` — DSI host comes alive
+5. **First refresh** — call `HAL_DSI_Refresh()` for LEFT half, then RIGHT half. Framebuffer is already "perfect" from step 2. SDRAM is uncontested. **First scan completes without FUIF.**
+
+**Backlight trick**: keep the panel backlight (PWM or GPIO) OFF until step 5 completes. User never sees the boot corruption — first visual frame is crisp.
+
+**Verification**: the IRQ ring buffer at `0x24008000` should show `LTDC_ER (89)` count = 0 even in second 0 with this sequence. If it's still firing during step 5, something earlier is still active (lingering MDMA, etc.).
+
+**Status as of 2026-05-04**: this restructuring is **NOT YET IMPLEMENTED**. Current code calls `MX_LTDC_Init()` early and `HAL_DSI_Refresh()` happens implicitly via TouchGFX's first-frame paint. To do this properly:
+- Move LTDC/DSI init out of the early-init chain
+- Hook into TouchGFX's first-frame trigger or override
+- Defer backlight enable to the same late point
+
+### CHOSEN ARCHITECTURE — Safe-Boot Sequence (Option A, decided 2026-05-04)
+
+**Decision:** Defer the **entire TouchGFX engine and GUI task** until after the JPEG decode + buffer prep is complete. This creates a "Protected Window" where the Cortex-M7 is the only master on SDRAM during the heavy work — no framework rendering, no DMA2D blits, no LTDC scans competing for AXI bandwidth.
+
+**Why Option A over Option B:**
+- Option B (gate the scan triggers) keeps the TouchGFX render task alive — it'll still hammer SDRAM with widget rendering, blits, and label invalidates that compete with JPEG decode for AXI cycles.
+- Option A makes the M7 the *only* SDRAM master during the boot bulk-load. AXI arbitration becomes trivial. FUIF cannot fire because LTDC isn't running yet.
+- Predictable timing: the WFI-instrumented JPEG loops execute with no interruption from framework code.
+- Clean handover: when LTDC finally starts, framebuffer is already "perfect" — first scan-out is correct.
+
+**Refined model (2026-05-04): GATED MULTITASKING — Two phases, three tasks**
+
+A purely sequential boot is insufficient because TouchGFX, JPEG, and Video are inherently concurrent in the running app. Instead, split into:
+
+#### Phase 1 — The "Silent" Boot (Pre-OS)
+
+Before `osKernelStart()`, perform operations that need 100% of the AXI bus without interference:
+
+1. **Hardware Foundation** — Initialize Clocks, FMC (SDRAM), MPU regions.
+2. **Splash Load** — Perform initial JPEG decode and R↔B swap for the splash screen image **while LTDC is physically Disabled** (`LTDC_GCR.LTDCEN = 0`).
+3. **Video Buffer Prep** — Zero the video ring-buffers in SDRAM with a standard `memset`. Since LTDC isn't scanning, this high-speed bulk operation cannot trigger FUIF.
+
+**End-of-Phase-1 state:** SDRAM holds a complete, correct splash framebuffer at `0xD0000000`. Video buffers are cleared. Backlight still OFF.
+
+#### Phase 2 — Task-Based Launch (RTOS Startup)
+
+Once the clean frame is staged in SDRAM, the FreeRTOS kernel starts and spawns the three core tasks:
+
+| Task | Priority | Responsibility |
+|---|---|---|
+| **`guiTask`** (TouchGFXTask) | `osPriorityHigh` | Owns LTDC + DSI hardware. Runs the TouchGFX engine. Triggers `HAL_DSI_Refresh()` per frame. EOR callback handles LEFT/RIGHT split. |
+| **`videoTask`** | `osPriorityAboveNormal` | Decodes video frames into the secondary SDRAM buffer (the one Phase 1 cleared). Blocks on a "frame request" semaphore when idle. |
+| **`jpegTask`** (JpegDisplayTask) | `osPriorityNormal` | Background decoding of UI assets, icons, gallery thumbnails. Runs WFI-yield-instrumented loops so its SDRAM bursts can stand down when LTDC scans. |
+
+**The "gating" between tasks is what eliminates contention:**
+- `guiTask` is highest priority — when LTDC needs to refresh, it preempts everything.
+- `jpegTask` and `videoTask` use `wait_for_ltdc_idle()` checkpoints (already in `jpeg_decoder.c`) to step out of the bus during scan windows.
+- The framework's TE→EOR cycle drives the heartbeat; the lower-priority tasks fill the gaps.
+
+#### Backlight reveal
+
+The backlight GPIO stays LOW from boot through the end of Phase 1 and the first frame in Phase 2. The first time `guiTask` completes a successful EOR for both halves, it toggles backlight HIGH. **User never sees the boot transition** — display goes from dark to crisp first frame.
+
+#### Verification criteria
+
+- IRQ ring buffer at `0x24008000`: `LTDC_ER (89)` count = **0** through seconds 0-3
+- Visual: panel goes black → clean first frame, no flash of half-blue/half-green corruption
+- Steady state (sec 1+): continued zero FUIF (already proven by WFI yields)
+- All three tasks reach their idle/blocked state with stable stack high-water marks
+
+#### Files to change for implementation (not yet done)
+
+| File | Change |
+|---|---|
+| `CM7/Core/Src/main.c` | **Phase 1 in `main()` pre-`osKernelStart()`:** Clocks + FMC + MPU + initial JPEG decode + video buffer memset, ALL while LTDC is disabled. **Phase 2:** task creation only. Move `MX_LTDC_Init()`/`MX_DSIHOST_DSI_Init()`/`MX_TouchGFX_Init()` into `guiTask` body. |
+| `CM7/Core/Src/music_display_task.c` | `jpegTask` (currently `JpegDisplayTask`) keeps existing WFI yield instrumentation; priority lowered to `osPriorityNormal`. |
+| `CM7/Core/Src/main.c` (videoTask) | **Re-enable** the currently commented-out videoTask creation (line 384). Priority set to `osPriorityAboveNormal`. Even if no MJPEG widget is active, the task framework should be in place. |
+| `CM7/TouchGFX/target/TouchGFXHAL.cpp` | `TouchGFX_Task` body restructured: do `MX_LTDC_Init()` + `MX_DSIHOST_DSI_Init()` + `HAL_DSI_Start()` first, then loop the framework. Backlight GPIO HIGH after first successful EOR. Priority bumped to `osPriorityHigh`. |
+| `CM7/Core/Src/stm32h7xx_hal_msp.c` | Backlight GPIO configured as output, default LOW in early boot. |

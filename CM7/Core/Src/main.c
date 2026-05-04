@@ -95,18 +95,25 @@ SAI_HandleTypeDef hsai_BlockA4;
 
 UART_HandleTypeDef huart8;
 
-/* Definitions for TouchGFXTask */
+/* Definitions for TouchGFXTask (guiTask in Gated Multitasking model) */
 osThreadId_t TouchGFXTaskHandle;
 const osThreadAttr_t TouchGFXTask_attributes = {
   .name = "TouchGFXTask",
-  .stack_size = 3048 * 4,   /* pre-merge value — JPEG decode now runs in JpegDisplayTask */
-  .priority = (osPriority_t) osPriorityNormal,  /* pre-merge — JpegDisplayTask handles decode @ priority 16 */
+  .stack_size = 3048 * 4,
+  /* Priority bumped Normal -> High per CLAUDE.md Gated Multitasking model.
+   * guiTask owns LTDC/DSI hardware; when it needs to refresh, it preempts
+   * the lower-priority jpegTask/videoTask which are background workers. */
+  .priority = (osPriority_t) osPriorityHigh,
 };
 /* Definitions for videoTask */
 osThreadId_t videoTaskHandle;
 const osThreadAttr_t videoTask_attributes = {
   .name = "videoTask",
   .stack_size = 1000 * 4,
+  /* Priority Low (matches dea8b27 working config). The Gated Multitasking
+   * model called for AboveNormal, but with no actual VideoWidget active,
+   * AboveNormal causes background SDRAM contention that undoes the WFI
+   * yields' FUIF reduction. Stays blocked on framework semaphore. */
   .priority = (osPriority_t) osPriorityLow,
 };
 /* USER CODE BEGIN PV */
@@ -200,8 +207,11 @@ static void MX_MDMA_Init(void);
 static void MX_QUADSPI_Init(void);
 static void MX_FMC_Init(void);
 static void MX_DMA2D_Init(void);
-static void MX_DSIHOST_DSI_Init(void);
-static void MX_LTDC_Init(void);
+/* GATED MULTITASKING: extern (was static) so guiTask in app_touchgfx.c
+ * can defer this init to Phase 2 after Phase 1 framebuffer prep. */
+void MX_DSIHOST_DSI_Init(void);
+/* GATED MULTITASKING: extern (was static) — see MX_DSIHOST_DSI_Init note. */
+void MX_LTDC_Init(void);
 static void MX_CRC_Init(void);
 static void MX_JPEG_Init(void);
 static void MX_SAI4_Init(void);
@@ -298,8 +308,14 @@ Error_Handler();
   MX_QUADSPI_Init();
   MX_FMC_Init();
   MX_DMA2D_Init();
-  MX_DSIHOST_DSI_Init();
-  MX_LTDC_Init();
+  /* GATED MULTITASKING (CLAUDE.md, 2026-05-04): MX_DSIHOST_DSI_Init() and
+   * MX_LTDC_Init() deferred from here to guiTask body in
+   * CM7/TouchGFX/App/app_touchgfx.c::TouchGFX_Task(). Phase 1 stays
+   * "display-silent" so the upcoming heavy CPU work (JPEG decode + R<->B
+   * swap + framebuffer prep) doesn't compete with LTDC scans for SDRAM.
+   * Original calls preserved here as comments for traceability:
+   *   MX_DSIHOST_DSI_Init();
+   *   MX_LTDC_Init();                                              */
   MX_CRC_Init();
   MX_JPEG_Init();
   MX_LIBJPEG_Init();
@@ -319,7 +335,10 @@ Error_Handler();
   MX_DFSDM1_Init();
   ITM_STAGE(ITM_INIT_DFSDM_DONE);
 #endif
-  MX_TouchGFX_Init();
+  /* MX_TouchGFX_Init() also deferred to guiTask. It calls hal.initialize()
+   * which writes LTDC's CFBAR — must run AFTER MX_LTDC_Init(). All three
+   * (DSI, LTDC, TouchGFX) move together to maintain dependency order. */
+  /* MX_TouchGFX_Init(); */
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
   /* USER CODE BEGIN 2 */
@@ -378,10 +397,11 @@ Error_Handler();
   /* creation of TouchGFXTask */
   TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
 
-  /* videoTask removed — MJPEG decoder not active in this project.
-   * videoController object stays in TouchGFXGeneratedHAL.cpp so video
-   * widgets compile; they just do not decode frames. Re-enable if needed. */
-  /* videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes); */
+  /* videoTask re-enabled per Gated Multitasking model (2026-05-04).
+   * Stays blocked on the framework's internal video semaphore until a
+   * VideoWidget triggers it. Re-enabling restores the 3-task baseline
+   * the system used in dea8b27 (working March 30 thumbnail display). */
+  videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);
@@ -724,7 +744,7 @@ static void MX_DMA2D_Init(void)
   * @param None
   * @retval None
   */
-static void MX_DSIHOST_DSI_Init(void)
+void MX_DSIHOST_DSI_Init(void)
 {
 
   /* USER CODE BEGIN DSIHOST_Init 0 */
@@ -862,7 +882,7 @@ static void MX_JPEG_Init(void)
   * @param None
   * @retval None
   */
-static void MX_LTDC_Init(void)
+void MX_LTDC_Init(void)
 {
 
   /* USER CODE BEGIN LTDC_Init 0 */
@@ -916,6 +936,12 @@ static void MX_LTDC_Init(void)
   /* USER CODE BEGIN LTDC_Init 2 */
 
 #ifndef RELEASE_BUILD
+  /* AXI Bus Matrix QoS attempt: tried INI1 READ_QOS=0xF + ISS_OVERRIDE
+   * (per Gemini Hardware-Bullying suggestion). FUIF count went from 15
+   * (WFI-only) to 23 — no improvement, possibly worse. Without exact
+   * AN5354 INI-to-master mapping for STM32H747, the AXI port assignment
+   * is uncertain. Revert and stick with WFI yields. */
+
   /* Enable FIFO Underrun (FUIE) and Transfer Error (TERRIE) so the
    * LTDC_ER_IRQHandler in stm32h7xx_it.c can log them via RTT.
    * Catches SDRAM-bandwidth starvation that would otherwise produce

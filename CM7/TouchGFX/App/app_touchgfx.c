@@ -78,12 +78,31 @@ void MX_TouchGFX_Process(void)
     touchgfx_taskEntry();
 }
 
+/* GATED MULTITASKING — declarations for the deferred init calls. These are
+ * static in main.c, so we declare them here as extern. */
+extern void MX_DSIHOST_DSI_Init(void);
+extern void MX_LTDC_Init(void);
+
 /**
  * TouchGFX application thread
+ *
+ * GATED MULTITASKING (CLAUDE.md, 2026-05-04): Phase 2 hardware activation.
+ * DSI host, LTDC, and TouchGFX framework are initialized HERE, not in
+ * main(), so that:
+ *   1. Phase 1 (in main(), before osKernelStart()) runs CPU-heavy work
+ *      while LTDC is physically Disabled — no FUIF possible.
+ *   2. Phase 2 (this task) starts the display only after the framebuffer
+ *      is already perfect in SDRAM.
+ *   3. First HAL_DSI_Refresh() lands a clean frame on the panel GRAM.
  */
 void TouchGFX_Task(void* argument)
 {
-    // Calling forward to touchgfx_taskEntry in C++ domain
+    /* Phase 2: Hardware Activation — display peripherals come up here */
+    MX_DSIHOST_DSI_Init();
+    MX_LTDC_Init();
+    MX_TouchGFX_Init();
+
+    /* Enter the framework's main loop (never returns) */
     touchgfx_taskEntry();
 }
 
