@@ -1,22 +1,34 @@
 /*
- * boot_pipeline.mac -- Sequential boot probe via __hwRunToBreakpoint.
+ * boot_pipeline.mac -- Single-snapshot boot probe via __setCodeBreak action.
  *
- * Per UCSARM-26 v9.50.x:
- *   __hwRunToBreakpoint(address, timeout_ms) -- runs CPU until the BP
- *      at `address` fires.  Returns elapsed ms, or negative on failure
- *      (-1 = BP install failure, -2 = timeout).
- *   Symbols are NOT supported as address; resolve via __symbolAddress.
+ * Why this design and not sequential __hwRunToBreakpoint?
+ *   In CSpyBat 9.4.6.1706 (bundled with EWARM 9.70.2), tested with
+ *   J-Link DLL V9.30.x and V9.34b, __hwRunToBreakpoint raises:
+ *       Fatal error: Unknown exception in driver __hwRunToBreakpoint
+ *   on the very first call regardless of target address.  See CLAUDE.md
+ *   "C-SPY Macro and cspybat Syntax Reference" for the full investigation.
  *
- * Flow (in execUserSetup, single linear macro):
- *   1. Resolve all 20 boot-stage symbol addresses.
- *   2. Sequentially run-to-BP at each checkpoint and snapshot peripheral
- *      state. The CPU advances naturally from one checkpoint to the next.
- *   3. Final snapshot at TouchGFX_Task entry.
+ *   Action-on-BP (this file) works for the first BP that fires.  The
+ *   session ends after that, but a single comprehensive snapshot at the
+ *   right checkpoint is enough to verify Phase 1 silent boot.
  *
- * Note: SystemInit runs in the startup code BEFORE main(), so we can't
- * sample it via this approach -- the first observable checkpoint is main.
+ * Lifecycle (per UCSARM-26):
+ *   execUserSetup       installs 4 code breakpoints across the boot path
+ *                       and an action macro on each that dumps the full
+ *                       peripheral register block + DWT->CYCCNT
+ *   CPU runs from reset -- the first BP encountered (SystemInit) fires
+ *                       and runs the action; cspybat then exits cleanly
+ *   execUserExit        prints final banner
  *
- * Driver support: J-Link OK per UCSARM-26.
+ * For multi-checkpoint debugging, the working alternative in this project
+ * is boot_pipeline.bat (J-Link Commander mem32 sampling at fixed time).
+ *
+ * Macro language quirks (project-discovered):
+ *   - no preprocessor (no #define / #include / #ifdef)
+ *   - %02d in __message format string parses as octal literal -- use %d
+ *   - SDRAM (0xD0000000) read pre-MX_FMC_Init bus-faults the macro engine
+ *   - __symbolAddress() not in IAR EW 9.4.6 -- use & address-of operator
+ *   - __hwRunToBreakpoint not implemented for J-Link in this cspybat
  */
 
 /* --- helpers --- */
@@ -30,10 +42,8 @@ ReadCycle()
 
 DumpKeyRegs()
 {
-    /* Comprehensive boot-state dump.  All addresses are peripheral
-     * apertures that are always alive (RCC, FLASH, PWR, FMC, LTDC, DSI,
-     * MPU, GPIO).  SDRAM (0xD0000000) is NOT read here -- it would bus-
-     * fault before MX_FMC_Init and abort the macro. */
+    /* Comprehensive peripheral aperture dump.
+     * Do NOT read SDRAM (0xD0000000) here -- bus-faults pre-MX_FMC_Init. */
     __var rcc_cr, rcc_cfgr, rcc_pllckselr, rcc_d1cfgr;
     __var rcc_ahb1, rcc_ahb3, rcc_ahb4, rcc_apb2enr, rcc_apb3enr;
     __var flash_acr, pwr_d3cr;
@@ -79,58 +89,61 @@ DumpKeyRegs()
     __message "    GPIOE.MODER=0x", gpioe_moder:%08X, "  GPIOC.MODER=0x", gpioc_moder:%08X, "\n";
 }
 
-/* RunToCheckpoint(addr, timeout_ms, label)
- * Wraps __hwRunToBreakpoint with elapsed-time and snapshot output. */
-RunToCheckpoint(addr, timeout_ms, label)
+/* --- BP action: log + cycle count + comprehensive register dump --- */
+HitSystemInit()
 {
-    __var elapsed;
-    __message "\n>>> running to ", label, " (addr=0x", addr:%08X, ", timeout=", timeout_ms:%d, "ms) ...\n";
-    elapsed = __hwRunToBreakpoint(addr, timeout_ms);
-    if (elapsed < 0) {
-        __message "    [FAIL] __hwRunToBreakpoint returned ", elapsed:%d,
-                  " (-1=BP install fail, -2=timeout)\n";
-        return;
-    }
-    __message "    [OK] reached after ", elapsed:%d, "ms (host-side, +-5-20ms)\n";
+    __message "\n[BP-HIT] SystemInit entry (early Reset_Handler -> SystemInit -> main)\n";
     ReadCycle();
     DumpKeyRegs();
+    __message "[BP-HIT] action complete\n";
+}
+
+HitMpuConfig()
+{
+    __message "\n[BP-HIT] MPU_Config entry (in main, before peripheral inits)\n";
+    ReadCycle();
+    DumpKeyRegs();
+    __message "[BP-HIT] action complete\n";
+}
+
+HitSystemClockConfig()
+{
+    __message "\n[BP-HIT] SystemClock_Config entry (about to switch to PLL)\n";
+    ReadCycle();
+    DumpKeyRegs();
+    __message "[BP-HIT] action complete\n";
+}
+
+HitVTaskStartScheduler()
+{
+    __message "\n[BP-HIT] vTaskStartScheduler entry (end of Phase 1 silent boot)\n";
+    ReadCycle();
+    DumpKeyRegs();
+    __message "[BP-HIT] action complete\n";
 }
 
 execUserSetup()
 {
-    __message "\n*** boot_pipeline.mac (sequential RunToBp) ***\n";
-    __message "    Using direct symbol reference (no __symbolAddress in v9.4.6)\n";
+    __var bp_si, bp_mpu, bp_clk, bp_vts;
 
-    /* Direct symbol reference with address-of (&): in IAR C-SPY macros,
-     * a bare symbol name evaluates to the value AT that symbol; use &
-     * to get the address.  &main = address-of-main, etc. */
+    __message "\n*** boot_pipeline.mac (action-on-BP probe) ***\n";
+    __message "    4 BPs installed across the boot path.\n";
 
-    /* Phase 1 checkpoints */
-    RunToCheckpoint(&main,                 5000, "main");
-    RunToCheckpoint(&MPU_Config,           5000, "MPU_Config");
-    RunToCheckpoint(&SystemClock_Config,   5000, "SystemClock_Config");
-    RunToCheckpoint(&MX_GPIO_Init,         5000, "MX_GPIO_Init");
-    RunToCheckpoint(&MX_MDMA_Init,         5000, "MX_MDMA_Init");
-    RunToCheckpoint(&MX_FMC_Init,          5000, "MX_FMC_Init");
-    RunToCheckpoint(&MX_DMA2D_Init,        5000, "MX_DMA2D_Init");
-    RunToCheckpoint(&MX_CRC_Init,          5000, "MX_CRC_Init");
-    RunToCheckpoint(&MX_JPEG_Init,         5000, "MX_JPEG_Init");
-    RunToCheckpoint(&MX_UART8_Init,        5000, "MX_UART8_Init");
-    RunToCheckpoint(&MX_QUADSPI_Init,      5000, "MX_QUADSPI_Init");
-    RunToCheckpoint(&MX_TouchGFX_PreOSInit,5000, "MX_TouchGFX_PreOSInit");
-    RunToCheckpoint(&osKernelInitialize,   5000, "osKernelInitialize");
-    RunToCheckpoint(&osThreadNew,          5000, "osThreadNew");
-    RunToCheckpoint(&vTaskStartScheduler,  5000, "vTaskStartScheduler");
+    bp_si  = __setCodeBreak("SystemInit",         0, "1", "TRUE", "HitSystemInit()");
+    bp_mpu = __setCodeBreak("MPU_Config",         0, "1", "TRUE", "HitMpuConfig()");
+    bp_clk = __setCodeBreak("SystemClock_Config", 0, "1", "TRUE", "HitSystemClockConfig()");
+    bp_vts = __setCodeBreak("vTaskStartScheduler",0, "1", "TRUE", "HitVTaskStartScheduler()");
 
-    /* Phase 2 checkpoints */
-    RunToCheckpoint(&TouchGFX_Task,        5000, "TouchGFX_Task entry (Phase 2 begin)");
-    RunToCheckpoint(&MX_DSIHOST_DSI_Init,  5000, "MX_DSIHOST_DSI_Init");
-    RunToCheckpoint(&MX_LTDC_Init,         5000, "MX_LTDC_Init");
-
-    __message "\n*** boot_pipeline.mac DONE -- all checkpoints visited ***\n";
+    __message "[SETUP] BP handles -- SystemInit=", bp_si:%d,
+              "  MPU_Config=", bp_mpu:%d,
+              "  SystemClock_Config=", bp_clk:%d,
+              "  vTaskStartScheduler=", bp_vts:%d, "\n";
+    __message "[SETUP] returning -- CPU starts running.\n\n";
 }
 
 execUserExit()
 {
-    __message "[EXIT] session ending\n";
+    __message "\n=========================================================\n";
+    __message "[EXIT] boot_pipeline.mac session ending\n";
+    __message "=========================================================\n";
 }

@@ -46,11 +46,14 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo [3/3] cspybat: download .out + execUserSetup installs BPs + run...
-REM --leave_target_running keeps cspybat alive so subsequent BPs fire,
-REM not just the first one. Without this, cspybat exits after BP1.
+REM cspybat is invoked by full path "%IAR_BIN%\CSpyBat.exe" (CWD-
+REM independent). The Windows DLL loader resolves sibling DLLs from
+REM the EXE's directory first, so all of cspybat's siblings in
+REM common\bin (CSpyBat.ENU.dll, DebuggerGui.dll, the driver chain
+REM in arm\bin via armjlink.dll, etc.) load correctly regardless of
+REM what directory we invoked the bat from.
 "%IAR_BIN%\CSpyBat.exe" --leave_target_running --macro "%MACRO%" ^
     -f "%GENERAL_XCL_CLEAN%" --backend -f "%DRIVER_XCL%" > "%LOGFILE%" 2>&1
-
 set CSPY_EXIT=%ERRORLEVEL%
 
 echo.
