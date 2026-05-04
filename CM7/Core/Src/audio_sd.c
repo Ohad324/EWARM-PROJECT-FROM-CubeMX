@@ -187,6 +187,7 @@ bool AudioSD_Init(void)
      *   sec0 lba=2048      ← partition start sector
      *   sec0 oemid=[EXFAT   ]  ← only if sector 0 IS the VBR (SFD format)
      * ─────────────────────────────────────────────────────────────────────── */
+#ifndef RELEASE_BUILD
     {
         DRESULT dr = disk_read(0, s_sectorBuf, 0, 1);
         _itm_str("sec0 dr=");
@@ -208,6 +209,7 @@ bool AudioSD_Init(void)
         }
         _itm_str("]\n");
     }
+#endif /* RELEASE_BUILD */
 
     /* Register filesystem object — deferred mount (opt=0) per UM1722 / FatFS docs.
      * disk_initialize + BPB read are deferred until the first file operation

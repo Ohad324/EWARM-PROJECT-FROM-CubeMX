@@ -122,6 +122,13 @@ unsigned SEGGER_RTT_Write(unsigned BufferIndex,
                            const void* pBuffer,
                            unsigned NumBytes)
 {
+#ifdef RELEASE_BUILD
+    /* Release build: API-level gate. Every SEGGER_RTT_Write / WriteString call
+     * site project-wide becomes a no-op. Pretend we accepted the bytes so any
+     * caller that checks the return value still sees success. */
+    (void)BufferIndex; (void)pBuffer;
+    return NumBytes;
+#else
     SEGGER_RTT_BUFFER_UP* pRing = &_SEGGER_RTT.aUp[BufferIndex];
     const char*           pData = (const char*)pBuffer;
     unsigned              remaining = NumBytes;
@@ -163,11 +170,18 @@ unsigned SEGGER_RTT_Write(unsigned BufferIndex,
             return _WritePartial(pRing, pData, remaining);
         return 0u;
     }
+#endif /* RELEASE_BUILD */
 }
 
 unsigned SEGGER_RTT_WriteString(unsigned BufferIndex, const char* s)
 {
+#ifdef RELEASE_BUILD
+    /* Release build: API-level gate. See SEGGER_RTT_Write() above. */
+    (void)BufferIndex; (void)s;
+    return 0u;
+#else
     unsigned len = 0u;
     while (s[len] != '\0') { len++; }
     return SEGGER_RTT_Write(BufferIndex, s, len);
+#endif
 }
