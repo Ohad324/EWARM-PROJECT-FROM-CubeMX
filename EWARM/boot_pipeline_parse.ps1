@@ -124,15 +124,19 @@ CheckBit 'TERRIF bit2  Transfer Error (steady-state)' $LTDC_ISR_FINAL 2 0
 
 W ""
 W "FRAMEBUFFER CONTENT"
-$allZero = (($null -ne $FB_0_0) -and ($null -ne $FB_100_100) -and ($null -ne $FB_240_400) -and ($null -ne $FB_240_750) -and
-           ($FB_0_0 -eq 0) -and ($FB_100_100 -eq 0) -and ($FB_240_400 -eq 0) -and ($FB_240_750 -eq 0))
-if ($allZero) {
-    W "  FAIL  framebuffer all-zero -- TouchGFX never painted"
+$anyMissing = ($null -eq $FB_0_0) -or ($null -eq $FB_100_100) -or ($null -eq $FB_240_400) -or ($null -eq $FB_240_750)
+if ($anyMissing) {
+    W "  -    framebuffer reads missing -- J-Link probe didn't connect or SDRAM unreachable"
 } else {
-    W "  PASS  framebuffer has content"
-}
-if ($FB_240_750 -eq 0) {
-    W "  WARN  right-half tail (col=750) is zero -- DMA2D may not be reaching the cushion"
+    $allZero = ($FB_0_0 -eq 0) -and ($FB_100_100 -eq 0) -and ($FB_240_400 -eq 0) -and ($FB_240_750 -eq 0)
+    if ($allZero) {
+        W "  FAIL  framebuffer all-zero -- TouchGFX never painted (or D-cache hasn't flushed)"
+    } else {
+        W "  PASS  framebuffer has content"
+    }
+    if ($FB_240_750 -eq 0) {
+        W "  WARN  right-half tail (col=750) is zero -- DMA2D may not be reaching the cushion"
+    }
 }
 
 W ""

@@ -643,3 +643,193 @@ The backlight GPIO stays LOW from boot through the end of Phase 1 and the first 
 | `CM7/Core/Src/main.c` (videoTask) | **Re-enable** the currently commented-out videoTask creation (line 384). Priority set to `osPriorityAboveNormal`. Even if no MJPEG widget is active, the task framework should be in place. |
 | `CM7/TouchGFX/target/TouchGFXHAL.cpp` | `TouchGFX_Task` body restructured: do `MX_LTDC_Init()` + `MX_DSIHOST_DSI_Init()` + `HAL_DSI_Start()` first, then loop the framework. Backlight GPIO HIGH after first successful EOR. Priority bumped to `osPriorityHigh`. |
 | `CM7/Core/Src/stm32h7xx_hal_msp.c` | Backlight GPIO configured as output, default LOW in early boot. |
+
+---
+
+## C-SPY Macro Reference (UCSARM-26, v9.50.x)
+
+Authoritative reference source: **IAR C-SPY Debugging Guide for Arm (UCSARM-26), version 9.50.x.** Cross-checked against `docs/EWARM_DebuggingGuide.ENU.pdf` (in this repo). The older `docs/CSPYBAT_AND_CSPY_MACRO_GUIDE.md` mentions `__go()` / `__stop()` — **those are NOT in the current IAR macro language**. Do not use them. Use `__hwRunToBreakpoint`, `__delay`, and the proper reserved hooks listed below.
+
+### Reserved Setup Macros (auto-fired by debugger)
+
+| Macro | When it runs |
+|---|---|
+| `execConfigureTraceETM` | When configuring ETM trace |
+| `execConfigureTraceSWO` | When configuring SWO trace |
+| **`execUserAttach`** | **When attaching to a running target** ← correct hook for `--attach_to_running_target` |
+| `execUserPreload` | Before the application is loaded |
+| `execUserExecutionStarted` | Each time execution starts |
+| `execUserExecutionStopped` | Each time execution stops (BP hit, halt request, etc.) |
+| `execUserFlashInit` | Before flash programming |
+| **`execUserSetup`** | **Once, after the application is loaded** ← only fires on download flow, NOT on attach |
+| `execUserFlashReset` | After flash reset |
+| `execUserPreReset` | Before a target reset |
+| `execUserReset` | After a target reset |
+| `execUserExit` | When the debug session ends |
+| `execUserFlashExit` | After flash programming |
+| `execUserCoreConnect` | When connecting to a core (multicore) |
+
+**Critical: `execUserSetup` does NOT fire in `--attach_to_running_target` mode** — use `execUserAttach` instead. Confirmed empirically against this project: `boot_pipeline.mac` was silent under attach until renamed.
+
+### System Macros (called from your code)
+
+**Breakpoints:**
+`__setCodeBreak`, `__setDataBreak`, `__setDataLogBreak`, `__setLogBreak`, `__setSimBreak`, `__setTraceStartBreak`, `__setTraceStopBreak`, `__clearBreak`, `__restoreSoftwareBreakpoints`
+
+**Memory access:**
+`__readMemory8`/`Byte`, `__readMemory16`, `__readMemory32`, `__readMemory64`, `__writeMemory8`/`Byte`/`16`/`32`/`64`, `__fillMemory8`/`16`/`32`/`64`, `__memorySave`, `__memoryRestore`
+
+**Execution control (NO `__go` / `__stop`):**
+`__delay(ms)`, `__hwReset`, `__hwResetWithStrategy`, `__hwResetRunToBp`, `__hwJetResetWithStrategy`, **`__hwRunToBreakpoint`**, `__abortLaunch`
+
+**Interrupts (mostly simulator):**
+`__enableInterrupts`, `__disableInterrupts`, `__orderInterrupt`, `__cancelInterrupt`, `__cancelAllInterrupts`, `__popSimulatorInterruptExecutingStack`
+
+**Files (host PC):**
+`__openFile`, `__closeFile`, `__readFile`/`Byte`, `__writeFile`/`Byte`, `__resetFile`
+
+**Image / symbol management:**
+`__loadImage`, `__unloadImage`, `__registerMacroFile`, `__sourcePosition`, `__evaluate`, `__expandVar`, `__isMacroSymbolDefined`, `__symbolAddress`
+
+**String operations:**
+`__strFind`, `__subString`, `__toLower`, `__toUpper`, `__toString`
+
+**Probe and debug interface:**
+`__driverType`, `__probeType`, `__targetDebuggerVersion`, `__emulatorSpeed`, `__emulatorStatusCheckOnRead`, `__getTracePortSize`, `__hasDAPRegs`, `__readAPReg`/`writeAPReg`, `__readDPReg`/`writeDPReg`
+
+**JTAG-level access:**
+`__jtagCommand`, `__jtagData`, `__jtagRawRead`/`Write`/`Sync`, `__jtagResetTRST`, `__jtagCP15IsPresent`, `__jtagCP15ReadReg`/`WriteReg`
+
+**Probe-specific commands:**
+`__jlinkExecCommand`, `__jlinkExecMacro`, `__gdbserver_exec_command`
+
+**Multicore:**
+`__getNumberOfCores`, `__getSelectedCore`, `__selectCore`
+
+**Output and user interaction:**
+`__message` (statement, not function), `__messageBoxYesNo`, `__messageBoxYesCancel`
+
+**System / shell:**
+`__system1`, `__system2`, `__system3`
+
+**Miscellaneous:**
+`__isBatchMode` (true under cspybat), `__wallTime_ms`
+
+### Macro language quirks (project-discovered)
+
+- **No preprocessor.** No `#define`, no `#include`, no `#ifdef`. Inline literal addresses; use `__var` locals only.
+- **No structs / enums.** Flat scalars only.
+- **Format specifiers.** Use `:%08X` for hex, `:%d` for decimal — appear inside `__message` argument lists.
+- **`__var`** declares a local; assignments don't need a type. Numbers are 32-bit unsigned typically.
+- **Boolean: `if (a == b)` works, `&&` and `||` work.** No `!=`-with-bitwise on the same line without parens.
+- **`__readMemory32(addr, "Memory")`** — the second argument is the zone name (always `"Memory"` for normal SoC peripheral / RAM access).
+
+### cspybat invocation patterns observed in this project
+
+| Use case | Flags | Hook |
+|---|---|---|
+| Download + run + sample at fixed BP | (default flow) | `execUserSetup` |
+| Attach to already-running chip, sample, leave running | `--attach_to_running_target --leave_target_running` | **`execUserAttach`** |
+| Flash only | `--download_only --silent` | (none) |
+| Suppress macro `__message` output | `--silent` | — (do not use if you want the report) |
+
+Single source of truth for exact expected output: see `EWARM/boot_pipeline_cspy.bat` + `EWARM/boot_pipeline.mac`.
+
+### Debug Session Lifecycle (download flow)
+
+The reserved hooks fire in this order during a typical download-and-debug session:
+
+```
+1.  cspybat starts
+        |
+        v
+2.  Debugger connects to target via probe
+        |
+        v
+3.  execUserPreload()        <- hardware prep BEFORE firmware is loaded
+        |
+        v
+4.  Firmware downloaded to flash/RAM
+        |
+        v
+5.  execUserSetup()          <- install breakpoints, resolve symbols
+        |
+        v
+6.  CPU starts running
+        |
+        v
+   +--------------------------------------------+
+   | Loop:                                      |
+   |   execUserExecutionStarted()  <- CPU runs  |
+   |   ... target runs ...                      |
+   |   execUserExecutionStopped()  <- BP hit /  |
+   |                                  halt      |
+   |   (your BP action macros fire here)        |
+   +--------------------------------------------+
+        |
+        v   (if a reset happens at any point)
+7.  execUserPreReset()       <- BEFORE the reset signal
+        |
+        v
+   [hardware reset occurs]
+        |
+        v
+8.  execUserReset()          <- AFTER the reset
+        |
+        v
+9.  execUserExit()           <- session ending, clean up
+        |
+        v
+10. cspybat exits
+```
+
+For attach mode (`--attach_to_running_target`), the equivalent lifecycle is shorter: connect → `execUserAttach()` (hardware is already running) → optionally halt → samples / inspections → `execUserExit()`. The download/preload/reset hooks are NOT fired.
+
+#### Hook usage notes
+
+- **`execUserPreload`** — hardware prep before download. Use to enable external SDRAM/QSPI when linker places code there.
+- **`execUserSetup`** — workhorse. Runs once after firmware load, CPU paused at reset vector. Install breakpoints, resolve `__symbolAddress`, open log files.
+- **`execUserExecutionStarted`** — every CPU resume. Rare uses (timing host-side wall clock between halts).
+- **`execUserExecutionStopped`** — every halt (BP hit, single-step, manual halt). **Do not put heavy work here** — runs on every step too.
+- **`execUserPreReset` / `execUserReset`** — bracket a reset. Save/restore state, mark log boundaries.
+- **`execUserExit`** — teardown. Clear breakpoints, close files, final banner.
+
+#### BP-driven probe pattern (recommended over `__delay` timing)
+
+```c
+// In execUserSetup, install BPs at peripheral-init exits:
+__var bp_dsi, bp_ltdc, bp_tgfx;
+
+execUserSetup()
+{
+    bp_dsi  = __setCodeBreak(__symbolAddress("MX_DSIHOST_DSI_Init") + ..., 0, "1", "TRUE", "");
+    bp_ltdc = __setCodeBreak(__symbolAddress("MX_LTDC_Init") + ...,        0, "1", "TRUE", "");
+    bp_tgfx = __setCodeBreak(__symbolAddress("MX_TouchGFX_Init") + ...,    0, "1", "TRUE", "");
+}
+
+execUserExecutionStopped()
+{
+    __var pc;
+    pc = __readMemory32(0xE000EDF8, "Memory");   // DCRDR (or use __evaluate("$PC$"))
+    // Dispatch by which BP hit, snapshot peripheral state, clear that BP, continue.
+}
+```
+
+This is more precise than `__delay()` timing because it fires at exact transitions rather than arbitrary wall-clock points.
+
+#### Mental model: hooks as "anything to do here?" prompts
+
+Every C-SPY debug session follows the same built-in routine. The hooks are simply "anything you want to do here?" prompts the debugger asks you at each step:
+
+```
+Connect to the target
+   [hook: execUserPreload          -- anything to do here?]
+Download firmware
+   [hook: execUserSetup            -- anything to do here?]
+Run the CPU
+   [hook: execUserExecutionStopped -- anything to do here when it halts?]
+Eventually end the session
+   [hook: execUserExit             -- anything to clean up?]
+```
+
+If you don't define a hook, the debugger just continues with its built-in routine — empty hooks are fine. You only define the ones where you actually have work to do.

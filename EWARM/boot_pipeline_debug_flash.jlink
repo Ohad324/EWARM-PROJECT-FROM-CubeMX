@@ -1,0 +1,7 @@
+// boot_pipeline_debug_flash.jlink -- flash Debug (CM7) .out and start running.
+// Run via JLink.exe -CommanderScript <this>.
+
+loadfile C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out
+r
+g
+q
