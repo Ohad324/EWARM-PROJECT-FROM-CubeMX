@@ -23,18 +23,33 @@ $LOGDIR   = "$EWARM\runs"
 $PERDIR   = "$LOGDIR\boot_pipeline_multi"
 $COMBINED = "$LOGDIR\boot_pipeline_multi.log"
 
-# Ten boot-path checkpoints, ordered chronologically.
+# Twenty boot-path checkpoints in chronological order.  Phase 1 = pre-
+# osKernelStart, Phase 2 = inside guiTask after the scheduler dispatches.
+# A BP that fails to install (handle 0) likely means the symbol was
+# inlined or stripped in Release; the orchestrator logs and keeps going.
 $CHECKPOINTS = @(
-    'SystemInit',                   #  1. before main, very early Reset_Handler -> SystemInit
-    'MPU_Config',                   #  2. first call from main
-    'SystemClock_Config',            #  3. PLL switch
-    'MX_GPIO_Init',                  #  4. GPIO config
-    'MX_FMC_Init',                   #  5. SDRAM controller up
-    'MX_DMA2D_Init',                 #  6. DMA2D enabled
-    'MX_JPEG_Init',                  #  7. JPEG codec enabled
-    'MX_TouchGFX_PreOSInit',         #  8. last pre-RTOS step
-    'osKernelInitialize',            #  9. CMSIS-RTOS init
-    'vTaskStartScheduler'            # 10. end of Phase 1, kernel about to start
+    # --- Phase 1: pre-kernel ---
+    'SystemInit',                   #  1. before main, Reset_Handler -> SystemInit
+    'main',                         #  2. C entry point
+    'HAL_Init',                     #  3. ST HAL bring-up
+    'MPU_Config',                   #  4. MPU regions configured
+    'SystemClock_Config',           #  5. about to switch to PLL
+    'HAL_RCC_OscConfig',            #  6. HSE/PLL setup
+    'HAL_RCC_ClockConfig',          #  7. SYSCLK source switch
+    'MX_GPIO_Init',                 #  8. GPIO config
+    'MX_MDMA_Init',                 #  9. MDMA enabled
+    'MX_FMC_Init',                  # 10. SDRAM controller up
+    'MX_DMA2D_Init',                # 11. DMA2D enabled
+    'MX_CRC_Init',                  # 12. CRC peripheral
+    'MX_JPEG_Init',                 # 13. JPEG codec enabled
+    'MX_QUADSPI_Init',              # 14. QSPI peripheral
+    'MX_UART8_Init',                # 15. UART8 (NORA bridge)
+    'MX_TouchGFX_PreOSInit',        # 16. last pre-RTOS step
+    'osKernelInitialize',           # 17. CMSIS-RTOS init
+    'osThreadNew',                  # 18. task creation (guiTask)
+    'vTaskStartScheduler',          # 19. END OF PHASE 1
+    # --- Phase 2: inside guiTask after scheduler dispatches ---
+    'TouchGFX_Task'                 # 20. PHASE 2 BEGIN -- guiTask entry
 )
 
 # Strip --macro= from the IDE-generated general.xcl (we pass --macro on cmdline,
