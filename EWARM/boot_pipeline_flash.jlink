@@ -1,0 +1,7 @@
+// boot_pipeline_flash.jlink -- flash Release.out and start the chip running.
+// Run via JLink.exe -CommanderScript <this>.
+
+loadfile C:\TouchGFXProjects\MyApplication\EWARM\Release\Exe\STM32H747I-DISCO_CM7.out
+r
+g
+q

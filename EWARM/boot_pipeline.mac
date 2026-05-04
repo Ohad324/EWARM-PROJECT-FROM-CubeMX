@@ -1,0 +1,193 @@
+/*
+ * boot_pipeline.mac -- Headless C-SPY verifier for the post-boot state
+ * of the Gated Multitasking pipeline (CLAUDE.md "Phase 1 silent boot +
+ * Phase 2 task launch").
+ *
+ * Designed for the RELEASE configuration (RTT/ITM stripped). All checks
+ * are direct peripheral-register reads via __readMemory32 -- no source
+ * instrumentation required.
+ *
+ * IMPORTANT: cspybat attaches *after* boot is complete (download_only +
+ * 4 s sleep + attach_to_running_target). We CANNOT see Phase 1 (LTDC
+ * disabled) directly from this script because LTDC is already enabled
+ * by the time we attach. We can only verify the post-boot steady state.
+ *
+ * What this macro verifies:
+ *   T+attach    LTDC + DSI enabled, Layer 1 configured, framebuffer has
+ *               content, sticky FUIF/TERRIF flags sampled then cleared.
+ *   T+attach+2  Re-sample FUIF/TERRIF -- if non-zero, the contention bug
+ *               is fired during normal 60 Hz rendering even with the
+ *               Gated Multitasking init order. That's the diagnostic.
+ *
+ * For Phase 1 verification (LTDC disabled BEFORE osKernelStart), use a
+ * separate macro that sets a code breakpoint at osKernelStart before
+ * the chip starts running -- not this one.
+ *
+ * Reference: CLAUDE.md sections "GATED MULTITASKING" + RM0399 LTDC/DSI.
+ */
+
+/* ----------------------------------------------------------------------
+ * Helpers
+ * ---------------------------------------------------------------------- */
+
+PrintHex32(label, v)
+{
+    __message "  ", label, " = 0x", v:%08X, "\n";
+}
+
+CheckBit(label, val, bit, expect_set)
+{
+    __var got;
+    got = (val >> bit) & 1;
+    if (got == expect_set)
+        __message "  PASS ", label, "  bit", bit:%d, "=", got:%d, "  (expected ", expect_set:%d, ")\n";
+    else
+        __message "  FAIL ", label, "  bit", bit:%d, "=", got:%d, "  (expected ", expect_set:%d, ")\n";
+}
+
+CheckEq(label, got, expect)
+{
+    if (got == expect)
+        __message "  PASS ", label, " = 0x", got:%08X, "\n";
+    else
+        __message "  FAIL ", label, " = 0x", got:%08X, "  (expected 0x", expect:%08X, ")\n";
+}
+
+/* ----------------------------------------------------------------------
+ * Snapshot 1 -- post-boot steady state: LTDC + DSI must be ON,
+ *               Layer 1 configured to scan SDRAM at 0xD0000000.
+ * ---------------------------------------------------------------------- */
+Snapshot_PostBoot()
+{
+    __var gcr, dsi_cr, dsi_wcr, l1pfcr, l1cfbar, l1cfblr, l1cfblnr;
+    __var sdcr, mpu_ctrl, isr;
+
+    __message "\n=========================================================\n";
+    __message " SNAPSHOT 1  (post-boot, target paused after attach)\n";
+    __message "=========================================================\n";
+
+    gcr      = __readMemory32(0x50001018, "Memory");   /* LTDC->GCR     */
+    dsi_cr   = __readMemory32(0x50000004, "Memory");   /* DSI->CR       */
+    dsi_wcr  = __readMemory32(0x50000024, "Memory");   /* DSI->WCR      */
+    l1pfcr   = __readMemory32(0x50001094, "Memory");   /* LTDC L1PFCR   */
+    l1cfbar  = __readMemory32(0x500010AC, "Memory");   /* LTDC L1CFBAR  */
+    l1cfblr  = __readMemory32(0x500010B0, "Memory");   /* LTDC L1CFBLR  */
+    l1cfblnr = __readMemory32(0x500010B4, "Memory");   /* LTDC L1CFBLNR */
+    sdcr     = __readMemory32(0x52004140, "Memory");   /* FMC SDCR1     */
+    mpu_ctrl = __readMemory32(0xE000ED94, "Memory");   /* MPU->CTRL     */
+    isr      = __readMemory32(0x50001038, "Memory");   /* LTDC->ISR     */
+
+    PrintHex32("LTDC->GCR     ", gcr);
+    PrintHex32("DSI->CR       ", dsi_cr);
+    PrintHex32("DSI->WCR      ", dsi_wcr);
+    PrintHex32("LTDC L1PFCR   ", l1pfcr);
+    PrintHex32("LTDC L1CFBAR  ", l1cfbar);
+    PrintHex32("LTDC L1CFBLR  ", l1cfblr);
+    PrintHex32("LTDC L1CFBLNR ", l1cfblnr);
+    PrintHex32("FMC SDCR1     ", sdcr);
+    PrintHex32("MPU CTRL      ", mpu_ctrl);
+    PrintHex32("LTDC ISR      ", isr);
+
+    __message "\n  Expectations (post-boot):\n";
+    CheckBit("LTDC enabled (GCR.LTDCEN=1)",        gcr,      0, 1);
+    CheckBit("DSI host enabled (CR.EN=1)",         dsi_cr,   0, 1);
+    CheckBit("DSI wrapper enabled (WCR.DSIEN=1)",  dsi_wcr,  3, 1);
+    CheckBit("MPU enabled (CTRL.ENABLE=1)",        mpu_ctrl, 0, 1);
+    CheckEq ("Layer1 CFBAR points at 0xD0000000",  l1cfbar,  0xD0000000);
+    CheckEq ("Layer1 PixelFormat = RGB888 (0x01)", l1pfcr,   0x00000001);
+
+    __message "\n  Decoded LTDC->ISR (sticky from boot+now):\n";
+    CheckBit("LIF    bit0  Line Interrupt Flag",         isr, 0, 0);
+    CheckBit("FUIF   bit1  FIFO Underrun  -- BAD if 1",  isr, 1, 0);
+    CheckBit("TERRIF bit2  Transfer Error -- BAD if 1",  isr, 2, 0);
+    CheckBit("RRIF   bit3  Register Reload Flag",        isr, 3, 0);
+}
+
+/* ----------------------------------------------------------------------
+ * Snapshot 2 -- framebuffer content sampled at known pixel positions.
+ *               832-pitch RGB888 layout (832*3 = 2496 B/row).
+ * ---------------------------------------------------------------------- */
+Snapshot_Framebuffer()
+{
+    __var fb0, fb1, fb_mid, fb_far;
+
+    __message "\n=========================================================\n";
+    __message " SNAPSHOT 2  Framebuffer at 0xD0000000 (832-pitch RGB888)\n";
+    __message "=========================================================\n";
+
+    fb0    = __readMemory32(0xD0000000,                                "Memory");
+    fb1    = __readMemory32(0xD0000000 +  100 * 2496 + 100 * 3,        "Memory");
+    fb_mid = __readMemory32(0xD0000000 +  240 * 2496 + 400 * 3,        "Memory");
+    fb_far = __readMemory32(0xD0000000 +  240 * 2496 + 750 * 3,        "Memory");
+
+    PrintHex32("FB[0,0]                     ", fb0);
+    PrintHex32("FB[100,100]                 ", fb1);
+    PrintHex32("FB[240,400]  centre         ", fb_mid);
+    PrintHex32("FB[240,750]  right-half tail", fb_far);
+
+    __message "\n  Expectations:\n";
+    if (fb0 == 0 && fb1 == 0 && fb_mid == 0 && fb_far == 0)
+        __message "  FAIL  framebuffer all-zero -- TouchGFX never painted\n";
+    else
+        __message "  PASS  framebuffer has content\n";
+
+    if (fb_far == 0)
+        __message "  WARN  right-half tail (col=750) is zero -- DMA2D may not be reaching the cushion\n";
+}
+
+ReportSummary()
+{
+    __message "\n=========================================================\n";
+    __message " boot_pipeline.mac  DONE\n";
+    __message "=========================================================\n";
+    __message " What the PASS/FAIL lines tell you:\n";
+    __message "\n";
+    __message " LTDC GCR.LTDCEN=1 + DSI CR.EN=1 -- normal post-boot state.\n";
+    __message "                                    Phase 2 reached LTDC init.\n";
+    __message " Layer1 CFBAR=0xD0000000         -- LTDC scanning SDRAM FB.\n";
+    __message " Layer1 PFCR=0x01                -- pixel format = RGB888.\n";
+    __message " FUIF=0 + framebuffer non-zero   -- success criterion: clean\n";
+    __message "                                    rendering, no contention.\n";
+    __message " FUIF=1                          -- contention bug active.\n";
+    __message "\n";
+    __message " To verify Phase 1 (LTDC disabled BEFORE osKernelStart), a\n";
+    __message " separate macro is needed that breakpoints at osKernelStart.\n";
+}
+
+/* ----------------------------------------------------------------------
+ * Entry point: cspybat with --attach_to_running_target triggers
+ * execUserConnect() (NOT execUserSetup -- that one fires only on
+ * fresh-download flow). Target is running on attach; we halt to sample.
+ * ---------------------------------------------------------------------- */
+execUserSetup()
+{
+    __message "\n*** boot_pipeline.mac  --  Gated Multitasking post-boot probe ***\n";
+    __message "    Built against RELEASE configuration (no RTT logging)\n";
+    __message "    Attached at ~T+5s after reset; target already halted by attach.\n";
+
+    Snapshot_PostBoot();
+    Snapshot_Framebuffer();
+
+    /* Re-sample LTDC->ISR after a short wait to detect ongoing FUIFs. */
+    __go();
+    __delay(2000);
+    __stop();
+
+    __message "\n=========================================================\n";
+    __message " RE-SAMPLE  (T+attach+2s)  ongoing FUIF / TERRIF detection\n";
+    __message "=========================================================\n";
+    {
+        __var isr2;
+        isr2 = __readMemory32(0x50001038, "Memory");   /* LTDC->ISR */
+        PrintHex32("LTDC->ISR after 2s of run", isr2);
+        CheckBit("FUIF   bit1  fired during 2s window", isr2, 1, 0);
+        CheckBit("TERRIF bit2  fired during 2s window", isr2, 2, 0);
+        __writeMemory32(0x0F, 0x5000103C, "Memory");   /* ICR clear */
+    }
+
+    ReportSummary();
+
+    /* cspybat invocation uses --leave_target_running, so resume the
+     * target so the LCD keeps refreshing after the macro returns. */
+    __go();
+}

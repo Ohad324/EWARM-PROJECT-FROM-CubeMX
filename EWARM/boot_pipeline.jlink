@@ -1,0 +1,51 @@
+// boot_pipeline.jlink -- J-Link Commander script to dump all boot-pipeline
+// registers from a running STM32H747I-DISCO board.
+//
+// Driven by boot_pipeline.bat, which builds Release, flashes, waits ~5s
+// for boot to complete, then invokes JLink with this script.
+//
+// JLink mem32 ADDR N reads N 32-bit words. Output is parsed by the wrapper
+// to print PASS/FAIL summary.
+//
+// Markers (BEGIN_XXX / END_XXX) are searched by the wrapper. Don't rename.
+
+// LTDC Layer 1 + global control
+// 0x50001018 GCR    bit0=LTDCEN
+// 0x5000101C SRCR
+// 0x50001034 IER
+// 0x50001038 ISR    bit1=FUIF bit2=TERRIF
+// 0x50001094 L1PFCR
+// 0x500010AC L1CFBAR
+// 0x500010B0 L1CFBLR
+// 0x500010B4 L1CFBLNR
+mem32 0x50001018 1
+mem32 0x50001038 1
+mem32 0x50001094 1
+mem32 0x500010AC 1
+mem32 0x500010B0 1
+mem32 0x500010B4 1
+
+// DSI HOST  0x50000004 CR (bit0=EN), 0x50000024 WCR (bit3=DSIEN)
+mem32 0x50000004 1
+mem32 0x50000024 1
+
+// FMC SDCR1, MPU CTRL
+mem32 0x52004140 1
+mem32 0xE000ED94 1
+
+// Framebuffer samples (832-pitch RGB888 -- 832*3=2496 B/row).
+// FB[0,0], FB[100,100], FB[240,400], FB[240,750]
+mem32 0xD0000000 1
+mem32 0xD003D0EC 1
+mem32 0xD00928B0 1
+mem32 0xD0093B98 1
+
+// Clear LTDC sticky flags (so a follow-up sample shows fresh FUIFs only).
+w4 0x5000103C 0x0000000F
+mem32 0x50001038 1
+
+// Sleep ~2s of target time, then re-sample LTDC->ISR for ongoing FUIFs.
+sleep 2000
+mem32 0x50001038 1
+
+q
