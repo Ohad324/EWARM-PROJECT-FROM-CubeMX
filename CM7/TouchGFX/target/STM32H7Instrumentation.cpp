@@ -7,7 +7,7 @@
 namespace touchgfx
 {
 static TIM_HandleTypeDef tim;
-
+ 
 void STM32H7Instrumentation::init()
 {
     uint32_t uwTimclock, uwD2Prescaler = 0U;

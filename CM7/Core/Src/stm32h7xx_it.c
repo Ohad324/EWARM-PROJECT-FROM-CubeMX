@@ -49,8 +49,10 @@
 #ifndef RELEASE_BUILD
 /* IRQ ring-buffer trace. ETM-substitute. Each ISR's first instruction
  * appends (irq_num, DWT cycle count) into the ring. Buffer at fixed
- * address 0x24008000 (top of AXI SRAM) so J-Link can read non-invasively
- * via mem8/mem32 commands at any time. */
+ * address 0x24050000 (320 KB into AXI SRAM, ABOVE the partial framebuffer
+ * at 0x24000000-0x24046800) so J-Link can read non-invasively via mem8/
+ * mem32 commands at any time. Was 0x24008000 before PFB landed; relocated
+ * to avoid collision with the new strip framebuffer. */
 typedef struct __attribute__((packed)) {
     uint8_t  irq_num;
     uint8_t  pad[3];
@@ -59,9 +61,9 @@ typedef struct __attribute__((packed)) {
 
 #define IRQ_LOG_SIZE 256u
 
-#pragma location = 0x24008000
+#pragma location = 0x24050000
 __root volatile irq_log_entry_t g_irq_log[IRQ_LOG_SIZE];
-#pragma location = 0x24008800
+#pragma location = 0x24050800
 __root volatile uint32_t        g_irq_idx = 0;   /* zero-init so reads are clean */
 
 static inline void Log_IRQ(uint8_t irq_num)

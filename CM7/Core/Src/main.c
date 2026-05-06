@@ -130,10 +130,22 @@ volatile uint32_t g_logDropped = 0u;   /* incremented by Log_ToQueue on queue-fu
 static StaticQueue_t s_logQueueObj;
 static uint8_t s_logQueueStorage[32u * sizeof(LogMsg_t)];
 
-/* ── DFSDM Mission Control Hub — live register snapshot at 0x24000050 ──────
- * J-Link: mem32 0x24000050 10    IAR: pin address in Live Watch window.
- * RTTLogTask refreshes every 200 ms.  __no_init = startup does not zero it. */
-#pragma location = 0x24000050
+/* FreeRTOS heap relocated from AXI SRAM to D2 SRAM1 (.freertos_heap section
+ * placed in SRAM1_region by the linker .icf). Frees ~100 KB of AXI SRAM
+ * for the upcoming partial framebuffer at 0x24000000. configAPPLICATION_-
+ * ALLOCATED_HEAP=1 in FreeRTOSConfig.h tells heap_4 to use this storage
+ * instead of declaring its own. Per AN4891 STM32H7 system architecture:
+ * heap on D2 internal RAM, framebuffer on D1 internal RAM. */
+uint8_t ucHeap[configTOTAL_HEAP_SIZE]
+    __attribute__((section(".freertos_heap"), aligned(8)));
+
+/* ── DFSDM Mission Control Hub — live register snapshot at 0x24070000 ──────
+ * J-Link: mem32 0x24070000 10    IAR: pin address in Live Watch window.
+ * RTTLogTask refreshes every 200 ms.  __no_init = startup does not zero it.
+ *
+ * RELOCATED from 0x24000050 to 0x24070000 to clear the start of AXI SRAM
+ * for the partial framebuffer (frameBuf occupies 0x24000000-0x24046800). */
+#pragma location = 0x24070000
 __root __no_init volatile DFSDM_Debug_Hub_t g_dbg;   /* __root keeps storage linked even when DFSDM init is gated out */
 
 /* ── LIVE debug snapshot — captured at VoiceRecTask recording-start time ────
@@ -258,11 +270,9 @@ int main(void)
   SCB_EnableDCache();
 
 /* USER CODE BEGIN Boot_Mode_Sequence_1 */
-  /* Wait until CPU2 boots and enters in stop mode or timeout*/
-  timeout = 0xFFFF;
-  while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
-  /* CM4 sync timeout is non-fatal: CM4 runs a stop-mode stub only.
-   * If CM4 never signals (e.g. not flashed), CM7 continues normally. */
+  /* CM4 D2CKRDY sync removed: CM4 holds a stop-mode stub at 0x08100000
+   * and BCM4=0 on this board, so D2CKRDY never clears and the original
+   * CubeMX-generated loop spins forever. CM7 boots independently. */
   (void)timeout;
 /* USER CODE END Boot_Mode_Sequence_1 */
   /* MCU Configuration--------------------------------------------------------*/
@@ -274,6 +284,17 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+
+  /* Enable D2 SRAM1 AHB clock (RCC_AHB2ENR.D2SRAM1EN). Required because the
+   * FreeRTOS heap (ucHeap, 100 KB) is now placed in SRAM1 at 0x30000000 via
+   * the .freertos_heap linker section. Reset value of D2SRAM1EN is 0 — first
+   * access to SRAM1 with the clock disabled bus-faults the M7. heap_4 calls
+   * pvPortMalloc → prvHeapInit on first xTaskCreate(); this enable must
+   * happen before osKernelStart(). Placed right after HAL_Init() — earlier
+   * than that the macro reads RCC->AHB2ENR for read-back which is fine, but
+   * keeping it adjacent to the only other RCC clock-enable code (HAL_Init's
+   * SYSCFG, etc.) makes the boot sequence easier to trace. */
+  __HAL_RCC_D2SRAM1_CLK_ENABLE();
 
   /* USER CODE END Init */
 
@@ -339,8 +360,11 @@ Error_Handler();
    * which writes LTDC's CFBAR — must run AFTER MX_LTDC_Init(). All three
    * (DSI, LTDC, TouchGFX) move together to maintain dependency order. */
   /* MX_TouchGFX_Init(); */
+  /* BISECT: ITM probes to find hang between UART8_DONE and BLE_UART_DONE */
+  _itm_str("[BISECT-A pre-PreOSInit]\n");
   /* Call PreOsInit function */
   MX_TouchGFX_PreOSInit();
+  _itm_str("[BISECT-B post-PreOSInit]\n");
   /* USER CODE BEGIN 2 */
   /* MX_UART8_Init() already called above in the CubeMX init sequence — removed duplicate. */
   /* Attach DMA1 Stream0 to huart8 and create xRawBleQueue / xBleHistMutex.
@@ -354,18 +378,36 @@ Error_Handler();
                                  (UBaseType_t)sizeof(LogMsg_t),
                                  s_logQueueStorage,
                                  &s_logQueueObj);
+  _itm_str("[BISECT-C post-xQueueCreateStatic]\n");
   configASSERT(xLogQueue != NULL);
+  _itm_str("[BISECT-D post-configASSERT]\n");
 
   BLE_UART_Init();
+  _itm_str("[BISECT-E post-BLE_UART_Init]\n");
   ITM_STAGE(ITM_INIT_BLEuart_DONE);
 #if 0   /* DEBUG ISOLATION Step 2 — skip voice recorder init (DMA + EXTI + RTOS). */
   VoiceRec_Init(); /* button EXTI + DFSDM + DMA + RTOS objects */
   ITM_STAGE(ITM_INIT_VOICEREC_DONE);
 #endif
+#if 0   /* Gated for screen-only boot test (PFB Phase 2 verification).
+         * AudioSD_Init was hanging pre-kernel (suspect: SD-absent slow path,
+         * unrelated to LCD changes). Restore once boot reaches osKernelInit. */
   AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
   ITM_STAGE(ITM_INIT_AUDIOSD_DONE);
+#endif
 
   CommandHandler_Init(); /* create CMD: message queue                              */
+
+  /* Phase 1 sanitization (per AN4861 / "Late-Start" sequence):
+   * zero the AXI-resident strip framebuffer to guarantee a clean black
+   * panel for the very first DSI transfer (before TouchGFX renders strip 0).
+   * BP-03 bisect (2026-05-06) confirmed this memset is NOT the boot hang
+   * cause -- the hang was MPU REGION 3 set to Non-Cacheable breaking
+   * heap_4 first init. REGION 3 is now WB Cacheable, memset is restored. */
+  {
+    extern uint32_t frameBuf[];
+    memset((void*)frameBuf, 0x00, 800u * 120u * 3u);
+  }
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -894,6 +936,12 @@ void MX_LTDC_Init(void)
   /* USER CODE BEGIN LTDC_Init 1 */
 
   /* USER CODE END LTDC_Init 1 */
+  /* Partial Framebuffer (PFB) mode: LTDC scans an 800x120 strip in AXI SRAM
+   * (frameBuf at 0x24000000). 4 strips per frame; each strip DSI'd to
+   * OTM8009A GRAM with PASET telling the panel the destination row range.
+   * AccumulatedActiveW = HBP(2) + 800 = 802. AccumulatedActiveH = VBP(2) +
+   * 120 = 122. Total adds 1 for HSYNC/VSYNC of width 1. */
+  extern uint32_t frameBuf[];   /* declared in TouchGFXGeneratedHAL.cpp */
   hltdc.Instance = LTDC;
   hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AH;
   hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AH;
@@ -903,10 +951,10 @@ void MX_LTDC_Init(void)
   hltdc.Init.VerticalSync = 0;
   hltdc.Init.AccumulatedHBP = 2;
   hltdc.Init.AccumulatedVBP = 2;
-  hltdc.Init.AccumulatedActiveW = 402;
-  hltdc.Init.AccumulatedActiveH = 482;
-  hltdc.Init.TotalWidth = 403;
-  hltdc.Init.TotalHeigh = 483;
+  hltdc.Init.AccumulatedActiveW = 802;   /* WAS 402 (LEFT-half 400-wide) */
+  hltdc.Init.AccumulatedActiveH = 122;   /* WAS 482 (full 480 rows) */
+  hltdc.Init.TotalWidth         = 803;   /* WAS 403 */
+  hltdc.Init.TotalHeigh         = 123;   /* WAS 483 */
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
   hltdc.Init.Backcolor.Red = 0;
@@ -915,17 +963,17 @@ void MX_LTDC_Init(void)
     Error_Handler();
   }
   pLayerCfg.WindowX0 = 0;
-  pLayerCfg.WindowX1 = 400;
+  pLayerCfg.WindowX1 = 800;             /* WAS 400 */
   pLayerCfg.WindowY0 = 0;
-  pLayerCfg.WindowY1 = 480;
+  pLayerCfg.WindowY1 = 120;             /* WAS 480 — strip height */
   pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB888;
   pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
   pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
-  pLayerCfg.FBStartAdress = 0xD0000000;
-  pLayerCfg.ImageWidth = 400;
-  pLayerCfg.ImageHeight = 480;
+  pLayerCfg.FBStartAdress = (uint32_t)frameBuf;   /* AXI SRAM strip buffer */
+  pLayerCfg.ImageWidth = 800;           /* WAS 400 */
+  pLayerCfg.ImageHeight = 120;          /* WAS 480 — strip height */
   pLayerCfg.Backcolor.Blue = 0;
   pLayerCfg.Backcolor.Green = 0;
   pLayerCfg.Backcolor.Red = 0;
@@ -1629,10 +1677,14 @@ void MPU_Config(void)
   MPU_InitStruct.IsBufferable     = MPU_ACCESS_BUFFERABLE;
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-  /* --- REGION 3: AXI SRAM (0x24000000, 512 KB) — SDMMC Bounce Buffer ---
-   * Contains s_pcmBounce. CPU fills it; SDMMC1 IDMA reads it.
-   * Write-Back Cacheable: call SCB_CleanDCache_by_Addr before each SDMMC transfer.
-   * TEX=0, C=1, B=1 = Write-Back, Write-Allocate. */
+  /* --- REGION 3: AXI SRAM (0x24000000, 512 KB) — TEMPORARILY REVERTED TO WB ---
+   * BISECT: trying Write-Back Cacheable to test if the NC change is what
+   * hung heap_4's first prvHeapInit (in BLE_UART_Init's xQueueCreate). The
+   * proper PFB plan is NC for the framebuffer; if WB boots cleanly, we'll
+   * narrow the NC region to JUST the framebuffer (256 KB at 0x24000000)
+   * via a higher-priority MPU region overlay, leaving the rest of AXI WB.
+   *
+   * TEX=0, C=1, B=1 = Write-Back, Write-Allocate (original setting). */
   MPU_InitStruct.Enable           = MPU_REGION_ENABLE;
   MPU_InitStruct.Number           = MPU_REGION_NUMBER3;
   MPU_InitStruct.BaseAddress      = 0x24000000;

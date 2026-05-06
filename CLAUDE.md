@@ -1,11 +1,84 @@
-# CLAUDE.md — STM32H747I-DISCO Voice Recorder
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
+# STM32H747I-DISCO Voice Recorder
+
+## ST Documentation — Design Reference Table
+
+When designing or reviewing changes that affect LTDC, framebuffer placement, FreeRTOS heap, or graphics pipeline, cite these ST documents (all available locally in `docs/`):
+
+| Document | Focus Area | Why It Supports the Current Design |
+|---|---|---|
+| **AN4861** | LTDC Peripheral | Justifies moving `frameBuf` to AXI SRAM to stop FUIF (FIFO Underrun). Bus isolation = LTDC on AXI, aggressors on FMC. |
+| **AN4891** | STM32H7 System Topology | Validates relocating the FreeRTOS heap to SRAM1 (D2 internal). Heap on D2, framebuffer on D1, kernel globals optionally on DTCM. |
+| **AN5215** | Bus Bandwidth & Performance | Forensically supports the "Aggressor" behavior of CPU/Cache during contention; explains FMC arbitration and burst latencies. |
+| **AN5056** | TouchGFX Graphics Framework | Explicitly supports the **Partial Framebuffer (PFB)** strip strategy used here — `setFrameRefreshStrategy(REFRESH_STRATEGY_PARTIAL_FRAMEBUFFER)` + per-strip `transmitBlock()` callback. |
+| **AN5405** | Cache & Coherency | Recommends framebuffer in MPU non-cacheable, shareable region (avoids `SCB_CleanDCache_by_Addr` overhead and races). |
+| **RM0399** | Reference Manual (chapters 32–33, 60) | Authoritative for LTDC register layout (§33), DMA2D (§32), DBGMCU freeze bits (§60.5 — confirms no LTDC freeze, hence the LTDC alias-on-halt finding). |
+
+Always read the relevant document before proposing or reviewing a change in these areas — guessing wastes hours, ST docs save them.
 
 ## Project Identity
 - Board: STM32H747I-DISCO
-- Active core: Cortex-M7
-- Toolchain: CubeMX + IAR
+- Active core: Cortex-M7 (CM4 holds a stop-mode stub at `0x08100000` only)
+- Toolchain: CubeMX + IAR EW 9.70.2 (cspybat 9.4.6.1706)
 - IAR project: `EWARM/STM32H747I-DISCO.ewp`
 - Active target: `STM32H747I-DISCO_CM7`
+- IAR tool root: `C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\common\bin\` (`iarbuild.exe`, `cspybat.exe`)
+- Repo layout: `CM4/Core` (CM4 stub), `CM7/Core` + `CM7/TouchGFX` (active app), `EWARM/` (IAR project + probes), `Drivers/`, `Common/`, `Middlewares/`, `docs/` (ST manuals).
+- CubeMX source-of-truth: `STM32H747I-DISCO.ioc` (also supports STM32CubeIDE / MDK-ARM, but EWARM is the active toolchain in this project).
+- Git: `.git` lives inside the project folder. Remotes: `origin` is a bare repo on OneDrive (`C:/Users/Ohad/OneDrive - sightsys/STM32H747-SCREEN/MyApplication.git`) for local backup, `github` is a GitHub mirror.
+
+## Common Commands
+
+All commands are run from the project root `C:\TouchGFXProjects\MyApplication`. Bash and PowerShell both work; the orchestrator scripts (`*.bat`, `*.ps1`) are Windows-native.
+
+**Build (CM7, current active configuration — usually Debug):**
+```
+"C:\TouchGFXProjects\IAR 9.70.2\ewarm-9.70.2\common\bin\iarbuild.exe" EWARM\STM32H747I-DISCO.ewp -make STM32H747I-DISCO_CM7 -log warnings
+```
+Use `-build` instead of `-make` to force a full rebuild (incremental otherwise). Output: `EWARM/STM32H747I-DISCO_CM7/Exe/STM32H747I-DISCO_CM7.out` and `.hex`. Linker map: `EWARM/STM32H747I-DISCO_CM7/List/STM32H747I-DISCO_CM7.map`.
+
+**Build + flash + reset (one-shot):**
+```
+EWARM\auto_build_flash.bat
+```
+Kills any held probes, builds, flashes via J-Link, then runs cspybat `--download_only` to release the chip into a running state.
+
+**Single-BP cspybat probe — diagnostic, captures register/RAM dump at one symbol entry:**
+```
+EWARM\boot_pipeline_lcd.bat            # 9 LCD-pipeline checkpoints (existing)
+EWARM\verify_pfb.bat                   # 15 PFB-verification checkpoints (this work)
+```
+Each `*.bat` calls a `*.ps1` orchestrator that runs cspybat once per BP via `*_one_bp.mac.tpl` template substitution. Per-iteration logs land under `EWARM/runs/<probe_name>/<NN_tag>.log`; combined log at `EWARM/runs/<probe_name>.log`. The "one useful BP hit per cspybat session" rule (see Project-discovered specifics) is why this is one BP per run, not many BPs in one session.
+
+**Free-running J-Link mem32 probe (target keeps running, no halt):**
+```
+EWARM\boot_pipeline.bat
+```
+Uses J-Link Commander for live memory reads — useful when LTDC layer registers need to be read post-init (they alias to GCR at halt).
+
+**Release the J-Link probe before reconnecting:**
+```
+taskkill /F /IM IarIdePm.exe
+taskkill /F /IM JLink.exe
+taskkill /F /IM JLinkRTTViewer.exe
+taskkill /F /IM CSpyBat.exe
+```
+Required between IAR IDE debug sessions and command-line cspybat runs (J-Link allows only one connection at a time).
+
+**Recovery from a chip lockup (HardFault leaves M7 with `SP=0x1`, J-Link can't attach):**
+1. Unplug the J-Link USB cable from CN2, wait 3 seconds, replug.
+2. Or press the black RESET button on the STM32H747I-DISCO board.
+3. Then re-run cspybat — the freshly-reset chip allows download of new firmware.
+
+**View the .map symbol locations after a build (sanity-check linker placement):**
+```
+grep "frameBuf\|ucHeap\|g_dbg\|g_irq_log" EWARM\STM32H747I-DISCO_CM7\List\STM32H747I-DISCO_CM7.map
+```
 
 ## Documentation Rule — MANDATORY, NO EXCEPTIONS
 
@@ -64,6 +137,8 @@ For larger or riskier changes, present the plan first.
 Do not diagnose from memory alone.
 Do not assume an old bug is the same as the current one without checking.
 
+When a change is risky or behavior is mysterious, reach for cspybat + C-SPY macros — set a BP at the suspect site, log the register/RAM state, confirm the prediction. Don't over-use it: skip for small score-1 fixes where flash + visual check is faster. The cspybat syntax reference is in this file (PART 1–6) and the project has working templates (`boot_pipeline_*.bat`, `boot_pipeline_*.mac.tpl`). "Build succeeded" is not proof the code runs as intended.
+
 ---
 
 ## Hard Technical Rules
@@ -91,7 +166,9 @@ These are project rules, not suggestions:
 
 9. No dynamic allocation.  
    No `malloc`, `pvPortMalloc`, `new`.  
-   Use static or global buffers only.
+   Use static or global buffers only.  
+   **This includes FreeRTOS dynamic creators that call `pvPortMalloc` internally:** `xQueueCreate`, `xSemaphoreCreateMutex`, `xSemaphoreCreateBinary`, `xTaskCreate`, `xTimerCreate`, `xEventGroupCreate`, etc. **Use the static variants instead:** `xQueueCreateStatic`, `xSemaphoreCreateMutexStatic`, `xSemaphoreCreateBinaryStatic`, `xTaskCreateStatic`, `xTimerCreateStatic`, `xEventGroupCreateStatic` — each takes pre-allocated storage (`StaticQueue_t`/`StaticSemaphore_t`/`StaticTask_t` + a typed buffer). FreeRTOSConfig.h must have `configSUPPORT_STATIC_ALLOCATION = 1` for these to compile.  
+   If `xQueueCreate` (dynamic) is unavoidable in some legacy code, document why and ensure `ucHeap` is sized + located correctly. The `BLE_UART_Init` path historically used `xQueueCreate` — this is a violation that should be migrated to `xQueueCreateStatic` over time.
 
 10. Do not call `Error_Handler()` for expected runtime conditions such as missing media or transient peripheral failures.  
     Log and return safely instead.
@@ -920,6 +997,8 @@ If the log is empty: the macro probably has a syntax error. cspybat usually repo
 - **SDRAM unreadable pre-FMC-init:** reading `0xD0000000` before `MX_FMC_Init` runs returns a bus-fault from the DAP, which the macro engine reports as `Operation error` and aborts the session. Only read SDRAM at checkpoints AFTER `MX_FMC_Init`.
 - **`__hwRunToBreakpoint` driver support per UCSARM-26:** CMSIS-DAP, I-jet, J-Link/J-Trace, PE micro, ST-LINK, TI XDS. Confirmed working with J-Link Ultra V7 / J-Link Commander V9.34b on this project.
 - **Sequential RunToBp pattern is the working multi-checkpoint flow:** put the entire probe sequence inside `execUserSetup`. Each `__hwRunToBreakpoint(addr, timeout)` advances the CPU to the next checkpoint. After all checkpoints, the macro returns and the session ends cleanly.
+- **One useful BP hit per cspybat session (passive `__setCodeBreak` model):** `__setCodeBreak` lets you arm 15+ BPs in a single `execUserSetup` call — install always succeeds. But once the target is running, only the FIRST BP that fires reliably runs its action and produces useful output. Subsequent BPs in the same session are unreliable: cspybat in this environment doesn't dependably resume the CPU after the first hit's action returns. **Mental model:** install N BPs if you like, but expect ~1 useful hit per cspybat invocation. For multi-checkpoint mapping, run cspybat N times via an orchestrator (`boot_pipeline_lcd.ps1`, `verify_pfb.ps1`) — each iteration generates a per-checkpoint `.mac` from a `_one_bp.mac.tpl` template via `@@CHECKPOINT@@` / `@@SKIP@@` substitution and installs ONE intended BP. This differs from the active `__hwRunToBreakpoint` flow above (where many checkpoints DO work in one session) because passive `__setCodeBreak` relies on natural execution to hit the BP, and cspybat's post-action resume path doesn't behave the same as `__hwRunToBreakpoint`'s explicit advance.
+- **Stop-and-fix at the first failing BP — don't keep running checkpoints against broken infrastructure.** When a BP-bisect orchestrator runs N checkpoints sequentially (`verify_pfb.ps1` etc.), the moment one BP fails to fire (cspybat times out / chip locks / target hangs before reaching the symbol), all downstream BPs in the sequence are gated on the same broken state and will also fail. There is no diagnostic value in continuing past the first failure — every later iteration burns ~30 s of host watchdog only to confirm the same hang. **Correct methodology:** run iteration N → if it fires cleanly, advance to N+1; if it fails, STOP, read the per-iteration log, fix the root cause in firmware, rebuild, and re-run from N (or N-1 to confirm regression). The orchestrator script's `Wait-Job -Timeout` is a watchdog for cspybat hangs, not a green light to plough through a broken pipeline.
 
 ### LTDC reads alias when CPU halted post-init (chip-level behavior, NOT a probe bug)
 
@@ -1005,3 +1084,94 @@ Reuse `boot_pipeline_multi.bat`'s pattern — list 5-10 LTDC/DMA2D probe points 
 4. **Phase 4**: BP at `LTDC_ER_IRQHandler` → if it fires, capture DMA2D state. Find which DMA2D blit was active at the moment of FUIF.
 
 The macro template already exists; for LCD debug we'd add a dedicated `boot_pipeline_lcd_one_bp.mac.tpl` with the LCD-specific register set, plus a `boot_pipeline_lcd.ps1` orchestrator listing the LCD-specific BP targets above.
+
+---
+
+## LCD Bus Guard — Robust Gated Wait (Gemini Plan, 2026-05-05)
+
+### Problem
+
+3-task LCD architecture (TouchGFXTask + JpegDisplayTask + videoTask) fires **16 LTDC_ER (FUIF/TERRIF) IRQs in the first 32 IRQs from boot** — measured via the alias-immune IRQ ring buffer at `0x24008000`. Visual: half-blue/half-green corruption at LEFT/RIGHT 400-pixel split.
+
+Root cause: while LTDC is mid-scan (autonomous AHB master, ~5–10 ms per LEFT or RIGHT half), guiTask blocks on `OSWrappers::waitForVSync()`'s message queue. The FreeRTOS scheduler dispatches the next-priority task (`jpegTask` at osPriorityLow/Normal), which performs `Music_InjectTestThumb()` → memcpy → JPEG hardware decode → scale → R↔B swap → DMA2D blit, all hitting SDRAM. CPU+LTDC concurrent SDRAM access → LTDC FIFO underrun → FUIF.
+
+### Why the previous fix attempts failed
+
+| Attempt | Outcome |
+|---|---|
+| `cbc9523` single-task revert (merge JpegDisplayTask into TouchGFXTask via Music_Poll in Model::tick) | Chip HardFaulted on first run — Music_Poll() called from Model::tick may run before framework is fully initialized; SP corrupted. |
+| Unbounded `while (displayRefreshing) { __WFI(); }` after `HAL_DSI_Refresh` | Chip HardFaulted — first refresh's EOR ISR didn't fire (NVIC race during framework startup) → CPU spun in WFI forever → watchdog/assert HardFault → "Stack pointer is setup to incorrect alignment. Stack addr = 0x1" diagnostic from J-Link. |
+
+### The fix (implemented, this commit)
+
+**File:** [`CM7/TouchGFX/target/TouchGFXHAL.cpp`](CM7/TouchGFX/target/TouchGFXHAL.cpp), inside `flushFrameBuffer()` at the LEFT-half `HAL_DSI_Refresh()` call site.
+
+```cpp
+displayRefreshing = true;          // set BEFORE the refresh kick (was after)
+HAL_DSI_Refresh(hdsi);
+// Allow ~20 ms (more than a 60Hz frame) of retries
+for (uint32_t timeout = 0; timeout < 5000 && displayRefreshing; timeout++) {
+    __WFI();
+}
+// Post-Wait Safety Check: if EOR ISR was somehow missed, force-clear
+// the flag so the system doesn't stay stuck.  Costs at most one corrupt
+// frame (RIGHT half won't trigger that frame); permanent CPU hang is not
+// recoverable.
+if (displayRefreshing) {
+    displayRefreshing = false;
+}
+```
+
+**3 design elements working together:**
+
+1. **WFI gate** — Holds guiTask in M7 halt state during the scan. Because guiTask is at `osPriorityHigh` and the loop keeps it the highest-priority running task, the scheduler doesn't switch to lower-priority tasks. CPU bus master is silent. SDRAM is exclusively LTDC's during the scan. FUIF cannot fire from CPU+LTDC contention.
+
+2. **Bounded `for` loop with 5000-iteration cap** — Each `__WFI()` wakes on the next IRQ (typically SysTick at 1 kHz, plus DSI/LTDC IRQs). 5000 iterations = worst-case ~5 sec; normal scan exits in << 100 iterations once EOR clears `displayRefreshing`. The bound prevents permanent hang if EOR is masked or stalled.
+
+3. **Post-wait safety clear** — If the loop times out with `displayRefreshing` still true, force-clear it. Loses one frame's RIGHT-half scan (visible glitch on that frame), but the system progresses. The guiTask's existing `OSWrappers::waitForVSync()` afterwards still handles frame timing.
+
+### What stays unchanged
+
+- `OSWrappers::waitForVSync()` in `OSWrappers.cpp:113-121` — frame timing between frames. Allows lower-priority tasks to run during the inter-frame idle window. NOT replaced by the WFI gate.
+- The 3-task architecture (TouchGFXTask, JpegDisplayTask, videoTask).
+- `wait_for_ltdc_idle()` in `jpeg_decoder.c:23-27` — finer-grained per-row protection during decode loops, complementary to this scan-window gate.
+- The second `HAL_DSI_Refresh()` call at `TouchGFXHAL.cpp:561` (RIGHT half) — that one is inside `HAL_DSI_EndOfRefreshCallback` (ISR context). NEVER add WFI in an ISR. The single guard at the LEFT-half site naturally covers both halves because `displayRefreshing` stays true until the RIGHT-half EOR completes at line 582.
+
+### Verification protocol
+
+1. **Hardware recovery** before first run (chip may be wedged from a prior unbounded-WFI HardFault):
+   - Power-cycle the J-Link USB cable (unplug, wait 3s, replug)
+   - Press the black RESET button on the STM32H747I-DISCO board (or unplug + replug CN2 USB)
+
+2. **Build + probe:**
+   ```
+   EWARM\boot_pipeline_lcd.bat
+   ```
+
+3. **Read the IRQ ring buffer** count from any successful checkpoint log:
+   ```
+   grep "first .* entries" EWARM\runs\boot_pipeline_lcd\refresh_60_early_render.log
+   ```
+
+4. **Pass criteria:**
+
+   | Metric | Pre-fix | Pass criterion |
+   |---|---|---|
+   | `LTDC_ER(FUIF/TERRIF)` in first 32 IRQs | 16 | **0** (or single-digit) |
+   | Visual on panel | half-blue/half-green at LEFT/RIGHT split | clean test thumbnail (Debug build has Music_InjectTestThumb) |
+   | Voice recording / SD writes / NORA UART | working | still working (priorities unchanged) |
+
+5. **If `LTDC_ER` count is non-zero after the fix:** the timeout fallback fired, meaning EOR was missed for at least one frame. This is recoverable but indicates a deeper synchronization issue. Diagnose by setting BPs at `HAL_DSI_EndOfRefreshCallback` entry and the post-wait safety clear (would need `boot_pipeline_lcd.ps1` extended).
+
+### Theory: why this is the right intervention level
+
+| Layer | What it controls | Effective for FUIF? |
+|---|---|---|
+| **Single-task merge (cbc9523)** | All LCD work in one thread → naturally serial | Yes (proven historically) but breaks current branch's task structure |
+| **Mutex-protected refresh trigger** | Coordinates jpegTask vs guiTask via FreeRTOS primitive | Theoretically yes; risk of priority inversion |
+| **`__WFI` gate at refresh site (THIS FIX)** | CPU-level halt during scan; scheduler can't dispatch | Yes — surgical 1-file change, no architecture changes |
+| **DBGMCU LTDC freeze bit** | Halt LTDC when CPU halts (debug only) | Doesn't exist on STM32H7 per RM0399 §60.5 |
+| **DSI Video Mode migration** | LTDC streams continuously, no LEFT/RIGHT split | Architectural fix, large scope |
+| **RGB565 instead of RGB888** | Halves SDRAM bandwidth need | Architectural fix, color quality impact |
+
+The WFI gate is the smallest-scope intervention that targets the root cause (concurrent SDRAM access during scan).

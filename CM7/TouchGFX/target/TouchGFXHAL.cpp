@@ -28,6 +28,7 @@
 
 /* USER CODE BEGIN Includes */
 #include <touchgfx/hal/GPIO.hpp>
+#include <touchgfx/hal/PartialFrameBufferManager.hpp>
 #include "../Components/otm8009a/otm8009a.h"
 #include <STM32H7Instrumentation.hpp>
 #include "FreeRTOS.h"
@@ -96,7 +97,9 @@ TouchGFXHAL::TouchGFXHAL(touchgfx::DMA_Interface& dma, touchgfx::LCD& display, t
     : TouchGFXGeneratedHAL(dma,
                            display,
                            tc,
-                           width + 32, /*32 is for padding*/
+                           width,    /* was width+32 (832-cushion for Bug X);
+                                      * removed in coordination with frameBuf
+                                      * 800-wide allocation + CFBLR 800*3 pitch */
                            height)
       /* USER CODE END TouchGFXHAL Constructor */
 {
@@ -120,6 +123,15 @@ void TouchGFXHAL::initialize()
 
     /* USER CODE BEGIN initialize step 2 */
     lockDMAToFrontPorch(false);
+
+    /* Partial Framebuffer mode: framework renders the screen in 4 strips
+     * of 120 rows each into the AXI-resident strip buffer. After each strip
+     * is rendered, framework calls transmitBlock() (defined below) which
+     * DSI-pushes that strip to OTM8009A panel GRAM. LTDC pulls only from
+     * AXI SRAM -- FMC bus stays free for JPEG/CPU/MDMA. */
+    setFrameRefreshStrategy(REFRESH_STRATEGY_PARTIAL_FRAMEBUFFER);
+    setNumberOfBlocks(4);
+    setMaxBlockLines(120);
 
     mcuInstr.init();
     setMCUInstrumentation(&mcuInstr);
@@ -334,6 +346,73 @@ void TouchGFXHAL::endFrame()
 }
 /* USER CODE END virtual overloaded methods */
 
+/* ─────────────────────────────────────────────────────────────────────────
+ * Partial Framebuffer (PFB) callbacks — touchgfx::-namespace free functions
+ * called by PartialFrameBufferManager when the framework renders one strip
+ * (800x120 RGB888) and needs us to push it to OTM8009A panel GRAM via DSI.
+ * ───────────────────────────────────────────────────────────────────────── */
+namespace touchgfx {
+
+/* DSI/LTDC busy flag, cleared by HAL_DSI_EndOfRefreshCallback when the
+ * panel GRAM update for the current strip is complete. */
+static volatile bool s_dsi_busy = false;
+
+void transmitBlock(const uint8_t* pixels, uint16_t x, uint16_t y,
+                   uint16_t w, uint16_t h)
+{
+    (void)x; (void)w;   /* Always full panel width 0..799 */
+
+    /* 1. Set OTM8009A target window: full 800-pixel-wide row range, rows y..y+h-1. */
+    uint8_t pCol[4] = { 0x00, 0x00, 0x03, 0x1F };   /* cols 0..799 */
+    uint8_t pPag[4];
+    pPag[0] = (uint8_t)((y          ) >> 8);
+    pPag[1] = (uint8_t)((y          ) & 0xFFu);
+    pPag[2] = (uint8_t)((y + h - 1u) >> 8);
+    pPag[3] = (uint8_t)((y + h - 1u) & 0xFFu);
+
+    HAL_DSI_LongWrite(&hdsi, 0, DSI_DCS_LONG_PKT_WRITE, 4, OTM8009A_CMD_CASET, pCol);
+    HAL_DSI_LongWrite(&hdsi, 0, DSI_DCS_LONG_PKT_WRITE, 4, OTM8009A_CMD_PASET, pPag);
+
+    /* 2. Drain DSI host's command + payload FIFOs so CASET/PASET are fully
+     *    transmitted before we re-arm LTDCEN via HAL_DSI_Refresh. Same poll
+     *    pattern the LEFT/RIGHT split previously used between halves. */
+    {
+        const uint32_t empty_mask = DSI_GPSR_CMDFE | DSI_GPSR_PWRFE;
+        uint32_t to = 100000u;
+        while ((hdsi.Instance->GPSR & empty_mask) != empty_mask && --to) { __NOP(); }
+    }
+
+    /* 3. Point LTDC at the strip pixels (always frameBuf base in single-block
+     *    PFB mode) and trigger DSI scan. EOR ISR clears s_dsi_busy. */
+    LTDC_LAYER(&hltdc, 0)->CFBAR = (uint32_t)pixels;
+    __HAL_LTDC_RELOAD_IMMEDIATE_CONFIG(&hltdc);
+
+    s_dsi_busy = true;
+    HAL_DSI_Refresh(&hdsi);
+}
+
+int transmitActive()
+{
+    return s_dsi_busy ? 1 : 0;
+}
+
+int shouldTransferBlock(uint16_t /*bottom*/)
+{
+    return s_dsi_busy ? 0 : 1;
+}
+
+void waitUntilTransmitEnd()
+{
+    while (s_dsi_busy) { __WFE(); }
+}
+
+void waitUntilCanTransferBlock(uint16_t /*bottom*/)
+{
+    while (s_dsi_busy) { __WFE(); }
+}
+
+}   /* namespace touchgfx */
+
 /* USER CODE BEGIN extern C functions */
 extern "C" {
 
@@ -446,148 +525,41 @@ extern "C" {
                            OTM8009A_CMD_WRDISBV, (uint16_t)(value * 255) / 100);
     }
 
+    /* TE callback (panel "GRAM-safe to update" pulse).
+     * For PFB, we only signal VSync to the framework — the strip transmission
+     * is driven by the framework calling transmitBlock() (defined above), not
+     * by the LEFT/RIGHT trigger that lived here. */
     void HAL_DSI_TearingEffectCallback(DSI_HandleTypeDef* hdsi)
     {
+        (void)hdsi;
         GPIO::set(GPIO::VSYNC_FREQ);
 
         HAL::getInstance()->vSync();
         OSWrappers::signalVSync();
 
-        // In single buffering, only require that the system waits for display update to be finished if we
-        // actually intend to update the display in this frame.
-        // CLEVER LOCK: keep DMA2D blocked through the ENTIRE LEFT/RIGHT
-        // split (displayRefreshing stays true across both halves) — not
-        // just while a refresh is queued (refreshRequested gets cleared
-        // ~immediately after LEFT scan starts). Without the OR, DMA2D
-        // races against the RIGHT-half scan and produces FUIFs mid-frame.
-        HAL::getInstance()->lockDMAToFrontPorch(refreshRequested || displayRefreshing);
-
-#ifndef RELEASE_BUILD
-        /* Bug Y diagnostic — count TE ticks + skipped (refresh not started)
-         * + log refreshRequested / displayRefreshing state. If TE keeps
-         * ticking but refresh never starts, displayRefreshing is stuck (H3)
-         * or refreshRequested is stuck false (H1 root cause). */
-        static uint32_t te_count   = 0;
-        static uint32_t te_skipped = 0;
-        ++te_count;
-        if (!(refreshRequested && !displayRefreshing)) { ++te_skipped; }
-        if ((te_count % 600u) == 0u)
-        {
-            LOG("[LCD-TE] ticks=%lu skipped=%lu refReq=%u dispRef=%u\n",
-                (unsigned long)te_count, (unsigned long)te_skipped,
-                (unsigned)refreshRequested, (unsigned)displayRefreshing);
-        }
-#endif
-
-        if (refreshRequested && !displayRefreshing)
-        {
-
-            // Update region 0 = first area of display (First quarter for 16bpp, first half for 24bpp)
-            updateRegion = 0;
-            LCD_SetUpdateRegionLeft();
-
-            // Transfer a quarter screen of pixel data.
-            HAL_DSI_Refresh(hdsi);
-            displayRefreshing = true;
-        }
-        else
-        {
-            GPIO::clear(GPIO::VSYNC_FREQ);
-        }
+        GPIO::clear(GPIO::VSYNC_FREQ);
     }
 
+    /* EOR (End-of-Refresh) callback — fires when LTDC has finished sending
+     * one strip's pixels via DSI to OTM8009A GRAM. For PFB we just clear the
+     * per-strip busy flag, ensure the panel display is enabled, and let the
+     * PartialFrameBufferManager schedule the next block transmission if any. */
     void HAL_DSI_EndOfRefreshCallback(DSI_HandleTypeDef* hdsi)
     {
-#ifndef RELEASE_BUILD
-        /* Bug Y diagnostic — count left/right/stale EOR firings. If TE keeps
-         * ticking but EOR-right stops growing after press 1, DSI stalled
-         * mid-refresh and displayRefreshing is stuck true (H3). Stale = EOR
-         * fired while displayRefreshing was already false (out-of-order). */
-        static uint32_t eor_left  = 0;
-        static uint32_t eor_right = 0;
-        static uint32_t eor_stale = 0;
-        if (!displayRefreshing)         { ++eor_stale; }
-        else if (updateRegion == 0)     { ++eor_left;  }
-        else                            { ++eor_right; }
-        /* DEBUG — log EVERY EOR for first 20 firings, then every 60.
-         * With test inject doing only 2 invalidates total, we'd never hit
-         * 60 firings. We need every event to see if eor_right fires after
-         * each eor_left or if the RIGHT-half transfer is being dropped. */
-        const uint32_t total_eor = eor_left + eor_right + eor_stale;
-        if (total_eor <= 20u || (total_eor % 60u) == 0u)
+        (void)hdsi;
+        touchgfx::s_dsi_busy = false;
+
+        /* Turn on the display the first time a strip lands in panel GRAM. */
+        LCD_ReqEnable();
+
+        /* Signal frontPorchEntered if the framework is tracking it. */
+        if (HAL::getInstance())
         {
-            LOG("[LCD-EOR] L=%lu R=%lu stale=%lu region=%d dispRef=%u\n",
-                (unsigned long)eor_left, (unsigned long)eor_right,
-                (unsigned long)eor_stale, updateRegion,
-                (unsigned)displayRefreshing);
+            HAL::getInstance()->frontPorchEntered();
         }
-#endif
 
-        if (displayRefreshing)
-        {
-            if (updateRegion == 0)
-            {
-                HAL_Delay(1);
-
-                // If we transferred the left half, also transfer right half.
-                __HAL_DSI_WRAPPER_DISABLE(hdsi);
-                LTDC_LAYER(&hltdc, 0)->CFBAR = ((uint32_t)currFbBase) + 400 * 3;
-                uint16_t ADJUSTED_WIDTH = 432; //64-byte aligned width
-                uint16_t REAL_WIDTH = 400; //we only actually have this amount of pixels on display
-                LTDC->AWCR = ((ADJUSTED_WIDTH + 2) << 16) | 0x1E2;
-                LTDC->TWCR = ((REAL_WIDTH + 2 + 1 - 1) << 16) | 0x1E3;
-                LTDC_LAYER(&hltdc, 0)->WHPCR = ((REAL_WIDTH + 2) << 16) | 3;
-                LTDC_LAYER(&hltdc, 0)->CFBLR = ((832 * 3) << 16) | ((REAL_WIDTH) * 3 + 3);
-                __HAL_LTDC_RELOAD_IMMEDIATE_CONFIG(&hltdc);
-                __HAL_DSI_WRAPPER_ENABLE(hdsi);
-
-                LCD_SetUpdateRegionRight(); //Set display column to 448-799
-                updateRegion = 1;
-
-                /* Wait for DSI host's Command FIFO and Payload Write FIFO
-                 * to drain (CASET long-write fully transmitted) before
-                 * re-arming LTDCEN. Without this poll, HAL_DSI_Refresh()'s
-                 * WCR.LTDCEN write can land while the CASET command is
-                 * still in the DSI host's command FIFO, mis-targeting the
-                 * subsequent LTDC pixel burst. Both FIFOs report Empty when
-                 * their respective bits are SET in GPSR. 100k-iteration cap
-                 * avoids ISR deadlock if a FIFO never empties. */
-                {
-                    const uint32_t empty_mask = DSI_GPSR_CMDFE | DSI_GPSR_PWRFE;
-                    uint32_t to = 100000u;
-                    while ((hdsi->Instance->GPSR & empty_mask) != empty_mask && --to) { __NOP(); }
-                }
-
-                HAL_DSI_Refresh(hdsi);
-            }
-            else
-            {
-                // Otherwise we are done refreshing.
-
-                __HAL_DSI_WRAPPER_DISABLE(hdsi);
-                LTDC_LAYER(&hltdc, 0)->CFBAR = (uint32_t)currFbBase;
-                uint16_t WIDTH = 400;
-                LTDC->AWCR = ((WIDTH + 2) << 16) | 0x1E2;
-                LTDC->TWCR = ((WIDTH + 2 + 1) << 16) | 0x1E3;
-                LTDC_LAYER(&hltdc, 0)->WHPCR = ((WIDTH + 2) << 16) | 3;
-                LTDC_LAYER(&hltdc, 0)->CFBLR = (((832 * 3) << 16) | ((WIDTH * 3) + 3));
-                __HAL_LTDC_RELOAD_IMMEDIATE_CONFIG(&hltdc);
-                __HAL_DSI_WRAPPER_ENABLE(hdsi);
-
-                GPIO::clear(GPIO::VSYNC_FREQ);
-
-                // Turn on display if not already active
-                LCD_ReqEnable();
-
-                displayRefreshing = false;
-                if (HAL::getInstance())
-                {
-                    // Signal to the framework that display update has finished.
-                    HAL::getInstance()->frontPorchEntered();
-                }
-
-            }
-        }
+        /* Allow the framework to immediately push a queued next block. */
+        touchgfx::PartialFrameBufferManager::tryTransmitBlockFromIRQ();
     }
 
     portBASE_TYPE IdleTaskHook(void* p)

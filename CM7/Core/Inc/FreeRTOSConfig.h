@@ -75,6 +75,11 @@ extern uint32_t SystemCoreClock;
 #define configUSE_MINI_LIST_ITEM                ( valueNotSetted )
 #define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
 #define configTOTAL_HEAP_SIZE                    ((size_t)100000)
+/* Application provides ucHeap[] storage with explicit section attribute
+ * (see main.c). Lets us relocate the 100 KB heap from AXI SRAM to D2 SRAM1
+ * via the .freertos_heap section in the linker .icf, freeing AXI for the
+ * partial framebuffer. */
+#define configAPPLICATION_ALLOCATED_HEAP         1
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configHEAP_CLEAR_MEMORY_ON_FREE          0
 #define configUSE_TRACE_FACILITY                 1

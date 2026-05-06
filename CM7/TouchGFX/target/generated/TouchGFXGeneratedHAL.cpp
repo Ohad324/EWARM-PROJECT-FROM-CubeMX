@@ -18,6 +18,7 @@
 
 #include <TouchGFXGeneratedHAL.hpp>
 #include <touchgfx/hal/OSWrappers.hpp>
+#include <touchgfx/hal/FrameBufferAllocator.hpp>
 #include <gui/common/FrontendHeap.hpp>
 
 #include <touchgfx/widgets/canvas/CWRVectorRenderer.hpp>
@@ -55,27 +56,76 @@ VectorRenderer* VectorRenderer::getInstance()
 
 using namespace touchgfx;
 
+/* Partial Framebuffer (PFB) — 1-block strip buffer in AXI SRAM at
+ * 0x24000000. 800x120 RGB888 = 288,000 bytes. TouchGFX renders the screen
+ * in 4 strips of 120 rows each into this single block; after each strip is
+ * rendered, transmitBlock() (in TouchGFXHAL.cpp) DSI-pushes that strip to
+ * OTM8009A panel GRAM. LTDC scans only this small AXI buffer -- FMC bus
+ * stays free for JPEG/CPU/MDMA.
+ *
+ * Single block forces strict serialization (render strip N -> wait EOR ->
+ * render strip N+1) which guarantees no read-while-write between DMA2D and
+ * LTDC. Two blocks would let render and DSI-push pipeline, but 2*288KB
+ * exceeds 512KB AXI SRAM. Per Gemini analysis: 1 block in AXI is the
+ * highest-stability option.
+ *
+ * External linkage: main.c references frameBuf via `extern uint32_t frameBuf[]`
+ * for MX_LTDC_Init's FBStartAdress (placeholder; transmitBlock overwrites
+ * CFBAR per-strip) and the Phase 1 memset sanitization. */
+LOCATION_PRAGMA_NOLOAD("TouchGFX_Framebuffer")
+uint32_t frameBuf[(800 * 120 * 3 + 3) / 4] LOCATION_ATTRIBUTE_NOLOAD("TouchGFX_Framebuffer");
+
+/* Custom 1-block allocator backed by frameBuf[] (instead of the framework's
+ * ManyBlockAllocator which carries its own internal storage). Saves 288KB
+ * by reusing frameBuf as the strip buffer. */
 namespace
 {
-// Use the section "TouchGFX_Framebuffer" in the linker script to specify the placement of the buffer
-LOCATION_PRAGMA_NOLOAD("TouchGFX_Framebuffer")
-#ifndef RELEASE_BUILD
-/* DEBUG — width 832 (panel 800 + 32-px alignment cushion) to match the LTDC
- * CFBLR pitch of 832*3=2496 bytes/row in TouchGFXHAL.cpp:530/549. Without
- * this the buffer is allocated at 800*3=2400 bytes/row while LTDC reads
- * with stride 2496, drifting +32 px per row -> stacked/sliced image (Bug X).
- * Originally fixed in 3f2e6ef and lost during a Designer regen. */
-uint32_t frameBuf[(832 * 480 * 3 + 3) / 4] LOCATION_ATTRIBUTE_NOLOAD("TouchGFX_Framebuffer");
-#else
-uint32_t frameBuf[(800 * 480 * 3 + 3) / 4] LOCATION_ATTRIBUTE_NOLOAD("TouchGFX_Framebuffer");
-#endif
-}
+class StripAllocator : public touchgfx::FrameBufferAllocator
+{
+public:
+    StripAllocator() : state_(EMPTY) {}
+
+    virtual uint16_t allocateBlock(const uint16_t x, const uint16_t y,
+                                   const uint16_t width, const uint16_t height,
+                                   uint8_t** block)
+    {
+        (void)x; (void)width;
+        rect_.x = x; rect_.y = y; rect_.width = width; rect_.height = height;
+        *block = reinterpret_cast<uint8_t*>(frameBuf);
+        state_ = ALLOCATED;
+        return height;
+    }
+    virtual void markBlockReadyForTransfer() { state_ = DRAWN; }
+    virtual bool hasBlockReadyForTransfer()  { return state_ == DRAWN; }
+    virtual const uint8_t* getBlockForTransfer(touchgfx::Rect& rect)
+    {
+        rect = rect_;
+        state_ = SENDING;
+        return reinterpret_cast<uint8_t*>(frameBuf);
+    }
+    virtual const touchgfx::Rect& peekBlockForTransfer() { return rect_; }
+    virtual bool hasEmptyBlock() { return state_ == EMPTY; }
+    virtual void freeBlockAfterTransfer() { state_ = EMPTY; }
+
+private:
+    enum St { EMPTY, ALLOCATED, DRAWN, SENDING };
+    volatile St state_;
+    touchgfx::Rect rect_;
+};
+
+StripAllocator stripAllocator;
+}  // namespace
 
 void TouchGFXGeneratedHAL::initialize()
 {
     HAL::initialize();
     registerEventListener(*(Application::getInstance()));
     setFrameBufferStartAddresses((void*)frameBuf, (void*)0, (void*)0);
+
+    /* Register the partial-framebuffer allocator. The framework will call
+     * stripAllocator.allocateBlock() before drawing each strip; our
+     * transmitBlock() in TouchGFXHAL.cpp DSI-pushes filled strips. */
+    setFrameBufferAllocator(&stripAllocator);
 
     /*
      * Add DMA2D to hardware decoder

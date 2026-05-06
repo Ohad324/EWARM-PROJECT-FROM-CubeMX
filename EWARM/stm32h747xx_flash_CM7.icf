@@ -45,7 +45,8 @@ define block HEAP      with alignment = 8, size = __ICFEDIT_size_heap__     { };
 initialize by copy { readwrite };
 do not initialize  { section .noinit, section Video_RGB_Buffer, section TouchGFX_Framebuffer,
                      section .sdram_bss,
-                     section .audio_buffer };
+                     section .audio_buffer,
+                     section .freertos_heap };
 
 place at address mem:__ICFEDIT_intvec_start__ { readonly section .intvec };
 place at address mem:0x08100000 { section .cm4_code };
@@ -235,6 +236,14 @@ place in ROM_region   { readonly, section IntFlashSection, section FontFlashSect
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /* AXI SRAM D1 — default home for all task stacks, FreeRTOS, globals */
+
+/* TouchGFX Partial Framebuffer (800×120×3 = 288,000 B strip buffer) anchored
+ * at the start of AXI SRAM (0x24000000). LTDC reads from here only — FMC bus
+ * stays free for JPEG/CPU/MDMA in SDRAM. Eliminates FUIF contention.
+ * Per AN4861 §2/§9 + AN4891 system architecture. 32-byte aligned for DMA2D. */
+define block FB_BLOCK with alignment = 32 { section TouchGFX_Framebuffer };
+place at start of RAM_region { block FB_BLOCK };
+
 place in RAM_region   { readwrite };
 
 /* Stack/Heap in DTCM — fastest M7 access, no DMA contention */
@@ -244,11 +253,18 @@ place in DTCMRAM_region { block CSTACK, block HEAP };
  * Placed via #pragma location in voice_recorder.c — section anchors the region. */
 place at address mem:0x30000000 { section .audio_buffer };
 
+/* D2 SRAM1 — FreeRTOS heap relocated here (was in AXI as 100 KB ucHeap[]).
+ * Frees ~100 KB of AXI for the partial framebuffer above. SRAM1 is internal
+ * D2 (~zero-wait via AHB crossbar from M7) and coexists with the 128-byte
+ * .audio_buffer at 0x30000000 — heap fills the remainder. Per AN4891 system
+ * architecture: heap on D2 internal RAM, framebuffer on D1 internal RAM. */
+place in SRAM1_region { section .freertos_heap };
+
 /* D2 SRAM2 — g_AudioBuf (0x30020000, 96 KB) placed via #pragma location.
  * No section needed — absolute address placement bypasses the linker region.
  * SRAM2_region is defined above so the linker knows this address space exists
  * and can catch any accidental overlap with future allocations. */
 
 place in QSPI_region   { section ExtFlashSection };
-place in SDRAM_region  { first section TouchGFX_Framebuffer, section Video_RGB_Buffer,
+place in SDRAM_region  { section Video_RGB_Buffer,
                          section .sdram_bss };

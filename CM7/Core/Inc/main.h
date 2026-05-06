@@ -45,8 +45,8 @@ extern "C" {
 
 /**
  * DFSDM Mission Control Hub
- * Target Address: 0x24000050 (AXI SRAM D1)
- * J-Link command: mem32 0x24000050 18
+ * Target Address: 0x24070000 (AXI SRAM D1)
+ * J-Link command: mem32 0x24070000 18
  *
  * RTTLogTask refreshes all fields every 200 ms. Pin this address in IAR
  * Live Watch to monitor the full audio pipeline without RTT output.
@@ -112,7 +112,7 @@ typedef struct {
     uint32_t d3ccipr;
 } DFSDM_Debug_Hub_t;
 
-/* Placed at 0x24000050 (AXI SRAM) — __no_init, startup does not zero it */
+/* Placed at 0x24070000 (AXI SRAM) — __no_init, startup does not zero it */
 extern volatile DFSDM_Debug_Hub_t g_dbg;
 
 /* USER CODE END ET */
