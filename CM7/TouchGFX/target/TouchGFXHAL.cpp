@@ -34,7 +34,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
-#include "log_mutex.h"    /* LOG() — RTT logging */
+#include "log_mutex.h"    /* LOG()/RLOG() — RTT logging */
+#include "pfb_itm.h"     /* ITM_PFB(char) — bare-metal ITM port 0 trace */
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN private defines */
@@ -130,6 +131,11 @@ void TouchGFXHAL::initialize()
      * DSI-pushes that strip to OTM8009A panel GRAM. LTDC pulls only from
      * AXI SRAM -- FMC bus stays free for JPEG/CPU/MDMA. */
     setFrameRefreshStrategy(REFRESH_STRATEGY_PARTIAL_FRAMEBUFFER);
+    /* setNumberOfBlocks(4) tells the framework there are 4 strips per frame
+     * (480 rows / 120 lines per strip = 4). Earlier setNumberOfBlocks(1) was
+     * wrong -- it made the framework treat each frame as "1 strip" and only
+     * paint y=0. With 4, the framework iterates all 4 strips per frame.
+     * Our 1-buffer allocator handles serialization via state machine + EOR. */
     setNumberOfBlocks(4);
     setMaxBlockLines(120);
 
@@ -139,6 +145,11 @@ void TouchGFXHAL::initialize()
 
     /* USER CODE END initialize step 2 */
 }
+
+#ifndef RELEASE_BUILD
+volatile uint32_t g_pfb_dbg_taskentry_iter = 0;
+volatile uint32_t g_pfb_dbg_backporch     = 0;
+#endif
 
 void TouchGFXHAL::taskEntry()
 {
@@ -161,10 +172,19 @@ void TouchGFXHAL::taskEntry()
     HAL_DSI_ShortWrite(&hdsi, LCD_OTM8009A_ID, DSI_DCS_SHORT_PKT_WRITE_P1, OTM8009A_CMD_DISPON, 0x00);
     /* USER CODE END taskEntry step 3 */
 
+    ITM_PFB('1');   /* TouchGFXTask body entered */
     for (;;)
     {
         OSWrappers::waitForVSync();
+        ITM_PFB('t');   /* loop top -- waitForVSync returned */
+#ifndef RELEASE_BUILD
+        g_pfb_dbg_taskentry_iter++;
+        if ((g_pfb_dbg_taskentry_iter % 60u) == 1u) RLOG("[PFB-Lp] iter=", g_pfb_dbg_taskentry_iter);
+#endif
         backPorchExited();
+#ifndef RELEASE_BUILD
+        g_pfb_dbg_backporch++;
+#endif
     }
 }
 
@@ -219,6 +239,26 @@ void TouchGFXHAL::flushFrameBuffer(const touchgfx::Rect& rect)
     // be called to notify the touchgfx framework that flush has been performed.
 
     /* USER CODE BEGIN flushFrameBuffer step 1 */
+    if (getFrameRefreshStrategy() == REFRESH_STRATEGY_PARTIAL_FRAMEBUFFER)
+    {
+        FrameBufferAllocator* alloc = getFrameBufferAllocator();
+        if (alloc)
+        {
+            alloc->markBlockReadyForTransfer();
+        }
+        PartialFrameBufferManager::tryTransmitBlock();
+
+        /* CRITICAL: with single-buffer StripAllocator, we must wait for the
+         * just-triggered transmit to fully complete (DSI -> panel + EOR ISR
+         * -> freeBlockAfterTransfer) before returning. Otherwise framework
+         * immediately calls allocateBlock for next strip while state is still
+         * SENDING -- our impl clobbers the state, the in-flight strip's
+         * subsequent dispatch is lost, and only strip 0 ever transmits.
+         * Bug found 2026-05-06 via SWO trace: aMgX bMM cMM dMM N E FF (no
+         * X for strips 1/2/3). With this wait: aMgXEF bMgXEF cMgXEF dMgXEF N. */
+        uint32_t timeout = 200000u;   /* ~few ms safety cap */
+        while (touchgfx::transmitActive() && --timeout) { __NOP(); }
+    }
     TouchGFXGeneratedHAL::flushFrameBuffer(rect);
     /* USER CODE END flushFrameBuffer step 1 */
 }
@@ -298,14 +338,29 @@ void TouchGFXHAL::setFrameBufferStartAddresses(void* frameBuffer, void* doubleBu
     HAL::setFrameBufferStartAddresses(frameBuffer, doubleBuffer, animationStorage);
 }
 
+#ifndef RELEASE_BUILD
+volatile uint32_t g_pfb_dbg_beginframe = 0;
+volatile uint32_t g_pfb_dbg_beginframe_ret_true  = 0;
+volatile uint32_t g_pfb_dbg_beginframe_ret_false = 0;
+/* g_pfb_dbg_taskentry_iter / g_pfb_dbg_backporch defined earlier near taskEntry */
+#endif
+
 bool TouchGFXHAL::beginFrame()
 {
+    ITM_PFB('B');   /* beginFrame entry (use endFrame N to bracket) */
     refreshRequested = false;
-    return HAL::beginFrame();
+    bool r = HAL::beginFrame();
+#ifndef RELEASE_BUILD
+    g_pfb_dbg_beginframe++;
+    if (r) g_pfb_dbg_beginframe_ret_true++;
+    else   g_pfb_dbg_beginframe_ret_false++;
+#endif
+    return r;
 }
 
 void TouchGFXHAL::endFrame()
 {
+    ITM_PFB('N');
     TouchGFXGeneratedHAL::endFrame();
 #ifndef RELEASE_BUILD
     /* Bug Y diagnostic — count endFrame() calls + how many had
@@ -357,10 +412,43 @@ namespace touchgfx {
  * panel GRAM update for the current strip is complete. */
 static volatile bool s_dsi_busy = false;
 
+#ifndef RELEASE_BUILD
+/* PFB strip dispatch instrumentation. Read via cspybat:
+ *   __readMemory32(&g_pfb_dbg_count, "Memory")
+ *   __readMemory32(&g_pfb_dbg_mask,  "Memory")
+ * mask bits: 0=y0, 1=y120, 2=y240, 3=y360.  Expected after 60+ frames:
+ * count >> 60 and mask == 0xF if all 4 strips dispatch. */
+volatile uint32_t g_pfb_dbg_count   = 0;
+volatile uint32_t g_pfb_dbg_mask    = 0;
+volatile uint32_t g_pfb_dbg_last_y  = 0xFFFFFFFFu;
+volatile uint32_t g_pfb_dbg_last_h  = 0;
+volatile uint32_t g_pfb_dbg_last_px = 0;
+#endif
+
 void transmitBlock(const uint8_t* pixels, uint16_t x, uint16_t y,
                    uint16_t w, uint16_t h)
 {
     (void)x; (void)w;   /* Always full panel width 0..799 */
+    /* Emit ITM events BEFORE any DSI work so we can tell if a hang is in
+     * the markers vs. in DSI. y/10 → 0/12/24/36 with hardware cycle stamp. */
+    ITM_PFB('X');                           /* transmitBlock entry */
+    /* ITM_EVENT8(0, (uint8_t)(y / 10u));  -- temporarily disabled: suspect of
+     * hanging the trace. Re-enable after confirming non-blocking. */
+
+#ifndef RELEASE_BUILD
+    g_pfb_dbg_count++;
+    g_pfb_dbg_last_y  = y;
+    g_pfb_dbg_last_h  = h;
+    g_pfb_dbg_last_px = (uint32_t)pixels;
+    if      (y ==   0) g_pfb_dbg_mask |= 1u;
+    else if (y == 120) g_pfb_dbg_mask |= 2u;
+    else if (y == 240) g_pfb_dbg_mask |= 4u;
+    else if (y == 360) g_pfb_dbg_mask |= 8u;
+    /* DIAGNOSTIC: log every transmitBlock call to confirm dispatch is firing.
+     * If [PFB-TX] never appears, transmitBlock is NEVER called -- the EOR
+     * handler / framework state machine is the bug. */
+    RLOG("[PFB-TX] y=", y);
+#endif
 
     /* 1. Set OTM8009A target window: full 800-pixel-wide row range, rows y..y+h-1. */
     uint8_t pCol[4] = { 0x00, 0x00, 0x03, 0x1F };   /* cols 0..799 */
@@ -407,6 +495,24 @@ void waitUntilTransmitEnd()
 }
 
 void waitUntilCanTransferBlock(uint16_t /*bottom*/)
+{
+    while (s_dsi_busy) { __WFE(); }
+}
+
+/* PFB framework hooks (declared in FrameBufferAllocator.hpp, NOT defined
+ * by the framework -- each HAL must supply them). Called by the framework
+ * to wait for / signal transfer events. On this hardware:
+ *   - SignalBlockDrawn(): a strip just hit DRAWN state; nothing to do
+ *     because tryTransmitBlock() (called from flushFrameBuffer) starts
+ *     the transmission directly. Kept as a no-op for symmetry.
+ *   - WaitOnTransfer(): block until in-flight DSI strip completes.
+ *     Same WFE loop the other wait functions use; EOR ISR clears the flag. */
+void FrameBufferAllocatorSignalBlockDrawn()
+{
+    /* No-op: tryTransmitBlock() in flushFrameBuffer() initiates the transfer. */
+}
+
+void FrameBufferAllocatorWaitOnTransfer()
 {
     while (s_dsi_busy) { __WFE(); }
 }
@@ -532,11 +638,10 @@ extern "C" {
     void HAL_DSI_TearingEffectCallback(DSI_HandleTypeDef* hdsi)
     {
         (void)hdsi;
+        ITM_PFB('T');
         GPIO::set(GPIO::VSYNC_FREQ);
-
         HAL::getInstance()->vSync();
         OSWrappers::signalVSync();
-
         GPIO::clear(GPIO::VSYNC_FREQ);
     }
 
@@ -547,7 +652,35 @@ extern "C" {
     void HAL_DSI_EndOfRefreshCallback(DSI_HandleTypeDef* hdsi)
     {
         (void)hdsi;
+        ITM_PFB('E');
+
+        /* EOR semantics: the previously-transmitting strip is now COMPLETE.
+         * Sequence:
+         *   1. Free the just-finished SENDING block (state -> EMPTY).
+         *   2. Clear s_dsi_busy so transmitActive()==false -- framework's
+         *      tryTransmitBlockFromIRQ knows it can start a new transfer.
+         *   3. Call tryTransmitBlockFromIRQ. If a DRAWN block exists (queued
+         *      strip 1/2/3), it dispatches: getBlockForTransfer -> transmitBlock
+         *      -> transmitBlock sets s_dsi_busy=true again. The for(;;) chain
+         *      continues until no more DRAWN blocks remain.
+         *   4. waitOnTransfer (in the GUI task) wakes when s_dsi_busy=false. */
+
+        if (HAL::getInstance())
+        {
+            touchgfx::FrameBufferAllocator* alloc = HAL::getInstance()->getFrameBufferAllocator();
+            if (alloc)
+            {
+                alloc->freeBlockAfterTransfer();
+            }
+        }
+
+        /* Clear FIRST so transmitActive() reports false. tryTransmitBlockFromIRQ
+         * will then either:
+         *  - dispatch the next DRAWN strip (transmitBlock re-sets s_dsi_busy=true)
+         *  - find nothing to do (s_dsi_busy stays false, waitOnTransfer wakes) */
         touchgfx::s_dsi_busy = false;
+
+        touchgfx::PartialFrameBufferManager::tryTransmitBlockFromIRQ();
 
         /* Turn on the display the first time a strip lands in panel GRAM. */
         LCD_ReqEnable();
@@ -557,9 +690,6 @@ extern "C" {
         {
             HAL::getInstance()->frontPorchEntered();
         }
-
-        /* Allow the framework to immediately push a queued next block. */
-        touchgfx::PartialFrameBufferManager::tryTransmitBlockFromIRQ();
     }
 
     portBASE_TYPE IdleTaskHook(void* p)

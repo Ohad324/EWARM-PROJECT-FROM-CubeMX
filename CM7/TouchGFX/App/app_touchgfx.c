@@ -95,14 +95,40 @@ extern void MX_LTDC_Init(void);
  *      is already perfect in SDRAM.
  *   3. First HAL_DSI_Refresh() lands a clean frame on the panel GRAM.
  */
+#include <stdint.h>
+#include "log_mutex.h"    /* RLOG — RTT trace */
+#include "pfb_itm.h"      /* ITM_PFB(c) — bare-metal ITM port 0 trace */
+
+#ifndef RELEASE_BUILD
+volatile uint32_t g_pfb_dbg_t_entry      = 0;  /* TouchGFX_Task entered */
+volatile uint32_t g_pfb_dbg_t_post_dsi   = 0;  /* MX_DSIHOST_DSI_Init returned */
+volatile uint32_t g_pfb_dbg_t_post_ltdc  = 0;  /* MX_LTDC_Init returned */
+volatile uint32_t g_pfb_dbg_t_post_tgfx  = 0;  /* MX_TouchGFX_Init returned */
+volatile uint32_t g_pfb_dbg_t_pre_loop   = 0;  /* about to call touchgfx_taskEntry */
+#endif
+
 void TouchGFX_Task(void* argument)
 {
-    /* Phase 2: Hardware Activation — display peripherals come up here */
+#ifndef RELEASE_BUILD
+    g_pfb_dbg_t_entry++;
+    RLOG0("[PFB-Te] task entry");
+#endif
     MX_DSIHOST_DSI_Init();
+#ifndef RELEASE_BUILD
+    g_pfb_dbg_t_post_dsi++;
+    RLOG0("[PFB-DSI] init done");
+#endif
     MX_LTDC_Init();
+#ifndef RELEASE_BUILD
+    g_pfb_dbg_t_post_ltdc++;
+    RLOG0("[PFB-LTD] init done");
+#endif
     MX_TouchGFX_Init();
-
-    /* Enter the framework's main loop (never returns) */
+#ifndef RELEASE_BUILD
+    g_pfb_dbg_t_post_tgfx++;
+    g_pfb_dbg_t_pre_loop++;
+    RLOG0("[PFB-Pe ] entering framework loop");
+#endif
     touchgfx_taskEntry();
 }
 

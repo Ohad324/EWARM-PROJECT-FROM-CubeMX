@@ -26,6 +26,7 @@
 #include <HardwareMJPEGDecoder.hpp>
 #include <DedicatedBufferVideoController.hpp>
 #include <stm32h7xx_hal.h>
+#include "pfb_itm.h"     /* ITM_PFB(c) — bare-metal ITM port 0 trace */
 
 HardwareMJPEGDecoder mjpegdecoder1;
 
@@ -93,19 +94,43 @@ public:
         rect_.x = x; rect_.y = y; rect_.width = width; rect_.height = height;
         *block = reinterpret_cast<uint8_t*>(frameBuf);
         state_ = ALLOCATED;
+        if      (y ==   0) ITM_PFB('a');
+        else if (y == 120) ITM_PFB('b');
+        else if (y == 240) ITM_PFB('c');
+        else if (y == 360) ITM_PFB('d');
+        else               ITM_PFB('?');
+#ifndef RELEASE_BUILD
+        extern volatile uint32_t g_pfb_dbg_alloc_count;
+        extern volatile uint32_t g_pfb_dbg_alloc_mask;
+        extern volatile uint32_t g_pfb_dbg_alloc_last_y;
+        g_pfb_dbg_alloc_count++;
+        g_pfb_dbg_alloc_last_y = y;
+        if      (y ==   0) g_pfb_dbg_alloc_mask |= 1u;
+        else if (y == 120) g_pfb_dbg_alloc_mask |= 2u;
+        else if (y == 240) g_pfb_dbg_alloc_mask |= 4u;
+        else if (y == 360) g_pfb_dbg_alloc_mask |= 8u;
+#endif
         return height;
     }
-    virtual void markBlockReadyForTransfer() { state_ = DRAWN; }
-    virtual bool hasBlockReadyForTransfer()  { return state_ == DRAWN; }
-    virtual const uint8_t* getBlockForTransfer(touchgfx::Rect& rect)
-    {
+    virtual void markBlockReadyForTransfer() { ITM_PFB('M'); state_ = DRAWN; }
+    virtual bool hasBlockReadyForTransfer()  {
+        bool r = (state_ == DRAWN);
+        if (r) ITM_PFB('!');
+        return r;
+    }
+    virtual const uint8_t* getBlockForTransfer(touchgfx::Rect& rect) {
+        ITM_PFB('g');
         rect = rect_;
         state_ = SENDING;
         return reinterpret_cast<uint8_t*>(frameBuf);
     }
     virtual const touchgfx::Rect& peekBlockForTransfer() { return rect_; }
-    virtual bool hasEmptyBlock() { return state_ == EMPTY; }
-    virtual void freeBlockAfterTransfer() { state_ = EMPTY; }
+    virtual bool hasEmptyBlock() {
+        bool r = (state_ == EMPTY);
+        if (!r) ITM_PFB('?');
+        return r;
+    }
+    virtual void freeBlockAfterTransfer() { ITM_PFB('F'); state_ = EMPTY; }
 
 private:
     enum St { EMPTY, ALLOCATED, DRAWN, SENDING };
@@ -115,6 +140,16 @@ private:
 
 StripAllocator stripAllocator;
 }  // namespace
+
+#ifndef RELEASE_BUILD
+/* PFB allocator-side instrumentation. Counts how many times the framework
+ * asks for a block, with which y-coordinate. If alloc_mask reaches 0xF but
+ * transmitBlock's mask stays 0x1 -> bug is between alloc and transmit.
+ * If alloc_mask stays 0x1 -> framework never iterates past strip 0. */
+volatile uint32_t g_pfb_dbg_alloc_count  = 0;
+volatile uint32_t g_pfb_dbg_alloc_mask   = 0;
+volatile uint32_t g_pfb_dbg_alloc_last_y = 0xFFFFFFFFu;
+#endif
 
 void TouchGFXGeneratedHAL::initialize()
 {

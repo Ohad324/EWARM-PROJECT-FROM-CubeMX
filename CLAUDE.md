@@ -95,6 +95,35 @@ Reason: ST has thousands of developers, excellent docs, and an active community.
 - Always check `docs/` folder first before asking the user to find a document.
 - If a document is missing from `docs/`, tell the user which specific document is needed and why.
 
+## Auto-Approve & Order of Operations
+
+### Auto-Approve Definition
+
+- **Permission:** Claude is authorized to execute Bash commands (terminal commands) without manual confirmation.
+- **Scope:** This permission is granted specifically for tool execution and workflow automation.
+
+### Operational Order-of-Operations Rules
+
+- **Flexible Order:** Claude may change the order of terminal commands (e.g., performing a `git grep` before a `taskkill`, or reordering build stages) to optimize the debug loop.
+- **Mandatory Sequence:** Any command involving `iarbuild.exe` or `cspybat.exe` (and any J-Link probe attach) **MUST** be immediately preceded by the `taskkill` sequence to prevent probe contention:
+  ```
+  taskkill /F /IM IarIdePm.exe
+  taskkill /F /IM JLink.exe
+  taskkill /F /IM JLinkRTTViewer.exe
+  taskkill /F /IM CSpyBat.exe
+  ```
+
+### The "No-Change" Policy — Strict Enforcement
+
+Despite the ability to change command order, these project artifacts are **READ-ONLY**:
+
+- **Architecture:** The 3-task RTOS model is locked (TouchGFXTask, jpegTask, videoTask).
+- **3rd-Party Code:** ST Drivers, **CMSIS files**, and TouchGFX library code must not be modified. (Generated TouchGFX glue files like `OSWrappers.cpp` may be hand-modified per Hard Rule #9, but the framework `.lib`, ST Driver `.c`, and CMSIS headers/sources are untouchable.)
+- **ICF / Priorities:** Linker files and task priorities are final.
+- **Pinouts:** Hardware pin assignments are fixed.
+
+If a fix would require touching anything in this list, **stop and propose the change** with reasoning before editing.
+
 ## Main Goal
 Preserve the existing working system and make the smallest safe fix possible.
 
@@ -1175,3 +1204,102 @@ if (displayRefreshing) {
 | **RGB565 instead of RGB888** | Halves SDRAM bandwidth need | Architectural fix, color quality impact |
 
 The WFI gate is the smallest-scope intervention that targets the root cause (concurrent SDRAM access during scan).
+
+---
+
+## PFB Strip Dispatch — Single-Buffer Serialization Fix (2026-05-06)
+
+### The visible bug
+
+After the PFB Phase-2 milestone (commit `1fd1e71`), the LCD showed only the **top 120 rows** (one strip) of any rendered content; the bottom 360 rows displayed uninitialized OTM8009A panel GRAM (rainbow noise / black). All 4 strips were configured (`setNumberOfBlocks(4)`, `setMaxBlockLines(120)`, `frameBuf` 800×120 in AXI SRAM at `0x24000000`) but only strip y=0 ever reached the panel.
+
+### Diagnosis methodology — the lesson
+
+**Theory-based fixes cost half a day; ITM-trace data found the bug in 30 seconds.** The order that worked:
+
+1. **Add software counters** (`g_pfb_dbg_count`, `g_pfb_dbg_mask`, `g_pfb_dbg_alloc_*`) read via IAR Live Watch to see which functions ran how many times. Reaches verdict: framework calls `allocateBlock` for all 4 y values (`alloc_mask=0xF`) but `transmitBlock` only fires for y=0 (`mask=0x1`).
+2. **Add bare-metal ITM port-0 markers** (`pfb_itm.h` → `ITM_PFB('a'/'b'/'c'/'d'/'M'/'g'/'X'/'E'/'F'/'!'/'?'/'B'/'N'/'T'/'t'/'1'`) to get a cycle-accurate event stream over SWO. View in **IAR's SWO Trace window**, port 0 ASCII.
+3. **Read the stream literally.** First-frame trace before fix:
+   ```
+   T B aMM!gX bMM cMM dMM N E FF
+   ```
+   Decoded: alloc fires for all 4, but transmitBlock (`X`) only fires for the FIRST. Strips 1/2/3 mark DRAWN then nothing — `tryTransmitBlock` bails because `transmitActive()` returns true (s_dsi_busy=true from strip 0 still in flight). After much later EOR, state has been clobbered to ALLOCATED → DRAWN by subsequent allocs, and `freeBlockAfterTransfer` resets to EMPTY before tryTransmitBlockFromIRQ can dispatch the queued strip.
+
+### Two interlocked root causes
+
+**Bug A — `flushFrameBuffer` returned immediately after kicking the transmit.** The framework then called `allocateBlock(y=120)` while strip 0's DSI transfer was still in flight. The `StripAllocator::allocateBlock` unconditionally sets `state=ALLOCATED`, clobbering the SENDING state. Strip 1 sat in DRAWN state but `tryTransmitBlock` bailed because `transmitActive()` was still true.
+
+**Bug B — EOR handler had a tautology that NEVER cleared `s_dsi_busy`:**
+```cpp
+if (!touchgfx::transmitActive()) {     // transmitActive() reads s_dsi_busy
+    touchgfx::s_dsi_busy = false;       // only clears if already false (no-op)
+}
+```
+So even after EOR fired and the previous transfer completed, `s_dsi_busy` stayed `true`, preventing all subsequent dispatches.
+
+### The fix (committed in this session, two files)
+
+**File 1:** [`CM7/TouchGFX/target/TouchGFXHAL.cpp`](CM7/TouchGFX/target/TouchGFXHAL.cpp) — `flushFrameBuffer()` waits for transmit to complete before returning:
+
+```cpp
+if (getFrameRefreshStrategy() == REFRESH_STRATEGY_PARTIAL_FRAMEBUFFER)
+{
+    FrameBufferAllocator* alloc = getFrameBufferAllocator();
+    if (alloc) alloc->markBlockReadyForTransfer();
+    PartialFrameBufferManager::tryTransmitBlock();
+
+    /* SERIALIZE: wait for DSI scan + EOR ISR + freeBlockAfterTransfer
+     * before returning. Otherwise framework's next allocateBlock clobbers
+     * SENDING state and only strip 0 ever transmits. */
+    uint32_t timeout = 200000u;
+    while (touchgfx::transmitActive() && --timeout) { __NOP(); }
+}
+```
+
+**File 2:** Same file, `HAL_DSI_EndOfRefreshCallback()` — clear `s_dsi_busy` unconditionally + correct ordering:
+
+```cpp
+/* 1. Free the just-completed block (state -> EMPTY) */
+if (HAL::getInstance()) {
+    FrameBufferAllocator* alloc = HAL::getInstance()->getFrameBufferAllocator();
+    if (alloc) alloc->freeBlockAfterTransfer();
+}
+/* 2. Clear FIRST so transmitActive() reports false to tryTransmitBlockFromIRQ */
+touchgfx::s_dsi_busy = false;
+/* 3. Dispatch next strip if one is queued */
+touchgfx::PartialFrameBufferManager::tryTransmitBlockFromIRQ();
+```
+
+### Verification — `aMM!gXEFF bMM!gXEFF cMM!gXEFF dMM!gXEFF N`
+
+After fix, SWO Trace shows the full per-strip cycle for each of 4 strips per frame: alloc → mark → ready → getBlock → transmit → EOR → free. Visual: full red background painted across all 480 rows of the panel (verified by setting `__background` to `RGB(255,0,0)` in Screen1ViewBase).
+
+### Lessons for future LCD/PFB debugging
+
+1. **`pfb_itm.h` (added this session) is the right tool for "where does the code actually go?"** Bare-metal ITM port writes, no CMSIS dependency, ~30 ns per call. Visible in IAR's View → SWO Trace.
+2. **One-character markers per state transition** beat multi-byte `RLOG` for high-frequency code paths. Pattern recognition at human speed.
+3. **Enable "Generate timestamps" in IAR SWO Trace settings** — every ITM packet then carries a cycle stamp from DWT.CYCCNT, hardware-attached.
+4. **`ITM_EVENT8(port, value)` and `ITM_EVENT32(port, value)`** (in `pfb_itm.h`) are the right tool when you need numeric data, addresses, or counters per event. Encode numeric values to printable ASCII range (`'0' + n`) or use SWO Trace's hex view, otherwise non-printable bytes look like silence.
+5. **`__itm(cycle, port, value)` is a C-SPY macro** (debugger-side, used in `.mac` files at BP hit handlers — NOT a firmware function). Use it when firmware instrumentation is too invasive or rebuild is too expensive.
+6. **Single-buffer PFB on STM32H7 + DSI Command Mode requires synchronous flush.** With `setNumberOfBlocks(4)` + 1 physical buffer, the strip dispatch must serialize via a wait in `flushFrameBuffer`. Multi-buffer pipelining would need `frameBuf` to be N strips wide (288 KB × N) which doesn't fit AXI SRAM for N>1.
+
+### Files modified
+
+| File | Change | Status |
+|---|---|---|
+| `CM7/TouchGFX/target/TouchGFXHAL.cpp` | flushFrameBuffer wait + EOR ordering + ITM_PFB markers | committed candidate |
+| `CM7/TouchGFX/target/generated/TouchGFXGeneratedHAL.cpp` | StripAllocator state-machine ITM markers | committed candidate |
+| `CM7/TouchGFX/target/generated/OSWrappers.cpp` | static-buffer `osMessageQueueAttr_t` / `osSemaphoreAttr_t` (Hard Rule #9) | committed candidate |
+| `CM7/TouchGFX/App/app_touchgfx.c` | TouchGFX_Task lifecycle counters + RLOG | committed candidate |
+| `CM7/Core/Inc/pfb_itm.h` | NEW: bare-metal ITM helpers (`ITM_PFB`, `ITM_EVENT8`, `ITM_EVENT32`) | committed candidate |
+| `CM7/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp` | red bg for visual test (revert to black before merging) | DEBUG ONLY |
+| `CM7/Core/Src/main.c` | task isolation `#if 0` blocks (videoTask, UART, CommandHandler, RtosTrace) | DEBUG ONLY — re-enable |
+| `CM7/Core/Src/music_display_task.c` | `Music_InjectTestThumb()` disabled | DEBUG ONLY — re-enable |
+
+### Open work for next session
+
+1. Revert red `__background` → black in Screen1ViewBase
+2. Re-enable disabled tasks in main.c (videoTask, UARTReceiveTask, CommandHandler, RtosTrace_DrainTask)
+3. Re-enable `Music_InjectTestThumb()` so MusicScreen path runs
+4. Verify thumbnail flow still works end-to-end (no regression)
+5. Commit as a single logical fix with the trace evidence in the message

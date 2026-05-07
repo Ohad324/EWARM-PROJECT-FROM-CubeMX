@@ -6,7 +6,10 @@
 Screen1ViewBase::Screen1ViewBase()
 {
     __background.setPosition(0, 0, 800, 480);
-    __background.setColor(touchgfx::Color::getColorFromRGB(0, 0, 0));
+    /* PFB-VISUAL-TEST 2026-05-06: red background so we can SEE if all 4
+     * strips paint. Original was black -- indistinguishable from "panel off".
+     * Revert to (0,0,0) when bug is confirmed fixed. */
+    __background.setColor(touchgfx::Color::getColorFromRGB(255, 0, 0));
     add(__background);
 }
 

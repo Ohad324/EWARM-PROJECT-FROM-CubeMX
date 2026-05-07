@@ -65,7 +65,7 @@ extern uint32_t SystemCoreClock;
 
 #define configUSE_PREEMPTION                     1
 #define configSUPPORT_STATIC_ALLOCATION          1
-#define configSUPPORT_DYNAMIC_ALLOCATION         1
+#define configSUPPORT_DYNAMIC_ALLOCATION         1  /* TODO: flip to 0 after converting the 8 remaining xQueueCreate sites (ble_uart, command_handler, main, music_display_task, voice_recorder) to xQueueCreateStatic per Hard Rule #9. Linker will surface them when flipped. */
 #define configUSE_IDLE_HOOK                      1
 #define configUSE_TICK_HOOK                      0
 #define configCPU_CLOCK_HZ                       ( SystemCoreClock )

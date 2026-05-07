@@ -428,32 +428,36 @@ Error_Handler();
   /* USER CODE BEGIN RTOS_QUEUES */
   /* BLE message queue: 8 slots, each BLE_MSG_LEN bytes */
   xBleQueue = xQueueCreate(8, BLE_MSG_LEN * sizeof(char));
-  /* Music queues + JpegDisplayTask */
+  /* PFB-ISOLATION 2026-05-06: Music_Init() must run because Model::tick()
+   * polls xMusicDoneQueue every frame; xQueueReceive(NULL,...) HardFaults.
+   * JpegDisplayTask spawns but blocks on xQueueReceive(xMusicQueue) with
+   * no producers (test injection disabled, UARTReceiveTask disabled), so
+   * it's idle and harmless during PFB test. */
   Music_Init();
   /* Voice recorder handoff queue: depth 1, VoiceRecTask → SDWriteTask */
   xVoiceQueue = xQueueCreate(1, sizeof(uint32_t));
-  /* xLogQueue already created in USER CODE 2 before AudioSD_Init() */
   /* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
+  /* PFB-ISOLATION: keep ONLY TouchGFXTask + RTTLogTask. All audio / video /
+   * UART / NORA / JPEG tasks disabled to remove SDRAM and DMA contention
+   * during PFB strip-iteration debug. Re-enable after the strip bug is
+   * fixed. Comments preserved so the original task layout is recoverable. */
+
   /* creation of TouchGFXTask */
   TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
 
-  /* videoTask re-enabled per Gated Multitasking model (2026-05-04).
-   * Stays blocked on the framework's internal video semaphore until a
-   * VideoWidget triggers it. Re-enabling restores the 3-task baseline
-   * the system used in dea8b27 (working March 30 thumbnail display). */
+#if 0  /* PFB-ISOLATION: videoTask off */
   videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
+#endif
 
   /* USER CODE BEGIN RTOS_THREADS */
+#if 0  /* PFB-ISOLATION: UART / Command handler / RtosTrace off */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);
   ITM_STAGE(ITM_INIT_TASK_UART);
-  /* CommandHandler: receives CMD: messages from NORA, dispatches to screen.
-     Stack 1024 words.  Priority below normal: display updates are not time-critical. */
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1536u, NULL,
               osPriorityBelowNormal, NULL);
   ITM_STAGE(ITM_INIT_TASK_CMDHANDLER);
-  /* Voice recorder pipeline — prio/stack per CLAUDE.md task map */
+#endif
 #if 0   /* DEBUG ISOLATION Step 2 — don't start voice/SD-write tasks. */
   xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   ITM_STAGE(ITM_INIT_TASK_VOICEREC);
@@ -461,13 +465,14 @@ Error_Handler();
   ITM_STAGE(ITM_INIT_TASK_SDWRITE);
 #endif
 #ifndef RELEASE_BUILD
+  /* RTTLogTask STAYS — needed for RLOG output to RTT viewer */
   xTaskCreate(RTTLogTask,    "RTTLogTask",    1024u, NULL,        1u, NULL);
   ITM_STAGE(ITM_INIT_TASK_RTTLOG);
-#endif /* RELEASE_BUILD — strip diagnostic log task in release */
-  /* HealthMonTask removed — health logged by SDWriteTask after each f_close() */
-  /* RTOS trace drain task — prio 1 (lowest app priority), 512-word stack */
+#endif
+#if 0  /* PFB-ISOLATION: RtosTrace drain off */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);
+#endif
   /* USB MSC format recovery — disabled.
    * xTaskCreate(USB_MSC_TaskEntry, "UsbMscTask", 512u, NULL, 2u, NULL); */
 

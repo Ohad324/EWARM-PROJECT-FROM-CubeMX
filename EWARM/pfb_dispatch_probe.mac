@@ -1,0 +1,108 @@
+/*
+ * pfb_dispatch_probe.mac
+ * --------------------------------------------------------------------------
+ * 3-checkpoint probe inside TouchGFX_Task to localize where the task hangs.
+ * Reads counters by hardcoded .map address (only reliable cspy method on
+ * this codebase -- &symbol and __evaluate both fail in cspybat 9.4.6.1706).
+ *
+ * Decision matrix:
+ *   t_entry=0      -> task never created or scheduled
+ *   t_post_dsi=0   -> hung in MX_DSIHOST_DSI_Init
+ *   t_post_ltdc=0  -> hung in MX_LTDC_Init
+ *   t_post_tgfx=0  -> hung in MX_TouchGFX_Init
+ *   t_pre_loop=0   -> shouldn't happen (one stmt before)
+ *   pre_loop=1, taskentry_iter=0 -> blocked on first waitForVSync()
+ */
+
+ReadCycle()
+{
+    __message "  cyc=0x", __readMemory32(0xE0001004, "Memory"):%08X, "\n";
+}
+
+DumpAll()
+{
+    __var entry, post_dsi, post_ltdc, post_tgfx, pre_loop;
+    __var iter, bp, bf, bf_t, bf_f, cnt, mask;
+    __var sig_calls, sig_ok, sig_fail, q_handle, sem_handle;
+
+    /* Phase: TouchGFX_Task lifecycle */
+    entry     = __readMemory32(0x2406BE94, "Memory"); /* g_pfb_dbg_t_entry */
+    post_dsi  = __readMemory32(0x2406BE98, "Memory"); /* g_pfb_dbg_t_post_dsi */
+    post_ltdc = __readMemory32(0x2406BE9C, "Memory"); /* g_pfb_dbg_t_post_ltdc */
+    post_tgfx = __readMemory32(0x2406BEA0, "Memory"); /* g_pfb_dbg_t_post_tgfx */
+    pre_loop  = __readMemory32(0x2406BEA4, "Memory"); /* g_pfb_dbg_t_pre_loop */
+
+    /* Phase: TouchGFXHAL::taskEntry inner loop -- addrs from current .map */
+    iter   = __readMemory32(0x2406C004, "Memory"); /* g_pfb_dbg_taskentry_iter */
+    bp     = __readMemory32(0x2406C008, "Memory"); /* g_pfb_dbg_backporch */
+    bf     = __readMemory32(0x2406C00C, "Memory"); /* g_pfb_dbg_beginframe */
+    bf_t   = __readMemory32(0x2406C010, "Memory"); /* g_pfb_dbg_beginframe_ret_true */
+    bf_f   = __readMemory32(0x2406C014, "Memory"); /* g_pfb_dbg_beginframe_ret_false */
+
+    cnt    = __readMemory32(0x2406C020, "Memory"); /* touchgfx::g_pfb_dbg_count */
+    mask   = __readMemory32(0x2406C024, "Memory"); /* touchgfx::g_pfb_dbg_mask */
+    /* Bonus: read last_y (different region!) */
+    __message "  g_pfb_dbg_last_y (0x240465CC) = ",
+              __readMemory32(0x240465CC, "Memory"):%d, "\n";
+    __message "  g_pfb_dbg_last_h (0x2406C028) = ",
+              __readMemory32(0x2406C028, "Memory"):%d, "\n";
+
+    /* Phase: signalVSync internals */
+    sig_calls  = __readMemory32(0x2406BF54, "Memory"); /* g_pfb_dbg_signal_calls */
+    sig_ok     = __readMemory32(0x2406BF58, "Memory"); /* g_pfb_dbg_signal_ok */
+    sig_fail   = __readMemory32(0x2406BF5C, "Memory"); /* g_pfb_dbg_signal_fail */
+    sem_handle = __readMemory32(0x2406BF48, "Memory"); /* frame_buffer_sem (handle ptr) */
+    q_handle   = __readMemory32(0x2406BF4C, "Memory"); /* vsync_queue (handle ptr) */
+
+    __message "\n  ==== TouchGFX_Task lifecycle ====\n";
+    __message "  t_entry          = ", entry:%d, "  (task scheduled?)\n";
+    __message "  t_post_dsi       = ", post_dsi:%d, "  (MX_DSIHOST_DSI_Init done?)\n";
+    __message "  t_post_ltdc      = ", post_ltdc:%d, "  (MX_LTDC_Init done?)\n";
+    __message "  t_post_tgfx      = ", post_tgfx:%d, "  (MX_TouchGFX_Init done?)\n";
+    __message "  t_pre_loop       = ", pre_loop:%d, "  (about to call touchgfx_taskEntry?)\n";
+
+    __message "\n  ==== Render loop ====\n";
+    __message "  taskentry_iter   = ", iter:%d, "  (loop body executed?)\n";
+    __message "  backPorchExited  = ", bp:%d, "\n";
+    __message "  beginFrame()     = ", bf:%d,
+              "  (true=", bf_t:%d, " false=", bf_f:%d, ")\n";
+    __message "  transmitBlock    = ", cnt:%d, "\n";
+    __message "  strip-y mask     = 0x", mask:%X, "\n";
+
+    __message "\n  ==== signalVSync internals ====\n";
+    __message "  vsync_queue handle      = 0x", q_handle:%08X,
+              "  (zero=NULL=queue creation failed)\n";
+    __message "  frame_buffer_sem handle = 0x", sem_handle:%08X, "\n";
+    __message "  signalVSync calls       = ", sig_calls:%d, "\n";
+    __message "  signalVSync ok          = ", sig_ok:%d, "\n";
+    __message "  signalVSync fail        = ", sig_fail:%d, "\n";
+
+    __message "\n  ==== waitForVSync internals ====\n";
+    __message "  wait_enter   = ", __readMemory32(0x2406BF60, "Memory"):%d, "  (waitForVSync entered)\n";
+    __message "  wait_drained = ", __readMemory32(0x2406BF64, "Memory"):%d, "  (1st Get returned)\n";
+    __message "  wait_unblock = ", __readMemory32(0x2406BF68, "Memory"):%d, "  (2nd Get returned)\n";
+}
+
+HitCheckpoint()
+{
+    __message "\n[BP-HIT] HAL_DSI_TearingEffectCallback skip=120\n";
+    ReadCycle();
+    DumpAll();
+    __message "\n[BP-HIT] action complete\n";
+}
+
+execUserSetup()
+{
+    __var bp;
+    __message "[CSPY] pfb_dispatch_probe start\n";
+    bp = __setCodeBreak("HAL_DSI_TearingEffectCallback", 120, "1", "TRUE", "HitCheckpoint()");
+    if (bp == 0)
+        __message "[CSPY] BP install FAILED\n";
+    else
+        __message "[CSPY] BP installed h=", bp:%d, "\n";
+}
+
+execUserExit()
+{
+    __message "[CSPY] session ending\n";
+}

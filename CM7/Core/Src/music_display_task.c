@@ -114,11 +114,16 @@ static void JpegDisplayTask(void *argument)
     JPEG_Init();    /* initialise colour-conversion lookup tables once */
 
 #ifndef RELEASE_BUILD
-    /* One-shot fixture injection ~3 s after task start, giving MusicScreen
-     * time to activate. Result is cached in Model::pendingThumb until the
-     * screen comes up, then setThumbnail() fires from the presenter. */
-    vTaskDelay(pdMS_TO_TICKS(3000));
-    Music_InjectTestThumb();
+    /* PFB DEBUG 2026-05-06: test injection DISABLED to isolate the static
+     * logo render. With injection on, the system switches to MusicScreen +
+     * re-injects every 1 s -- too much churn to diagnose strip iteration.
+     * With it off, system stays on Screen1 (logo screen) so we can verify
+     * whether the PFB pipeline renders all 4 strips for a single static
+     * frame. Re-enable when the strip-iteration bug is fixed. */
+    /*
+     * vTaskDelay(pdMS_TO_TICKS(3000));
+     * Music_InjectTestThumb();
+     */
 #endif
 
     music_msg_t      raw;
@@ -126,17 +131,9 @@ static void JpegDisplayTask(void *argument)
 
     for (;;)
     {
-#ifndef RELEASE_BUILD
-        /* Re-inject test thumb every 1 s for IRQ logger capture */
-        if (xQueueReceive(xMusicQueue, &raw, pdMS_TO_TICKS(1000)) != pdTRUE)
-        {
-            Music_InjectTestThumb();
-            continue;
-        }
-#else
+        /* Block on real music messages only -- no test re-inject */
         if (xQueueReceive(xMusicQueue, &raw, portMAX_DELAY) != pdTRUE)
             continue;
-#endif
 
         memset(&done, 0, sizeof(done));
 

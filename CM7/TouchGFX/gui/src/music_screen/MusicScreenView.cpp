@@ -31,6 +31,15 @@ void MusicScreenView::setupScreen()
     imgThumbnail.setAlpha(0);
     /* Phase 1: image only — lblTitle and lblArtist are NOT added to screen */
     m_onMusicScreen = true;
+
+    /* PFB diagnostic 2026-05-06: force full-screen invalidate so all 4 strips
+     * (y=0,120,240,360) get rendered + transmitted at boot. Without this the
+     * framework only marks dirty regions where widgets changed, leaving the
+     * bottom 360 rows of the panel as uninitialized GRAM (rainbow noise). */
+    {
+        touchgfx::Rect fullScreen(0, 0, 800, 480);
+        invalidateRect(fullScreen);
+    }
 }
 
 void MusicScreenView::tearDownScreen()
