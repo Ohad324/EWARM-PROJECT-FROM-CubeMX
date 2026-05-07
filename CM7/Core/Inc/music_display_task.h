@@ -86,6 +86,17 @@ void Music_Init(void);
  *  Defined but NOT called in Phase 1. Uncomment transmit in Phase 2. */
 void Music_SendCtrl(const char *action);
 
+#ifndef RELEASE_BUILD
+/** ISR-safe: post a synthetic MSG_THUMB carrying the embedded test JPEG
+ *  (kTestThumbJpeg, in flash) to xMusicQueue. Wakes JpegDisplayTask, which
+ *  decodes + scales + blits the test thumbnail to the LCD.
+ *
+ *  Caller must pass &xHigherPriorityTaskWoken and call portYIELD_FROM_ISR
+ *  with that flag after returning. Returns pdTRUE on enqueue success. */
+#include "FreeRTOS.h"
+BaseType_t Music_RequestTestThumbFromISR(BaseType_t *pxHigherPriorityTaskWoken);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

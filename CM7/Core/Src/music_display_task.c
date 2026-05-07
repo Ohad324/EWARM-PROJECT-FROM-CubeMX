@@ -102,6 +102,20 @@ static void Music_InjectTestThumb(void)
         LOG("[TEST-INJECT] Test thumb pushed to xMusicQueue (%u bytes)\n",
             (unsigned)TEST_THUMB_JPEG_SIZE);
 }
+
+/* ISR-safe trigger: post MSG_THUMB pointing at flash-resident kTestThumbJpeg.
+ * No memcpy/cache flush needed -- flash is read-only and JPEG MDMA bypasses
+ * CPU caches. JpegDisplayTask receives, decodes, scales, blits. */
+BaseType_t Music_RequestTestThumbFromISR(BaseType_t *pxHigherPriorityTaskWoken)
+{
+    if (xMusicQueue == NULL) return pdFALSE;
+
+    music_msg_t m;
+    m.type       = MSG_THUMB;
+    m.thumb.data = (uint8_t *)kTestThumbJpeg;   /* flash, MDMA-readable */
+    m.thumb.size = TEST_THUMB_JPEG_SIZE;
+    return xQueueSendFromISR(xMusicQueue, &m, pxHigherPriorityTaskWoken);
+}
 #endif
 
 /* ── Task body ─────────────────────────────────────────────────────────── */
@@ -113,13 +127,9 @@ static void JpegDisplayTask(void *argument)
 
     JPEG_Init();    /* initialise colour-conversion lookup tables once */
 
-#ifndef RELEASE_BUILD
-    /* Re-enabled 2026-05-07 after PFB strip-dispatch fix verified.
-     * Single-shot injection ~3 s after task start -> MusicScreen activates
-     * -> Sysgo Architecture image renders across full 800x480 panel. */
-    vTaskDelay(pdMS_TO_TICKS(3000));
-    Music_InjectTestThumb();
-#endif
+    /* Test thumb injection is now triggered by PC13 blue button press
+     * (HAL_GPIO_EXTI_Callback in voice_recorder.c -> Music_RequestTestThumbFromISR).
+     * No auto T+3s injection. */
 
     music_msg_t      raw;
     music_done_msg_t done;

@@ -68,6 +68,7 @@
 #include "audio_sd.h"       /* AudioSD_GetErrorCode(), AudioSD_Remount() */
 #include "log_mutex.h"   /* RLOG — button diagnostic only, not in audio hot path */
 #include "itm_log.h"     /* STAGE() — ITM PORT[0] + RTT WriteString, zero printf */
+#include "music_display_task.h"  /* Music_RequestTestThumbFromISR() */
 #include <string.h>
 #include <stdio.h>       /* snprintf */
 #include <limits.h>      /* ULONG_MAX */
@@ -292,14 +293,21 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     /* ISR context — must not call xQueueSend. Use RTT directly (ISR-safe). */
     SEGGER_RTT_WriteString(0, "[BTN] PC13_PRESSED\n");
 
+    BaseType_t higher = pdFALSE;
+
+#ifndef RELEASE_BUILD
+    /* Trigger test-thumb display on every button press (debug builds only) */
+    Music_RequestTestThumbFromISR(&higher);
+#endif
+
     /* Only notify task if it has been created */
     if (g_State == REC_IDLE
         && voiceRecTaskHandle != NULL)
     {
-        BaseType_t higher = pdFALSE;
         xTaskNotifyFromISR(voiceRecTaskHandle, 1u, eSetBits, &higher);
-        portYIELD_FROM_ISR(higher);
     }
+
+    portYIELD_FROM_ISR(higher);
 }
 
 /* DFSDM DMA half-complete — s_DfsdmBuf[0..DFSDM_BUF_HALF-1] ready. */

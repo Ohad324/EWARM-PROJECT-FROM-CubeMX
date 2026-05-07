@@ -385,10 +385,8 @@ Error_Handler();
   BLE_UART_Init();
   _itm_str("[BISECT-E post-BLE_UART_Init]\n");
   ITM_STAGE(ITM_INIT_BLEuart_DONE);
-#if 0   /* DEBUG ISOLATION Step 2 — skip voice recorder init (DMA + EXTI + RTOS). */
   VoiceRec_Init(); /* button EXTI + DFSDM + DMA + RTOS objects */
   ITM_STAGE(ITM_INIT_VOICEREC_DONE);
-#endif
 #if 0   /* Gated for screen-only boot test (PFB Phase 2 verification).
          * AudioSD_Init was hanging pre-kernel (suspect: SD-absent slow path,
          * unrelated to LCD changes). Restore once boot reaches osKernelInit. */
