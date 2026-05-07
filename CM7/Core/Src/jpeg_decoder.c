@@ -243,7 +243,10 @@ HAL_StatusTypeDef JPEG_Decode(const uint8_t *jpegData, uint32_t jpegSize,
 
     LOG("[JPEG] Stage6: scaling DONE  scaled=%p\n", (void *)s_rgb888Scaled);
 
-#ifndef RELEASE_BUILD
+#if 0  /* DISABLED 2026-05-07: swap was producing yellow-instead-of-blue.
+        * Theory: LTDC RGB888 in this build reads memory as [R,G,B] not
+        * [B,G,R], so jpeg_utils RGB output already matches. Re-enable if
+        * a future build inverts colors again. */
     /* R<->B swap. Per RM0399 §33.7.18 Table 276, LTDC PF=RGB888 reads
      * memory in [B,G,R] byte order, but jpeg_utils writes [R,G,B]. Swap
      * aligns the buffer with what LTDC expects so source-blue displays

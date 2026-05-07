@@ -114,16 +114,11 @@ static void JpegDisplayTask(void *argument)
     JPEG_Init();    /* initialise colour-conversion lookup tables once */
 
 #ifndef RELEASE_BUILD
-    /* PFB DEBUG 2026-05-06: test injection DISABLED to isolate the static
-     * logo render. With injection on, the system switches to MusicScreen +
-     * re-injects every 1 s -- too much churn to diagnose strip iteration.
-     * With it off, system stays on Screen1 (logo screen) so we can verify
-     * whether the PFB pipeline renders all 4 strips for a single static
-     * frame. Re-enable when the strip-iteration bug is fixed. */
-    /*
-     * vTaskDelay(pdMS_TO_TICKS(3000));
-     * Music_InjectTestThumb();
-     */
+    /* Re-enabled 2026-05-07 after PFB strip-dispatch fix verified.
+     * Single-shot injection ~3 s after task start -> MusicScreen activates
+     * -> Sysgo Architecture image renders across full 800x480 panel. */
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    Music_InjectTestThumb();
 #endif
 
     music_msg_t      raw;
@@ -131,7 +126,8 @@ static void JpegDisplayTask(void *argument)
 
     for (;;)
     {
-        /* Block on real music messages only -- no test re-inject */
+        /* Block on real music messages only -- no periodic re-inject (one
+         * injection above is enough to verify the full pipeline visually) */
         if (xQueueReceive(xMusicQueue, &raw, portMAX_DELAY) != pdTRUE)
             continue;
 

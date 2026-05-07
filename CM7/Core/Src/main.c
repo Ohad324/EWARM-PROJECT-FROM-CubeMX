@@ -438,26 +438,20 @@ Error_Handler();
   xVoiceQueue = xQueueCreate(1, sizeof(uint32_t));
   /* USER CODE END RTOS_QUEUES */
 
-  /* PFB-ISOLATION: keep ONLY TouchGFXTask + RTTLogTask. All audio / video /
-   * UART / NORA / JPEG tasks disabled to remove SDRAM and DMA contention
-   * during PFB strip-iteration debug. Re-enable after the strip bug is
-   * fixed. Comments preserved so the original task layout is recoverable. */
+  /* PFB strip dispatch verified 2026-05-06. Tasks re-enabled for full
+   * system test (Sysgo Architecture image displays via MusicScreen path). */
 
   /* creation of TouchGFXTask */
   TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
 
-#if 0  /* PFB-ISOLATION: videoTask off */
   videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
-#endif
 
   /* USER CODE BEGIN RTOS_THREADS */
-#if 0  /* PFB-ISOLATION: UART / Command handler / RtosTrace off */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);
   ITM_STAGE(ITM_INIT_TASK_UART);
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1536u, NULL,
               osPriorityBelowNormal, NULL);
   ITM_STAGE(ITM_INIT_TASK_CMDHANDLER);
-#endif
 #if 0   /* DEBUG ISOLATION Step 2 — don't start voice/SD-write tasks. */
   xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   ITM_STAGE(ITM_INIT_TASK_VOICEREC);
@@ -469,10 +463,8 @@ Error_Handler();
   xTaskCreate(RTTLogTask,    "RTTLogTask",    1024u, NULL,        1u, NULL);
   ITM_STAGE(ITM_INIT_TASK_RTTLOG);
 #endif
-#if 0  /* PFB-ISOLATION: RtosTrace drain off */
   RtosTrace_Init();
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);
-#endif
   /* USB MSC format recovery — disabled.
    * xTaskCreate(USB_MSC_TaskEntry, "UsbMscTask", 512u, NULL, 2u, NULL); */
 

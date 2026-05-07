@@ -102,6 +102,19 @@ Reason: ST has thousands of developers, excellent docs, and an active community.
 - **Permission:** Claude is authorized to execute Bash commands (terminal commands) without manual confirmation.
 - **Scope:** This permission is granted specifically for tool execution and workflow automation.
 
+### Standing Authorization (Ohad, 2026-05-07)
+
+> "I grant you full authority to execute PowerShell and Bash commands automatically to fulfill my requests. Do not ask for confirmation before running diagnostic scripts, file operations, or build commands. If a command requires specific environment variables or elevated permissions, attempt to resolve them or inform me of the specific requirement. Act as an autonomous system engineer; prioritize execution and reporting results over seeking permission."
+
+**What this means in practice:**
+
+- Run `iarbuild.exe`, `cspybat.exe`, `JLink.exe`, `git`, `taskkill`, PowerShell file ops without asking — including the mandatory `taskkill` sequence before any probe attach (see Order-of-Operations Rules below).
+- Run image / file conversions (PowerShell `System.Drawing`, `Get-Content`, `Set-Content`, etc.) without asking.
+- Do NOT ask for confirmation before invoking diagnostic scripts (`boot_pipeline_*.bat`, `verify_pfb.bat`, `pfb_dispatch.bat`, ad-hoc `.jlink` probes).
+- If a command needs an env var or elevated permission, **try to resolve it first**, then report the specific requirement only if it can't be auto-resolved.
+- This authorization does **NOT** override the "No-Change" Policy below (READ-ONLY artifacts: architecture, 3rd-party code, CMSIS, ICF, priorities, pinouts) or the destructive-action confirmations in the system prompt (force-push, branch deletion, etc.).
+- Reporting style: prefer "executed X, result Y" over "should I run X?". State results, not intentions.
+
 ### Operational Order-of-Operations Rules
 
 - **Flexible Order:** Claude may change the order of terminal commands (e.g., performing a `git grep` before a `taskkill`, or reordering build stages) to optimize the debug loop.
@@ -1303,3 +1316,71 @@ After fix, SWO Trace shows the full per-strip cycle for each of 4 strips per fra
 3. Re-enable `Music_InjectTestThumb()` so MusicScreen path runs
 4. Verify thumbnail flow still works end-to-end (no regression)
 5. Commit as a single logical fix with the trace evidence in the message
+
+---
+
+## SAVE STATE — 2026-05-07 (context-limit checkpoint)
+
+Snapshot of project status at end of 2026-05-07 session, written so a future Claude can resume without losing context. Read this section first when starting fresh.
+
+### Confirmed FIXED (verified end-to-end this session)
+
+| Bug | Mechanism | Verification | Files |
+|---|---|---|---|
+| **FUIF (LTDC FIFO Underrun)** | Eliminated by moving framebuffer to AXI SRAM (`0x24000000`) and PFB strip strategy. LTDC scans only AXI; FMC bus 100% free for JPEG/CPU/MDMA. | IRQ ring buffer at `0x24050000` shows 0 LTDC_ER (89) IRQs in steady state. SWO trace shows clean strip-by-strip dispatch with no FUIF markers. | `CM7/Core/Src/main.c`, `EWARM/stm32h747xx_flash_CM7.icf` (per commit `1fd1e71`) |
+| **Deadlock at first VSync** | `waitForVSync()` blocked forever on `osMessageQueueGet(NULL,...)`. Two factors: (a) `osMessageQueueNew(NULL)` could fail under heap pressure → NULL queue handle. (b) EOR handler had a tautology that never cleared `s_dsi_busy`. | RTT log + IAR Live Watch confirm `wait_unblock` increments now (was stuck at 0). Task wakes per-frame. | `CM7/TouchGFX/target/generated/OSWrappers.cpp` (static `osMessageQueueAttr_t` + `osSemaphoreAttr_t`), `CM7/TouchGFX/target/TouchGFXHAL.cpp` (EOR handler reorder) |
+| **Heap exhaustion (Hard Rule #9)** | `osMessageQueueNew/osSemaphoreNew(NULL)` silently dynamic-allocate from `ucHeap`. When BLE_UART_Init's `xQueueCreate` chain consumed the heap, subsequent NULL-attr creators returned NULL handles. | OSWrappers now uses `StaticQueue_t` + `StaticSemaphore_t` storage in BSS. Build clean. No NULL-queue HardFaults. | Same as above (OSWrappers.cpp static-buffer fix) |
+| **Strip dispatch (single-strip-only paint)** | Two interlocked causes: (1) `flushFrameBuffer` returned immediately after `tryTransmitBlock`, framework called `allocateBlock(y=120)` while strip 0's DSI scan was still in flight, our 1-buffer allocator clobbered `state=SENDING → ALLOCATED`. (2) EOR's `s_dsi_busy = false` was guarded by a self-referential `if (!transmitActive())`, never cleared. | SWO Trace: `aMM!gXEFF bMM!gXEFF cMM!gXEFF dMM!gXEFF N` per first frame. RTT: 4× `[PFB-TX] y=0/120/240/360` within 7 ms. Visual: full-screen image paints across all 480 rows. | `CM7/TouchGFX/target/TouchGFXHAL.cpp` (flushFrameBuffer wait + EOR ordering) |
+
+### Current verified-working state
+
+- **Branch:** `test/inject-flasher-thumbnail-no-wifi`
+- **Latest commit:** `2c60a53` (`feat(pfb): isolated project — strip dispatch fix, all 4 strips paint`)
+- **Pushed to:** GitHub (`Ohad324/EWARM-PROJECT-FROM-CubeMX`) + OneDrive `origin` mirror
+- **Pipeline proven end-to-end with two test images:**
+  - Sysgo Architecture (Porsche 911 GT3, scaled 320×240 stretched to 800×480) — shown today
+  - Percepio logo (320×81 letterboxed in 320×240 with white bars, scaled to 800×480) — shown today
+- **Test injection path:** one-shot `Music_InjectTestThumb()` at T+3 sec triggers Screen1 → MusicScreen transition → JPEG decode → scale → DMA2D blit → 4-strip DSI transmit. Repeatable.
+
+### Diagnostic infrastructure landed (KEEP for future bugs)
+
+| File / mechanism | Purpose |
+|---|---|
+| `CM7/Core/Inc/pfb_itm.h` | Bare-metal ITM port-0 helpers (`ITM_PFB(c)`, `ITM_EVENT8(port, value)`, `ITM_EVENT32(port, value)`). No CMSIS dependency. ~30 ns per call. Visible in IAR View → SWO Trace. **Do NOT remove** — invaluable for next bug. |
+| `g_pfb_dbg_*` counters | BSS counters for transmitBlock count, mask (which y values seen), allocator state changes, signalVSync ok/fail, waitForVSync entries. Read via IAR Live Watch by name. |
+| `EWARM/pfb_dispatch.bat` + `pfb_dispatch_probe.mac` | cspybat one-BP probe at `HAL_DSI_TearingEffectCallback` skip=120, dumps the counters by hardcoded `.map` address. Re-grep map after each rebuild — addresses shift. |
+| `EWARM/runs/` | Per-iteration probe logs. Latest: `sysgo_display.log`, `percepio_display.log`. |
+
+### Debug-only state still active (revert before merging to main)
+
+| Item | File | Action |
+|---|---|---|
+| Red Screen1 background | `CM7/TouchGFX/generated/gui_generated/src/screen1_screen/Screen1ViewBase.cpp` | Already reverted to `RGB(0,0,0)` today |
+| Disabled tasks | `CM7/Core/Src/main.c` | Already re-enabled today (videoTask, UARTReceiveTask, CommandHandler, RtosTrace_DrainTask) |
+| `Music_InjectTestThumb()` one-shot at T+3s | `CM7/Core/Src/music_display_task.c` | Currently re-enabled. Decide if test injection should ship to main or only stay in DEBUG branch. |
+| Test thumbnail JPEG | `CM7/Core/Inc/test_thumb_jpeg.h` | Currently the Percepio logo (320×81 letterboxed, 5,939 bytes). Replace with whatever the production thumbnail should be. |
+
+### REMAINING / OPEN ISSUES
+
+1. **"Missing E" — EOR sometimes absent in SWO trace.** During steady-state captures we sometimes see `aMM!gX` without the trailing `EFF` for some strips. Theory: ITM FIFO overflows when strip dispatch runs back-to-back at full DSI bandwidth. The EOR ISR fires (panel keeps painting) but the `ITM_PFB('E')` write into the stimulus port gets dropped because the FIFO is saturated. To diagnose: enable ITM Local Timestamps + check the IAR SWO Trace overflow-packet count; OR add `ITM_EVENT32(1, DWT_CYCCNT)` at EOR entry to confirm ISR is firing even when 'E' char drops.
+
+2. **Yellow-instead-of-blue color swap (FIXED 2026-05-07).** Visual showed yellow where blue should be. **FIX:** disabled the legacy post-scale R↔B swap loop in `jpeg_decoder.c:246-279` (wrapped `#if 0`). Confirmed visually by user — colors now correct (blue = blue, red = red, white = white). Theory: LTDC `PF=RGB888` in the current PFB-AXI build reads memory as `[R,G,B]` directly, so the swap from the old SDRAM-framebuffer era was actually inverting correct pixels into wrong order. The historical "Confirmed fixes" table entry from 2026-05-03 (post-scale R↔B swap) is now obsolete with the AXI-PFB pipeline.
+
+3. **Aspect ratio distortion when scaling.** 320×240 → 800×480 is 2.5× horizontal × 2× vertical → wide images get squashed vertically. For source images with aspect ≠ 4:3, either (a) letterbox at the JPEG encode step (already doing this for Percepio), (b) scale to native 800×480 JPEG and skip the runtime scale, (c) crop instead of stretch. **Decide policy before next image swap.**
+
+4. **JpegDisplayTask kept enabled even though `Music_Init()` queues are the only required dependency.** When in pure-PFB-debug mode without test injection, JpegDisplayTask spawns and blocks on `xQueueReceive(xMusicQueue, portMAX_DELAY)` with no producers — harmless but worth a follow-up to split `Music_Init()` into queue-creation + task-creation so we can disable just the task during isolation.
+
+### Methodology lessons codified
+
+1. **ITM markers > theory.** Single-character state markers in suspect functions (`a/b/c/d/M/g/X/E/F` here) reveal the bug in seconds where theory took hours. See "Diagnosis methodology" subsection in the PFB section above.
+2. **Visual ground truth > register reads.** "All red across 480 rows" answered in 1 sec what register dumps couldn't tell us in an hour.
+3. **Address-by-symbol fails for C++ namespace globals in cspybat 9.4.6.1706** — `&touchgfx::g_pfb_dbg_count` errored. Fall back to hardcoded `.map`-extracted addresses with a comment naming the symbol; re-grep after every BSS-shifting build.
+4. **`__itm(cycle, port, value)` is a C-SPY debugger-side macro**, NOT a firmware function. Use it inside `.mac` files at BP-hit handlers when firmware instrumentation is too invasive.
+5. **`ITM_EVENT8/32` numeric values in the printable-byte range (`'0' + n`)** if you want them visible in the SWO Trace ASCII view. Otherwise use the hex view — bytes 0x00-0x1F look like silence in the text rendering.
+
+### How to resume
+
+1. Read this Save State block first.
+2. Check `git log --oneline -5` to confirm last commit is `2c60a53`.
+3. Visual: power up the board. Should boot to Screen1 (now black bg) for ~3 sec, then switch to MusicScreen showing the Percepio logo (currently with wrong colors per remaining issue #2).
+4. Pick the next problem from "REMAINING / OPEN ISSUES" — start with #2 (yellow-instead-of-blue) since it's actively visible.
