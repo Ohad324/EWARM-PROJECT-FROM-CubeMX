@@ -460,7 +460,14 @@ class Handler(BaseHTTPRequestHandler):
 DISCOVERY_PORT = 5001
 
 def discovery_responder(local_ip: str, http_port: int):
-    """Background thread: reply to NORA's UDP broadcast with our IP+port."""
+    """Background thread: reply to NORA's UDP broadcast with our IP+port.
+
+    Re-detects the local IP on every reply by probing toward NORA's source
+    address. This handles the case where the PC switches networks (e.g. from
+    office Wi-Fi to iPhone hotspot) after the script started — without this,
+    the reply would still contain the stale startup-time IP and NORA's
+    follow-up POST would fail with no route.
+    """
     import socket, threading
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -472,7 +479,17 @@ def discovery_responder(local_ip: str, http_port: int):
             data, addr = sock.recvfrom(64)
             msg = data.decode("ascii", errors="replace").strip()
             if msg == "NORA_HELLO":
-                reply = f"PLAYER:{local_ip}:{http_port}".encode("ascii")
+                # Re-detect our IP per-request. Probe toward NORA's source
+                # address; whatever local IP the OS picks is on the same
+                # subnet that received the broadcast.
+                try:
+                    probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    probe.connect((addr[0], 1))
+                    current_ip = probe.getsockname()[0]
+                    probe.close()
+                except OSError:
+                    current_ip = local_ip  # fallback to startup-detected IP
+                reply = f"PLAYER:{current_ip}:{http_port}".encode("ascii")
                 sock.sendto(reply, addr)
                 print(f"[disc]   NORA_HELLO from {addr[0]} → replied {reply.decode()}")
         except Exception as e:
