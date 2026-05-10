@@ -62,9 +62,15 @@
 #define BLE_WORD_MAX     256    /* max chars from phone */
 #define BLE_DEFAULT_LANGPAIR "en|he"
 
-/* Wi-Fi credentials — change before flashing */
-#define WIFI_SSID        "Ohad2.4"
-#define WIFI_PASSWORD    "paypal324"
+/* Wi-Fi credentials — multi-AP, scan-and-connect to strongest visible known AP.
+ * Order matters only as a tiebreaker (first wins on equal RSSI). */
+typedef struct { const char *ssid; const char *pass; } known_ap_t;
+static const known_ap_t s_knownAPs[] = {
+    { "iphone",         "aj3r83520r6bz" },  /* iPhone hotspot — closest, best RSSI */
+    { "Ohad2.4",        "paypal324"     },  /* home AP */
+    { "Sightsys_SEC24", "0542584033"    },  /* office AP */
+};
+#define WIFI_KNOWN_AP_COUNT  (sizeof(s_knownAPs) / sizeof(s_knownAPs[0]))
 #define WIFI_MAX_RETRY   5
 
 /* ── Google Translate response buffer ───────────────────────────────────── */
@@ -349,29 +355,32 @@ static void wifi_event_handler(void *arg, esp_event_base_t base,
     }
 }
 
-/* Run a passive scan and dump every visible AP. Helps diagnose
- * "reason=201 NO_AP_FOUND" — if the target SSID is missing here but the
- * laptop sees it, the AP is on a band/channel NORA can't reach (NORA-W10
- * is 2.4 GHz only) or NORA's antenna is dead. */
-static void wifi_scan_dump(void)
+/* Scan all visible APs, log each, and return the index of the highest-priority
+ * known AP that is visible. Priority = order in s_knownAPs (iPhone first,
+ * then home, then office). Returns -1 if no known AP is visible. */
+static int wifi_scan_pick_priority(void)
 {
     wifi_scan_config_t scan_cfg = { 0 };  /* scan all channels, all SSIDs */
     ESP_LOGI(TAG, "[scan] starting active scan...");
     esp_err_t err = esp_wifi_scan_start(&scan_cfg, true /* block until done */);
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "[scan] esp_wifi_scan_start failed: %s", esp_err_to_name(err));
-        return;
+        return -1;
     }
 
     uint16_t n = 0;
     esp_wifi_scan_get_ap_num(&n);
     ESP_LOGI(TAG, "[scan] found %u APs", n);
-    if (n == 0) return;
+    if (n == 0) return -1;
 
     if (n > 32) n = 32;
     wifi_ap_record_t *aps = calloc(n, sizeof(*aps));
-    if (!aps) return;
+    if (!aps) return -1;
     esp_wifi_scan_get_ap_records(&n, aps);
+
+    /* Track best (lowest-index) known AP found, and its rssi for the log. */
+    int best_known = -1;
+    int best_rssi  = -127;
 
     for (uint16_t i = 0; i < n; i++) {
         const char *auth =
@@ -386,8 +395,27 @@ static void wifi_scan_dump(void)
                                                               "OTHER";
         ESP_LOGI(TAG, "[scan] ch=%-2u rssi=%-4d auth=%-9s ssid=\"%s\"",
                  aps[i].primary, aps[i].rssi, auth, aps[i].ssid);
+
+        /* Match against our priority list; lowest index wins (iPhone first). */
+        for (size_t k = 0; k < WIFI_KNOWN_AP_COUNT; k++) {
+            if (strcmp((const char *)aps[i].ssid, s_knownAPs[k].ssid) == 0) {
+                if (best_known < 0 || (int)k < best_known) {
+                    best_known = (int)k;
+                    best_rssi  = aps[i].rssi;
+                }
+                break;
+            }
+        }
     }
     free(aps);
+
+    if (best_known >= 0) {
+        ESP_LOGI(TAG, "[scan] picking \"%s\" (priority=%d, rssi=%d)",
+                 s_knownAPs[best_known].ssid, best_known, best_rssi);
+    } else {
+        ESP_LOGW(TAG, "[scan] no known AP visible — will retry");
+    }
+    return best_known;
 }
 
 static void wifi_init(void)
@@ -405,24 +433,48 @@ static void wifi_init(void)
     ESP_ERROR_CHECK(esp_event_handler_instance_register(
         IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL, NULL));
 
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    /* Power tweaks (post-start):
+     * - Max TX power 84 = 21 dBm (default ~78 = 19.5 dBm) → +1-2 dB outgoing
+     * - Disable MODEM_SLEEP power-save → lower latency, marginal current cost */
+    esp_wifi_set_max_tx_power(84);
+    esp_wifi_set_ps(WIFI_PS_NONE);
+
+    /* Driver settling delay before first scan — STA_START event is in flight. */
+    vTaskDelay(pdMS_TO_TICKS(100));
+
+    /* Scan-and-pick: try priority order (iPhone first, then home, then office).
+     * Retry scan up to 3× with 1s delay if no known AP is visible. */
+    int picked = -1;
+    for (int attempt = 0; attempt < 3 && picked < 0; attempt++) {
+        if (attempt > 0) {
+            ESP_LOGW(TAG, "[scan] retry %d after delay...", attempt);
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
+        picked = wifi_scan_pick_priority();
+    }
+    if (picked < 0) {
+        ESP_LOGE(TAG, "[scan] no known AP found after 3 scans — defaulting to entry [0]");
+        picked = 0;  /* try iPhone anyway in case the scan missed it */
+    }
+
     wifi_config_t wifi_cfg = {
         .sta = {
-            .ssid      = WIFI_SSID,
-            .password  = WIFI_PASSWORD,
             .threshold.authmode = WIFI_AUTH_WPA2_PSK,
         },
     };
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    /* SSID/password may be longer than the field if user picks a long iPhone
+     * name; strncpy with the full field width is safe (struct is zero-init). */
+    strncpy((char *)wifi_cfg.sta.ssid,     s_knownAPs[picked].ssid,
+            sizeof(wifi_cfg.sta.ssid));
+    strncpy((char *)wifi_cfg.sta.password, s_knownAPs[picked].pass,
+            sizeof(wifi_cfg.sta.password));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_cfg));
-    ESP_ERROR_CHECK(esp_wifi_start());
 
-    /* Driver settling delay before scan — STA_START event is in flight. */
-    vTaskDelay(pdMS_TO_TICKS(100));
-
-    /* Diagnostic: dump every visible AP before attempting to connect. */
-    wifi_scan_dump();
-
-    ESP_LOGI(TAG, "Wi-Fi init done, connecting to \"%s\"...", WIFI_SSID);
+    ESP_LOGI(TAG, "Wi-Fi init done, connecting to \"%s\"...",
+             s_knownAPs[picked].ssid);
     esp_wifi_connect();   /* explicit — auto-connect on STA_START is disabled */
 }
 
