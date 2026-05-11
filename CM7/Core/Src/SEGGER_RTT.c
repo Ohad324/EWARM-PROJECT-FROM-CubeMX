@@ -13,8 +13,18 @@
 
 /*--------------------------------------------------------------------
  * Static storage for channel 0 ring buffers
+ *
+ * 2026-05-11 evening: relocated from default AXI .bss to D3 SRAM4
+ * (0x38000000, 64 KB region, otherwise unused on this project) to free
+ * 16 KB of AXI for the LCD/video tasks. RTT is a CPU-only memory ring
+ * — no DMA — so any RAM domain works as long as the J-Link DAP can
+ * reach it. DAP can reach D3 SRAM4 over the AHB bus crossbar; only
+ * external SDRAM is too slow for RTT throughput. D3 also stays powered
+ * in Stop mode if we ever want post-mortem RTT capture.
  *------------------------------------------------------------------*/
+#pragma location = ".sram4_rtt"
 static char s_upBuf  [SEGGER_RTT_BUFFER_SIZE_UP];
+#pragma location = ".sram4_rtt"
 static char s_downBuf[SEGGER_RTT_BUFFER_SIZE_DOWN];
 
 /*--------------------------------------------------------------------
@@ -24,7 +34,11 @@ static char s_downBuf[SEGGER_RTT_BUFFER_SIZE_DOWN];
  * J-Link scans all RAM at connect time looking for this signature.
  * __attribute__((used)) prevents the linker from discarding it when
  * no code references it by name.
+ *
+ * Pinned to D3 SRAM4 alongside the ring buffers so J-Link's RAM scan
+ * finds the magic signature in the same region.
  *------------------------------------------------------------------*/
+#pragma location = ".sram4_rtt"
 SEGGER_RTT_CB _SEGGER_RTT __attribute__((used)) = {
     /* acID — magic signature, exactly 16 bytes */
     "SEGGER RTT\0\0\0\0\0\0",

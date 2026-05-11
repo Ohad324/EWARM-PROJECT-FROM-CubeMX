@@ -15,6 +15,11 @@
  * J-Link polls every ~1 ms.  At 4 MB/s SWD the host drains ~4 KB/ms.
  * 4 KB is the standard default and is plenty to sustain continuous flow
  * while we stream the 1.1 MB pixel dump in blocking mode.              */
+/* 2026-05-11 evening: kept at 16 KB but relocated buffers to D3 SRAM4
+ * (0x38000000) — see SEGGER_RTT.c. This frees the full 16 KB from AXI
+ * SRAM for the LCD/video tasks (TouchGFXTask + videoTask need 28 KB of
+ * .bss/stack which overflowed AXI). D3 SRAM4 is otherwise unused and
+ * also stays powered in Stop mode if we ever want post-mortem RTT. */
 #define SEGGER_RTT_BUFFER_SIZE_UP         (16384u)
 #define SEGGER_RTT_BUFFER_SIZE_DOWN       (16u)
 

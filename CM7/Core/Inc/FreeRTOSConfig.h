@@ -193,6 +193,16 @@ standard names. */
  * traceTASK_SWITCHED_IN/OUT are kept separate below for CPU-load accounting.
  * ───────────────────────────────────────────────────────────────────────── */
 
+/* 2026-05-11 evening: rtos_trace adds ~24 KB to AXI SRAM (16 KB ring buffer
+ * + 8 KB RTT channel-1 staging + ~256 B counters). Defining DISABLE_RTOS_TRACE
+ * compiles all trace hooks to empty and bypasses RtosTrace_Init() + drain
+ * task creation in main.c, allowing the linker to drop the static storage.
+ * Trade-off lost: per-task switch counts, stack HWM monitoring via RTT
+ * channel 1, FreeRTOS-API event timeline. Re-enable by removing this
+ * define when memory permits or when debugging concurrency bugs. */
+#define DISABLE_RTOS_TRACE   1
+
+#ifndef DISABLE_RTOS_TRACE
 /* Queue / semaphore / mutex — from task context */
 #define traceQUEUE_SEND(pxQueue)             rtos_trace_queue_event(TRC_Q_SEND,          (void*)(pxQueue))
 #define traceQUEUE_SEND_FAILED(pxQueue)      rtos_trace_queue_event(TRC_Q_SEND_FAIL,     (void*)(pxQueue))
@@ -234,6 +244,7 @@ standard names. */
     xTaskCallApplicationTaskHook( pxCurrentTCB, (void*)0 ); \
     rtos_trace_switched_in( pxCurrentTCB->pcTaskName ); \
 } while(0)
+#endif /* !DISABLE_RTOS_TRACE */
 /* USER CODE END Defines */
 
 #endif /* FREERTOS_CONFIG_H */

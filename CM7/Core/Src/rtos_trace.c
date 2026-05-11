@@ -5,9 +5,31 @@
  * Ring buffer: 1024 entries × 16 bytes = 16 KB in .bss (internal SRAM).
  * Lock-free write via ARM LDREX/STREX exclusive access.
  * Drain task: formats events and writes to RTT up-buffer 1 ("RTOS" terminal).
+ *
+ * 2026-05-11 evening: when DISABLE_RTOS_TRACE is set in FreeRTOSConfig.h,
+ * this file compiles to no-op stubs only. The ~24 KB of static storage
+ * (s_buf[16K] + s_rtt_buf[8K] + s_run_counts[256]) is removed from AXI
+ * .bss, freeing space for the re-enabled LCD/video tasks.
  */
 
 #include "rtos_trace.h"
+#include "FreeRTOSConfig.h"   /* picks up DISABLE_RTOS_TRACE if defined */
+
+#ifdef DISABLE_RTOS_TRACE
+
+/* All public entry points become no-ops. main.c calls RtosTrace_Init()
+ * unconditionally; provide a stub so the link succeeds. The DrainTask
+ * stub is provided for symmetry but is never spawned (xTaskCreate is
+ * also gated in main.c). */
+#include "FreeRTOS.h"
+#include "task.h"
+void RtosTrace_Init(void) { /* no-op */ }
+void RtosTrace_DrainTask(void *arg) { (void)arg; vTaskSuspend(NULL); }
+void rtos_trace_queue_event(unsigned char type, void* handle) { (void)type; (void)handle; }
+void rtos_trace_task_event(unsigned char type, const char* name) { (void)type; (void)name; }
+void rtos_trace_switched_in(const char* name) { (void)name; }
+
+#else  /* !DISABLE_RTOS_TRACE — full implementation follows */
 
 /* FreeRTOS */
 #include "FreeRTOS.h"
@@ -337,3 +359,5 @@ void RtosTrace_DrainTask(void* arg)
         }
     }
 }
+
+#endif /* DISABLE_RTOS_TRACE */

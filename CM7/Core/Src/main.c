@@ -436,9 +436,13 @@ Error_Handler();
   /* PFB strip dispatch verified 2026-05-06. Tasks re-enabled for full
    * system test (Sysgo Architecture image displays via MusicScreen path). */
 
-  /* AUDIO BISECT 2026-05-10: LCD/video tasks gated OFF while we solve the
-   * '-30518 constant' DFSDM bug. Re-enable by setting the define to 0. */
-#define AUDIO_DEBUG_LCD_DISABLED 1
+  /* AUDIO BISECT 2026-05-10: temporarily gated LCD/video tasks while solving
+   * the '-30518 constant' DFSDM bug. RE-ENABLED 2026-05-11 evening after STT
+   * verified end-to-end (commit 4019b95): static-queue migration fixed the
+   * UART RX path, recordings now stream cleanly to GCS, transcripts arrive.
+   * Keep this guard in place so the bisect aid can be re-engaged in the
+   * future (set the define back to 1) without changing surrounding code. */
+#define AUDIO_DEBUG_LCD_DISABLED 0
 
 #if !defined(AUDIO_DEBUG_LCD_DISABLED) || (AUDIO_DEBUG_LCD_DISABLED == 0)
   /* creation of TouchGFXTask */
@@ -463,7 +467,9 @@ Error_Handler();
   ITM_STAGE(ITM_INIT_TASK_RTTLOG);
 #endif
   RtosTrace_Init();
+#ifndef DISABLE_RTOS_TRACE
   xTaskCreate(RtosTrace_DrainTask, "rtos_trace", 512u, NULL, 1u, NULL);
+#endif
   /* USB MSC format recovery — disabled.
    * xTaskCreate(USB_MSC_TaskEntry, "UsbMscTask", 512u, NULL, 2u, NULL); */
 

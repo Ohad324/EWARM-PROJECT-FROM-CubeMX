@@ -16,6 +16,11 @@ define symbol __ICFEDIT_region_SRAM1_start__   = 0x30000000;
 define symbol __ICFEDIT_region_SRAM1_end__     = 0x3001FFFF;
 define symbol __ICFEDIT_region_SRAM2_start__   = 0x30020000;
 define symbol __ICFEDIT_region_SRAM2_end__     = 0x3003FFFF;
+/* D3 SRAM4 — 64 KB at 0x38000000. Otherwise unused on this project
+ * (SAI4 BDMA path retired in Path C-PC2). Currently hosts the SEGGER
+ * RTT buffers (16 KB up + 16 B down + control block) to free AXI. */
+define symbol __ICFEDIT_region_SRAM4_start__   = 0x38000000;
+define symbol __ICFEDIT_region_SRAM4_end__     = 0x3800FFFF;
 /*-Sizes-*/
 define symbol __ICFEDIT_size_cstack__ = 0x2000;  /* 8KB — IAR reported 96% used at 4KB */
 define symbol __ICFEDIT_size_heap__   = 0x1000;
@@ -34,6 +39,7 @@ define region ITCMRAM_region  = mem:[from __ICFEDIT_region_ITCMRAM_start__ to __
 define region DTCMRAM_region  = mem:[from __ICFEDIT_region_DTCMRAM_start__ to __ICFEDIT_region_DTCMRAM_end__];
 define region SRAM1_region    = mem:[from __ICFEDIT_region_SRAM1_start__ to __ICFEDIT_region_SRAM1_end__];
 define region SRAM2_region    = mem:[from __ICFEDIT_region_SRAM2_start__ to __ICFEDIT_region_SRAM2_end__];
+define region SRAM4_region    = mem:[from __ICFEDIT_region_SRAM4_start__ to __ICFEDIT_region_SRAM4_end__];
 
 define region SDRAM_region    = mem:[from __ICFEDIT_region_SDRAM_start__      to __ICFEDIT_region_SDRAM_end__];
 define region QSPI_region     = mem:[from __ICFEDIT_region_QSPI_start__    to __ICFEDIT_region_QSPI_end__];
@@ -282,6 +288,10 @@ place at address mem:0x30000000 { section .audio_buffer };
 place in RAM_region    { section .axi_sram };
 place in SRAM1_region  { section .sram1 };
 place in SRAM2_region  { section .sram2 };
+/* D3 SRAM4 hosts SEGGER RTT buffers + control block (16 KB total).
+ * J-Link DAP can read D3 over the AHB bus crossbar; RTT scan finds
+ * the "SEGGER RTT" magic signature in the control block here. */
+place in SRAM4_region  { section .sram4_rtt };
 
 place in QSPI_region   { section ExtFlashSection };
 place in SDRAM_region  { section Video_RGB_Buffer,
