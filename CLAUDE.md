@@ -1384,3 +1384,50 @@ Snapshot of project status at end of 2026-05-07 session, written so a future Cla
 2. Check `git log --oneline -5` to confirm last commit is `2c60a53`.
 3. Visual: power up the board. Should boot to Screen1 (now black bg) for ~3 sec, then switch to MusicScreen showing the Percepio logo (currently with wrong colors per remaining issue #2).
 4. Pick the next problem from "REMAINING / OPEN ISSUES" — start with #2 (yellow-instead-of-blue) since it's actively visible.
+
+---
+
+## SAVE STATE — 2026-05-11 (end-of-day, mic clock restored, gain pending)
+
+### Confirmed FIXED today
+
+**DFSDM mic clock missing on PC2** (PCM stuck at -30518 = Sinc3 on zero PDM input). Two root causes from PFB-era drift:
+
+1. **`MX_SAI4_Init()` was re-enabled** — Path C-PC2 (commit `72ad9fa`) requires SAI4 OFF so PE2 stays high-Z and doesn't fight DFSDM CKOUT (PC2) on the shared mic-CLK net.
+2. **FreeRTOS heap was relocated to D2 SRAM1** at `0x30004200`, directly adjacent to `s_DfsdmBuf` at `0x30004000` → DMA contention.
+
+Both reverted to match `bdc7159` (May 1 verified-working) baseline. Scope confirms **2 MHz CKOUT on PC2** restored.
+
+**Commit: `745de5d`** "fix(audio): restore DFSDM mic clock — gate MX_SAI4_Init + heap back to AXI" — pushed to OneDrive + GitHub.
+
+### Current state
+
+- Branch `test/inject-flasher-thumbnail-no-wifi` at `745de5d`
+- DFSDM captures real PDM data (raw values vary, channel ID `0x00` = CH0)
+- Full pipeline runs end-to-end: SD write OK, UART OK, GCS HTTP 200, STT call
+- **`AUDIO_DEBUG_LCD_DISABLED 1`** — temporary bisect aid in `main.c`, revert to 0 before merging
+
+### Open issue blocking STT
+
+**Speech too quiet** — Audio Quality Report:
+```
+[PCM] peak=215  dc_offset=119  noise_rms=128  speech_rms=122  snr~-6 dB
+[PCM] FAIL: speech too quiet -- increase mic_gain or speak closer
+```
+Voice at ~−43 dB FS. STT correctly returns `no transcript`.
+
+### How to resume (tomorrow)
+
+1. Read this SAVE STATE block.
+2. `git log --oneline -3` should show `745de5d` at top.
+3. Power up board, press blue button, **speak loudly within 5 cm of mic** (U21 near LCD).
+4. **If `[PCM] peak > 5000`** → STT should transcribe → move to Phase 4 (re-enable LCD, commit, push).
+5. **If `peak < 1000`** → apply 4x gain in `voice_recorder.c::StoreDmaChunk` (~L750-754). Exact diff in `~/.claude/plans/typed-honking-clover.md` Phase 3.
+6. **After STT works**: set `AUDIO_DEBUG_LCD_DISABLED 0`, verify LCD + audio coexist, commit + push.
+
+### Lessons codified
+
+- "We changed memory, look there" → believe the user, not your own analysis.
+- Bisect against known-working commit: `git stash` + `git checkout bdc7159` + flash → scope. Single data point unblocks debugging.
+- The boot self-check FAILs are false positives (reads CH1 instead of CH0).
+- Audio Quality Report (`raw[0..7]`, `peak`, `noise_rms`, `speech_rms`) is the authoritative signal.
