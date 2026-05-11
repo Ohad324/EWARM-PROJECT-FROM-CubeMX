@@ -82,7 +82,18 @@ static DMA_HandleTypeDef s_hdma_uart8_rx;
  * not extend past the end of the array into adjacent variables.
  * 128 = 4 × 32, handles messages up to 127 printable bytes.
  */
-static uint8_t s_dma_rx_buf[BLE_DMA_BUF_SIZE] __attribute__((aligned(32), section(".dma_buf")));
+/* Hard Rule #3 (section attribution). UART8 RX DMA target placed deliberately
+ * in D1 AXI SRAM. Why AXI:
+ *   - DMA1_Stream0 can write here (D1 + D2 reachable from DMA1)
+ *   - Same domain as s_rawBleQueueCB / s_rawBleQueueStorage — ISR copies from
+ *     s_dma_rx_buf into the queue storage with zero cross-bus hops
+ *   - D-Cache is enabled on AXI; SCB_InvalidateDCache_by_Addr is called in the
+ *     ISR before the memcpy, which is the canonical pattern for AXI DMA buffers
+ * Previously declared with __attribute__((section(".dma_buf"))) but ".dma_buf"
+ * had no .icf placement directive — linker silently fell back to default .bss,
+ * which happens to land in AXI but only by accident. Made deliberate. */
+#pragma location = ".axi_sram"
+static uint8_t s_dma_rx_buf[BLE_DMA_BUF_SIZE] __attribute__((aligned(32)));
 
 /* ── DMA memory region validation ───────────────────────────────────────────── */
 
@@ -107,6 +118,30 @@ void validate_dma_buffers(void)
 char              bleHistory[BLE_HIST_ROWS][BLE_HIST_COLS];
 SemaphoreHandle_t xBleHistMutex;
 QueueHandle_t     xRawBleQueue;
+
+/* Hard Rule #1 (static allocation) + Hard Rule #3 (section attribution).
+ * Queue control block, storage, and mutex CB pinned to D1 AXI SRAM
+ * (.axi_sram) at 0x24000000-region. Why D1 AXI SRAM:
+ *   - Same domain as s_dma_rx_buf (0x2407CB00 in AXI) — ISR copies from the
+ *     DMA buffer into the queue, keeping both in the same domain avoids
+ *     cross-bus traffic per send
+ *   - Heap-independent fixed address (no silent relocation if heap moves)
+ *   - DMA1/DMA2 reachable (UART RX DMA already writes to AXI here)
+ *   - High-speed M7 access; queue ops are critical-path in the UART pipeline
+ * Avoids the 2026-05-11 UART RX silent-drop regression where the heap
+ * moved between AXI and D2 SRAM1, taking xRawBleQueue with it and breaking
+ * the STM32→NORA AUDIO:READY handshake.
+ *
+ * IAR EWARM idiom: #pragma location selects the named section defined in
+ * the .icf (`place in RAM_region { section .axi_sram }`). The GCC-style
+ * __attribute__((section(...))) also works on IAR as a compatibility
+ * extension, but #pragma location is the canonical form for this toolchain. */
+#pragma location = ".axi_sram"
+static StaticQueue_t     s_rawBleQueueCB;
+#pragma location = ".axi_sram"
+static uint8_t           s_rawBleQueueStorage[4u * sizeof(BleRawMsg_t)];
+#pragma location = ".axi_sram"
+static StaticSemaphore_t s_bleHistMutexCB;
 
 /* ── Private helper ─────────────────────────────────────────────────────────── */
 
@@ -206,15 +241,15 @@ void BLE_UART_Init(void)
 
     /* ── 4. FreeRTOS objects ───────────────────────────────────────────── */
 
-    /* Internal ISR→task queue.  4 slots of BleRawMsg_t (4 × 129 = 516 bytes
-       on the heap).  4 slots absorbs a rapid burst of back-to-back BLE
-       packets without the ISR having to drop any, even if UARTReceiveTask
-       is briefly pre-empted by a TouchGFX frame. */
-    xRawBleQueue = xQueueCreate(4u, sizeof(BleRawMsg_t));
+    /* Internal ISR→task queue.  4 slots of BleRawMsg_t.  Static allocation
+       (Hard Rule #9): storage in BSS at a fixed address, independent of
+       FreeRTOS heap location. */
+    xRawBleQueue = xQueueCreateStatic(4u, sizeof(BleRawMsg_t),
+                                      s_rawBleQueueStorage, &s_rawBleQueueCB);
     configASSERT(xRawBleQueue != NULL);
 
-    /* Mutex for bleHistory read/write synchronisation. */
-    xBleHistMutex = xSemaphoreCreateMutex();
+    /* Mutex for bleHistory read/write synchronisation — static. */
+    xBleHistMutex = xSemaphoreCreateMutexStatic(&s_bleHistMutexCB);
     configASSERT(xBleHistMutex != NULL);
 
     /* Zero the history so the TouchGFX task never reads uninitialised data

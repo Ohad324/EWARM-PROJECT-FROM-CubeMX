@@ -265,6 +265,24 @@ place at address mem:0x30000000 { section .audio_buffer };
  * SRAM2_region is defined above so the linker knows this address space exists
  * and can catch any accidental overlap with future allocations. */
 
+/* ── Named section anchors for Rule #3 (Section Attribution) ──────────────
+ * Per CLAUDE.md Rule #3: any static buffer that must live in a specific
+ * domain MUST use __attribute__((section(...))) so its placement is a
+ * compile-time property of the source. These section names are the
+ * authoritative list — using any other name will fail link-time.
+ *
+ *   section .axi_sram  → D1 AXI SRAM (default .bss target; explicit tag)
+ *   section .sram1     → D2 SRAM1   (DMA1/DMA2 reachable, e.g. DFSDM extras)
+ *   section .sram2     → D2 SRAM2   (DMA1/DMA2 reachable, e.g. queues/audio)
+ *
+ * Note: existing absolute-address placements (#pragma location = 0x30000000
+ * for g_DfsdmBuf, 0x30020000 for g_AudioBuf) keep working unchanged — they
+ * bypass these section regions by design. Use named sections for everything
+ * that doesn't need a literal hardcoded address. */
+place in RAM_region    { section .axi_sram };
+place in SRAM1_region  { section .sram1 };
+place in SRAM2_region  { section .sram2 };
+
 place in QSPI_region   { section ExtFlashSection };
 place in SDRAM_region  { section Video_RGB_Buffer,
                          section .sdram_bss };

@@ -206,11 +206,58 @@ These are project rules, not suggestions:
 
 8. `xLogQueue` send timeout must be `pdMS_TO_TICKS(100)`.
 
-9. No dynamic allocation.  
-   No `malloc`, `pvPortMalloc`, `new`.  
-   Use static or global buffers only.  
-   **This includes FreeRTOS dynamic creators that call `pvPortMalloc` internally:** `xQueueCreate`, `xSemaphoreCreateMutex`, `xSemaphoreCreateBinary`, `xTaskCreate`, `xTimerCreate`, `xEventGroupCreate`, etc. **Use the static variants instead:** `xQueueCreateStatic`, `xSemaphoreCreateMutexStatic`, `xSemaphoreCreateBinaryStatic`, `xTaskCreateStatic`, `xTimerCreateStatic`, `xEventGroupCreateStatic` — each takes pre-allocated storage (`StaticQueue_t`/`StaticSemaphore_t`/`StaticTask_t` + a typed buffer). FreeRTOSConfig.h must have `configSUPPORT_STATIC_ALLOCATION = 1` for these to compile.  
-   If `xQueueCreate` (dynamic) is unavoidable in some legacy code, document why and ensure `ucHeap` is sized + located correctly. The `BLE_UART_Init` path historically used `xQueueCreate` — this is a violation that should be migrated to `xQueueCreateStatic` over time.
+9. **Hard Rule #1: Absolute Ban on Dynamic Allocation.**
+
+   **Prohibited:** `malloc()`, `calloc()`, `realloc()`, `free()`, `pvPortMalloc()`, `vPortFree()`, C++ `new` / `delete`.
+
+   **Prohibited:** Standard RTOS "Create" functions that call `pvPortMalloc` internally: `xTaskCreate`, `xQueueCreate`, `xSemaphoreCreateMutex`, `xSemaphoreCreateBinary`, `xSemaphoreCreateCounting`, `xTimerCreate`, `xEventGroupCreate`, `xStreamBufferCreate`, `xMessageBufferCreate`.
+
+   **Mandatory:** Use the Static equivalents only — `xTaskCreateStatic`, `xQueueCreateStatic`, `xSemaphoreCreateMutexStatic`, `xSemaphoreCreateBinaryStatic`, `xSemaphoreCreateCountingStatic`, `xTimerCreateStatic`, `xEventGroupCreateStatic`, `xStreamBufferCreateStatic`, `xMessageBufferCreateStatic`. Each takes pre-allocated storage (`StaticQueue_t`/`StaticSemaphore_t`/`StaticTask_t`/`StaticTimer_t`/`StaticEventGroup_t` + a typed byte buffer for queue/stream items). `FreeRTOSConfig.h` must have `configSUPPORT_STATIC_ALLOCATION = 1`.
+
+   **No exceptions.** If a dynamic creator is found in legacy code, migrate it to its static variant — do NOT just "document why" and move on. Reason: heap-location bugs are non-local and silent. A queue created via `xQueueCreate` lives wherever `pvPortMalloc` puts it, which depends on heap placement, fragmentation, and prior allocations. Moving the heap (AXI ↔ D2 SRAM1 ↔ DTCM) can silently move the queue into a region with different cache/DMA coherency, breaking ISR↔task data paths without any compile-time signal. Static storage lives at a fixed BSS address forever — heap-independent, predictable, debuggable.
+
+   **2026-05-11 incident:** UART RX silently stopped delivering NORA's `AUDIO:READY` to STM32 after the FreeRTOS heap was moved from D2 SRAM1 back to AXI SRAM (commit `745de5d`). The `xRawBleQueue` in `BLE_UART_Init` was created with `xQueueCreate` (dynamic) and ended up at a different address with different attributes. STM32→GCS pipeline timed out for 10 s; full session lost to debugging. Fix: migrate to `xQueueCreateStatic` + `xSemaphoreCreateMutexStatic`. **Treat any remaining `xQueueCreate`/`xSemaphoreCreate*` call as a latent bug, not a future cleanup.**
+
+   **Hard Rule #3: Section Attribution — Mandatory for static buffers outside default `.data`/`.bss`.**
+
+   When declaring a static buffer that must live in a specific memory region (because of MPU attributes, DMA reachability, cache policy, or domain isolation), Claude MUST explicitly attach a section attribute and state in the comment which region was chosen and why. Buffers that "just work" in default `.bss` (AXI SRAM in this project) do NOT need an attribute — but anything DMA-touched, cache-sensitive, or domain-pinned MUST be tagged.
+
+   **Syntax — IAR EWARM canonical form (prefer this):**
+   ```c
+   /* Named section — selects a region defined in stm32h747xx_flash_CM7.icf
+    * via `place in <region> { section <name> };`. This is the IAR idiom. */
+   #pragma location = ".sram2"
+   static StaticQueue_t s_queueCB;
+
+   /* Alternative IAR syntax with @ operator — equivalent to #pragma location: */
+   static uint8_t buf[N] @ ".sram2";
+
+   /* Literal absolute address — bypasses section regions entirely.
+    * Use only when a peripheral / DMA constraint demands a specific address. */
+   #pragma location = 0x30000000
+   static __no_init uint8_t dfsdm_buf[N];
+   ```
+
+   **Syntax — GCC-style attribute (also works on IAR as compatibility extension):**
+   ```c
+   __attribute__((section(".sram1"))) static uint8_t dma_buf[N];
+   __attribute__((section(".axi_sram"))) static uint8_t cpu_buf[N];
+   ```
+   Use `#pragma location` for new code; the GCC attribute is acceptable when porting from another toolchain or matching surrounding style.
+
+   **Section ↔ memory map (this project, see `EWARM/stm32h747xx_flash_CM7.icf`):**
+   | Section | Domain | Base | Size | DMA reach | Cache | Typical use |
+   |---|---|---|---|---|---|---|
+   | `.axi_sram` (default `.bss`/`.data`) | D1 | `0x24000000` | 512 KB | DMA1/DMA2/MDMA | Cacheable WB | CPU buffers, framebuffer, FreeRTOS heap |
+   | `.sram1` | D2 | `0x30000000` | 128 KB | DMA1/DMA2 | MPU Non-Cacheable+Shareable | DFSDM `s_DfsdmBuf`, audio PCM |
+   | `.sram2` | D2 | `0x30020000` | 128 KB | DMA1/DMA2 | MPU Non-Cacheable+Shareable | secondary audio, RTOS objects |
+   | `.dma_buf` (alias for D2) | D2 | `0x30040000` | 32 KB | DMA1/DMA2 | MPU Non-Cacheable+Shareable | UART DMA RX (`s_dma_rx_buf`) |
+   | (BDMA region) | D3 | `0x38000000` | 64 KB | BDMA only | MPU Non-Cacheable | SAI4 PDM (when used) |
+   | `.dtcm` | TCM | `0x20000000` | 128 KB | CPU only | Tightly coupled | kernel-critical, NEVER DMA |
+
+   **Comment requirement.** Every section-tagged buffer must have a one-line comment naming the domain and the reason. Examples in this codebase: `s_DfsdmBuf @ 0x30000000` (D3-style D2 SRAM1 for DFSDM DMA), `s_dma_rx_buf @ 0x2407CB00` (`.dma_buf`, UART8 RX DMA target). When in doubt about reachability, consult RM0399 §2 (memory map) + AN4891 (system architecture) before guessing.
+
+   **Why this matters.** STM32H7's bus matrix means a buffer that compiles fine can be silently unreachable by its DMA master. BDMA cannot reach AXI; DMA1/2 cannot reach D3 SRAM; cache lines can deliver stale data to non-coherent DMA. The section attribute is the only compile-time anchor that ties the buffer to a region — without it, a future refactor (e.g. moving the heap, adjusting MPU) can silently relocate the buffer and break the pipeline with no diagnostic signal. Pair this rule with Rule #1 (static allocation): together they make memory placement a property of the source code, not of runtime heap state.
 
 10. Do not call `Error_Handler()` for expected runtime conditions such as missing media or transient peripheral failures.  
     Log and return safely instead.
@@ -1431,3 +1478,54 @@ Voice at ~−43 dB FS. STT correctly returns `no transcript`.
 - Bisect against known-working commit: `git stash` + `git checkout bdc7159` + flash → scope. Single data point unblocks debugging.
 - The boot self-check FAILs are false positives (reads CH1 instead of CH0).
 - Audio Quality Report (`raw[0..7]`, `peak`, `noise_rms`, `speech_rms`) is the authoritative signal.
+
+---
+
+## SAVE STATE — 2026-05-11 (evening) — UART pipeline restored, STT still pending volume
+
+### What changed today (after morning's DFSDM clock fix)
+
+End-to-end audio → cloud pipeline now reaches **GCS HTTP 200** for the first time since yesterday's heap shuffle. Root cause of the regression and today's fix:
+
+1. **`xRawBleQueue` was dynamically allocated** in `BLE_UART_Init` (`xQueueCreate`). When commit `745de5d` moved the FreeRTOS heap from D2 SRAM1 back to AXI to fix DFSDM clock contention, the queue moved with it and the UART RX path broke silently — NORA's `AUDIO:READY` reply never reached `UARTReceiveTask`. Migrated to `xQueueCreateStatic` + `xSemaphoreCreateMutexStatic`, control blocks and storage pinned with `#pragma location = ".axi_sram"`.
+2. **`s_dma_rx_buf` used `__attribute__((section(".dma_buf")))`** but `.dma_buf` had no `.icf` placement — linker silently fell back to default `.bss`. Made deliberate with `#pragma location = ".axi_sram"`.
+3. **`.icf` now defines named regions** `.axi_sram` (D1 AXI), `.sram1` (D2 SRAM1), `.sram2` (D2 SRAM2) so future static buffers are deterministically placed.
+4. **Hard Rule #1 (Absolute Ban on Dynamic Allocation)** and **Hard Rule #3 (Section Attribution)** added to this file with the project's memory-region map.
+
+A separate **physical issue** masked the SW fix for several hours: the STM32↔NORA UART jumper wire was intermittently disconnected. Every `STREAM2 FAIL` with `last_err=0x00` was the wire, not the code. After reseating the wire, the static-queue firmware ran cleanly to GCS upload.
+
+### Verified successful end-to-end run (REC_010.wav)
+
+```
+T+93135  NORA received AUDIO:FILE
+T+93135  NORA sent AUDIO:READY → STM32 RX received cleanly
+T+95125  96 512 B streamed in ~2 s (~48 KB/s)
+T+95465  TLS cert validated
+T+98515  GCS upload OK (HTTP 200)
+T+101545 STT call returned "no transcript"
+```
+
+### Open issue — voice volume below STT threshold
+
+`[PCM] peak=437..684` (noise floor). STT correctly returns nothing. Tomorrow's first move: apply the queued 4× gain change in `voice_recorder.c::StoreDmaChunk`. Exact diff is preserved in `~/.claude/plans/typed-honking-clover.md` Phase 3.
+
+### Debug aids still active (REVERT before merging to main)
+
+| File | Setting | Action |
+|---|---|---|
+| `CM7/Core/Src/main.c` | `AUDIO_DEBUG_LCD_DISABLED 1` | Set to 0 after STT confirmed |
+| `CM7/Core/Src/main.c` | `videoTask` re-enabled but at `osPriorityLow` | Confirm no LCD interference once re-enabled |
+
+### How to resume
+
+1. Read this SAVE STATE block.
+2. `git log --oneline -3` — current commit is the static-queue checkpoint pushed today.
+3. Power up board, press blue PC13 button. Speak loudly within 5 cm of mic.
+4. If `[PCM] peak > 5000` → STT should transcribe. Move to Phase 4 (re-enable LCD, commit).
+5. If `peak < 1000` → apply 4× gain in `voice_recorder.c::StoreDmaChunk`. Build, flash, retest.
+
+### Methodology lessons codified
+
+- **Trust memory-related observations first.** Yesterday's heap move + today's queue allocation = same class of bug. CLAUDE.md Hard Rules #1+#3 are the deterrent.
+- **Two failures rule still applies** but **wire continuity is a valid hypothesis early** — Bug B (`STREAM2 FAIL last_err=0x00`) had zero hardware errors, which **only** matches a disconnected wire (silence) or a missing ISR (which placement audit ruled out).
+- **`#pragma location = ".name"`** is the canonical IAR idiom. GCC `__attribute__((section(".name")))` works as a compat extension but its section name must still be placed in the `.icf` or it silently falls back to default `.bss`.
