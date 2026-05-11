@@ -1529,3 +1529,95 @@ T+101545 STT call returned "no transcript"
 - **Trust memory-related observations first.** Yesterday's heap move + today's queue allocation = same class of bug. CLAUDE.md Hard Rules #1+#3 are the deterrent.
 - **Two failures rule still applies** but **wire continuity is a valid hypothesis early** — Bug B (`STREAM2 FAIL last_err=0x00`) had zero hardware errors, which **only** matches a disconnected wire (silence) or a missing ISR (which placement audit ruled out).
 - **`#pragma location = ".name"`** is the canonical IAR idiom. GCC `__attribute__((section(".name")))` works as a compat extension but its section name must still be placed in the `.icf` or it silently falls back to default `.bss`.
+
+---
+
+## SAVE STATE — 2026-05-11 (late evening) — FULL SYSTEM WORKING — LCD + AUDIO + STT
+
+### Milestone achieved
+
+**End-to-end pipeline fully operational with LCD enabled.** Commit `a303dac` pushed to OneDrive origin + GitHub mirror.
+
+```
+[BTN] PC13_PRESSED
+  → DFSDM captures 48000 samples in D2 SRAM2 (g_AudioBuf @ 0x30020000)
+  → SDWriteTask saves REC_NNN.wav to SD card
+  → UART8 TX streams 96512 bytes to NORA (STREAM2 PASS, ~48 KB/s)
+  → NORA buffers + opens GCS HTTPS
+  → GCS upload HTTP 200
+  → STT returns transcript
+  → LCD renders MusicScreen via PFB (4 strips, [PFB-TX] y=0/120/240/360)
+```
+
+All running **concurrently**. Audio sample-rate metrics clean (`dfsdm_overruns=0`, `sd_write_max_ms=11`, `buffer_misses=0`, `dma_queue_ovf=0`).
+
+### What was fixed today (session arc)
+
+**Morning (commit `745de5d`):** Restored DFSDM mic clock — gated `MX_SAI4_Init`, reverted FreeRTOS heap from D2 SRAM1 back to AXI. Scope verified 2 MHz CKOUT on PC2.
+
+**Midday (commit `4019b95`):** Fixed broken UART RX handshake. Root cause: `xRawBleQueue` in `BLE_UART_Init` was created with `xQueueCreate` (dynamic). When yesterday's heap move shuffled the queue's address, the ISR↔task path broke silently. Migrated to `xQueueCreateStatic` + `xSemaphoreCreateMutexStatic` with explicit `#pragma location = ".axi_sram"` placement. Promoted "no dynamic allocation" to **Hard Rule #1 (Absolute Ban)** and added **Hard Rule #3 (Section Attribution)** to this file.
+
+**Late evening (commit `a303dac`):** Re-enabled LCD/video tasks. Hit AXI SRAM overflow (need 264 KB, have 234 KB). Solved by:
+1. Moving SEGGER RTT buffer (16 KB up + 16 B down + CB) to **D3 SRAM4** at `0x38000000` via `#pragma location = ".sram4_rtt"`. D3 was otherwise unused (SAI4 BDMA path retired).
+2. Disabling `rtos_trace` via `#define DISABLE_RTOS_TRACE 1` in `FreeRTOSConfig.h`. Wrapped the entire `rtos_trace.c` body in `#ifdef`, linker drops the 24 KB of static ring + RTT channel-1 staging.
+
+Combined: freed ~40 KB AXI, fits LCD + video + audio + UART pipeline simultaneously.
+
+### Methodology wins worth remembering
+
+1. **Mid-session disconnect of UART jumper wire fooled us for an hour.** Symptoms (`STREAM2 FAIL last_err=0x00`) matched the static-queue bug exactly. After reseating the wire, the static-queue firmware worked first try.
+2. **`#pragma location = ".sram4_rtt"` works** for non-DMA buffers across domain boundaries. DAP reads through AHB crossbar, no special config needed. **J-Link RTT Logger needs `-rttsearchranges "0x38000000 0x10000"`** to find the CB outside default AXI scan.
+3. **Stack-shrinking does NOT free AXI** — task stacks come from `ucHeap[]`, not `.bss`. Only `configTOTAL_HEAP_SIZE` or moving the heap reduces AXI. Most savings came from `.bss` removals (rtos_trace), not stack tuning.
+4. **IAR Optimization for Size doesn't help `.bss` overflow** — it shrinks Flash `.text`, not RAM. Tried High/Size: shortfall actually grew from 25 KB to 30 KB (inlining can add scratch buffers). Documented in `docs/BUG-002_AXI_OVERFLOW_LCD_ENABLE.md` as failed option A.
+5. **Audio file analysis caught two failure modes** that looked identical from STM32 side:
+   - REC_010 = real audio, too quiet → STT no transcript → fix is gain
+   - REC_011/REC_012 = constant `-30518` samples (DFSDM seeing no PDM) → STT no transcript → fix is wire or clock
+   Python script reading the WAV's data chunk reliably distinguishes them.
+
+### Current memory map (verified in `.map`)
+
+| Region | Base | Size | Used | Notes |
+|---|---|---|---|---|
+| D1 AXI SRAM | `0x24000000` | 512 KB | ~498 KB | FB (281 KB) + ucHeap (96 KB) + .bss/.data + LCD tasks |
+| D1 DTCM | `0x20000000` | 128 KB | 12 KB | CSTACK (8 KB) + HEAP (4 KB) |
+| D2 SRAM1 | `0x30000000` | 128 KB | 512 B | `s_DfsdmBuf` @ `0x30004000` |
+| D2 SRAM2 | `0x30020000` | 128 KB | 96 KB | `g_AudioBuf` @ `0x30020000` (PCM accumulator) |
+| **D3 SRAM4** | `0x38000000` | 64 KB | **~16.1 KB** | **NEW: SEGGER RTT (up + down + CB)** |
+| External SDRAM | `0xD0000000` | 32 MB | ~5.4 MB | JPEG decode intermediates |
+
+### Hard Rule violations remaining (technical debt)
+
+None — all queue/mutex/semaphore creation in the audio + UART path is static. Other modules (TouchGFX OSWrappers, Music_Init) were already static. No `xQueueCreate` / `xSemaphoreCreateMutex` calls remain in the user-code search.
+
+### Active debug aids (none active anymore)
+
+| Setting | Status | Notes |
+|---|---|---|
+| `AUDIO_DEBUG_LCD_DISABLED` | **0** (enabled) | LCD/video tasks creating normally |
+| `DISABLE_RTOS_TRACE` | **1** (disabled) | Tracer off to save 24 KB. Re-enable if debugging concurrency. |
+
+### Bug tracker
+
+- [BUG-001](docs/BUG-001_PCM_STREAM_75PCT_TIMEOUT.md) — **CLOSED** (root cause: disconnected UART jumper wire)
+- [BUG-002](docs/BUG-002_AXI_OVERFLOW_LCD_ENABLE.md) — **CLOSED** (root cause: RTT in AXI + rtos_trace in AXI; fix: D3 SRAM4 + #ifdef gate)
+
+### Resume on next session
+
+1. Read this SAVE STATE block.
+2. `git log --oneline -3` → top should be `a303dac feat(lcd): re-enable LCD + video tasks alongside audio pipeline (FULL SYSTEM WORKING)`.
+3. Power up board, watch LCD render, press button, speak briefly. Expect STT transcript in NORA log.
+4. **Optional next steps** (no pressure):
+   - Apply 4× gain in `voice_recorder.c::StoreDmaChunk` if STT accuracy is poor due to quiet input (peak should be > 5000 for reliable transcripts)
+   - Wire the Edge Impulse wake-word SDK (already vendored, not yet hooked into VoiceRecTask)
+   - Re-enable `rtos_trace` only when actively debugging concurrency
+   - Consider gitignore additions for `.axivion-cache/`, `EWARM/runs/`, the many ad-hoc `.jlink` probe scripts, build artefacts — currently hundreds of untracked files clutter `git status`
+
+### Today's J-Link recipes worth keeping
+
+**RTT capture (D3 SRAM4 explicit search range):**
+```
+JLinkRTTLogger -device STM32H747II_M7 -if SWD -speed 4000 -rttchannel 0 \
+  -rttsearchranges "0x38000000 0x10000" <output.txt>
+```
+
+**Flash + run via JLink Commander:** `EWARM/runs/uart_debug/flash_and_run.jlink` — loads the current `.hex`, resets, runs, exits. Faster than cspybat's `--download_only` for routine flashing.
