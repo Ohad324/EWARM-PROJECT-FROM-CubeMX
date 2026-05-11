@@ -295,10 +295,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     BaseType_t higher = pdFALSE;
 
-#ifndef RELEASE_BUILD
-    /* Trigger test-thumb display on every button press (debug builds only) */
-    Music_RequestTestThumbFromISR(&higher);
-#endif
+    /* Normal pipeline: button → voice recording → NORA → PC → cloud → thumbnail back.
+     * The local test-thumb shortcut (Music_RequestTestThumbFromISR) was used during
+     * PFB pipeline bring-up (commit 8bb1ee3); removed now that the LCD is stable on
+     * AXI SRAM and we want the real round-trip pipeline to drive the LCD. */
 
     /* Only notify task if it has been created */
     if (g_State == REC_IDLE

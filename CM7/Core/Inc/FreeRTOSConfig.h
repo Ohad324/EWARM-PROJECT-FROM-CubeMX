@@ -75,11 +75,14 @@ extern uint32_t SystemCoreClock;
 #define configUSE_MINI_LIST_ITEM                ( valueNotSetted )
 #define configMINIMAL_STACK_SIZE                 ((uint16_t)128)
 #define configTOTAL_HEAP_SIZE                    ((size_t)100000)
-/* Application provides ucHeap[] storage with explicit section attribute
- * (see main.c). Lets us relocate the 100 KB heap from AXI SRAM to D2 SRAM1
- * via the .freertos_heap section in the linker .icf, freeing AXI for the
- * partial framebuffer. */
-#define configAPPLICATION_ALLOCATED_HEAP         1
+/* AUDIO BISECT 2026-05-10: heap put back to its default location
+ * (heap_4's internal xHeap array, lands in AXI SRAM .bss). The HEAD value
+ * was 1, which placed ucHeap[] in D2 SRAM1 alongside s_DfsdmBuf and made
+ * recordings silent (constant -30518). Setting back to 0 = matches the
+ * verified-working bdc7159 baseline.
+ * LCD must stay disabled (AUDIO_DEBUG_LCD_DISABLED in main.c) so the AXI
+ * framebuffer doesn't try to use the same memory as the heap. */
+#define configAPPLICATION_ALLOCATED_HEAP         0
 #define configMAX_TASK_NAME_LEN                  ( 16 )
 #define configHEAP_CLEAR_MEMORY_ON_FREE          0
 #define configUSE_TRACE_FACILITY                 1

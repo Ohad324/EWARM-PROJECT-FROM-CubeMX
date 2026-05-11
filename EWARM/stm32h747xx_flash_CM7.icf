@@ -45,8 +45,10 @@ define block HEAP      with alignment = 8, size = __ICFEDIT_size_heap__     { };
 initialize by copy { readwrite };
 do not initialize  { section .noinit, section Video_RGB_Buffer, section TouchGFX_Framebuffer,
                      section .sdram_bss,
-                     section .audio_buffer,
-                     section .freertos_heap };
+                     section .audio_buffer };
+/* AUDIO BISECT 2026-05-10: .freertos_heap section temporarily removed —
+ * heap_4 uses its internal xHeap (lands in AXI .bss) per
+ * configAPPLICATION_ALLOCATED_HEAP=0 in FreeRTOSConfig.h. */
 
 place at address mem:__ICFEDIT_intvec_start__ { readonly section .intvec };
 place at address mem:0x08100000 { section .cm4_code };
@@ -253,12 +255,10 @@ place in DTCMRAM_region { block CSTACK, block HEAP };
  * Placed via #pragma location in voice_recorder.c — section anchors the region. */
 place at address mem:0x30000000 { section .audio_buffer };
 
-/* D2 SRAM1 — FreeRTOS heap relocated here (was in AXI as 100 KB ucHeap[]).
- * Frees ~100 KB of AXI for the partial framebuffer above. SRAM1 is internal
- * D2 (~zero-wait via AHB crossbar from M7) and coexists with the 128-byte
- * .audio_buffer at 0x30000000 — heap fills the remainder. Per AN4891 system
- * architecture: heap on D2 internal RAM, framebuffer on D1 internal RAM. */
-place in SRAM1_region { section .freertos_heap };
+/* AUDIO BISECT 2026-05-10: heap relocation REVERTED. heap_4 uses internal
+ * xHeap[] (lands in AXI .bss). Original placement preserved as comment:
+ *   place in SRAM1_region { section .freertos_heap };
+ */
 
 /* D2 SRAM2 — g_AudioBuf (0x30020000, 96 KB) placed via #pragma location.
  * No section needed — absolute address placement bypasses the linker region.

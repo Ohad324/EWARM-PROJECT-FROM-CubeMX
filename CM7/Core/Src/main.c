@@ -130,14 +130,15 @@ volatile uint32_t g_logDropped = 0u;   /* incremented by Log_ToQueue on queue-fu
 static StaticQueue_t s_logQueueObj;
 static uint8_t s_logQueueStorage[32u * sizeof(LogMsg_t)];
 
-/* FreeRTOS heap relocated from AXI SRAM to D2 SRAM1 (.freertos_heap section
- * placed in SRAM1_region by the linker .icf). Frees ~100 KB of AXI SRAM
- * for the upcoming partial framebuffer at 0x24000000. configAPPLICATION_-
- * ALLOCATED_HEAP=1 in FreeRTOSConfig.h tells heap_4 to use this storage
- * instead of declaring its own. Per AN4891 STM32H7 system architecture:
- * heap on D2 internal RAM, framebuffer on D1 internal RAM. */
+/* AUDIO BISECT 2026-05-10: ucHeap[] gated out — heap_4 uses its internal
+ * xHeap array (lands in AXI SRAM .bss) per configAPPLICATION_ALLOCATED_HEAP=0
+ * in FreeRTOSConfig.h. This matches verified-working bdc7159 baseline.
+ * The previous configuration relocated heap to D2 SRAM1 next to s_DfsdmBuf,
+ * which produced silent recordings. */
+#if 0  /* ucHeap[] in D2 SRAM1 — DISABLED for audio bisect */
 uint8_t ucHeap[configTOTAL_HEAP_SIZE]
     __attribute__((section(".freertos_heap"), aligned(8)));
+#endif
 
 /* ── DFSDM Mission Control Hub — live register snapshot at 0x24070000 ──────
  * J-Link: mem32 0x24070000 10    IAR: pin address in Live Watch window.
@@ -340,9 +341,12 @@ Error_Handler();
   MX_CRC_Init();
   MX_JPEG_Init();
   MX_LIBJPEG_Init();
-  /* Path C-PC2: SAI4 retired. DFSDM drives 2 MHz CKOUT on PC2/AF6 directly.
-   * PE2 stays in reset Analog/high-Z state — no driver contention with PC2 on
-   * the wire. SAI4 init body preserved in source for revert. */
+  /* Path C-PC2 (commit 72ad9fa, 2026-04-28): SAI4 retired. DFSDM drives the
+   * 2 MHz CKOUT on PC2/AF6 directly. PE2 stays in reset Analog/high-Z state —
+   * MX_SAI4_Init() is INTENTIONALLY GATED OUT so PE2 doesn't drive 2.048 MHz
+   * (from PLL2P/MCKDIV) which would fight DFSDM CKOUT on the shared mic CLK
+   * net (PC2 ↔ STMod+ P2.3 ↔ SB36 ↔ PE2 net ↔ SB45 ↔ mic CLK).
+   * Re-enabling SAI4 here corrupts the mic clock → silent recordings. */
 #if 0
   MX_SAI4_Init();
   /* ITM: print SAIEN immediately after SAI4 init — expect 0 (not started yet) */
@@ -351,11 +355,8 @@ Error_Handler();
 #endif
   MX_UART8_Init();
   ITM_STAGE(ITM_INIT_UART8_DONE);
-#if 0   /* DEBUG ISOLATION Step 2 — disable DFSDM to silence PC2 2 MHz CKOUT
-         * (potential SDRAM crosstalk source). Restore by deleting #if 0/#endif. */
   MX_DFSDM1_Init();
   ITM_STAGE(ITM_INIT_DFSDM_DONE);
-#endif
   /* MX_TouchGFX_Init() also deferred to guiTask. It calls hal.initialize()
    * which writes LTDC's CFBAR — must run AFTER MX_LTDC_Init(). All three
    * (DSI, LTDC, TouchGFX) move together to maintain dependency order. */
@@ -387,12 +388,8 @@ Error_Handler();
   ITM_STAGE(ITM_INIT_BLEuart_DONE);
   VoiceRec_Init(); /* button EXTI + DFSDM + DMA + RTOS objects */
   ITM_STAGE(ITM_INIT_VOICEREC_DONE);
-#if 0   /* Gated for screen-only boot test (PFB Phase 2 verification).
-         * AudioSD_Init was hanging pre-kernel (suspect: SD-absent slow path,
-         * unrelated to LCD changes). Restore once boot reaches osKernelInit. */
   AudioSD_Init();    /* SDMMC1 init + FatFS mount — non-fatal if card absent       */
   ITM_STAGE(ITM_INIT_AUDIOSD_DONE);
-#endif
 
   CommandHandler_Init(); /* create CMD: message queue                              */
 
@@ -439,10 +436,16 @@ Error_Handler();
   /* PFB strip dispatch verified 2026-05-06. Tasks re-enabled for full
    * system test (Sysgo Architecture image displays via MusicScreen path). */
 
+  /* AUDIO BISECT 2026-05-10: LCD/video tasks gated OFF while we solve the
+   * '-30518 constant' DFSDM bug. Re-enable by setting the define to 0. */
+#define AUDIO_DEBUG_LCD_DISABLED 1
+
+#if !defined(AUDIO_DEBUG_LCD_DISABLED) || (AUDIO_DEBUG_LCD_DISABLED == 0)
   /* creation of TouchGFXTask */
   TouchGFXTaskHandle = osThreadNew(TouchGFX_Task, NULL, &TouchGFXTask_attributes);
 
   videoTaskHandle = osThreadNew(videoTaskFunc, NULL, &videoTask_attributes);
+#endif
 
   /* USER CODE BEGIN RTOS_THREADS */
   osThreadNew(UARTReceiveTask, NULL, &uartReceiveTask_attributes);
@@ -450,12 +453,10 @@ Error_Handler();
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1536u, NULL,
               osPriorityBelowNormal, NULL);
   ITM_STAGE(ITM_INIT_TASK_CMDHANDLER);
-#if 0   /* DEBUG ISOLATION Step 2 — don't start voice/SD-write tasks. */
   xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   ITM_STAGE(ITM_INIT_TASK_VOICEREC);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
   ITM_STAGE(ITM_INIT_TASK_SDWRITE);
-#endif
 #ifndef RELEASE_BUILD
   /* RTTLogTask STAYS — needed for RLOG output to RTT viewer */
   xTaskCreate(RTTLogTask,    "RTTLogTask",    1024u, NULL,        1u, NULL);
