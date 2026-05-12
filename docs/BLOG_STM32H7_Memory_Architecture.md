@@ -1,24 +1,64 @@
-# Memory Architecture, From The Trenches — STM32H747 + TouchGFX + FreeRTOS + Audio
+# STM32H7 Memory Architecture in Practice — A Real-World Guide for TouchGFX, FreeRTOS and DMA-Heavy Embedded Systems
 
-*A practical write-up from a real embedded project where memory placement decisions determined whether the system worked at all.*
+*Engineering notes from a voice-controlled music player built on the STM32H747I-DISCO, where memory placement decisions were the difference between a working system and a frozen LCD.*
 
-*Written for embedded software and hardware engineers working with STMicroelectronics parts — particularly those who have built (or are about to build) anything more complex than a blinky on an H7.*
+*For embedded software and hardware engineers working with STMicroelectronics MCUs — particularly anyone moving from an STM32F4 / L4 to the H7 family for the first time, or anyone debugging unexplained DMA, cache, or LCD-tearing bugs on a dual-core H7.*
 
 ---
 
-## 1. Introduction
+## 1. Introduction — Why STM32H7 Memory Architecture Matters
 
-This post is a retrospective on the memory-architecture work I did building a voice-controlled music player on an **STM32H747I-DISCO** board. The system records audio from an onboard PDM microphone, streams it over UART to an ESP32 (NORA-W106) which uploads to Google Cloud Storage, calls Google Speech-to-Text, and routes the transcript back. In parallel, a TouchGFX UI runs on the 800×480 DSI panel, with a partial-framebuffer (PFB) rendering pipeline. All of this is coordinated by FreeRTOS.
+### TL;DR
 
-I built the firmware in **IAR Embedded Workbench 9.70.2** with `cspybat` for command-line debugging via SEGGER J-Link.
+The STM32H747 is a high-end dual-core Cortex-M7 + Cortex-M4 MCU with **three independent power domains, eight SRAM regions, four DMA controllers, and a multi-master bus matrix**. Default linker placement works for trivial projects and quietly breaks for everything more complex — audio capture stutters, LCD framebuffers tear, UART RX silently drops bytes. This post documents the architectural rules that prevent those failure modes, with worked examples from a real TouchGFX + FreeRTOS + audio-streaming project. If you read only one section, read [Section 8: Hard Rules — Where Each Buffer Class Belongs](#8-hard-rules-where-each-buffer-class-belongs-on-stm32h7).
 
-You don't get a system like this working without taking memory placement seriously. The STM32H747 has **three independent power domains** with **multiple SRAM regions** that are not freely interchangeable — each DMA controller can only reach certain regions, each region has different cache behaviour, and the linker's default placement is wrong as often as it is right. Picking the correct domain for each buffer is the difference between "the screen renders" and "the screen tears every frame".
+### Motivation — the problem this post solves
 
-What you'll learn from this post: the H7's three-domain layout and the engineering reasons ST chose it; how the AHB bus matrix and MDMA tie the domains together; a concrete block diagram of one real project's tasks and buffers; how to read a linker `.map` to verify placement decisions; and a short rule book I now apply to every H7 project. Every example is from real firmware and every decision is traceable back to a `.map` file.
+If you've ever built anything beyond a hello-blink on an STM32H7, you've probably hit at least one of these:
+
+- Audio capture works on the bench but glitches every few seconds when the LCD redraws.
+- A FreeRTOS queue that worked yesterday breaks today after an unrelated refactor — and no code in your queue path changed.
+- LCD tearing or FUIF (FIFO underrun) interrupts firing during heavy CPU work, with no obvious culprit.
+- DMA transfers that "complete successfully" but the CPU reads stale data, or transmits stale data.
+- Random HardFaults that disappear when you add a `printf` for debugging.
+
+Every one of these is a **memory architecture symptom**. None of them are bugs you can find by reading the code line by line. They're bugs that come from the H7's distributed memory map being treated as a flat SRAM blob, which is the model embedded engineers carry over from simpler MCUs. The H7 doesn't work that way, and the silicon won't tell you when you've placed a buffer in a region that doesn't suit it — the compiler is silent, the linker is silent, and at runtime the bug shows up as non-deterministic glitches.
+
+This post is a practical walkthrough of how to think about H7 memory placement *before* those symptoms appear, written from the trenches of a real product. Everything here was learned the hard way; everything is traceable to a `.map` file, a register dump, or an RTT log.
+
+### A high-level overview of the STM32H747
+
+The STM32H747 is at the top end of STMicroelectronics's general-purpose Cortex-M lineup. The key specs that drive everything in this post:
+
+- **Dual-core architecture.** A Cortex-M7 main core running up to 480 MHz (400 MHz in our build for thermal headroom), plus a Cortex-M4 co-processor running up to 240 MHz. The two cores share Flash and most peripherals but each has its own L1 cache, its own NVIC, and its own bus-master ports into the system bus matrix. On this project we use the M7 exclusively; the M4 holds a stop-mode stub for future low-power offload.
+- **Three independent power domains (D1, D2, D3).** Each domain has its own clock gate, voltage regulator, and SRAM. Domains can be powered down independently, which enables low-power modes where only D3 stays alive listening for wake events.
+- **~1 MB of internal SRAM total, split across at least five distinct regions** — D1 AXI SRAM (512 KB), D2 SRAM1/2/3 (288 KB combined), D3 SRAM4 (64 KB), plus D1 DTCM (128 KB) and ITCM (64 KB) tightly coupled to the M7.
+- **2 MB Flash, dual-bank, with read-while-write support** for in-field firmware updates.
+- **Four DMA controllers** with different domain reach: MDMA (cross-domain), DMA1/DMA2 (D2-rooted, can reach D1+D2), BDMA (D3-only). Plus DMA2D for graphics blitting and dedicated IDMAs inside SDMMC and JPEG.
+- **A rich peripheral set:** dual Ethernet MAC, USB OTG HS/FS, multiple SAI (audio), DFSDM (digital filter for sigma-delta — what we use for PDM mic capture), FMC (external memory controller), QUADSPI, LTDC (LCD-TFT controller) with up to 24-bit RGB output, DSI host for MIPI-DSI panels, hardware JPEG codec, DMA2D 2D blitter, two SDMMC controllers, and the usual array of UARTs, SPIs, I2Cs, timers and ADCs.
+- **High-end Cortex-M7 features:** 16 KB + 16 KB L1 caches (instruction + data), single-precision + double-precision FPU, MPU with 16 regions, and full CoreSight trace (ETM, ITM, DWT) brought out to SWO and trace pins.
+
+### What ST built this for
+
+The H7 is targeted at applications that need MCU-level real-time determinism *and* near-MPU-level compute. The canonical use cases are: graphical user interfaces driving large colour TFT panels (TouchGFX, embedded Wizard, LVGL); industrial control with simultaneous Ethernet + CAN + motor-control PWM; high-resolution audio capture, processing and streaming (PDM mic arrays, multi-channel SAI, USB Audio Class); medical and instrumentation devices that combine signal acquisition, on-device DSP, and a touch screen; and any product where a single chip needs to drive a display, talk to a cloud, and run sensor pipelines simultaneously. This project — voice capture, cloud STT, and a TouchGFX UI on one chip — is squarely in that envelope.
+
+### The specific project this post is built from
+
+This post is a retrospective on the memory-architecture work for a voice-controlled music player built on the **STM32H747I-DISCO** development board. The STM32 records audio from the onboard MP34DT05-A PDM microphone using DFSDM in Sinc3 mode at 16 kHz, persists the WAV file to SD card via SDMMC, and streams it over UART8 to a Wi-Fi companion module that handles the cloud upload and speech-to-text call. The companion module is treated as an opaque endpoint in this post — every technical detail below concerns the STM32 side: how the audio buffers are placed, how the DMA paths are routed, how the FreeRTOS objects are pinned, and how the LCD framebuffer coexists with the audio path on the bus matrix. In parallel with audio, a TouchGFX UI renders to the 800×480 RGB DSI panel using a partial-framebuffer (PFB) strategy. FreeRTOS coordinates seven concurrent tasks on the M7: voice recording, SD-card writing, UART RX, command handling, RTT logging, TouchGFX rendering, and a low-priority video-frame task.
+
+The toolchain used throughout this post: **IAR Embedded Workbench 9.70.2** for compile + link, **`cspybat`** (IAR's command-line C-SPY runner) for headless automated debug probes, **C-SPY macros** (`.mac` files) for scripted breakpoint actions, **SEGGER J-Link** as the SWD probe, **SEGGER RTT** for zero-overhead real-time logging, and **J-Link Commander** for free-running register/memory inspection while the target runs. The combination of these tools is what made it feasible to diagnose the memory-related bugs described later in the post without ever using `printf`.
+
+### What you'll learn from this post
+
+The H7's three-domain layout and the engineering reasons ST chose it. The fixed peripheral memory map and which DMA controllers can reach which peripherals. How the AHB bus matrix and MDMA tie the domains together. A concrete block diagram of one real project's tasks and buffers. How to read a linker `.map` file to verify placement decisions. The three classes of memory collision (spatial, bus contention, cache coherency) and how to fix each. A practical workflow for debugging real-time systems with zero CPU overhead using SEGGER RTT, `cspybat`, and C-SPY macros. A short rule book I now apply to every H7 project.
+
+Every example below is from real firmware on this project and every decision is traceable back to a `.map` file or a `.icf` linker script committed to the project repository.
 
 ---
 
 ## 2. STM32H7 Memory Domain Overview
+
+![STM32H7 memory architecture diagram showing the three power domains D1 D2 D3 with their SRAMs and DMA controllers](images/stm32h7-memory-architecture-domains.png "STM32H7 memory architecture — three-domain layout (D1 core, D2 peripheral, D3 low-power)")
 
 The H747 silicon is partitioned into three power domains. Each owns its own clock gate, voltage regulator, can sleep independently, and contains its own SRAM and peripherals.
 
@@ -60,7 +100,58 @@ The names get easier once you stop reading "D1, D2, D3" as ordinal and start rea
 
 ---
 
-## 3. Bus Matrix and Domain Placement
+## 3. STM32H747 Peripheral Memory Map — Where Each Peripheral Lives
+
+Beyond the SRAM regions, every peripheral on the H747 lives at a **fixed memory address**. These addresses are baked into the silicon and never change; they're how the CPU and DMA controllers reach each peripheral's registers. Knowing this map matters for three concrete reasons: (a) choosing the right DMA controller, because each peripheral has fixed DMA request lines that pair with specific DMA streams; (b) debugging via direct memory access, because a J-Link command like `mem32 0x40017000` reads DFSDM1 channel 0's `CHCFGR1` register regardless of whether any debug symbols are loaded; and (c) understanding why peripherals in the same domain share clock-gate behaviour and power-mode reach.
+
+The table below summarises the major peripheral bus segments on the STM32H747. Each row maps an address range to its bus (APB1–4 or AHB1–4), its power domain (D1, D2, or D3), and the key peripherals living there. Numbered descriptions in sections 3.1–3.8 below explain each row in detail.
+
+| #   | Address range              | Bus     | Domain | Key peripherals living in this segment                                     |
+|-----|---------------------------|---------|--------|----------------------------------------------------------------------------|
+| 3.1 | `0x4000_0000 - 0x4000_FFFF` | APB1    | D2     | TIM2-7, TIM12-14, LPTIM1, SPI2/3, SPDIFRX, USART2/3, **UART4-8**, I2C1-3, DAC1, FDCAN |
+| 3.2 | `0x4001_0000 - 0x4001_FFFF` | APB2    | D2     | TIM1, TIM8, TIM15-17, USART1/6, SPI1/4/5, SAI1/2/3, **DFSDM1**, HRTIM      |
+| 3.3 | `0x4002_0000 - 0x4007_FFFF` | AHB1    | D2     | **DMA1, DMA2, DMAMUX1**, ADC1/2, Ethernet MAC, USB1 OTG_HS                |
+| 3.4 | `0x4800_0000 - 0x4802_FFFF` | AHB2    | D2     | DCMI, CRYP, HASH, RNG, SDMMC2                                              |
+| 3.5 | `0x5000_0000 - 0x53FF_FFFF` | AHB3    | D1     | **LTDC, MDMA, DMA2D, JPEG**, FMC, QUADSPI, SDMMC1, FLASH interface         |
+| 3.6 | `0x5800_0000 - 0x5800_3FFF` | APB4    | D3     | SYSCFG, LPUART1, SPI6, I2C4, LPTIM2/3/4/5, COMP1/2, VREFBUF, **RTC, SAI4** |
+| 3.7 | `0x5802_0000 - 0x5806_FFFF` | AHB4    | D3     | **GPIOA-K**, CRC, **BDMA**, ADC3, HSEM, **RCC, PWR**                       |
+| 3.8 | `0xE000_0000 - 0xE00F_FFFF` | Private | M7 core | NVIC, SCB, SysTick, MPU, DWT, ITM, FPB, ETM, DAP                          |
+
+### 3.1 APB1 — D2 peripheral domain, slower bus
+
+APB1 is the lower-speed peripheral bus, running at HCLK/2 (typically 100 MHz when the M7 is at 400 MHz). It hosts the bulk of general-purpose communication peripherals: the lower-numbered timers (TIM2-7 and TIM12-14), most UARTs (UART4-8, USART2/3), all I2C controllers, most SPI controllers, the DAC, FDCAN, and SPDIFRX. **UART8** on this project — the link to the Wi-Fi companion module — is mapped at `0x4000_7C00`. APB1's relatively low clock means most APB1 peripherals can be driven at line rate without contention even when D1 is heavily loaded.
+
+### 3.2 APB2 — D2 peripheral domain, faster bus
+
+APB2 also runs at HCLK/2 (100 MHz max in the typical configuration), but its peripherals are the higher-bandwidth ones: the advanced timers (TIM1, TIM8, TIM15-17, HRTIM), the fast SPI/SAI controllers, USART1/6, and crucially **DFSDM1**, which drives the PDM microphone capture on this project. DFSDM1 sits at `0x4001_7000`. Its DMA pairings route to DMA1/DMA2 channels through DMAMUX1; both of those DMA controllers live in the same D2 domain, which is why DFSDM-to-RAM transfers don't need to cross the bus matrix to reach D2 SRAM1.
+
+### 3.3 AHB1 — D2 peripheral domain, DMA + high-speed peripherals
+
+AHB1 is the high-speed peripheral bus, running at HCLK directly (200 MHz). It hosts the **DMA controllers (DMA1, DMA2)** and their request multiplexer (DMAMUX1), along with the Ethernet MAC, USB1 OTG_HS, and the first two ADCs. The DMA controllers' register banks sit at `0x4002_0000` (DMA1) and `0x4002_0400` (DMA2). When firmware writes to a DMA stream's configuration registers (CR, NDTR, M0AR, etc.), it's writing here — the actual data movement happens through the AHB-master ports of the DMA blocks, not through these register accesses.
+
+### 3.4 AHB2 — D2 peripheral domain, security + camera + SD
+
+AHB2 hosts the security/crypto block (CRYP, HASH, RNG), the digital camera interface (DCMI), and the second SD/MMC controller (SDMMC2). SDMMC2 is functionally identical to SDMMC1 (which is on AHB3 in D1) — the difference is which domain's DMA can reach it most cheaply. SDMMC2 in D2 pairs naturally with DMA1/2 in D2; SDMMC1 in D1 pairs naturally with MDMA.
+
+### 3.5 AHB3 — D1 core domain, graphics + JPEG + memory controllers
+
+AHB3 is the D1 master bus and is where the high-bandwidth memory controllers live: **FMC** (for external SDRAM, SRAM, NOR or NAND), **QUADSPI** (for external Flash), and the first SD/MMC controller (SDMMC1). AHB3 also hosts the bulk-DMA and graphics engines the M7 needs to drive the LCD pipeline: **MDMA** at `0x5200_0000` (the cross-domain master-mode DMA), **DMA2D** (the 2D blitter), the **JPEG codec**, and **LTDC** (the display controller). On this project all of them are in use: JPEG decodes the cover-art thumbnails, DMA2D blits the decoded RGB into the framebuffer, and LTDC scans the framebuffer to the DSI panel at 60 Hz.
+
+### 3.6 APB4 — D3 low-power domain
+
+APB4 is the low-power peripheral bus. Anything that needs to stay alive in Stop or Standby modes lives here: the **RTC** for time-of-day wakeups, **SAI4** for low-power audio listening (when used), **LPUART1** for low-power serial wake patterns, **LPTIM2-5** for low-power timing, and the low-speed comparators COMP1/2. All of these can run on the LSE (32.768 kHz) or LSI (~32 kHz) clock sources while the main HSE/PLL clocks are gated off — which is exactly what enables the "deep sleep, wake on event" power profile that makes the H7 suitable for battery-powered designs.
+
+### 3.7 AHB4 — D3 low-power domain, GPIO + clock + power
+
+AHB4 hosts the foundational always-on peripherals: every GPIO bank (**GPIOA-K** starting at `0x5802_0000`), the **RCC** (Reset and Clock Control) block, the **PWR** (Power Control) block, the **BDMA** (the D3-local DMA that can only reach SRAM4), ADC3, the hardware semaphore **HSEM** for dual-core synchronisation, and the CRC engine. Notably, **all GPIO control registers live in D3**. Even when you're toggling a GPIO from a D1 task running at 400 MHz, the write crosses the bus matrix into D3. For most cases this is invisible because the GPIO operation is single-cycle from the CPU's perspective, but it's worth knowing when chasing the last cycle of bit-bang timing or when a low-power mode unexpectedly stops a GPIO from responding.
+
+### 3.8 Cortex-M7 Private Peripheral Bus (PPB)
+
+The PPB isn't a chip-level bus — it's a Cortex-M7 architectural feature. The Private Peripheral Bus hosts the core's own debug and control blocks: **NVIC** (interrupt controller), **SCB** (system control block including the cache maintenance registers), SysTick, **MPU** (memory protection unit), **DWT** (data watchpoint and trace), **ITM** (instrumentation trace), FPB (flash patch and breakpoint), ETM (embedded trace macrocell), and the DAP that the J-Link probe talks to. These registers are CPU-private — they're not on any AHB or APB segment, and DMA cannot reach them. The cache-maintenance functions `SCB_CleanDCache_by_Addr` and `SCB_InvalidateDCache_by_Addr` are register writes to addresses in this region.
+
+---
+
+## 4. STM32H7 Bus Matrix and Domain Placement
 
 When working with the STM32H7, the primary architectural logic to consider is the distributed memory and bus design. Unlike simpler MCUs where memory is a single uniform block, the H7 is split into distinct domains (D1, D2, D3) connected by a complex bus matrix. To prevent system stalls or jitter, a developer must surgically place data based on its consumer. High-speed application code and graphics should live in D1-domain AXI SRAM for maximum CPU performance. Peripheral data — such as UART or SAI buffers — should ideally reside in D2-domain SRAM1/2, allowing DMA controllers to move data without competing for the CPU's local buses. Ignoring this spatial logic leads to bus contention, where a high-speed peripheral can effectively starve the CPU, causing real-time deadlocks often seen in complex multitasking projects.
 
@@ -94,15 +185,15 @@ MDMA has more sophisticated channel features than DMA1/2: it can do 2D transfers
 
 ---
 
-## 4. SW Component Block Diagram
+## 5. Software Component Block Diagram — Audio + UART + LCD Pipeline
 
-Here's how the moving parts of this specific project relate. The audio path lives entirely in D2. The UART RX queue is in D1 AXI. RTT diagnostic buffers live in D3 SRAM4. LCD framebuffer is in D1 AXI. Tasks have priorities that let `VoiceRecTask` (32) preempt almost everything, with `UARTReceiveTask` (26) close behind, and `TouchGFXTask` (High, ~24) rendering the UI in the background.
+Here's how the moving parts of this specific project relate on the STM32 side. The audio path lives entirely in D2. The UART RX queue is in D1 AXI. RTT diagnostic buffers live in D3 SRAM4. LCD framebuffer is in D1 AXI. Tasks have priorities that let `VoiceRecTask` (32) preempt almost everything, with `UARTReceiveTask` (26) close behind, and `TouchGFXTask` (High, ~24) rendering the UI in the background. The right-hand "Wi-Fi companion" branch in the diagram is intentionally simplified — what matters for this post is the STM32-side UART RX / TX path and where its buffers live.
 
 ```
 +---------------------+               +---------------------+
-|  MP34DT05-A PDM mic |               |  NORA-W106 ESP32    |
-|  CLK on PC2 (2MHz)  |               |  UART8 @ 921600     |
-|  Data on PC1        |               |  WiFi -> GCS/STT    |
+|  MP34DT05-A PDM mic |               |  Wi-Fi companion    |
+|  CLK on PC2 (2MHz)  |               |  module (opaque)    |
+|  Data on PC1        |               |  UART8 @ 921600     |
 +---------+-----------+               +---------+-----------+
           | PDM bitstream                       | UART8 RX/TX
           v                                     v
@@ -159,20 +250,20 @@ Three things are worth pointing out. **One:** the audio path lives entirely in D
 
 ---
 
-## 5. Memory Placement Audit — Reading the `.map`
+## 6. Memory Placement Audit — Reading the IAR `.map` File
 
 Understanding the STM32H747 memory architecture is essential before assigning any buffer or RTOS object to a region. The `.map` file in IAR is the final, comprehensive report generated by the linker after each build, and it is the **source of truth** for the physical location of every function and variable in the MCU's memory. While the `.icf` file acts as the blueprint or plan, the `.map` file shows the actual execution: it details exactly which address was assigned to every symbol, its size, and which memory section it belongs to.
 
 For an STM32H7 developer, this is the most essential tool for verifying that placement was successful. It allows you to confirm that DMA buffers are sitting in SRAM1 (and not accidentally in DTCM, which is inaccessible to DMA), or to ensure that your static queues are properly located in the AXI SRAM as intended. Analysing the map file is crucial for identifying memory hogs, preventing overflow, and resolving complex bus contention issues by verifying a total physical separation between different system variables.
 
-Each entry in the `.map` looks like:
+**Example `.map` entry from this project:**
 
 ```
 s_DfsdmBuf              0x30004000      0x200  Data  Lc  voice_recorder.o [5]
                         ^address        ^size              ^object file
 ```
 
-So `s_DfsdmBuf` is 512 bytes (`0x200`) at `0x30004000` — inside D2 SRAM1. That matches the `#pragma location = 0x30004000` directive in `voice_recorder.c`.
+So `s_DfsdmBuf` is 512 bytes (`0x200`) at `0x30004000` — inside D2 SRAM1. That matches the `#pragma location = 0x30004000` directive declared in our source file.
 
 ### How the IAR `.map` file helps during development
 
@@ -202,7 +293,7 @@ Five buffers in particular benefited from explicit placement. `s_DfsdmBuf` got `
 
 ---
 
-## 6. Collision Audit
+## 7. Collision Audit — Bus, Cache, and Spatial Conflicts
 
 Placement audits are necessary but not sufficient. Once every buffer is mapped to a domain, you have to check that **the right master can reach each one** and that **adjacent buffers can't trample each other**. A few specific checks I run after every significant build:
 
@@ -229,7 +320,7 @@ There's a recurring question that comes up on every new buffer: should this live
 
 ---
 
-## 7. Hard Rules — Where Each Buffer Class Belongs
+## 8. Hard Rules — Where Each Buffer Class Belongs on STM32H7
 
 | Buffer class | Required region | Why |
 |---|---|---|
@@ -249,7 +340,7 @@ The pattern: **place each buffer in the same domain as the master that drives it
 
 ---
 
-## 8. Managing the L1 Cache on STM32H7
+## 9. Managing the Cortex-M7 L1 Cache on STM32H7
 
 Managing the L1 cache on the STM32H7 (Cortex-M7) is a mandatory requirement for system reliability. The core problem is a synchronisation gap between what the CPU sees and what the hardware actually does. To achieve high performance, the CPU reads and writes data to a local, high-speed cache rather than slower physical RAM. However, peripheral DMA controllers — such as those for UART, SAI, or Ethernet — bypass this cache entirely and talk directly to the RAM.
 
@@ -267,30 +358,32 @@ There are three patterns that recur for cache management on this architecture an
 
 ---
 
-## 9. Section Attribution Cheat Sheet
+## 10. IAR Section Attribution Cheat Sheet — `#pragma location` Syntax
+
+**Example — typical placements from this project (variable names are illustrative; pick your own naming for your own project):**
 
 ```c
-/* Default .bss/.data — goes to D1 AXI SRAM by linker default */
+/* Example: default .bss/.data — goes to D1 AXI SRAM by linker default */
 static uint32_t g_counter;
 
-/* Explicit AXI placement (rare, but documents intent) */
+/* Example: explicit AXI placement (rare, but documents intent) */
 #pragma location = ".axi_sram"
 static StaticQueue_t s_queueCB;
 
-/* D2 SRAM1 — DMA1/DMA2 reachable */
+/* Example: D2 SRAM1 — DMA1/DMA2 reachable */
 #pragma location = ".sram1"
 static uint8_t s_dmaBuf[256];
 
-/* D2 SRAM2 — DMA1/DMA2 reachable */
+/* Example: D2 SRAM2 — DMA1/DMA2 reachable */
 #pragma location = ".sram2"
 static int16_t s_audioBlock[8192];
 
-/* Absolute address — for hardware-fixed buffers */
+/* Example: absolute address — for hardware-fixed buffers like the DFSDM ring */
 #pragma location = 0x30004000
 static __no_init uint32_t s_DfsdmBuf[128];
 ```
 
-For the named-section approach to work, the `.icf` must define each section's region:
+For the named-section approach to work, the `.icf` must define each section's region. **Example `.icf` snippet:**
 
 ```
 define region SRAM1_region = mem:[from 0x30000000 to 0x3001FFFF];
@@ -301,7 +394,7 @@ Without that, the named section silently falls back to default `.bss` placement,
 
 ---
 
-## 10. Debugging a Real-Time System — cspybat, C-SPY macros, and SEGGER RTT
+## 11. Debugging a Real-Time STM32H7 System — cspybat, C-SPY macros, and SEGGER RTT
 
 The hardest part of debugging real-time embedded firmware isn't finding bugs in the code — it's finding them without altering the timing of the system enough to make the bug disappear. At 400-480 MHz on a Cortex-M7, a single `printf` to a UART can stall the calling task for several milliseconds while the bytes shift out the wire. That's enough to mask a race condition, hide a priority-inversion deadlock, or smear an audio glitch across so many frames you can't localise it. The whole point of using purpose-built embedded-debug tooling is to inspect the system *without* changing its behaviour. Three tools in the IAR + SEGGER ecosystem make this practical on STM32: `cspybat`, C-SPY macros, and SEGGER RTT. They complement each other; mature projects use all three.
 
@@ -315,7 +408,11 @@ RTT (Real-Time Transfer) replaces `printf` entirely on this project. Instead of 
 
 ### C-SPY macros — programmable debugger logic
 
-The C-SPY macro language is the scripting layer that sits inside `cspybat` (or the interactive IDE). A `.mac` file can install breakpoints by symbol name, read C variables and struct fields directly (the debugger resolves symbols from the `.out`/ELF, you don't grep the `.map`), write to peripheral registers, advance the CPU between checkpoints, and emit formatted text to the log. The canonical pattern is `__setCodeBreak("MX_LTDC_Init", 0, "1", "TRUE", "onHit()")`, where `onHit()` is a macro function that dumps whatever state matters at that breakpoint and the session continues. For multi-checkpoint flows we use `__hwRunToBreakpoint(&main, 5000)` to chain advances. The macro layer is what makes C-SPY genuinely powerful versus a generic GDB session — symbol-aware breakpoints survive a rebuild (no address re-extraction), struct-field reads work without manual offset arithmetic, and the same `.mac` file can be replayed in the IDE for interactive use. There is one specific quirk to be aware of on this project: with passive `__setCodeBreak`, only the first breakpoint hit reliably runs its action under `cspybat`; for multi-BP flows we use an orchestrator (PowerShell) that runs `cspybat` once per breakpoint, substituting the target symbol via a template `.mac.tpl` file. The active `__hwRunToBreakpoint` flow doesn't have this limit.
+The C-SPY macro language is the scripting layer that sits inside `cspybat` (or the interactive IDE). A `.mac` file can install breakpoints by symbol name, read C variables and struct fields directly (the debugger resolves symbols from the `.out`/ELF, you don't grep the `.map`), write to peripheral registers, advance the CPU between checkpoints, and emit formatted text to the log. The canonical pattern is `__setCodeBreak("MX_LTDC_Init", 0, "1", "TRUE", "onHit()")`, where `onHit()` is a macro function that dumps whatever state matters at that breakpoint and the session continues. For multi-checkpoint flows we use `__hwRunToBreakpoint(&main, 5000)` to chain advances.
+
+The macro layer is what makes C-SPY genuinely powerful versus a generic GDB session — symbol-aware breakpoints survive a rebuild (no address re-extraction), struct-field reads work without manual offset arithmetic, and the same `.mac` file can be replayed in the IDE for interactive use. There is one specific quirk to be aware of on this project: with passive `__setCodeBreak`, only the first breakpoint hit reliably runs its action under `cspybat`; for multi-BP flows we use an orchestrator (PowerShell) that runs `cspybat` once per breakpoint, substituting the target symbol via a template `.mac.tpl` file. The active `__hwRunToBreakpoint` flow doesn't have this limit.
+
+> **For a deeper walkthrough of `cspybat` command syntax, the C-SPY macro language reference, the lifecycle hooks (`execUserSetup`, `execUserExit`, `execUserExecutionStopped`), the one-useful-BP-per-session quirk, and worked probe examples from this project — including boot-stage verification, LTDC pipeline checkpoints, and DFSDM register snapshots — see my dedicated post: [Debugging STM32 with cspybat and C-SPY Macros — A Practical Guide](TODO-ADD-SIGHTSYS-BLOG-LINK) on the Sightsys website.**
 
 ### Choosing the right tool for the question
 
@@ -323,7 +420,7 @@ The three tools answer different questions and don't substitute for each other. 
 
 ---
 
-## 11. References
+## 12. References
 
 - **AN4861** — LTDC peripheral, FUIF/FIFO underrun causes and bandwidth math
 - **AN4891** — STM32H7 system architecture overview. Bus matrix, domains, DMA reach
@@ -340,7 +437,7 @@ For the IAR-specific compiler syntax (`#pragma location`, `@` operator, `.icf` p
 
 ---
 
-## 12. Conclusion
+## 13. Conclusion
 
 Five rules cover most of the placement decisions on STM32H7:
 
@@ -356,4 +453,26 @@ The practical takeaway: memory placement on H7 is part of the design, not part o
 
 ---
 
+## 14. Related Reading on the Sightsys Engineering Blog
+
+If you found this STM32H7 memory architecture deep-dive useful, you'll likely find the following companion posts on the Sightsys blog directly relevant:
+
+- **[Debugging STM32 with cspybat and C-SPY Macros — A Practical Guide](TODO-ADD-CSPYBAT-BLOG-LINK)** — the full toolchain walk-through summarised in Section 11 of this post. Covers macro language syntax, lifecycle hooks, the IAR project setup, and worked examples of automated post-build probes.
+- **[TouchGFX Partial Framebuffer on STM32H7 — Eliminating LCD Tearing and FUIF](TODO-ADD-PFB-BLOG-LINK)** — the LCD pipeline architecture mentioned in Sections 5 and 7 of this post. Covers the 4-strip dispatch, DMA2D scheduling, and the DSI Command Mode integration.
+- **[FreeRTOS on Dual-Core STM32H747 — Task Priorities, Static Allocation, and the Bus Matrix](TODO-ADD-FREERTOS-BLOG-LINK)** — the RTOS side of the architecture covered briefly in Section 4 of this post. Static-queue migration, priority inversion, and the bus matrix's effect on task scheduling.
+
+---
+
+## 15. Call to Action
+
+If you're building an STM32H7 product and hitting any of the symptoms described in Section 1 — audio jitter, LCD tearing, silent DMA corruption, FreeRTOS queue weirdness — **the Sightsys engineering team works on this class of problem for a living**. We help product teams from start-ups to OEMs design memory architectures, debug bus-contention issues, integrate TouchGFX cleanly, and bring STM32H7 designs to production.
+
+**[Get in touch with Sightsys →](TODO-ADD-CONTACT-LINK)**
+
+Or subscribe to the Sightsys engineering blog (link at the top of the page) for more deep-dives on STM32, embedded debugging, and real-time architecture.
+
+---
+
 *Built and debugged with IAR Embedded Workbench 9.70.2 (`cspybat` 9.4.6.1706), SEGGER J-Link V9.30, on the STM32H747I-DISCO board.*
+
+*Author: [your name here], Sightsys engineering. Estimated reading time: 18-22 minutes.*

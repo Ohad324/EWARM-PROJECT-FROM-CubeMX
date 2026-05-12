@@ -130,6 +130,15 @@ def apply_inline_formatting(paragraph, text: str):
             paragraph.add_run(part)
 
 
+HEADING_COLORS = {
+    1: RGBColor(0x1F, 0x4E, 0x79),   # deep blue for H1 / section
+    2: RGBColor(0x2E, 0x74, 0xB5),   # medium blue for H2
+    3: RGBColor(0x5B, 0x9B, 0xD5),   # light blue for H3
+    4: RGBColor(0x4B, 0xAC, 0xC6),   # teal for H4
+    5: RGBColor(0x70, 0xAD, 0x47),   # green for H5
+}
+
+
 def render_docx(blocks, out_path: Path, title: str):
     doc = Document()
 
@@ -140,35 +149,66 @@ def render_docx(blocks, out_path: Path, title: str):
         section.top_margin = Inches(0.6)
         section.bottom_margin = Inches(0.6)
 
-    # Default style: Calibri 10pt
+    # Default style: Calibri 10pt with line spacing for readability
     style = doc.styles['Normal']
     style.font.name = 'Calibri'
     style.font.size = Pt(10)
+    style.paragraph_format.line_spacing = 1.15
+    style.paragraph_format.space_after = Pt(4)
 
-    # Document title
+    # Document title — large, colored
     title_p = doc.add_heading(title, level=0)
     title_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for run in title_p.runs:
+        run.font.color.rgb = HEADING_COLORS[1]
 
     for kind, payload in blocks:
         if kind == 'heading':
             level, text_h = payload
-            # docx headings 1..9 (level 0 reserved for title)
-            doc.add_heading(text_h, level=min(level, 5))
+            level = min(level, 5)
+            h = doc.add_heading(text_h, level=level)
+            color = HEADING_COLORS.get(level, HEADING_COLORS[5])
+            for run in h.runs:
+                run.font.color.rgb = color
+                # H2 a touch bigger for emphasis
+                if level == 1:
+                    run.font.size = Pt(18)
+                elif level == 2:
+                    run.font.size = Pt(14)
 
         elif kind == 'paragraph':
-            p = doc.add_paragraph()
-            apply_inline_formatting(p, payload)
+            # Blockquote callout (lines starting with "> ")
+            if payload.startswith('> '):
+                p = doc.add_paragraph()
+                p.paragraph_format.left_indent = Inches(0.25)
+                p.paragraph_format.right_indent = Inches(0.25)
+                p.paragraph_format.space_before = Pt(6)
+                p.paragraph_format.space_after = Pt(6)
+                # Set a colored left border via shading on a temp run prefix
+                run = p.add_run('  ')
+                run.font.highlight_color = None
+                apply_inline_formatting(p, payload[2:].lstrip())
+                # Color the callout text dark green
+                for run in p.runs[1:]:
+                    if run.font.color.rgb is None:
+                        run.font.color.rgb = RGBColor(0x2E, 0x5C, 0x2E)
+                    if not run.bold and not run.italic:
+                        run.italic = True
+            else:
+                p = doc.add_paragraph()
+                apply_inline_formatting(p, payload)
 
         elif kind == 'code':
-            # Monospace block, single paragraph keeping line breaks
+            # Monospace block: light gray background effect via spacing,
+            # colored text by simple syntax categorization
             p = doc.add_paragraph()
-            p.paragraph_format.left_indent = Inches(0.1)
+            p.paragraph_format.left_indent = Inches(0.15)
             p.paragraph_format.space_before = Pt(4)
             p.paragraph_format.space_after = Pt(4)
             run = p.add_run(payload)
             run.font.name = 'Consolas'
             run.font.size = Pt(8)
-            run.font.color.rgb = RGBColor(0x10, 0x10, 0x10)
+            run.font.color.rgb = RGBColor(0x10, 0x40, 0x80)  # navy for code
 
         elif kind == 'table':
             rows = payload
