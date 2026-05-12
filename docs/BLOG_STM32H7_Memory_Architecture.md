@@ -426,18 +426,26 @@ The three tools answer different questions and don't substitute for each other. 
 
 ## 12. References
 
-- **AN4861** — LTDC peripheral, FUIF/FIFO underrun causes and bandwidth math
-- **AN4891** — STM32H7 system architecture overview. Bus matrix, domains, DMA reach
-- **AN5215** — Memory bandwidth and performance numbers
-- **AN5405** — Cache and coherency on Cortex-M7. Required reading
-- **RM0399** — Reference manual. Chapter 2 (memory map), chapter 8 (RCC), bus-matrix appendix
-- **UM2411** — SAI peripheral, PDM input mode
-- **SEGGER RTT documentation** — wire protocol, control-block layout, host tools
-- **SEGGER J-Link/J-Trace User Guide (UM08001)** — J-Link Commander commands, SWO, RTT
-- **IAR C-SPY Debugging Guide (UCSARM-26)** — macro language reference, cspybat invocation
-- **IAR Linker and Library Tools Reference Guide** — `.icf` syntax, section placement, `#pragma location`
+### Official STMicroelectronics documentation (all available on st.com)
 
-For the IAR-specific compiler syntax (`#pragma location`, `@` operator, `.icf` placement directives), the **IAR C/C++ Development Guide** ships with EWARM.
+All of the application notes (AN) and reference manuals (RM, UM) below are published by STMicroelectronics on their official website (`www.st.com`). Each document is downloadable for free; search the document number on the ST site to get the latest revision.
+
+- **AN4861 — LCD-TFT display controller (LTDC) on STM32 MCUs** (STMicroelectronics application note). FUIF / FIFO underrun causes, framebuffer bandwidth math, recommended memory placement for LTDC scan-out. Available at `www.st.com`.
+- **AN4891 — STM32H7 system architecture and performance** (STMicroelectronics application note). The canonical reference for the H7's bus matrix, the three power domains, and DMA-master reach across regions. Available at `www.st.com`.
+- **AN5215 — DMA controllers on STM32H7 MCUs** (STMicroelectronics application note). Memory bandwidth, performance numbers, master arbitration. Available at `www.st.com`.
+- **AN5405 — Managing memory protection unit in STM32 MCUs** and the related cache-coherency guidance (STMicroelectronics application note). Required reading for the Cortex-M7 D-cache + DMA interaction described in Section 9. Available at `www.st.com`.
+- **AN5027 — Interfacing PDM digital microphones using STM32 MCUs** (STMicroelectronics application note). PDM clock and decimation pairing, mic-clock physics, AN5027 §2.4.2 on the shared-source rule. Available at `www.st.com`.
+- **RM0399 — STM32H745/755 and STM32H747/757 advanced Arm-based 32-bit MCUs reference manual** (STMicroelectronics reference manual). Chapter 2 (memory map), chapter 8 (RCC), the bus-matrix appendix, and chapter 60 (DBGMCU) are the relevant sections for this post. Available at `www.st.com`.
+- **UM2411 — STM32H7 SAI (serial audio interface)** (STMicroelectronics user manual). PDM input mode, SAI4 register-level detail. Available at `www.st.com`.
+
+### Tool-vendor documentation
+
+- **SEGGER RTT documentation** (SEGGER Microcontroller) — wire protocol, control-block layout, host tools. Available at `www.segger.com`.
+- **SEGGER J-Link / J-Trace User Guide (UM08001)** (SEGGER Microcontroller) — J-Link Commander commands, SWO, RTT, scripted batch invocation. Available at `www.segger.com`.
+- **IAR C-SPY Debugging Guide (UCSARM-26)** (IAR Systems) — macro language reference, cspybat invocation, lifecycle hooks. Available at `www.iar.com`.
+- **IAR Linker and Library Tools Reference Guide** (IAR Systems) — `.icf` linker-config syntax, section placement, `#pragma location` semantics. Available at `www.iar.com`.
+
+For the IAR-specific compiler syntax (`#pragma location`, `@` placement operator, `.icf` directives), the **IAR C/C++ Development Guide** ships with every EWARM installation under the `doc/` subdirectory.
 
 ---
 
