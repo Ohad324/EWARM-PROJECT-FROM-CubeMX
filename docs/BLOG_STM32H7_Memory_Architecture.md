@@ -2,6 +2,8 @@
 
 *A practical write-up from a real embedded project where memory placement decisions determined whether the system worked at all.*
 
+*Written for embedded software and hardware engineers working with STMicroelectronics parts — particularly those who have built (or are about to build) anything more complex than a blinky on an H7.*
+
 ---
 
 ## 1. Introduction
@@ -299,7 +301,29 @@ Without that, the named section silently falls back to default `.bss` placement,
 
 ---
 
-## 10. References
+## 10. Debugging a Real-Time System — cspybat, C-SPY macros, and SEGGER RTT
+
+The hardest part of debugging real-time embedded firmware isn't finding bugs in the code — it's finding them without altering the timing of the system enough to make the bug disappear. At 400-480 MHz on a Cortex-M7, a single `printf` to a UART can stall the calling task for several milliseconds while the bytes shift out the wire. That's enough to mask a race condition, hide a priority-inversion deadlock, or smear an audio glitch across so many frames you can't localise it. The whole point of using purpose-built embedded-debug tooling is to inspect the system *without* changing its behaviour. Three tools in the IAR + SEGGER ecosystem make this practical on STM32: `cspybat`, C-SPY macros, and SEGGER RTT. They complement each other; mature projects use all three.
+
+### SEGGER RTT — zero-overhead real-time logging
+
+RTT (Real-Time Transfer) replaces `printf` entirely on this project. Instead of writing bytes to a UART peripheral, the firmware writes them to a ring buffer in target RAM. The J-Link probe, attached via SWD, reads the ring buffer over the DAP (Debug Access Port) at roughly 1 ms intervals and streams the bytes to a host-side viewer (`JLinkRTTViewer.exe`) or logger (`JLinkRTTLogger.exe`). The cost on the target side is one cache-line write per message and an atomic increment of the write index — a handful of CPU cycles, no peripheral involvement, no interrupts, no scheduling impact. We use this for every `RLOG()` call in the firmware. The boot log, per-PING health counters, audio quality reports, DFSDM self-checks, and STREAM2/3 handshake markers all flow through RTT channel 0. On this project the RTT control block and ring buffer sit in D3 SRAM4 (`0x38000000`) — completely outside the main AXI memory where the application's data lives. J-Link's RAM-scan finds the `"SEGGER RTT"` magic signature there at session start, and from then on the RTT channel is "free" in the sense that turning it off would not give us a faster boot or a roomier AXI. For long captures, `JLinkRTTLogger.exe -rttsearchranges "0x38000000 0x10000" -rttchannel 0 log.txt` writes the channel directly to a file without holding a debug session open.
+
+### `cspybat` — command-line C-SPY for automated probes
+
+`cspybat` is IAR's headless invocation of the C-SPY debug engine. It loads a `.out` file, attaches the configured probe (J-Link, in our case), runs a macro file, and exits — all from a shell prompt or batch script. The killer use case is **automated post-build verification**: every time the firmware is built, a CI step (or a developer's `.bat` file) can run a probe that flashes the binary, lets it boot, halts at a known function, dumps the relevant peripheral registers and global variables, and writes a log file the developer reads. No human in the loop. On this project we have probe scripts for boot-stage verification (25 checkpoints across `MX_*_Init`), PFB strip dispatch verification, LTDC/DSI pipeline state, and DFSDM register snapshot capture at button-press EXTI. Each one is a one-line invocation of `cspybat.exe ... --macro=probe.mac > log.txt`. The boot probe alone has caught a dozen regressions over the project's lifetime — clock-tree misconfigurations, MPU regions that drifted, peripheral init order that broke after a CubeMX regenerate — all without anyone opening the IAR IDE.
+
+### C-SPY macros — programmable debugger logic
+
+The C-SPY macro language is the scripting layer that sits inside `cspybat` (or the interactive IDE). A `.mac` file can install breakpoints by symbol name, read C variables and struct fields directly (the debugger resolves symbols from the `.out`/ELF, you don't grep the `.map`), write to peripheral registers, advance the CPU between checkpoints, and emit formatted text to the log. The canonical pattern is `__setCodeBreak("MX_LTDC_Init", 0, "1", "TRUE", "onHit()")`, where `onHit()` is a macro function that dumps whatever state matters at that breakpoint and the session continues. For multi-checkpoint flows we use `__hwRunToBreakpoint(&main, 5000)` to chain advances. The macro layer is what makes C-SPY genuinely powerful versus a generic GDB session — symbol-aware breakpoints survive a rebuild (no address re-extraction), struct-field reads work without manual offset arithmetic, and the same `.mac` file can be replayed in the IDE for interactive use. There is one specific quirk to be aware of on this project: with passive `__setCodeBreak`, only the first breakpoint hit reliably runs its action under `cspybat`; for multi-BP flows we use an orchestrator (PowerShell) that runs `cspybat` once per breakpoint, substituting the target symbol via a template `.mac.tpl` file. The active `__hwRunToBreakpoint` flow doesn't have this limit.
+
+### Choosing the right tool for the question
+
+The three tools answer different questions and don't substitute for each other. **RTT** answers "what is the firmware doing right now?" — continuous narrative trace. **`cspybat` + C-SPY macros** answer "what is the state at this specific symbol when execution reaches it?" — symbol-resolved snapshots. **J-Link Commander** (a fourth tool we use but didn't expand on here) answers "what is in this memory address while the target keeps running?" — free-running memory reads with no halt. Together they replace `printf` debugging entirely. On a 400 MHz Cortex-M7 running a partial-framebuffer LCD pipeline alongside live audio capture, `printf` was never going to be the right answer. RTT plus C-SPY plus J-Link memory probing is.
+
+---
+
+## 11. References
 
 - **AN4861** — LTDC peripheral, FUIF/FIFO underrun causes and bandwidth math
 - **AN4891** — STM32H7 system architecture overview. Bus matrix, domains, DMA reach
@@ -307,13 +331,16 @@ Without that, the named section silently falls back to default `.bss` placement,
 - **AN5405** — Cache and coherency on Cortex-M7. Required reading
 - **RM0399** — Reference manual. Chapter 2 (memory map), chapter 8 (RCC), bus-matrix appendix
 - **UM2411** — SAI peripheral, PDM input mode
-- **SEGGER RTT** documentation — for the J-Link RTT integration
+- **SEGGER RTT documentation** — wire protocol, control-block layout, host tools
+- **SEGGER J-Link/J-Trace User Guide (UM08001)** — J-Link Commander commands, SWO, RTT
+- **IAR C-SPY Debugging Guide (UCSARM-26)** — macro language reference, cspybat invocation
+- **IAR Linker and Library Tools Reference Guide** — `.icf` syntax, section placement, `#pragma location`
 
-For the IAR-specific syntax (`#pragma location`, `@` operator, `.icf` placement directives), see the **IAR C/C++ Development Guide** and the **IAR Linker and Library Tools Reference Guide** that ship with EWARM.
+For the IAR-specific compiler syntax (`#pragma location`, `@` operator, `.icf` placement directives), the **IAR C/C++ Development Guide** ships with EWARM.
 
 ---
 
-## 11. Conclusion
+## 12. Conclusion
 
 Five rules cover most of the placement decisions on STM32H7:
 
