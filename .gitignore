@@ -26,3 +26,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 *.elf
+
+# Large doc moved to OneDrive (755 MB, exceeds GitHub 100 MB limit)
+# Stored at: C:/Users/Ohad/OneDrive - sightsys/STM32H747-SCREEN/large-docs/
+docs/ITM_HARDWARE_TRACING_GUIDE.doc
