@@ -4,6 +4,81 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## SAVE STATE — 2026-05-14 (00:10) — Build linked with EON+int8, continuous wake-word loop is the next big step
+
+### What's working now (commit fd88140 on OneDrive)
+
+- EON+int8 export integrated and linked cleanly. 0 errors, .out + .hex produced.
+- `s_ei_pool` = **96 KB** in `.sram1` at `0x30000000` (~33 KB margin over the observed 63 KB peak).
+- `tensor_arena` (~2 KB) at `0x30018000` (top of SRAM1). ~30 KB free SRAM1 region tail.
+- `s_DfsdmBuf` moved to D2 SRAM2 (`0x3003B800`) so SRAM1 is pool+arena only.
+- Hard Rule #1 compliance: bump allocator over static pool, no real malloc.
+- EON+int8 cut MFCC scratch peak from 110 KB → 63 KB (43% reduction).
+- 755 MB `docs/ITM_HARDWARE_TRACING_GUIDE.doc` moved out of repo to user's OneDrive
+  at `C:/Users/Ohad/OneDrive - sightsys/STM32H747-SCREEN/large-docs/`. .gitignore prevents re-add.
+- GitHub mirror is OUT OF SYNC (commit f76f95e still contains the 720 MB blob — needs
+  `git filter-repo` to remove from history before github will accept it). OneDrive is current.
+
+### What's NOT yet done
+
+- **Classifier never actually ran on-device** because the current architecture is
+  **button-triggered post-recording** — user pressed nothing tonight, so no
+  `WakeWordTest_Trigger` call → `WakeWordTest_OnIdle` bailed at the pending-flag gate.
+- We never saw `[EI] classify START` or `HEY NOA <pct>` / `Noise <pct>` lines.
+- Model correctness (does it actually recognize "Hey Noa"?) is unverified.
+
+### User's actual goal — continuous wake-word listening, NOT button
+
+User stated explicitly: "I am not looking to test a button." The real target is:
+
+1. **DFSDM in circular DMA mode** (currently one-shot triggered by PC13 ISR)
+2. **Rolling 1-second window** maintained in `g_AudioBuf` (or new dedicated buffer)
+3. **Idle hook classifies every ~100-250 ms** on the latest 16,000 samples
+4. **On `HEY NOA > threshold` (e.g. 70%)** → take action (trigger recording flow,
+   blink LED, etc.)
+5. CPU-load budget: classifier currently uses ~20-40 ms per inference; running at
+   4-10 Hz adds noticeable load but should still leave room for TouchGFX +
+   audio + UART pipeline.
+
+Estimated effort: 1-2 hours for the refactor.
+
+### How to resume tomorrow
+
+1. Read this SAVE STATE block.
+2. `git log --oneline -3` — top should be `fd88140` (doc removal) or `f76f95e` (EI integration).
+3. **Optional quick sanity check**: power up, press PC13 button, say "Hey Noa", wait 4 sec.
+   Look in Terminal I/O for `[EI] classify START` → `HEY NOA <pct>` / `Noise <pct>`.
+   If percentages look sane (e.g. HEY NOA > 50 when said clearly, < 30 when silent) →
+   model works → proceed to continuous refactor with confidence.
+4. **Start continuous wake-word refactor:**
+   - Change `MX_DFSDM1_Init` (in `main.c` or wherever) from `DMA_NORMAL` to `DMA_CIRCULAR`
+   - Switch DFSDM half-complete / full-complete callbacks to maintain a rolling
+     1-second window (16000 samples × 2 bytes = 32 KB) in PCM-converted form
+   - In `WakeWordTest_OnIdle`: replace the `s_classifyPending` gate with a
+     time-or-counter-based gate (e.g. classify if `(HAL_GetTick() - last_class_ms) > 250`)
+   - Add a detection threshold + RLOG on hit
+   - Decide what "hit" does — for first pass, just RLOG the detection. Then later
+     wire it to the recording flow.
+
+### Methodology lessons codified TODAY
+
+- **"Don't size to the edge"** (feedback memory) — sizing buffers to observed peak without
+  margin caused 5 rebuild cycles tonight. Always 2× the peak or natural boundary.
+- **"Make vs Rebuild All"** (feedback memory) — Make for small edits (10-30s), Rebuild All
+  only when preprocessor defines change or files added/removed.
+- **`#pragma` only, no GCC attributes** for new section/alignment placement (Hard Rule #3 update).
+- **EI bump-allocator pattern is correct but needs precise pool sizing** — Studio's
+  Peak RAM estimate is approximate (4× off in our case due to alignment + non-CMSIS path).
+  Definitive sizing comes from `s_ei_pool_high` after a successful inference on the real chip.
+
+### Open question for tomorrow
+
+The `ei_postprocessing_common.h:56` cast patch we applied tonight will be overwritten
+every time the user re-exports from Edge Impulse. Worth considering: keep a `patches/`
+folder with a script to re-apply known fixes after each EON re-export. Low priority.
+
+---
+
 ## SAVE STATE — 2026-05-13 (evening) — Edge Impulse "Hey Noa" MFCC blocked on pool size, model needs EON+int8 optimization
 
 ### Where we left off
