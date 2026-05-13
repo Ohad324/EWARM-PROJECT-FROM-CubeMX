@@ -1,6 +1,8 @@
-# STM32H7 Memory Architecture in Practice — A Real-World Guide for TouchGFX, FreeRTOS and DMA-Heavy Embedded Systems
+# STM32H7 Memory Architecture in Practice
 
-*Engineering notes from a voice-controlled music player built on the STM32H747I-DISCO, where memory placement decisions were the difference between a working system and a frozen LCD.*
+*A real-world guide for TouchGFX, FreeRTOS and DMA-heavy embedded systems.*
+
+*Engineering notes from a Music Player by Voice Command, built on the STM32H747I-DISCO, where memory placement decisions were the difference between a working system and a frozen LCD.*
 
 *For embedded software and hardware engineers working with STMicroelectronics MCUs — particularly anyone moving from an STM32F4 / L4 to the H7 family for the first time, or anyone debugging unexplained DMA, cache, or LCD-tearing bugs on a dual-core H7.*
 
@@ -8,9 +10,9 @@
 
 ## 1. Introduction — Why STM32H7 Memory Architecture Matters
 
-### TL;DR
+### At a glance
 
-The STM32H747 is a high-end dual-core Cortex-M7 + Cortex-M4 MCU with **three independent power domains, eight SRAM regions, four DMA controllers, and a multi-master bus matrix**. Default linker placement works for trivial projects and quietly breaks for everything more complex — audio capture stutters, LCD framebuffers tear, UART RX silently drops bytes. This post documents the architectural rules that prevent those failure modes, with worked examples from a real TouchGFX + FreeRTOS + audio-streaming project. If you read only one section, read [Section 8: Hard Rules — Where Each Buffer Class Belongs](#8-hard-rules-where-each-buffer-class-belongs-on-stm32h7).
+The STM32H747 is a high-end dual-core Cortex-M7 + Cortex-M4 MCU with **three independent power domains, eight SRAM regions, four DMA controllers, and a multi-master bus matrix**. Default linker placement works for trivial projects and quietly breaks for everything more complex — audio capture stutters, LCD framebuffers tear, UART RX silently drops bytes. This post documents the architectural rules that prevent those failure modes, with worked examples from a real product: **a Music Player by Voice Command**, built end-to-end on the STM32H747I-DISCO with TouchGFX on the LCD, FreeRTOS coordinating audio capture, SD persistence, UART streaming to a Wi-Fi companion, and cloud Speech-to-Text. The cloud connection itself was handled by a **u-blox NORA-W106-00B Wi-Fi/Bluetooth module** (ESP32-S3 inside, no PSRAM on this variant) acting as the STM32's Wi-Fi front-end; the NORA receives audio over UART from the STM32, opens a TLS session, and uploads to Google Cloud Storage + Speech-to-Text. If you read only one section, read [Section 8: Hard Rules — Where Each Buffer Class Belongs](#8-hard-rules-where-each-buffer-class-belongs-on-stm32h7).
 
 ### Motivation — the problem this post solves
 
@@ -24,7 +26,7 @@ If you've ever built anything beyond a hello-blink on an STM32H7, you've probabl
 
 Every one of these is a **memory architecture symptom**. None of them are bugs you can find by reading the code line by line. They're bugs that come from the H7's distributed memory map being treated as a flat SRAM blob, which is the model embedded engineers carry over from simpler MCUs. The H7 doesn't work that way, and the silicon won't tell you when you've placed a buffer in a region that doesn't suit it — the compiler is silent, the linker is silent, and at runtime the bug shows up as non-deterministic glitches.
 
-This post is a practical walkthrough of how to think about H7 memory placement *before* those symptoms appear, written from the trenches of a real product. Everything here was learned the hard way; everything is traceable to a `.map` file, a register dump, or an RTT log.
+This post is a practical walkthrough of how to think about H7 memory placement *before* those symptoms appear, written from the trenches of a real product. Everything here was learned the hard way; everything is traceable to a `.map` file, a register dump, or an RTT log. That said, the fact that we used excellent tools from **IAR** (Embedded Workbench, `cspybat`, C-SPY macros) and **SEGGER** (J-Link, RTT, RTT Viewer, J-Link Commander) made it dramatically simpler to debug each issue and pinpoint exactly where the fault was — without those tools, the same investigation would have taken days instead of hours.
 
 ### A high-level overview of the STM32H747
 
@@ -32,7 +34,7 @@ The STM32H747 is at the top end of STMicroelectronics's general-purpose Cortex-M
 
 - **Dual-core architecture.** A Cortex-M7 main core running up to 480 MHz (400 MHz in our build for thermal headroom), plus a Cortex-M4 co-processor running up to 240 MHz. The two cores share Flash and most peripherals but each has its own L1 cache, its own NVIC, and its own bus-master ports into the system bus matrix. On this project we use the M7 exclusively; the M4 holds a stop-mode stub for future low-power offload.
 - **Three independent power domains (D1, D2, D3).** Each domain has its own clock gate, voltage regulator, and SRAM. Domains can be powered down independently, which enables low-power modes where only D3 stays alive listening for wake events.
-- **~1 MB of internal SRAM total, split across at least five distinct regions** — D1 AXI SRAM (512 KB), D2 SRAM1/2/3 (288 KB combined), D3 SRAM4 (64 KB), plus D1 DTCM (128 KB) and ITCM (64 KB) tightly coupled to the M7.
+- **1 056 KB of internal SRAM total, split across at least five distinct regions** — D1 AXI SRAM (512 KB), D2 SRAM1/2/3 (128 + 128 + 32 = 288 KB combined), D3 SRAM4 (64 KB), plus D1 DTCM (128 KB) and ITCM (64 KB) tightly coupled to the M7. There is also a 4 KB battery-backed SRAM in the D3 backup region for state that survives across power loss.
 - **2 MB Flash, dual-bank, with read-while-write support** for in-field firmware updates.
 - **Four DMA controllers** with different domain reach: MDMA (cross-domain), DMA1/DMA2 (D2-rooted, can reach D1+D2), BDMA (D3-only). Plus DMA2D for graphics blitting and dedicated IDMAs inside SDMMC and JPEG.
 - **A rich peripheral set:** dual Ethernet MAC, USB OTG HS/FS, multiple SAI (audio), DFSDM (digital filter for sigma-delta — what we use for PDM mic capture), FMC (external memory controller), QUADSPI, LTDC (LCD-TFT controller) with up to 24-bit RGB output, DSI host for MIPI-DSI panels, hardware JPEG codec, DMA2D 2D blitter, two SDMMC controllers, and the usual array of UARTs, SPIs, I2Cs, timers and ADCs.
@@ -40,7 +42,7 @@ The STM32H747 is at the top end of STMicroelectronics's general-purpose Cortex-M
 
 ### What ST built this for
 
-The H7 is targeted at applications that need MCU-level real-time determinism *and* near-MPU-level compute. The canonical use cases are: graphical user interfaces driving large colour TFT panels (TouchGFX, embedded Wizard, LVGL); industrial control with simultaneous Ethernet + CAN + motor-control PWM; high-resolution audio capture, processing and streaming (PDM mic arrays, multi-channel SAI, USB Audio Class); medical and instrumentation devices that combine signal acquisition, on-device DSP, and a touch screen; and any product where a single chip needs to drive a display, talk to a cloud, and run sensor pipelines simultaneously. This project — voice capture, cloud STT, and a TouchGFX UI on one chip — is squarely in that envelope.
+The H7 is targeted at applications that need MCU-level real-time determinism *and* near-MPU-level compute. The canonical use cases are: graphical user interfaces driving large colour TFT panels (TouchGFX, Embedded Wizard, LVGL, **Crank Storyboard**); industrial control with simultaneous Ethernet + CAN + motor-control PWM; high-resolution audio capture, processing and streaming (PDM mic arrays, multi-channel SAI, USB Audio Class); medical and instrumentation devices that combine signal acquisition, on-device DSP, and a touch screen; and any product where a single chip needs to drive a display, talk to a cloud, and run sensor pipelines simultaneously. This project — voice capture, cloud STT, and a TouchGFX UI on one chip — is squarely in that envelope.
 
 ### The specific project this post is built from
 
@@ -62,39 +64,25 @@ Every example below is from real firmware on this project and every decision is 
 
 The H747 silicon is partitioned into three power domains. Each owns its own clock gate, voltage regulator, can sleep independently, and contains its own SRAM and peripherals.
 
-```
-+-----------------------------------------------------------------------+
-|  D1 — CORE DOMAIN  (always-on while M7 runs)                         |
-|  CPU:  Cortex-M7 @ up to 480 MHz                                      |
-|  DMA:  MDMA (cross-domain), DMA2D (graphics, D1-only)                 |
-|  RAM:                                                                 |
-|    Flash       0x08000000   1 MB    code + read-only data             |
-|    ITCM        0x00000000   64 KB   M7 instruction-side, no DMA reach |
-|    DTCM        0x20000000   128 KB  M7 data-side, no DMA reach        |
-|    AXI SRAM    0x24000000   512 KB  DMA1/DMA2/MDMA accessible         |
-+-----------------------------------------------------------------------+
-                          | AHB bus matrix crossbar
-+-----------------------------------------------------------------------+
-|  D2 — PERIPHERAL DOMAIN                                               |
-|  CPU:  Cortex-M4 @ up to 240 MHz (unused on this project)             |
-|  DMA:  DMA1 (audio path), DMA2 (SDMMC bounce, generic)                |
-|  Peripherals: DFSDM1, SDMMC1/2, SAI1-3, SPI, I2C, USART, USB, UART8   |
-|  RAM:                                                                 |
-|    SRAM1       0x30000000   128 KB  DMA1/DMA2 reachable               |
-|    SRAM2       0x30020000   128 KB  DMA1/DMA2 reachable               |
-|    SRAM3       0x30040000   32 KB   DMA1/DMA2 reachable               |
-+-----------------------------------------------------------------------+
-                          | silicon bridges where they exist
-+-----------------------------------------------------------------------+
-|  D3 — LOW-POWER DOMAIN  (can stay alive while D1+D2 are halted)       |
-|  CPU:  none                                                           |
-|  DMA:  BDMA (D3-local only)                                           |
-|  Peripherals: SAI4, LPTIM, RTC, LPUART, ADC3, DAC, I2C4, SPI6         |
-|  RAM:                                                                 |
-|    SRAM4       0x38000000   64 KB                                     |
-|    Backup      0x38800000   4 KB    battery-backed across power loss  |
-+-----------------------------------------------------------------------+
-```
+**Table 2.1 — STM32H7 power domains side-by-side**
+
+| Aspect                | **D1 — Core Domain**                                                                | **D2 — Peripheral Domain**                                                          | **D3 — Low-Power Domain**                                                  |
+|-----------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| **Always-on?**        | Yes, while M7 runs                                                                  | Active when a D2 peripheral runs                                                    | Can stay alive when D1 + D2 are halted                                     |
+| **Resident CPU**      | Cortex-M7 @ up to 480 MHz                                                           | Cortex-M4 @ up to 240 MHz *(shut down on this project)*                             | None                                                                       |
+| **Active master on this project** | Cortex-M7 — the main application core                                   | Cortex-M7 — reaches every D2 peripheral + SRAM via the bus matrix (M4 is held in stop-mode stub) | Cortex-M7 — reaches every D3 peripheral + SRAM via the bus matrix          |
+| **DMA controllers**   | MDMA (cross-domain), DMA2D (graphics, D1-only)                                      | DMA1 (audio path), DMA2 (SDMMC bounce, generic)                                     | BDMA (D3-local only)                                                       |
+| **Key peripherals**   | JPEG codec, FMC, QUADSPI, LTDC                                                      | DFSDM1, SDMMC1/2, SAI1-3, SPI, I2C, USART, USB, UART8                              | SAI4, LPTIM, RTC, LPUART, ADC3, DAC, I2C4, SPI6                            |
+| **Flash / ROM**       | `0x0800_0000`, 1 MB, code + read-only data                                          | —                                                                                   | —                                                                          |
+| **ITCM**              | `0x0000_0000`, 64 KB, M7 instruction-side, no DMA reach                             | —                                                                                   | —                                                                          |
+| **DTCM**              | `0x2000_0000`, 128 KB, M7 data-side, no DMA reach                                   | —                                                                                   | —                                                                          |
+| **AXI SRAM**          | `0x2400_0000`, 512 KB, DMA1/DMA2/MDMA accessible                                    | —                                                                                   | —                                                                          |
+| **D2 SRAM1**          | —                                                                                   | `0x3000_0000`, 128 KB, DMA1/DMA2 reachable                                          | —                                                                          |
+| **D2 SRAM2**          | —                                                                                   | `0x3002_0000`, 128 KB, DMA1/DMA2 reachable                                          | —                                                                          |
+| **D2 SRAM3**          | —                                                                                   | `0x3004_0000`, 32 KB, DMA1/DMA2 reachable                                           | —                                                                          |
+| **D3 SRAM4**          | —                                                                                   | —                                                                                   | `0x3800_0000`, 64 KB, BDMA-only                                            |
+| **Backup SRAM**       | —                                                                                   | —                                                                                   | `0x3880_0000`, 4 KB, battery-backed across power loss                      |
+| **Connects via**      | AXI bus + AHB bus matrix crossbar to D2 and D3                                      | AHB bus matrix crossbar to D1 and to D2 SRAMs                                       | Silicon bridges where they exist; otherwise reachable via the bus matrix   |
 
 The names get easier once you stop reading "D1, D2, D3" as ordinal and start reading them as **purpose**: **D1 is for processing**, **D2 is for peripherals**, **D3 is for whatever has to stay alive when most of the chip is asleep**. Everything else falls out of that.
 
@@ -116,6 +104,27 @@ The table below summarises the major peripheral bus segments on the STM32H747. E
 | 3.6 | `0x5800_0000 - 0x5800_3FFF` | APB4    | D3     | SYSCFG, LPUART1, SPI6, I2C4, LPTIM2/3/4/5, COMP1/2, VREFBUF, **RTC, SAI4** |
 | 3.7 | `0x5802_0000 - 0x5806_FFFF` | AHB4    | D3     | **GPIOA-K**, CRC, **BDMA**, ADC3, HSEM, **RCC, PWR**                       |
 | 3.8 | `0xE000_0000 - 0xE00F_FFFF` | Private | M7 core | NVIC, SCB, SysTick, MPU, DWT, ITM, FPB, ETM, DAP                          |
+
+### A quick refresher — AHB vs APB
+
+Before diving into each row, it helps to remember what "AHB" and "APB" actually mean, because the names appear in every row of the table above and the difference is the reason peripherals are split across them in the first place.
+
+Both AHB and APB are bus protocols defined by the **AMBA specification** that ARM publishes for its Cortex cores. They were designed in tandem to serve two different bandwidth/cost trade-offs in a single chip:
+
+- **AHB — Advanced High-performance Bus.** Full clock-rate (in the H7, **200 MHz HCLK**). Supports multiple bus masters with hardware arbitration, burst transfers, pipelined transactions, and wide 32-bit data paths. Designed for the throughput-heavy traffic of DMA controllers, the LCD controller, the Ethernet MAC, the SDMMC controllers, the memory controllers (FMC, QUADSPI), and the graphics blitter (DMA2D). Anything that needs to move bytes by the thousands per millisecond lives on an AHB segment.
+
+- **APB — Advanced Peripheral Bus.** Half clock-rate (in the H7, **100 MHz** = HCLK/2). Single-master (the CPU's AHB-to-APB bridge), no bursts, simpler handshake, lower gate count, lower power. Designed for the slower-but-numerous register-mapped peripherals — UARTs, I2Cs, SPIs, timers, DAC, comparators, the RTC, basic SAI. The CPU writes a register, the peripheral acts on it, the peripheral generates a slow IO signal. None of that needs 200 MHz throughput.
+
+On the H7, the bus matrix exposes **AHB1–AHB4** as the high-speed segments and **APB1–APB4** as the low-speed segments — one of each per power domain (roughly), plus the D1-specific AHB3 that hosts the heaviest D1 masters. Knowing which segment a peripheral lives on tells you *(a)* its register-access clock rate, *(b)* whether DMA can fan in from multiple sources at once, and *(c)* what the upper bound on its sustained data rate is. The rest of this section walks each segment in detail.
+
+**Table 3.0 — Why ST split D2 peripherals across high-speed (AHB) and low-speed (APB) buses**
+
+| Bus                                | Clock rate                | Why peripherals were put there                                                                                                                | Examples in D2                                                                            |
+|------------------------------------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| **AHB1, AHB2** *(high-speed)*      | HCLK = 200 MHz            | Peripherals whose own internal state machine + register accesses are throughput-critical, or which act as **bus masters** (initiating their own transactions) | DMA1, DMA2, DMAMUX1, Ethernet MAC, USB OTG_HS, ADC1/2, DCMI, SDMMC2, CRYP, HASH, RNG       |
+| **APB1, APB2** *(low-speed)*       | HCLK/2 = 100 MHz          | Peripherals with simpler register banks where 100 MHz is plenty and a smaller bus saves power                                                  | TIM1-8/12-17, UART1-8, USART1-6, SPI1-5, I2C1-3, SAI1-3, DFSDM1, DAC, FDCAN, HRTIM         |
+
+The same logic applies to D1 (AHB3 high-speed, no APB3 in this project) and D3 (AHB4 high-speed for GPIO/RCC/PWR/BDMA, APB4 low-speed for RTC/LPUART/LPTIM/SAI4). Each peripheral is **hard-wired to exactly one bus segment** by ST at silicon design time — you cannot move a peripheral between AHB and APB.
 
 ### 3.1 APB1 — D2 peripheral domain, slower bus
 
@@ -148,6 +157,92 @@ AHB4 hosts the foundational always-on peripherals: every GPIO bank (**GPIOA-K** 
 ### 3.8 Cortex-M7 Private Peripheral Bus (PPB)
 
 The PPB isn't a chip-level bus — it's a Cortex-M7 architectural feature. The Private Peripheral Bus hosts the core's own debug and control blocks: **NVIC** (interrupt controller), **SCB** (system control block including the cache maintenance registers), SysTick, **MPU** (memory protection unit), **DWT** (data watchpoint and trace), **ITM** (instrumentation trace), FPB (flash patch and breakpoint), ETM (embedded trace macrocell), and the DAP that the J-Link probe talks to. These registers are CPU-private — they're not on any AHB or APB segment, and DMA cannot reach them. The cache-maintenance functions `SCB_CleanDCache_by_Addr` and `SCB_InvalidateDCache_by_Addr` are register writes to addresses in this region.
+
+### 3.9 Quick lookup — every peripheral the post mentions, mapped to its bus and domain
+
+When the rest of the post says "DFSDM1 sits on APB2 in D2", that's the silicon-level truth — DFSDM1's register bank physically lives on APB2, and you cannot move it. The table below is a one-stop lookup for every peripheral named anywhere in this post: it tells you the base address (so you can read the register directly with `mem32 0xADDR` in J-Link), the bus segment, the power domain, and whether this specific project exercises it.
+
+**Table 3.9 — Peripherals named in this post: address, bus, domain, and project usage**
+
+| Peripheral             | Base address    | Bus      | Domain      | Used in this project?                  |
+|------------------------|-----------------|----------|-------------|----------------------------------------|
+| Cortex-M7 PPB          | `0xE000_0000`   | PPB      | M7-private  | ✓ NVIC, SCB, MPU, DWT, ITM, SCB cache ops |
+| Flash interface (FLASH)| `0x5200_2000`   | AHB3     | D1          | ✓ holds the firmware                   |
+| FMC controller         | `0x5200_4000`   | AHB3     | D1          | ✓ drives the external SDRAM            |
+| QUADSPI                | `0x5200_5000`   | AHB3     | D1          | ✗ no external XIP Flash on this build  |
+| SDMMC1                 | `0x5200_8000`   | AHB3     | D1          | ✓ records WAV files to SD card         |
+| LTDC                   | `0x5001_0000`   | AHB3     | D1          | ✓ scans the framebuffer to the DSI panel |
+| DSI host               | `0x5000_0000`   | AHB3     | D1          | ✓ drives the OTM8009A DSI panel         |
+| DMA2D (2D blitter)     | `0x5200_1000`   | AHB3     | D1          | ✓ blits decoded RGB into the framebuffer |
+| JPEG codec             | `0x5200_3000`   | AHB3     | D1          | ✓ decodes cover-art thumbnails          |
+| MDMA                   | `0x5200_0000`   | AHB3     | D1          | ✗ available but not used on this branch |
+| DMA1                   | `0x4002_0000`   | AHB1     | D2          | ✓ DFSDM ring + UART8 RX                |
+| DMA2                   | `0x4002_0400`   | AHB1     | D2          | ✓ SDMMC bounce + generic helpers       |
+| DMAMUX1                | `0x4002_0800`   | AHB1     | D2          | ✓ routes peripheral requests to DMA1/2 |
+| Ethernet MAC           | `0x4002_8000`   | AHB1     | D2          | ✗ not wired on this build              |
+| USB1 OTG_HS            | `0x4004_0000`   | AHB1     | D2          | ✓ USB-MSC mass-storage path            |
+| ADC1, ADC2             | `0x4002_2000`   | AHB1     | D2          | ✗ unused                                |
+| SDMMC2                 | `0x4802_2400`   | AHB2     | D2          | ✗ unused; SDMMC1 in D1 is the active SD |
+| DCMI (camera)          | `0x4802_0000`   | AHB2     | D2          | ✗ no camera on this build              |
+| CRYP, HASH, RNG        | `0x4802_1000`+  | AHB2     | D2          | ✗ unused                                |
+| **DFSDM1**             | `0x4001_7000`   | **APB2** | D2          | ✓ PDM mic capture → 16 kHz PCM         |
+| SAI1, SAI2, SAI3       | `0x4001_5800`+  | APB2     | D2          | ✗ SAI4 (in D3) was used briefly; retired |
+| HRTIM                  | `0x4001_7400`   | APB2     | D2          | ✗ unused                                |
+| TIM1, TIM8, TIM15-17   | `0x4001_0000`+  | APB2     | D2          | ✗ unused                                |
+| USART1, USART6         | `0x4001_1000`+  | APB2     | D2          | ✗ unused                                |
+| SPI1, SPI4, SPI5       | `0x4001_3000`+  | APB2     | D2          | ✗ unused                                |
+| **UART8**              | `0x4000_7C00`   | **APB1** | D2          | ✓ link to the Wi-Fi companion module   |
+| UART4, UART5, UART7    | `0x4000_4C00`+  | APB1     | D2          | ✗ unused                                |
+| USART2, USART3         | `0x4000_4400`+  | APB1     | D2          | ✗ unused                                |
+| I2C1, I2C2, I2C3       | `0x4000_5400`+  | APB1     | D2          | ✓ I2C1 drives the touch controller     |
+| SPI2, SPI3             | `0x4000_3800`+  | APB1     | D2          | ✗ unused                                |
+| TIM2-7, TIM12-14       | `0x4000_0000`+  | APB1     | D2          | ✓ TIM6 used as FreeRTOS tick base       |
+| LPTIM1                 | `0x4000_2400`   | APB1     | D2          | ✗ unused                                |
+| DAC1                   | `0x4000_7400`   | APB1     | D2          | ✗ unused                                |
+| FDCAN1, FDCAN2         | `0x4000_A000`   | APB1     | D2          | ✗ unused                                |
+| SPDIFRX                | `0x4000_4000`   | APB1     | D2          | ✗ unused                                |
+| **GPIOA-K**            | `0x5802_0000`+  | **AHB4** | D3          | ✓ every pin on the project             |
+| RCC                    | `0x5802_4400`   | AHB4     | D3          | ✓ clock tree configuration             |
+| PWR                    | `0x5802_4800`   | AHB4     | D3          | ✓ supply config, voltage scaling       |
+| BDMA                   | `0x5802_5400`   | AHB4     | D3          | ✗ retired with SAI4 path               |
+| HSEM                   | `0x5802_6400`   | AHB4     | D3          | ✗ dual-core handshake not used         |
+| CRC                    | `0x5802_4C00`   | AHB4     | D3          | ✗ unused                                |
+| ADC3                   | `0x5802_3000`   | AHB4     | D3          | ✗ unused                                |
+| SYSCFG                 | `0x5800_0400`   | APB4     | D3          | ✓ pin remap / boot-mode plumbing       |
+| RTC                    | `0x5800_4000`   | APB4     | D3          | ✗ unused                                |
+| LPUART1                | `0x5800_0C00`   | APB4     | D3          | ✗ unused                                |
+| LPTIM2-5               | `0x5800_2000`+  | APB4     | D3          | ✗ unused                                |
+| SPI6                   | `0x5800_1400`   | APB4     | D3          | ✗ unused                                |
+| I2C4                   | `0x5800_1C00`   | APB4     | D3          | ✗ unused                                |
+| SAI4                   | `0x5801_5400`   | APB4     | D3          | ✗ retired in favour of DFSDM-master path |
+| VREFBUF                | `0x5800_3C00`   | APB4     | D3          | ✗ unused                                |
+| COMP1, COMP2           | `0x5800_3800`   | APB4     | D3          | ✗ unused                                |
+
+Addresses in the table are the base register address for each peripheral (from RM0399 Chapter 2's memory map). Add the per-peripheral register offset to read or write a specific register — for example, DFSDM1 channel 0's CHCFGR1 is `DFSDM1 base + 0x00` = `0x4001_7000`. When the post says "we use SCB_InvalidateDCache_by_Addr on the UART RX buffer", that SCB register lives on the PPB at the top of the table; the UART8 peripheral itself is at `0x4000_7C00` on APB1.
+
+### 3.10 Audio peripherals — the subsystem in one place
+
+DFSDM is one of several STM32H7 peripherals that ST built specifically for audio capture and playback. A real audio system on the H7 normally combines two or three of them — for example, a PDM microphone path (DFSDM or SAI in PDM mode), an I²S-driven codec output (SAI in TDM mode), and possibly a digital S/PDIF input. The table below collects every audio-oriented peripheral the H7 exposes, the bus and domain each lives on, what it does, and whether this project exercises it.
+
+**Table 3.10 — STM32H7 audio peripherals: bus, domain, role, and project usage**
+
+| Audio peripheral       | Base address    | Bus    | Domain | What it does                                                                          | Used in this project?                                              |
+|------------------------|-----------------|--------|--------|----------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+| **DFSDM1**             | `0x4001_7000`   | APB2   | D2     | Digital Filter for Sigma-Delta Modulators — Sinc1/2/3 + decimation. Ideal for PDM mics. | ✓ PDM mic capture → Sinc3 OSR=125 → 16 kHz PCM, DMA1 → D2 SRAM1     |
+| **SAI1, SAI2, SAI3**   | `0x4001_5800`+  | APB2   | D2     | Serial Audio Interface — I²S, TDM, AC97, and PDM modes; pairs with external codec / DAC | ✗ unused on this build; would drive an I²S codec for audio playback |
+| **SAI4**               | `0x5801_5400`   | APB4   | D3     | Same SAI block but in the low-power domain — can run while D1+D2 are halted             | ✗ retired in favour of DFSDM-master clock path; D3 stays idle       |
+| **SPDIFRX**            | `0x4000_4000`   | APB1   | D2     | Sony/Philips Digital Interface receiver — decodes S/PDIF biphase-mark digital audio     | ✗ unused                                                            |
+| **DAC1** (channels 1+2) | `0x4000_7400`  | APB1   | D2     | 12-bit dual-channel analogue DAC — line-level audio out, control voltages, etc.         | ✗ unused                                                            |
+| **MDIOS**              | `0x4000_9400`   | APB1   | D2     | Management Data Input/Output Slave — Ethernet PHY management, not audio per se          | ✗ unused (listed for completeness; not an audio peripheral)         |
+| **PDM2PCM library**    | (software)      | —      | —      | ST-provided software library that converts raw PDM bitstreams to PCM when SAI is in PDM mode | ✗ not used here; DFSDM's hardware Sinc filter does the same job natively |
+
+A few quick observations from the table:
+
+- **Two redundant ways to capture a PDM microphone:** DFSDM (hardware Sinc filter) or SAI-in-PDM-mode (raw PDM bitstream + software PDM2PCM library). DFSDM produces PCM directly with no CPU involvement; SAI requires the CPU or DMA to feed the bitstream into PDM2PCM. For this project we picked DFSDM because the audio path becomes a pure peripheral-to-RAM DMA flow with zero CPU cost per sample.
+- **SAI4 in D3 is the low-power audio listener** — designed for "always-listening" wake-word patterns where the M7 stays in Stop mode and SAI4 + BDMA continue capturing into D3 SRAM4. We attempted this path early on but switched to DFSDM-master on PC2 (CKOUT directly drives the mic) when the SAI4-driven PE2 clock had stability issues. The audio architecture documented in this post is the DFSDM-master version (the Path C-PC2 baseline in the project's internal notes).
+- **All audio peripherals are on APB** (APB1, APB2, or APB4 — never AHB) because their *register interface* doesn't need 200 MHz. The bandwidth-critical part — moving sample data from peripheral to SRAM — is done by an AHB-side DMA (DMA1 or BDMA) reading the peripheral's data register via the bus matrix, exactly the pattern described in the AHB/APB refresher above.
+
+This subsection focuses specifically on the audio subsystem because the project we're describing is an audio-streaming product; readers building, say, an Ethernet-heavy product or a motor-control product would want the equivalent focused tables for *their* peripheral group. The lookup pattern is the same in every case.
 
 ---
 
@@ -189,62 +284,39 @@ MDMA has more sophisticated channel features than DMA1/2: it can do 2D transfers
 
 Here's how the moving parts of this specific project relate on the STM32 side. The audio path lives entirely in D2. The UART RX queue is in D1 AXI. RTT diagnostic buffers live in D3 SRAM4. LCD framebuffer is in D1 AXI. Tasks have priorities that let `VoiceRecTask` (32) preempt almost everything, with `UARTReceiveTask` (26) close behind, and `TouchGFXTask` (High, ~24) rendering the UI in the background. The right-hand "Wi-Fi companion" branch in the diagram is intentionally simplified — what matters for this post is the STM32-side UART RX / TX path and where its buffers live.
 
-```
-+---------------------+               +---------------------+
-|  MP34DT05-A PDM mic |               |  Wi-Fi companion    |
-|  CLK on PC2 (2MHz)  |               |  module (opaque)    |
-|  Data on PC1        |               |  UART8 @ 921600     |
-+---------+-----------+               +---------+-----------+
-          | PDM bitstream                       | UART8 RX/TX
-          v                                     v
-+---------------------+               +---------------------+
-| DFSDM1 (D2)         |               | UART8 + DMA1 Str.0  |
-| Sinc3, OSR=125      |               | DMA-IDLE pattern    |
-| -> 16 kHz PCM       |               +---------+-----------+
-+---------+-----------+                         |
-          | DMA1 Stream 1                       | ISR callback
-          v                                     v
-+---------------------+               +---------------------+
-| s_DfsdmBuf @ D2     |               | xRawBleQueue        |
-| 0x30004000, 512 B   |               | static, in D1 AXI   |
-| Non-Cacheable/Share |               | StaticQueue_t + buf |
-+---------+-----------+               +---------+-----------+
-          | DMA HT/TC ISR                       | xQueueReceive
-          v                                     v
-+---------------------+               +---------------------+
-| StoreDmaChunk       |               | UARTReceiveTask     |
-| CPU shift+pack >>8  |               | priority 26         |
-+---------+-----------+               +---------+-----------+
-          | int16 PCM                           |
-          v                                     v
-+---------------------+               +---------------------+
-| g_AudioBuf @ D2     |               | route ASCII lines, |
-| 0x30020000, 96 KB   |               | match AUDIO:READY  |
-+---------+-----------+               +---------+-----------+
-          v                                     v
-+---------------------+        +---->+---------------------+
-| VoiceRecTask        |        |     | AudioSD_NotifyReady |
-| priority 32         |        |     +---------+-----------+
-+---------+-----------+        |               |
-          v                    |               v
-+---------------------------------------------------+
-| SDWriteTask  (priority 20, stack 2048W in AXI)    |
-|  1. write WAV header + PCM to SD card             |
-|  2. send "AUDIO:FILE name SIZE" via UART8 TX      |
-|  3. wait for AUDIO:READY from NORA                |
-|  4. stream 96 KB PCM over UART8 TX                |
-+---------------------------------------------------+
+**Table 5.1 — Audio capture pipeline (left branch of the block diagram), stage by stage**
 
-In parallel:                          Diagnostics:
-+---------------------+               +---------------------+
-| TouchGFXTask        |               | SEGGER RTT          |
-| priority High       |               | buffer in D3 SRAM4  |
-| Partial framebuffer |               | 0x38000000          |
-| 4 strips x 120 rows |               | viewable real-time  |
-| FB at 0x24000000    |               | via J-Link          |
-| (D1 AXI)            |               +---------------------+
-+---------------------+
-```
+| #     | Stage                       | Hardware / Software           | Address / domain                              | Notes                                                                                       |
+|-------|-----------------------------|-------------------------------|-----------------------------------------------|---------------------------------------------------------------------------------------------|
+| 5.1.1 | PDM bitstream source        | MP34DT05-A PDM microphone     | PC2 (CLK out, 2 MHz) + PC1 (data in)          | On-board microphone on the STM32H747I-DISCO                                                 |
+| 5.1.2 | PDM-to-PCM conversion       | DFSDM1 (peripheral)           | D2 (`0x4001_7000`)                            | Sinc3 filter, OSR = 125 → 16 kHz, 16-bit PCM                                                |
+| 5.1.3 | DMA path                    | DMA1 Stream 1                 | D2 master                                     | Half-complete / complete interrupt drives `StoreDmaChunk`                                   |
+| 5.1.4 | DFSDM DMA ring buffer       | `s_DfsdmBuf`                  | D2 SRAM1 (`0x3000_4000`, 512 B)               | MPU Non-Cacheable Shareable; bypasses M7 cache                                              |
+| 5.1.5 | Sample post-processing      | `StoreDmaChunk` (CPU)         | Runs in DMA HT/TC ISR context                 | Shifts 32-bit DFSDM word right by 8, packs into int16                                       |
+| 5.1.6 | PCM accumulator             | `g_AudioBuf`                  | D2 SRAM2 (`0x3002_0000`, 96 KB)               | 48 000 × int16 = 3 seconds at 16 kHz                                                        |
+| 5.1.7 | Recording orchestrator      | `VoiceRecTask`                | Stack in AXI, priority 32                     | Highest task priority; signals SDWriteTask when 3-sec window completes                      |
+
+**Table 5.2 — UART RX pipeline (right branch of the block diagram), stage by stage**
+
+| #     | Stage                       | Hardware / Software           | Address / domain                              | Notes                                                                                       |
+|-------|-----------------------------|-------------------------------|-----------------------------------------------|---------------------------------------------------------------------------------------------|
+| 5.2.1 | UART link to companion      | UART8 @ 921 600 baud          | APB1 (`0x4000_7C00`), D2                      | Talks to the u-blox NORA-W106-00B Wi-Fi companion (opaque endpoint for this post)           |
+| 5.2.2 | DMA reception               | DMA1 Stream 0, DMA-IDLE       | D2 master, writes into AXI                    | DMA + IDLE-line pattern so messages of any length are demarcated by the line going idle     |
+| 5.2.3 | DMA RX buffer               | `s_dma_rx_buf`                | D1 AXI SRAM, cacheable                        | ISR calls `SCB_InvalidateDCache_by_Addr` before reading                                     |
+| 5.2.4 | ISR → queue handoff         | `HAL_UARTEx_RxEventCallback`  | ISR context                                   | Copies bytes into `BleRawMsg_t` and `xQueueSendFromISR` posts to the queue                  |
+| 5.2.5 | ISR-to-task message queue   | `xRawBleQueue`                | D1 AXI, `StaticQueue_t` + storage             | Statically allocated via `#pragma location = ".axi_sram"` — Hard Rule #1                    |
+| 5.2.6 | Receive task                | `UARTReceiveTask`             | Stack in AXI, priority 26                     | Routes each ASCII line to the right handler                                                 |
+| 5.2.7 | AUDIO:READY signal          | `AudioSD_NotifyReady()`       | CPU                                           | Sets `s_audioReady = true`, which unblocks SDWriteTask's wait loop                          |
+
+**Table 5.3 — Cross-branch handoff and parallel tasks**
+
+| #     | Task / role                    | Priority      | Stack location | Responsibility                                                                                                                              |
+|-------|--------------------------------|---------------|----------------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| 5.3.1 | `SDWriteTask`                  | 20            | AXI, 2 048 W   | (1) write WAV header + PCM to SD card; (2) send "AUDIO:FILE name SIZE" over UART8 TX; (3) wait for AUDIO:READY; (4) stream 96 KB PCM over UART8 TX |
+| 5.3.2 | `TouchGFXTask`                 | High (~24)    | AXI, 3 048 W   | Drives the partial-framebuffer (PFB) LCD pipeline: 4 strips × 120 rows, framebuffer at `0x2400_0000` (D1 AXI)                                 |
+| 5.3.3 | `VoiceCMDhandler`              | 16            | AXI, 1 536 W   | Processes voice commands routed from `xRawBleQueue`                                                                                          |
+| 5.3.4 | `RTTLogTask`                   | 1             | AXI, 1 024 W   | Drains the application's RTT log queue                                                                                                       |
+| 5.3.5 | SEGGER RTT diagnostic channel  | n/a (HW path) | D3 SRAM4 (`0x3800_0000`) | 16 KB up-buffer + 16 B down-buffer + control block, scanned by the J-Link probe over SWD                                          |
 
 Three things are worth pointing out. **One:** the audio path lives entirely in D2 — DFSDM (D2 peripheral), DMA1 (D2 DMA), `s_DfsdmBuf` (D2 SRAM1), `g_AudioBuf` (D2 SRAM2). Zero AXI bus involvement during recording, so the LCD scanning AXI doesn't interfere with audio capture and vice versa. **Two:** the UART RX queue is in D1 AXI — both producer (ISR) and consumer (`UARTReceiveTask`) are CPU code, never DMA, so the queue doesn't need to be in a DMA-reachable region. AXI is fine and sits next to the DMA buffer (`s_dma_rx_buf`) the ISR reads from. **Three:** RTT buffers live in D3 SRAM4 — not because of any hard requirement (the M7 reaches D3 over the bus matrix without issue) but because AXI was already 97% full and SRAM4 was completely unused. Section attribution makes this kind of relocation a single-line change.
 
@@ -273,9 +345,49 @@ The IAR `.map` file is more than a passive report — it's the developer's most 
 
 `#pragma location` is an IAR-specific compiler instruction used to force the placement of a variable or function at a specific memory address or within a named memory section defined in the `.icf` file. Unlike standard variable declarations where the compiler chooses the location automatically, this directive gives the developer precise control over the hardware mapping. In high-performance systems like the STM32H7, it is a critical tool for ensuring that DMA buffers are placed in peripheral-accessible RAM (like SRAM1) and that high-frequency RTOS objects are stored in fast-access memory (like AXI SRAM). By using this pragma, you move away from the unpredictability of a dynamic heap and toward a deterministic, hard-coded memory layout that prevents bus contention and ensures system stability.
 
-### How `#pragma location` was used in this project
+### What `#pragma location` actually does — theory, motivation, and what it solves
 
-Five buffers in particular benefited from explicit placement. `s_DfsdmBuf` got `#pragma location = 0x30004000` because the DMA controller has to write there and the surrounding 127.5 KB of D2 SRAM1 must remain empty as headroom for future audio extensions; using an absolute address lets the linker treat the surrounding area as reservable space. `g_AudioBuf` got `#pragma location = 0x30020000` placing it at the start of D2 SRAM2 — same reasoning, but in a different SRAM. `s_dma_rx_buf`, `s_rawBleQueueCB`, and `s_rawBleQueueStorage` got `#pragma location = ".axi_sram"` (a named section defined in the `.icf`) so they're grouped together in D1 AXI alongside their consumer task. The SEGGER RTT control block and ring buffers got `#pragma location = ".sram4_rtt"`, which is how we moved 16 KB of diagnostic buffer out of AXI without changing a single line of SEGGER's library code. In every case the goal is the same: place the buffer next to the master that drives it, document the choice with a one-line comment naming the domain and reason, and then verify in the `.map` that the linker honoured the request. This is the practical mechanism that converts the "spatial logic" of the bus matrix from abstract architectural rule into compile-time enforcement.
+By default, the C/C++ compiler is allowed to put your variables anywhere in the writable memory regions the linker has been given (`.data`, `.bss`, `.noinit`). The compiler's only obligation is to honour storage class (static / extern / automatic) and alignment. **Where** in RAM each variable ends up is decided by the linker after seeing every object file, and it can shift on every build as the size and order of symbols changes. For a single-region MCU with one flat SRAM this is fine; nothing depends on the absolute address. For a multi-domain MCU like the STM32H7, where the same variable behaves differently depending on whether it lands in D1 AXI, D2 SRAM1, D3 SRAM4, or DTCM, "anywhere" is not an acceptable answer.
+
+`#pragma location` is the IAR compiler's mechanism for **removing the linker's freedom over a specific variable's placement** and pinning it to either an absolute address or a named section that the `.icf` linker script maps to a specific physical region. It's the IAR-native equivalent of GCC's `__attribute__((section(...)))`, with the additional ability to specify a literal address as the destination. Officially documented in the **IAR C/C++ Development Guide for Arm (EWARM_DevelopmentGuide.ENU.pdf)** — search for "*pragma directives*" → "*location*" — and the **IAR Linker and Library Tools Reference Guide (EWARM_LinkerGuide.ENU.pdf)**. Both ship with every EWARM install in the `doc/` subdirectory; the latest revisions are also downloadable from the IAR documentation portal at [www.iar.com/knowledge/support/technical-documentation/](https://www.iar.com/knowledge/support/technical-documentation/) (search "EWARM Development Guide").
+
+The directive has two forms.
+
+**Form 1 — placement in a named section:**
+
+```c
+#pragma location = ".my_section"
+static uint8_t my_buffer[1024];
+```
+
+The linker then needs a matching directive in the `.icf` script that maps `.my_section` to a memory region:
+
+```
+place in SRAM1_region { section .my_section };
+```
+
+This is the form to use when the goal is "land in a particular *domain*" without caring about the exact byte address. The linker still chooses the precise offset inside the region, but it's constrained to that region.
+
+**Form 2 — placement at an absolute address:**
+
+```c
+#pragma location = 0x30004000
+static __no_init uint32_t hw_pinned_buffer[128];
+```
+
+The variable lands at exactly that address. The linker treats it as a "do not place anything else here" reservation. This form is used for buffers tied to specific hardware constraints (e.g., DMA buffers a peripheral expects at a fixed location, or alignment-sensitive buffers that need a known boundary).
+
+**Why use it — what the directive solves.** Three problems disappear the moment a critical buffer carries a `#pragma location`:
+
+1. **Silent placement drift across builds.** Without the pragma, a refactor that adds 200 bytes of `.bss` somewhere unrelated can shift every subsequent symbol forward by 200 bytes. If your DMA buffer was sitting comfortably at `0x24050000` last build and now lives at `0x240500C8`, the firmware still works — but the MPU region you set up for it doesn't cover the new address. With `#pragma location`, the address is stable across builds and that whole class of "worked yesterday, broken today" goes away.
+
+2. **Domain-correctness verified at link time, not runtime.** The `.icf` script knows which sections map to which physical regions. A `#pragma location = ".sram1"` directive in source plus a `place in SRAM1_region { section .sram1 }` in the `.icf` together guarantee, at link time, that the buffer ends up in D2 SRAM1 — not somewhere DMA1 can't reach. The compiler won't catch a missing pragma; the linker won't catch it either; but a *present* pragma plus matching `.icf` rule is a contract the toolchain enforces.
+
+3. **Predictable cohabitation in the same region.** When several related buffers all need to share the same domain (the DMA target buffer, the queue control block, the queue storage backing it), giving them all the same named-section pragma groups them physically together in RAM. Cache lines, MPU regions, and address ranges become reasoning units instead of accidents.
+
+**What it does NOT solve.** `#pragma location` does not move task stacks (those come from the FreeRTOS heap, wherever that lives — see Hard Rule on static allocation), does not fix cache coherency on its own (that needs the MPU or explicit cache maintenance), and does not protect against a typo in the section name (a section name with no matching `.icf` placement silently falls back to default `.bss` — the linker won't warn). Verification in the `.map` file after every build is the practical safeguard against all three.
+
+In the body of this post you'll see `#pragma location` applied to the DFSDM DMA ring (absolute address in D2 SRAM1), the PCM accumulator (absolute address in D2 SRAM2), the UART RX DMA buffer and its FreeRTOS queue control block (named `.axi_sram` in D1 AXI), and the SEGGER RTT buffers (named `.sram4_rtt` in D3 SRAM4). Each placement is a deliberate decision documented in a comment next to the declaration, and each is verifiable in the `.map`.
 
 ### What ended up where (the audit by domain)
 
@@ -297,14 +409,28 @@ Five buffers in particular benefited from explicit placement. `s_DfsdmBuf` got `
 
 Placement audits are necessary but not sufficient. Once every buffer is mapped to a domain, you have to check that **the right master can reach each one** and that **adjacent buffers can't trample each other**. A few specific checks I run after every significant build:
 
-| Check | Buffers | Domain | Status |
-|---|---|---|---|
-| Audio buffers in their own domain | `s_DfsdmBuf` (D2 SRAM1) + `g_AudioBuf` (D2 SRAM2) | D2 | ✓ DMA1 writes SRAM1, CPU writes SRAM2; 124 KB gap |
-| UART RX pipeline same domain | `s_dma_rx_buf`, `s_rawBleQueueCB`, `s_rawBleQueueStorage`, `s_bleHistMutexCB` | D1 AXI | ✓ no cross-domain traffic per message |
-| Framebuffer isolated from audio | `TouchGFX_Framebuffer` (D1 AXI) vs audio (D2) | mixed | ✓ different domains — eliminates FUIF |
-| Heap vs DMA buffer | `ucHeap` (D1 AXI) vs `s_DfsdmBuf` (D2 SRAM1) | mixed | ✓ isolated by domain |
-| Stack vs DMA buffers | `CSTACK` (DTCM) | D1 DTCM | ✓ DMA cannot reach DTCM — safe by design |
-| Free space margins | D1 AXI 97.5% used, D2 SRAM1 99% free, D3 100% unused | — | ⚠ AXI is tight; move next big buffer to D2 |
+| #   | Check                                | Buffers                                                                              | Domain  | Status                                                                  |
+|-----|--------------------------------------|--------------------------------------------------------------------------------------|---------|-------------------------------------------------------------------------|
+| 7.1 | Audio buffers in their own domain    | `s_DfsdmBuf` (D2 SRAM1) + `g_AudioBuf` (D2 SRAM2)                                    | D2      | ✓ DMA1 writes SRAM1, CPU writes SRAM2; 124 KB gap between them          |
+| 7.2 | UART RX pipeline same domain         | `s_dma_rx_buf`, `s_rawBleQueueCB`, `s_rawBleQueueStorage`, `s_bleHistMutexCB`        | D1 AXI  | ✓ no cross-domain traffic per message                                   |
+| 7.3 | Framebuffer isolated from audio      | `TouchGFX_Framebuffer` (D1 AXI) vs audio (D2)                                        | mixed   | ✓ different domains — eliminates FUIF                                   |
+| 7.4 | Heap vs DMA buffer                   | `ucHeap` (D1 AXI) vs `s_DfsdmBuf` (D2 SRAM1)                                         | mixed   | ✓ isolated by domain                                                    |
+| 7.5 | Stack vs DMA buffers                 | `CSTACK` (DTCM)                                                                       | D1 DTCM | ✓ DMA cannot reach DTCM — safe by design                                |
+| 7.6 | Free-space margins                   | D1 AXI 97.5 % used, D2 SRAM1 99 % free, D3 100 % unused                              | —       | ⚠ AXI is tight; move next big buffer to D2                              |
+
+**Table 7 — Description of each row:**
+
+**7.1 — Audio buffers in their own domain.** The DFSDM DMA ring sits in D2 SRAM1, the PCM accumulator in D2 SRAM2. DMA1 (a D2 master) writes the ring directly; the CPU later shifts samples into the accumulator. Both buffers stay inside D2, so the audio path never competes with the LCD's traffic on the D1 AXI bus. The 124 KB gap between them is empty headroom in SRAM1 for future audio features.
+
+**7.2 — UART RX pipeline in a single domain.** Every piece of state along the receive path — the DMA target buffer, the FreeRTOS queue control block, the queue storage, and the history-mutex control block — lives in D1 AXI SRAM. Both producer (the DMA-completion ISR) and consumer (`UARTReceiveTask`) are CPU code, so no cross-domain bus traffic happens for each received message. This was the fix for a regression where the queue used to be dynamically allocated and moved across domains as the heap moved.
+
+**7.3 — Framebuffer isolated from audio.** The TouchGFX partial framebuffer sits at the start of D1 AXI; the audio path is entirely in D2. LTDC scans AXI as a D1 master; DMA1 fills SRAM1 as a D2 master. The two paths never collide on the same bus segment, which is what eliminates LCD FUIF (FIFO underrun) interrupts during heavy audio capture.
+
+**7.4 — Heap vs DMA buffer.** The FreeRTOS heap sits in D1 AXI; the DFSDM DMA ring sits in D2 SRAM1. Earlier in the project's life the heap was placed in D2 SRAM1 immediately after the DFSDM buffer, and task-creation logic stalled the audio pipeline. Moving the heap to AXI removed the contention. The general rule: never put a CPU-heavy structure adjacent to an active DMA buffer in the same MPU region.
+
+**7.5 — Stack vs DMA buffers.** `CSTACK` is in DTCM. No DMA master on the H7 can reach DTCM — it is tightly coupled to the M7 alone. As a consequence, no stray DMA transfer can ever corrupt the stack regardless of pointer bugs or misconfigured peripherals. This is one of the strongest reasons to keep the M7 stack out of AXI.
+
+**7.6 — Free-space margins.** D1 AXI sits at 97.5 % occupied — there is ~13 KB of headroom. D2 SRAM1 is almost entirely empty (127 KB free). D3 SRAM4 is mostly empty (~48 KB free after the RTT buffers). When the next big buffer needs adding, the answer is "D2 SRAM1 or D3 SRAM4" — and section attribution makes that a one-line change.
 
 A previous configuration on this project had the FreeRTOS heap adjacent to the DFSDM buffer in the same MPU region. Task-creation logic was stalling the audio pipeline because of competing bus traffic, and the bug was non-deterministic — sometimes audio came through, sometimes the pipeline stalled until the next reset. Moving the heap to AXI SRAM in D1 eliminated the contention completely. That issue is now resolved, but it's a textbook example of why "default placement" should never be trusted for DMA-adjacent buffers.
 
@@ -322,19 +448,43 @@ There's a recurring question that comes up on every new buffer: should this live
 
 ## 8. Hard Rules — Where Each Buffer Class Belongs on STM32H7
 
-| Buffer class | Required region | Why |
-|---|---|---|
-| LTDC framebuffer | D1 AXI SRAM (`0x24000000`) | LTDC scans on AHB; AXI removes contention with FMC/SDRAM |
-| DFSDM DMA ring | D2 SRAM1 (`0x30000000`+) | DMA1 lives in D2; placing in D2 SRAM avoids AXI contention with LTDC |
-| PCM accumulator (`g_AudioBuf`) | D2 SRAM2 (`0x30020000`+) | CPU-only writes, large (96 KB) — keeps D1 AXI free for graphics |
-| SDMMC IDMA bounce | D1 AXI SRAM | SDMMC1 IDMA prefers AXI; bounce buffer copied from D2 is the standard pattern |
-| UART RX DMA buffer | D1 AXI SRAM | DMA1/2 reachable; same domain as ISR-driven queue means no cross-domain hop per message |
-| FreeRTOS queues / mutexes / TCBs | D1 AXI SRAM (default) | CPU-only access; keep with task stacks. Static allocation. |
-| FreeRTOS heap (`ucHeap`) | D1 AXI SRAM | Default placement is correct. Never place adjacent to DMA ring buffers. |
-| `CSTACK` + ISR stack | DTCM (`0x20000000`) | Zero wait, no DMA can corrupt it |
-| JPEG decode intermediates | External SDRAM | Multi-megabyte, latency-tolerant |
-| TouchGFX assets | QSPI Flash (XIP) / SDRAM | Read-only LUTs at runtime |
-| SAI4 BDMA buffers (if ever used) | D3 SRAM4 (`0x38000000`) | BDMA is D3-only; will fail silently anywhere else |
+| #    | Buffer class                                  | Required region                       | Why                                                                                       |
+|------|-----------------------------------------------|---------------------------------------|-------------------------------------------------------------------------------------------|
+| 8.1  | LTDC framebuffer                              | D1 AXI SRAM (`0x24000000`)            | LTDC scans on AHB; AXI removes contention with FMC/SDRAM                                  |
+| 8.2  | DFSDM DMA ring                                | D2 SRAM1 (`0x30000000`+)              | DMA1 lives in D2; D2 SRAM avoids AXI contention with LTDC                                 |
+| 8.3  | PCM accumulator (`g_AudioBuf` in our project) | D2 SRAM2 (`0x30020000`+)              | CPU-only writes, large (96 KB) — keeps D1 AXI free for graphics                          |
+| 8.4  | SDMMC IDMA bounce                             | D1 AXI SRAM                           | SDMMC1 IDMA prefers AXI; bounce-buffer copy from D2 is the standard pattern               |
+| 8.5  | UART RX DMA buffer                            | D1 AXI SRAM                           | DMA1/2 reachable; same domain as ISR-driven queue means no cross-domain hop per message   |
+| 8.6  | FreeRTOS queues / mutexes / TCBs              | D1 AXI SRAM (default)                 | CPU-only access; keep with task stacks. Static allocation, no `xQueueCreate` from heap.   |
+| 8.7  | FreeRTOS heap (`ucHeap`)                      | D1 AXI SRAM                           | Default placement is correct. Never place adjacent to DMA ring buffers.                   |
+| 8.8  | `CSTACK` + ISR stack                          | DTCM (`0x20000000`)                   | Zero wait, no DMA can corrupt it                                                          |
+| 8.9  | JPEG decode intermediates                     | External SDRAM                        | Multi-megabyte, latency-tolerant                                                          |
+| 8.10 | TouchGFX assets                               | QSPI Flash (XIP) / SDRAM              | Read-only LUTs at runtime                                                                 |
+| 8.11 | SAI4 BDMA buffers (if ever used)              | D3 SRAM4 (`0x38000000`)               | BDMA is D3-only; will fail silently anywhere else                                         |
+
+**Table 8 — Description of each row:**
+
+**8.1 — LTDC framebuffer in D1 AXI.** The LTDC scans the framebuffer at line rate (in this project ~60 Hz × 800 × 480 × 3 bytes/pixel) and is a D1 master. Placing the framebuffer in AXI keeps that traffic inside D1; placing it in external SDRAM forces every scan to compete with the FMC controller's refresh cycles, which is the textbook cause of LCD tearing (FUIF) on H7 designs.
+
+**8.2 — DFSDM DMA ring in D2 SRAM1.** DMA1 is a D2 master. The DFSDM filter produces 32-bit samples that DMA1 deposits into the ring at 16 kHz. Keeping the buffer in D2 SRAM means DMA1 never crosses the bus matrix; the LCD on D1 AXI runs concurrently without contention.
+
+**8.3 — PCM accumulator in D2 SRAM2.** A 96 KB buffer that the CPU writes once per DMA chunk and SDMMC reads once per file. Large buffers crowd AXI (which is already 97 % full with the framebuffer + heap); D2 SRAM2 has ample empty space. CPU access through the bus matrix is acceptable here because each access is infrequent.
+
+**8.4 — SDMMC IDMA bounce in D1 AXI.** SDMMC1's internal DMA prefers AXI as its destination. The PCM data lives in D2 SRAM2; SDWriteTask `memcpy`s it into an AXI bounce buffer before issuing the SDMMC write. The bounce is the trade-off that lets us keep the big audio buffer in D2 while still using the AXI-friendly SD path.
+
+**8.5 — UART RX DMA buffer in D1 AXI.** The UART RX DMA (DMA1, but reaching back into AXI) deposits incoming bytes here. Adjacent in AXI is the ISR-driven `xRawBleQueue`. Because both buffers are in the same domain, the ISR's `memcpy` from DMA buffer to queue storage costs no cross-domain bus traffic.
+
+**8.6 — FreeRTOS queues, mutexes, TCBs in D1 AXI.** All CPU-side data, accessed every task switch and every API call. Default `.bss` placement in AXI is correct. **Critical caveat:** queue and mutex storage must be statically allocated (`xQueueCreateStatic`, `xSemaphoreCreateMutexStatic`) — otherwise the storage lives wherever the heap is, and the heap can quietly move across builds.
+
+**8.7 — FreeRTOS heap in D1 AXI.** The 96 KB `ucHeap[]` is the default for heap_4 and works correctly in AXI. The hard rule here is negative: **never place the heap adjacent to a DMA ring buffer in the same MPU region**. Earlier in this project's life the heap drifted next to the DFSDM ring in D2 SRAM1, and task-creation operations would corrupt audio capture non-deterministically.
+
+**8.8 — `CSTACK` and ISR stack in DTCM.** Zero wait states for the M7, and no DMA master can reach DTCM, so stack corruption from a stray DMA transfer is impossible by design. DTCM is the only place the M7 stack should ever live.
+
+**8.9 — JPEG decode intermediates in external SDRAM.** The YCbCr and RGB888 working buffers for JPEG decoding total several megabytes — too big for any internal SRAM. SDRAM is fine here because the JPEG codec is latency-tolerant and the decode is offline (not real-time per scan line).
+
+**8.10 — TouchGFX assets in QSPI Flash or SDRAM.** Fonts, bitmaps, and pre-rendered icons are read-only at runtime. QSPI Flash gives execute-in-place reads without consuming RAM; SDRAM is used when the asset is too big for QSPI or needs to be decompressed at boot.
+
+**8.11 — SAI4 BDMA buffers in D3 SRAM4 only.** BDMA is the D3-local DMA controller and **cannot reach D1 or D2 SRAM**. If a SAI4-driven BDMA path is ever added to a project, its DMA buffer must be in D3 SRAM4. Putting it anywhere else compiles and links cleanly but produces zero data movement at runtime — a silent failure mode.
 
 The pattern: **place each buffer in the same domain as the master that drives it most frequently**. Cross-domain access works through the bus matrix, but it costs cycles and creates contention. Putting things in their natural domain isn't optimisation — it's the path of least surprise.
 
@@ -342,7 +492,39 @@ The pattern: **place each buffer in the same domain as the master that drives it
 
 ## 9. Managing the Cortex-M7 L1 Cache on STM32H7
 
-Managing the L1 cache on the STM32H7 (Cortex-M7) is a mandatory requirement for system reliability. The core problem is a synchronisation gap between what the CPU sees and what the hardware actually does. To achieve high performance, the CPU reads and writes data to a local, high-speed cache rather than slower physical RAM. However, peripheral DMA controllers — such as those for UART, SAI, or Ethernet — bypass this cache entirely and talk directly to the RAM.
+### A quick refresher — what is a cache, and what types exist?
+
+Before diving into the specific cache-management work the STM32H7 demands, it helps to ground the discussion in the general theory of CPU caches, because **the H7 only exposes a subset** of what a modern processor architecture offers and knowing what's missing is as important as knowing what's there.
+
+A **cache** is a small, very fast memory placed between the CPU and main memory. Its job is to hide the latency of slower memory by keeping recently-used data and instructions close to the CPU. Every read miss costs full memory-access time; every cache hit costs a single CPU cycle. The bigger the gap between CPU speed and memory speed, the more performance a cache buys. On a 480 MHz Cortex-M7 reading from external SDRAM at ~50 ns per word, that gap is ~20× — caches matter.
+
+Caches are usually organised in **levels**, numbered by their distance from the CPU pipeline. Each level is larger and slower than the one above it.
+
+| Cache level   | Typical size      | Typical latency | Where it lives                                          | What it's for                                                                                                            |
+|---------------|-------------------|-----------------|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| **L1**        | 16-64 KB          | 1-2 cycles      | Inside the CPU core, often split into I-cache + D-cache | Hot working set: the instructions and data the CPU is touching right now. The first thing every load/store hits.         |
+| **L2**        | 256 KB - 4 MB     | 8-20 cycles     | On-chip, sometimes per-core, sometimes shared           | Catches L1 misses. Larger and unified (instructions and data share it). Common on application processors (Cortex-A, x86). |
+| **L3**        | 4 MB - 64 MB      | 30-60 cycles    | On-chip, shared across all cores                        | Last-level cache before main RAM. Standard on server-class and desktop CPUs; absent from most embedded MCUs.              |
+| **TLB**       | 32-1024 entries   | 1 cycle         | Inside the MMU (if present)                             | Translates virtual to physical addresses. Not present on Cortex-M which uses an MPU, not an MMU.                          |
+| **Branch / BTB** | 64-4096 entries | 1 cycle         | Inside the CPU front-end                                | Caches recently-taken branch targets for the branch predictor. Reduces pipeline flush cost on taken branches.             |
+
+In addition to the level numbering, **L1 is conventionally split** along the von Neumann / Harvard line into two physically separate banks:
+
+- **I-cache (Instruction cache)** — caches read-only instruction fetches from Flash or RAM-resident code. Never written by the CPU, so it has no dirty-line problem. Invalidation only matters when self-modifying code or runtime relocation moves instructions around.
+- **D-cache (Data cache)** — caches load/store accesses to data. Can be either *write-through* (every write goes immediately to memory and is also kept in cache) or *write-back* (writes update the cache, and the dirty line is flushed to memory later). Write-back is faster but introduces the cache-coherency problems described in this section.
+
+**Where the Cortex-M7 fits in this picture.** The Cortex-M7 core inside the STM32H747 has **L1 only — and only L1**. No L2, no L3. Specifically:
+
+- **L1 I-cache: 16 KB**, 2-way set-associative, 32-byte lines.
+- **L1 D-cache: 16 KB**, 4-way set-associative, 32-byte lines, **write-back with read-allocate** by default.
+- No L2 unified cache — main memory is the next stop after an L1 miss.
+- No MMU — memory protection is via the MPU (16 regions) which can change cacheability attributes per region but does not provide virtual-address translation.
+
+This puts the H7 in a useful middle ground: it has the performance of a cached pipeline (which is why it can hit 480 MHz on commodity SRAM and Flash), but it doesn't have the silicon area or the bus complexity of L2/L3 hierarchies. It also doesn't have the cache-coherency hardware that multi-core application processors have for keeping caches in sync between cores. **That coherency burden is yours to manage in software**, and that's what the rest of this section is about. By contrast, lower-end Cortex-M cores (M0, M0+, M3, M4) **have no cache at all** — every load and store goes straight to memory, which is why they cap out at much lower clock rates but never need any of the cache-maintenance discipline below.
+
+### Why managing the cache matters on STM32H7
+
+Managing the L1 cache on the STM32H7 (Cortex-M7) is a mandatory requirement for system reliability. The core problem is a synchronisation gap between what the CPU sees and what the hardware actually does. To achieve high performance, the CPU reads and writes data to its local L1 D-cache rather than slower physical RAM. However, peripheral DMA controllers — such as those for UART, SAI, or Ethernet — bypass this cache entirely and talk directly to the RAM.
 
 ### Write and read coherency failures
 
@@ -355,6 +537,16 @@ In practice on this project, the audio buffers (`s_DfsdmBuf` and `g_AudioBuf`) l
 ### Cache considerations across the project
 
 There are three patterns that recur for cache management on this architecture and it's worth being explicit about each. **Pattern A — Non-Cacheable MPU region for DMA buffers.** This is the simplest and most foolproof: declare an MPU region covering the buffer's address range with the Non-Cacheable and Shareable attributes, and the CPU bypasses the cache for every access to that region. No `Clean`, no `Invalidate`, no alignment headaches. The cost is slightly slower CPU access (because every read/write hits RAM directly), but for audio buffers updated at 16 kHz this is invisible. We use this for `s_DfsdmBuf` and `g_AudioBuf` in D2 SRAM. **Pattern B — Cacheable region with explicit maintenance.** For high-throughput DMA paths where bypassing the cache would actually hurt (e.g., a buffer the CPU also processes heavily), keep it cacheable but bracket every DMA transaction with `SCB_CleanDCache_by_Addr` before a transmit and `SCB_InvalidateDCache_by_Addr` before reading after a receive. We use this for the UART RX path: the buffer is in AXI, caching is on, the ISR invalidates the cache lines immediately before reading the DMA-deposited bytes. The discipline must be applied at every call site; missing a single invalidate produces intermittent corruption. **Pattern C — Cache-coherent regions (TCM and the AXI-cache mode where applicable).** DTCM and ITCM are by construction outside the cache hierarchy — no `Clean`, no `Invalidate`, no MPU configuration needed. This is why the M7 stack lives in DTCM: cache coherency is just not a concept that applies there. For framebuffers in AXI, we rely on the LTDC controller's burst-read semantics combined with the CPU's write-back cache being flushed on each DMA2D blit boundary; TouchGFX's framework handles the discipline transparently. The general decision tree: small DMA buffers → Pattern A; high-throughput CPU+DMA shared buffers → Pattern B; CPU-private fast data → DTCM / Pattern C. Pick one pattern per buffer, document the choice in a comment next to the declaration, and never mix patterns within a single buffer.
+
+### Why cache coherency is needed at all — and what it solved
+
+The cache exists because main memory is too slow for a 400 MHz CPU pipeline. Without it, every load and store would stall the M7 by tens of cycles waiting for RAM. So the cache is not an optional optimisation — it's the reason the M7 can run at 400 MHz on commodity SRAM in the first place. But the moment you turn the cache on, you create a **second view of memory**: the CPU sees what its cache holds, while every other bus master (DMA controllers, LTDC, SDMMC IDMA, JPEG codec, MDMA, the second core if it were used) sees the actual contents of RAM. Those two views are kept consistent automatically *only* between the CPU and its own cache. They are **not** kept consistent between the cache and any other master. That gap is the cache-coherency problem in a single sentence: the hardware that gives you 400 MHz throughput also gives you two divergent versions of the same bytes, and the architecture provides no automatic mechanism to reconcile them.
+
+Cache-coherency operations exist to close that gap manually. There are two directions to consider, and both matter. **In the DMA-to-CPU direction** (peripheral receives data, CPU reads it): a DMA controller writes bytes directly to physical RAM, bypassing the cache. The CPU then issues a read at the same address, but the cache may still hold the *previous* contents of that line — pre-DMA, stale. Without an Invalidate operation before the CPU read, the load hits the cache and returns the old data. The Invalidate marks the relevant cache lines as empty, forcing the next read to go all the way to RAM and pick up the DMA-deposited bytes. **In the CPU-to-DMA direction** (CPU prepares data, peripheral transmits it): the CPU writes to a buffer; in write-back mode those writes sit in the cache and have not yet been pushed to RAM. If the DMA reads the buffer before the cache is flushed, the peripheral transmits stale RAM contents instead of the CPU's intended bytes. The Clean operation forces dirty cache lines back out to RAM, so a subsequent DMA read sees the up-to-date version.
+
+**What cache coherency operations actually solved on this project.** Two concrete bug classes disappeared once the patterns above were in place. **First, the UART RX silent-loss bug.** Before the explicit `SCB_InvalidateDCache_by_Addr` was added to the receive-complete ISR, the wire and the J-Link probe both confirmed that bytes were arriving at the DMA buffer in AXI — but the CPU was reading zeros for entire messages. The cache was holding the line's pre-DMA state (which happened to be the zero-filled `.bss` initialisation), and the CPU's reads hit the cache instead of the freshly-written RAM. Adding the Invalidate immediately before the read fixed it. The fix wasn't a code change in the sense of new logic — it was the explicit acknowledgement that the cache and the DMA had two views, and the ISR had to reconcile them at the right instant. **Second, the audio capture corruption that would have followed.** Without the MPU Non-Cacheable Shareable region covering `s_DfsdmBuf` at `0x30004000`, the DFSDM DMA would have written 32-bit samples into RAM every 62.5 µs while the CPU's cache held stale lines from the previous half-buffer. The `StoreDmaChunk` reads in the half-complete and complete callbacks would have read alternating real-and-stale samples — audible as a sample-rate periodic distortion. By making the region Non-Cacheable at the MPU level, we sidestepped the problem entirely; the CPU never caches those addresses, so there is no second view to reconcile.
+
+In both cases, the operations didn't *add* functionality — they prevented the silent corruption that would have come from the cache's existence. Cache coherency is the cost of having a fast cache in the first place. The art of designing on the M7 is choosing, per buffer, whether to pay that cost in explicit per-callsite `Clean`/`Invalidate` calls (Pattern B), in an MPU region attribute that bypasses the cache entirely (Pattern A), or in a placement that puts the buffer outside the cache's reach to begin with (Pattern C in DTCM). Whichever pattern you pick, the underlying truth is the same: **on the H7, every byte that crosses between a CPU and a DMA master needs an explicit coherency decision, and skipping that decision is how silent data corruption enters a real-time system**.
 
 ---
 
@@ -478,8 +670,6 @@ If you found this STM32H7 memory architecture deep-dive useful, you'll likely fi
 ## 15. Call to Action
 
 If you're building an STM32H7 product and hitting any of the symptoms described in Section 1 — audio jitter, LCD tearing, silent DMA corruption, FreeRTOS queue weirdness — **the Sightsys engineering team works on this class of problem for a living**. We help product teams from start-ups to OEMs design memory architectures, debug bus-contention issues, integrate TouchGFX cleanly, and bring STM32H7 designs to production.
-
-**[Get in touch with Sightsys →](TODO-ADD-CONTACT-LINK)**
 
 Or subscribe to the Sightsys engineering blog (link at the top of the page) for more deep-dives on STM32, embedded debugging, and real-time architecture.
 

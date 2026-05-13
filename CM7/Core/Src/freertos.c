@@ -57,6 +57,10 @@ extern portBASE_TYPE IdleTaskHook(void* p);
 void vApplicationIdleHook(void);
 
 /* USER CODE BEGIN 2 */
+#ifdef WAKE_WORD_TEST
+#include "wake_word_test.h"   /* WakeWordTest_OnIdle() — quick EI classifier test */
+#endif
+
 void vApplicationIdleHook( void )
 {
    /* vApplicationIdleHook() will only be called if configUSE_IDLE_HOOK is set
@@ -69,6 +73,14 @@ void vApplicationIdleHook( void )
    function, because it is the responsibility of the idle task to clean up
    memory allocated by the kernel to any task that has since been deleted. */
 vTaskSetApplicationTaskTag(NULL, IdleTaskHook);
+
+#ifdef WAKE_WORD_TEST
+/* Quick test bench — runs run_classifier() on the last button-press recording
+ * when armed by WakeWordTest_Trigger(). Returns immediately if not armed.
+ * Idle task stack is bumped to 14 KB in wake_word_test.cpp to accommodate
+ * TF-Lite Micro inference. */
+WakeWordTest_OnIdle();
+#endif
 }
 /* USER CODE END 2 */
 

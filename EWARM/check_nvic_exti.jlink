@@ -1,0 +1,20 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+// NVIC ISER1 — bits for IRQs 32-63. EXTI15_10 = IRQ40 → bit8 of ISER1
+mem32 0xE000E104 1
+// NVIC ISPR1 — pending IRQs 32-63
+mem32 0xE000E204 1
+// EXTI_C1IMR1 — CPU1 interrupt mask
+mem32 0x58000500 1
+// EXTI_SWIER1 — pending software trigger
+mem32 0x58000418 1
+// EXTI_PR1 — pending flags
+mem32 0x58000488 1
+// FreeRTOS TCB notification value — TCB is at 0x2400BF68
+// xTaskNotifyWait uses ulNotifiedValue at offset +36 (0x24) in TCB
+mem32 0x2400BF68 4
+g
+exit

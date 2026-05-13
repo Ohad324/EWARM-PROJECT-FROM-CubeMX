@@ -1,0 +1,55 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Force D3CCIPR and trigger
+w4 0x58024454 0x00800000
+w4 0x58000088 0x00002000
+w4 0x58000008 0x00002000
+g
+sleep 1000
+h
+
+// SAI4 Block_A registers
+// CR1 @ 0x58005404
+mem32 0x58005404 1
+// CR2 @ 0x58005408
+mem32 0x58005408 1
+// SR  @ 0x5800540C — FLVL bits[18:16]: FIFO level; LFSDET, AFSDET, MUTEDET, WCKCFG bits
+mem32 0x5800540C 1
+// PDMCR @ 0x58005444
+mem32 0x58005444 1
+
+// D3CCIPR
+mem32 0x58024454 1
+
+// BDMA_Channel1: CCR and CNDTR (is it moving?)
+mem32 0x5802541C 1
+mem32 0x58025420 1
+
+// GPIOC IDR — PC1 (bit1) live level
+mem32 0x58020810 1
+
+// GPIOC PUPDR — check PC1 pull-up (bits[3:2]=01 expected)
+mem32 0x5802080C 1
+
+// g_DfsdmBuf — check if changing
+mem32 0x30000000 4
+
+// g_SampleCount
+mem32 0x240377FC 1
+
+g
+// halt again 100ms later to see CNDTR change
+sleep 100
+h
+
+// BDMA CNDTR again — should be different if DMA is transferring
+mem32 0x58025420 1
+
+// DfsdmBuf again
+mem32 0x30000000 2
+
+g
+exit

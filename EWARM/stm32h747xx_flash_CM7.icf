@@ -23,7 +23,10 @@ define symbol __ICFEDIT_region_SRAM4_start__   = 0x38000000;
 define symbol __ICFEDIT_region_SRAM4_end__     = 0x3800FFFF;
 /*-Sizes-*/
 define symbol __ICFEDIT_size_cstack__ = 0x2000;  /* 8KB — IAR reported 96% used at 4KB */
-define symbol __ICFEDIT_size_heap__   = 0x1000;
+define symbol __ICFEDIT_size_heap__   = 0x1000;  /* 4 KB — DLib basic heap, kept small.
+                                                   EI's MFCC scratch is supplied by our
+                                                   static bump pool in wake_word_test.cpp
+                                                   (Hard Rule #1 compliance). */
 /**** End of ICF editor section. ###ICF###*/
 
 /*-Quad-SPI Memory Regions-*/
@@ -51,7 +54,12 @@ define block HEAP      with alignment = 8, size = __ICFEDIT_size_heap__     { };
 initialize by copy { readwrite };
 do not initialize  { section .noinit, section Video_RGB_Buffer, section TouchGFX_Framebuffer,
                      section .sdram_bss,
-                     section .audio_buffer };
+                     section .audio_buffer,
+                     section .sram1,    /* EI tensor_arena lives here — D2 SRAM1 clock not
+                                          ready during C-runtime zero-init, would HardFault.
+                                          tflite_learn_*_init() memsets the arena anyway. */
+                     section .sram2,
+                     section .sram4_rtt };
 /* AUDIO BISECT 2026-05-10: .freertos_heap section temporarily removed —
  * heap_4 uses its internal xHeap (lands in AXI .bss) per
  * configAPPLICATION_ALLOCATED_HEAP=0 in FreeRTOSConfig.h. */

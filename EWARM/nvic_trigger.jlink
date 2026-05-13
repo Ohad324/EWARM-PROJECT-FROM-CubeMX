@@ -1,0 +1,53 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Clear stale PR1 pending flag (correct offset: EXTI_BASE + 0x088)
+w4 0x58000088 0x00002000
+
+// Fire EXTI13 via SWIER1 (correct offset: EXTI_BASE + 0x008)
+w4 0x58000008 0x00002000
+
+// Resume and wait 1s for recording to start
+g
+sleep 1000
+
+// Halt mid-recording
+h
+
+// --- State / DMA ---
+// g_State (1=recording)
+mem8  0x24037876 1
+// g_SampleCount
+mem32 0x240377FC 1
+
+// --- RCC clock registers ---
+// RCC_CR @ 0x58024400 — bit1=HSIRDY, bit0=HSION
+mem32 0x58024400 1
+// RCC_D1CCIPR @ 0x5802444C — CKPERSEL[29:28] (00=HSI 64MHz)
+mem32 0x5802444C 1
+// RCC_D3CCIPR @ 0x58024454 — SAI4ASEL[2:0] (4=CLKP), SAI4BSEL[23:21]
+mem32 0x58024454 1
+
+// --- SAI4 registers ---
+// SAI4 Block_A CR1 @ 0x58005404 — bit16=SAIEN, bits[25:20]=MCKDIV (expect 16)
+mem32 0x58005404 1
+// SAI4 PDMCR @ 0x58005444 — bit0=PDMEN, bit8=CKEN1 (expect 0x00000101)
+mem32 0x58005444 1
+
+// --- DFSDM ---
+// DFSDM Filter0 FLTISR @ 0x40017108 — bits[23:16]=CKABF (0x00=clock OK, 0xFF=no clock)
+mem32 0x40017108 1
+
+// --- GPIO IDR ---
+// GPIOE IDR @ 0x58020410 — bit2=PE2=SAI4_CK1 (1=clock, 0=dead)
+mem32 0x58020410 1
+// GPIOC IDR @ 0x58020810 — bit1=PC1=SAI4_D1 (should toggle)
+mem32 0x58020810 1
+
+// --- g_dbg struct (18 fields @ 0x24000050) ---
+mem32 0x24000050 18
+
+g
+exit

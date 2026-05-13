@@ -1,0 +1,25 @@
+2026-05-02 09:34:05 +03:00  INFO: Found Dashboard Database Version '2.82' which matches the current version.
+2026-05-02 09:34:05 +03:00  INFO: Running Dashboard Version is 7.11.4.18993
+2026-05-02 09:34:07 +03:00  INFO: org.apache.catalina.core.ContainerBase.[ax_engine].[localhost].[/axivion]> {org.apache.catalina.core.ApplicationContext log} Initializing Spring DispatcherServlet 'dispatcher'
+2026-05-02 09:34:07 +03:00  INFO: org.apache.coyote.http11.Http11NioProtocol> {org.apache.coyote.AbstractProtocol start} Starting ProtocolHandler ["http-nio-127.0.0.1-9090"]
+2026-05-02 09:34:07 +03:00  INFO: org.apache.coyote.http11.Http11NioProtocol> {org.apache.coyote.AbstractProtocol start} Starting ProtocolHandler ["http-nio-127.0.0.1-auto-1-56565"]
+2026-05-02 09:46:06 +03:00  WARN: Got java.io.IOException while handling request to /axivion/api/sse but response was already commited, so cannot send exception
+	IOException: An established connection was aborted by the software in your host machine
+2026-05-02 09:49:40 +03:00  INFO: Installing project from path C:\TouchGFXProjects\MyApplication\EWARM\.axivion-cache\NBRLWET6FNTF3PSZMUFDWRJPJSCLS2RP52DI3YMAVR7ODKNXVU3Q_db with name EWARM
+2026-05-02 09:51:30 +03:00  INFO: Visualization Script C:\TouchGFXProjects\MyApplication\axivionEWARM\modules::visualization_style_violations_donut exited with exit-code 0 and STDERR: 2026-05-02 09:51:28 - loader - INFO    - Loading module C:\TouchGFXProjects\MyApplication\axivionEWARM\modules\visualization_style_violations_donut.py
+2026-05-02 09:51:28 - runner - INFO    - Reading options JSON file at "C:\Users\Ohad\AppData\Local\Temp\options10399103894403145081.tmp"
+
+2026-05-02 09:51:31 +03:00  INFO: Visualization Script C:\TouchGFXProjects\MyApplication\axivionEWARM\modules::visualization_issue_count_grouped_by_rule exited with exit-code 0 and STDERR: 2026-05-02 09:51:28 - loader - INFO    - Loading module C:\TouchGFXProjects\MyApplication\axivionEWARM\modules\visualization_issue_count_grouped_by_rule.py
+2026-05-02 09:51:28 - runner - INFO    - Reading options JSON file at "C:\Users\Ohad\AppData\Local\Temp\options16007066275206349483.tmp"
+
+2026-05-02 09:51:31 +03:00  INFO: Visualization Script C:\TouchGFXProjects\MyApplication\axivionEWARM\modules::visualization_misra_autosar_report exited with exit-code 0 and STDERR: 2026-05-02 09:51:28 - loader - INFO    - Loading module C:\TouchGFXProjects\MyApplication\axivionEWARM\modules\visualization_misra_autosar_report.py
+2026-05-02 09:51:28 - runner - INFO    - Reading options JSON file at "C:\Users\Ohad\AppData\Local\Temp\options10908195269605934856.tmp"
+
+2026-05-02 11:56:39 +03:00  WARN: Got java.io.IOException while handling request to /axivion/api/sse but response was already commited, so cannot send exception
+	IOException: An established connection was aborted by the software in your host machine
+2026-05-02 13:05:37 +03:00  WARN: Got java.io.IOException while handling request to /axivion/api/sse but response was already commited, so cannot send exception
+	IOException: An established connection was aborted by the software in your host machine
+2026-05-02 14:30:47 +03:00  WARN: Got java.io.IOException while handling request to /axivion/api/sse but response was already commited, so cannot send exception
+	IOException: An established connection was aborted by the software in your host machine
+2026-05-02 15:30:06 +03:00  WARN: Got java.io.IOException while handling request to /axivion/api/sse but response was already commited, so cannot send exception
+	IOException: An established connection was aborted by the software in your host machine

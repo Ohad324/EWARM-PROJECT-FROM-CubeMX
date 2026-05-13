@@ -1,0 +1,14 @@
+
+Dashboard Url is http://localhost:9090/axivion/
+
+
+Initial administrative access credentials have been generated:
+
+Username: admin
+Password: 6st75iYvb1DNLoGsyPpn49jBQ9g
+
+Please change the password after logging in.
+
+Should you ever forget the admin password, you can regain access using the 'restore-admin' subcommand.
+
+Dashboard started successfully. Going into background.

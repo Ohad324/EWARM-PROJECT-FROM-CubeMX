@@ -1,0 +1,11 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+// voiceRecTaskHandle TCB @ 0x2400BF68 — read 24 words to find layout
+mem32 0x2400BF68 24
+// Also read voiceRecTaskHandle pointer itself
+mem32 0x2403780C 1
+g
+exit

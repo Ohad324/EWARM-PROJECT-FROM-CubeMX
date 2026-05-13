@@ -1,0 +1,23 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+// DFSDM Channel 0 CHCFGR1 (expect 0x80180000 — global enable + CKOUTDIV=24)
+mem32 0x40017000 1
+// DFSDM Channel 0 CHCFGR2
+mem32 0x40017004 1
+// DFSDM Channel 1 CHCFGR1 (expect 0x0000008D: CHEN + SPICKSEL=11 + SITP=01)
+mem32 0x40017020 1
+// DFSDM Channel 1 CHCFGR2 (expect 0x00000030 DTRBS=6)
+mem32 0x40017024 1
+// DFSDM Filter0 FLTCR1 (expect 0x21240001)
+mem32 0x40017100 1
+// DFSDM Filter0 FLTISR (CKABF bits[23:16])
+mem32 0x40017108 1
+// DMA1 Stream1 memory address
+mem32 0x40020030 1
+// g_DfsdmBuf address check — read what's at 0x30000000
+mem32 0x30000000 4
+g
+exit

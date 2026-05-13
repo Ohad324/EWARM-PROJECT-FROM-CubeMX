@@ -1,0 +1,64 @@
+/* rebuild_soak_5x.jlink — full reflash + 5 SWIER trigger cycles, 60s apart.
+ * Snapshot per cycle: CH0 CFGR1, FLT0ISR, FLT0RDATAR, DMA NDTR, s_DfsdmBuf[0..3]
+ */
+
+r
+erase
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+sleep 8000
+
+/* Initial state */
+mem32 0x40017000 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x4002002C 1
+mem32 0x30004000 4
+
+/* ── CYCLE 1 ── */
+w4 0x58000008 0x00002000
+sleep 60000
+mem32 0x40017000 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x4002002C 1
+mem32 0x30004000 4
+
+/* ── CYCLE 2 ── */
+w4 0x58000008 0x00002000
+sleep 60000
+mem32 0x40017000 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x4002002C 1
+mem32 0x30004000 4
+
+/* ── CYCLE 3 ── */
+w4 0x58000008 0x00002000
+sleep 60000
+mem32 0x40017000 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x4002002C 1
+mem32 0x30004000 4
+
+/* ── CYCLE 4 ── */
+w4 0x58000008 0x00002000
+sleep 60000
+mem32 0x40017000 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x4002002C 1
+mem32 0x30004000 4
+
+/* ── CYCLE 5 ── */
+w4 0x58000008 0x00002000
+sleep 60000
+mem32 0x40017000 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+mem32 0x4002002C 1
+mem32 0x30004000 4
+
+q

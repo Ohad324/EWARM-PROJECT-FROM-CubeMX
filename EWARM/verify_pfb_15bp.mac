@@ -1,0 +1,339 @@
+/*
+ * verify_pfb_15bp.mac
+ * --------------------------------------------------------------------------
+ * Verifies the Phase 2 Partial Framebuffer (PFB) architecture lands as
+ * designed: heap on SRAM1, framebuffer on AXI, MPU non-cacheable, PFB
+ * callbacks wired, no FUIF on first frame or sustained ops.
+ *
+ * Drives 15 code breakpoints in one IAR IDE C-SPY session.  Each BP has
+ * a focused action macro that dumps register/RAM state to the Debug Log.
+ * Tag prefix [BP-NN] makes log scraping with grep simple.
+ *
+ * Use:  Project > Options > Debugger category > Setup > "Use macro file(s)"
+ *       Browse to EWARM/verify_pfb_15bp.mac
+ *       Active build configuration must be Debug (RELEASE_BUILD strips
+ *       the diagnostic counters used by some BPs).
+ *
+ * BP timeline (skip counts assume Music_InjectTestThumb is compiled in):
+ *  01  SCB_EnableICache              skip=0    MPU REGION 3 attrs (NC + S)
+ *  02  SystemClock_Config            skip=0    RCC_AHB2ENR.D2SRAM1EN = 1
+ *  03  osKernelInitialize            skip=0    frameBuf zeroed, g_dbg moved
+ *  04  MX_LTDC_Init                  skip=0    LTDC clock + pre-config
+ *  05  HAL_DSI_Start                 skip=0    Layer cfg from hltdc struct
+ *  06  TouchGFXHAL::initialize       skip=0    Pre-PFB setup
+ *  07  HAL_DSI_Refresh               skip=0    First DSI refresh trigger
+ *  08  HAL_DSI_EndOfRefreshCallback  skip=0    First EOR fires
+ *  09  HAL_DSI_EndOfRefreshCallback  skip=1    Second EOR (strip 1 done)
+ *  10  HAL_DSI_EndOfRefreshCallback  skip=3    Fourth EOR -- first frame done
+ *  11  HAL_DSI_TearingEffectCallback skip=0    Panel TE pulse received
+ *  12  HAL_DSI_TearingEffectCallback skip=10   Sustained TE -- 11 frames
+ *  13  HAL_DSI_Refresh               skip=60   Sustained refresh -- ~15 frames
+ *  14  HAL_DSI_EndOfRefreshCallback  skip=60   Sustained EOR + STAIN TEST
+ *  15  LTDC_ER_IRQHandler            skip=0    FUIF detection (should NEVER hit)
+ *
+ * Pass criterion: BP-15 NEVER fires (LTDC_ER never triggers from boot
+ * through sustained operation).  BP-14's IRQ-ring counter shows 0 entries
+ * with irq_num == 89 (LTDC_ER).
+ *
+ * IAR macro language quirks observed in this project (CLAUDE.md PART 4):
+ *   - %02d parses as octal -- use plain %d or %2d
+ *   - __delay pauses the host, NOT the target
+ *   - Direct C symbols work: &g_dbg, &frameBuf, &g_irq_idx (no __symbolAddress)
+ *   - LTDC LAYER regs alias to GCR at halt -- read C struct fields instead
+ *   - LTDC global regs (ISR at 0x50001038) DO read correctly at halt
+ */
+
+/* ============================== HELPERS ================================== */
+
+ReadCycle()
+{
+    __message "  cyc=0x", __readMemory32(0xE0001004, "Memory"):%08X, "\n";
+}
+
+DumpMpuRegion(n)
+{
+    __var rbar, rasr, base, size, tex, cb, b, s, en;
+    __writeMemory32(n, 0xE000ED98, "Memory");          /* MPU_RNR */
+    rbar = __readMemory32(0xE000ED9C, "Memory");       /* MPU_RBAR */
+    rasr = __readMemory32(0xE000EDA0, "Memory");       /* MPU_RASR */
+    base = rbar & 0xFFFFFFE0;
+    en   =  rasr        & 0x1;
+    size = (rasr >>  1) & 0x1F;
+    b    = (rasr >> 16) & 0x1;
+    cb   = (rasr >> 17) & 0x1;
+    s    = (rasr >> 18) & 0x1;
+    tex  = (rasr >> 19) & 0x7;
+    __message "  MPU R", n:%d, "  base=0x", base:%08X,
+              "  size=2^", (size+1):%d,
+              "  EN=", en:%d,
+              "  TEX=", tex:%d, " C=", cb:%d, " B=", b:%d, " S=", s:%d, "\n";
+}
+
+DumpFbHead()
+{
+    __message "  frameBuf[0]   = 0x", __readMemory32(0x24000000, "Memory"):%08X,
+              "  [+0x10] = 0x",       __readMemory32(0x24000010, "Memory"):%08X, "\n";
+}
+
+DumpIrqRing()
+{
+    __var idx, i, n_total, n_dsi, n_ltdc_err, n_dma2d, n_jpeg, n_mdma, irq_n;
+    idx = __readMemory32(0x24050800, "Memory");        /* g_irq_idx */
+    __message "  IRQ ring  g_irq_idx=", idx:%d, "  (entries since boot)\n";
+    n_total = 0; n_dsi = 0; n_ltdc_err = 0; n_dma2d = 0; n_jpeg = 0; n_mdma = 0;
+    i = 0;
+    while (i < 32 && i < idx) {
+        irq_n = __readMemory8(0x24050000 + i*8, "Memory");   /* g_irq_log[i].irq_num */
+        n_total = n_total + 1;
+        if (irq_n == 123) n_dsi      = n_dsi      + 1;
+        if (irq_n ==  89) n_ltdc_err = n_ltdc_err + 1;
+        if (irq_n ==  90) n_dma2d    = n_dma2d    + 1;
+        if (irq_n == 121) n_jpeg     = n_jpeg     + 1;
+        if (irq_n == 122) n_mdma     = n_mdma     + 1;
+        i = i + 1;
+    }
+    __message "  [first ", n_total:%d, "] DSI=", n_dsi:%d,
+              "  LTDC_ER=", n_ltdc_err:%d,
+              "  DMA2D=", n_dma2d:%d,
+              "  JPEG=", n_jpeg:%d,
+              "  MDMA=", n_mdma:%d, "\n";
+}
+
+DumpLtdcGlobal()
+{
+    __var isr, ier, gcr;
+    isr = __readMemory32(0x50001038, "Memory");
+    ier = __readMemory32(0x50001034, "Memory");
+    gcr = __readMemory32(0x50001018, "Memory");
+    __message "  LTDC.ISR=0x", isr:%08X,
+              "  IER=0x", ier:%08X,
+              "  GCR=0x", gcr:%08X, "\n";
+    __message "  [decode] FUIF=",   ((isr >> 1) & 1):%d,
+              " TERRIF=",           ((isr >> 2) & 1):%d,
+              " LIF=",                (isr        & 1):%d, "\n";
+}
+
+DumpDsiHost()
+{
+    __var cr, wcr, isr0, vmcr;
+    cr   = __readMemory32(0x50000004, "Memory");
+    wcr  = __readMemory32(0x50000024, "Memory");
+    isr0 = __readMemory32(0x500000FC, "Memory");
+    vmcr = __readMemory32(0x50000138, "Memory");
+    __message "  DSI.CR=0x", cr:%08X,
+              "  WCR=0x", wcr:%08X,
+              "  ISR0=0x", isr0:%08X,
+              "  VMCR=0x", vmcr:%08X, "\n";
+    __message "  [decode] DSI.EN=", (cr & 1):%d,
+              "  WCR.LTDCEN=",      ((wcr >> 1) & 1):%d, "\n";
+}
+
+/* ============================== ACTIONS ================================= */
+
+Hit01_PostMpu()
+{
+    __message "\n[BP-01] post-MPU_Config -- verify REGION 3 (AXI) is NC+Shareable\n";
+    ReadCycle();
+    DumpMpuRegion(0);
+    DumpMpuRegion(1);
+    DumpMpuRegion(2);
+    DumpMpuRegion(3);
+    DumpMpuRegion(4);
+    __message "  PASS if R3 base=0x24000000 size=2^19 TEX=1 C=0 B=0 S=1\n";
+}
+
+Hit02_PostSram1Clk()
+{
+    __var ahb2enr, d2sram1en;
+    __message "\n[BP-02] post-D2SRAM1_CLK_ENABLE -- verify SRAM1 clock gate\n";
+    ReadCycle();
+    ahb2enr   = __readMemory32(0x580244DC, "Memory");
+    d2sram1en = (ahb2enr >> 29) & 1;
+    __message "  RCC.AHB2ENR=0x", ahb2enr:%08X, "  D2SRAM1EN(bit29)=", d2sram1en:%d, "\n";
+    __message "  PASS if D2SRAM1EN=1\n";
+    /* Probe SRAM1 by reading ucHeap[0] -- bus-faults if clock still off */
+    __message "  ucHeap[0] @ 0x30000000 = 0x", __readMemory32(0x30000000, "Memory"):%08X, "\n";
+}
+
+Hit03_PreKernel()
+{
+    __message "\n[BP-03] osKernelInitialize entry -- verify Phase 1 sanitization\n";
+    ReadCycle();
+    DumpFbHead();
+    __message "  g_dbg @ 0x24070000 = 0x", __readMemory32(0x24070000, "Memory"):%08X,
+              "  (relocated from 0x24000050)\n";
+    __message "  ucHeap[0] @ 0x30000000 = 0x", __readMemory32(0x30000000, "Memory"):%08X, "\n";
+    __message "  PASS if frameBuf[0]=0x00000000 (memset complete)\n";
+}
+
+Hit04_LtdcInit()
+{
+    __var apb3enr, ltdcen;
+    __message "\n[BP-04] MX_LTDC_Init entry -- verify LTDC bus clock enabled\n";
+    ReadCycle();
+    apb3enr = __readMemory32(0x580244E0, "Memory");    /* RCC_APB3ENR */
+    ltdcen  = (apb3enr >> 3) & 1;
+    __message "  RCC.APB3ENR=0x", apb3enr:%08X, "  LTDCEN(bit3)=", ltdcen:%d, "\n";
+    DumpLtdcGlobal();
+}
+
+Hit05_DsiStart()
+{
+    __message "\n[BP-05] HAL_DSI_Start entry -- verify LTDC layer cfg via hltdc struct\n";
+    ReadCycle();
+    /* hltdc lives in AXI .bss; struct field reads are safe at halt
+     * (LTDC LAYER MMIO regs would alias to GCR -- read C struct instead) */
+    __message "  hltdc.Init.AccumulatedActiveW = ",
+              __readMemory32(&hltdc.Init.AccumulatedActiveW, "Memory"):%d,
+              "  AccumulatedActiveH = ",
+              __readMemory32(&hltdc.Init.AccumulatedActiveH, "Memory"):%d, "\n";
+    __message "  hltdc.LayerCfg[0].FBStartAdress = 0x",
+              __readMemory32(&hltdc.LayerCfg[0].FBStartAdress, "Memory"):%08X, "\n";
+    __message "  hltdc.LayerCfg[0].ImageWidth=",
+              __readMemory32(&hltdc.LayerCfg[0].ImageWidth, "Memory"):%d,
+              "  ImageHeight=",
+              __readMemory32(&hltdc.LayerCfg[0].ImageHeight, "Memory"):%d, "\n";
+    __message "  PASS if FBStartAdress=0x24000000 + ImgW=800 + ImgH=120\n";
+    DumpDsiHost();
+}
+
+Hit06_TouchGfxInit()
+{
+    __message "\n[BP-06] TouchGFXHAL::initialize entry -- pre-PFB setup\n";
+    ReadCycle();
+    __message "  About to call setFrameRefreshStrategy(REFRESH_STRATEGY_PARTIAL_FRAMEBUFFER)\n";
+    DumpDsiHost();
+}
+
+Hit07_FirstRefresh()
+{
+    __message "\n[BP-07] HAL_DSI_Refresh #1 -- first PFB strip transmit\n";
+    ReadCycle();
+    DumpDsiHost();
+    DumpIrqRing();
+    /* hltdc layer FBStartAdress was set by transmitBlock right before this */
+    __message "  hltdc.LayerCfg[0].FBStartAdress = 0x",
+              __readMemory32(&hltdc.LayerCfg[0].FBStartAdress, "Memory"):%08X, "\n";
+    __message "  PASS if DSI.EN=1 + FB=0x24000000\n";
+}
+
+Hit08_FirstEor()
+{
+    __message "\n[BP-08] HAL_DSI_EndOfRefreshCallback #1 -- first strip done\n";
+    ReadCycle();
+    DumpLtdcGlobal();
+    DumpDsiHost();
+    DumpIrqRing();
+    __message "  PASS if FUIF=0 + LTDC_ER count=0\n";
+}
+
+Hit09_SecondEor()
+{
+    __message "\n[BP-09] EOR #2 -- strip 1 (rows 120..239) done\n";
+    ReadCycle();
+    DumpLtdcGlobal();
+    DumpIrqRing();
+}
+
+Hit10_FrameComplete()
+{
+    __message "\n[BP-10] EOR #4 -- FIRST FRAME COMPLETE (4 strips x 120 rows)\n";
+    ReadCycle();
+    DumpLtdcGlobal();
+    DumpIrqRing();
+    __message "  PASS if LTDC_ER count still 0 after full frame\n";
+}
+
+Hit11_FirstTe()
+{
+    __message "\n[BP-11] HAL_DSI_TearingEffectCallback #1 -- first panel TE pulse\n";
+    ReadCycle();
+    DumpDsiHost();
+}
+
+Hit12_SustainedTe()
+{
+    __message "\n[BP-12] TE #11 -- sustained vsync after 10 frames\n";
+    ReadCycle();
+    DumpLtdcGlobal();
+    DumpIrqRing();
+}
+
+Hit13_SustainedRefresh()
+{
+    __message "\n[BP-13] HAL_DSI_Refresh #61 -- sustained transmit (~15 frames in)\n";
+    ReadCycle();
+    DumpLtdcGlobal();
+    DumpIrqRing();
+}
+
+Hit14_SustainedEorStainTest()
+{
+    __var ltdc_isr;
+    __message "\n[BP-14] EOR #61 -- THE STAIN TEST (sustained, ~15 frames)\n";
+    ReadCycle();
+    ltdc_isr = __readMemory32(0x50001038, "Memory");
+    __message "  LTDC.ISR sticky bits = 0x", ltdc_isr:%08X, "\n";
+    __message "  [HEADLINE]  FUIF (sticky bit 1) = ", ((ltdc_isr >> 1) & 1):%d, "\n";
+    __message "  [HEADLINE]  TERRIF (sticky bit 2) = ", ((ltdc_isr >> 2) & 1):%d, "\n";
+    DumpIrqRing();
+    __message "  PASS criterion: LTDC_ER count == 0 across all logged IRQs\n";
+}
+
+Hit15_LtdcError()
+{
+    __message "\n[BP-15] !!! LTDC_ER_IRQHandler FIRED !!!  Architecture broken\n";
+    ReadCycle();
+    DumpLtdcGlobal();
+    DumpDsiHost();
+    DumpIrqRing();
+    __message "  This BP firing means FUIF or TERRIF triggered.  Investigate:\n";
+    __message "  - Is frameBuf actually at 0x24000000? (check Hit05)\n";
+    __message "  - Is MPU R3 actually NC? (check Hit01)\n";
+    __message "  - Did some other master start using AXI mid-scan?\n";
+}
+
+/* ============================== SETUP =================================== */
+
+InstallBp(sym, skip, action)
+{
+    __var h;
+    h = __setCodeBreak(sym, skip, "1", "TRUE", action);
+    if (h == 0)
+        __message "  [install FAILED]  ", sym, "  skip=", skip:%d, "  -- symbol absent / inlined\n";
+    else
+        __message "  [installed h=", h:%d, "]  ", sym, "  skip=", skip:%d, "\n";
+}
+
+execUserSetup()
+{
+    __message "\n=========================================================\n";
+    __message "  verify_pfb_15bp.mac  --  Phase 2 PFB architecture probe\n";
+    __message "=========================================================\n";
+
+    InstallBp("SCB_EnableICache",              0,  "Hit01_PostMpu()");
+    InstallBp("SystemClock_Config",            0,  "Hit02_PostSram1Clk()");
+    InstallBp("osKernelInitialize",            0,  "Hit03_PreKernel()");
+    InstallBp("MX_LTDC_Init",                  0,  "Hit04_LtdcInit()");
+    InstallBp("HAL_DSI_Start",                 0,  "Hit05_DsiStart()");
+    InstallBp("TouchGFXHAL::initialize",       0,  "Hit06_TouchGfxInit()");
+    InstallBp("HAL_DSI_Refresh",               0,  "Hit07_FirstRefresh()");
+    InstallBp("HAL_DSI_EndOfRefreshCallback",  0,  "Hit08_FirstEor()");
+    InstallBp("HAL_DSI_EndOfRefreshCallback",  1,  "Hit09_SecondEor()");
+    InstallBp("HAL_DSI_EndOfRefreshCallback",  3,  "Hit10_FrameComplete()");
+    InstallBp("HAL_DSI_TearingEffectCallback", 0,  "Hit11_FirstTe()");
+    InstallBp("HAL_DSI_TearingEffectCallback", 10, "Hit12_SustainedTe()");
+    InstallBp("HAL_DSI_Refresh",               60, "Hit13_SustainedRefresh()");
+    InstallBp("HAL_DSI_EndOfRefreshCallback",  60, "Hit14_SustainedEorStainTest()");
+    InstallBp("LTDC_ER_IRQHandler",            0,  "Hit15_LtdcError()");
+
+    __message "=========================================================\n";
+    __message "  Setup complete.  Run target -- BPs fire on hit.\n";
+    __message "  PASS: BP-15 NEVER fires + BP-14 LTDC_ER count = 0.\n";
+    __message "=========================================================\n";
+}
+
+execUserExit()
+{
+    __message "\n[verify_pfb_15bp]  session ending\n";
+}

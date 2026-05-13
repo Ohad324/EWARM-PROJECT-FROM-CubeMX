@@ -1,0 +1,1296 @@
+[UART] hdmarx linked: 2403693c (NULL=bad)
+[DMA] s_dma_rx_buf @ 0x24036840 — OK (DMA accessible)
+SDINIT1 PASS
+SDINIT2 PASS
+SDINIT3 PASS
+SDINIT4 PASS
+[MUSIC] Music_Init() -- queues created
+
+========================================
+[UART] UARTReceiveTask started -- DMA+IDLE mode
+       UART8 |  921600 8N1 | DMA1 Stream0
+       DWT cycle counter enabled (400 MHz)
+========================================
+[UART] huart8.hdmarx: 2403693c
+[UART] DMA buffer OK: 0x24036840
+[UART] DMA armed OK
+[UART] DMA armed -- listening on UART8
+
+[BOOT] ===== DFSDM Audio Pipeline Self-Check =====
+[BOOT]  1. LR hardware        : HIGH (RIGHT mic, SB43=OPEN, R213 pullup)  [HW-FIXED]
+[BOOT]  2. DFSDM channel       : CH0  (RCSEL bits[27:24])   [FAIL] expect 1
+[BOOT]  3. Edge (SITP)         : RISING (00)  (bits[1:0]=0x00)       [FAIL] expect 01=falling
+[BOOT]  4. SPICKSEL            : 00  (bits[3:2]=0x00)       [FAIL] expect 01=CKOUT
+[BOOT]  5. CHEN (CH1 enable)   : 0  (bit7)                  [FAIL] expect 1
+[BOOT]  6. DFSDMEN (global)    : 0  (bit31)                 [FAIL] expect 1
+[BOOT]  7. CKOUTDIV            : 0  (bits[22:16])           [FAIL] expect 24 -> 2.0 MHz
+[BOOT]  8. RCSEL (filter->CH)  : 0  FLTCR1=0x20240001      [FAIL] expect 1=CH1
+[BOOT]  9. Filter mode         : Sinc3  OSR=125  FLTFCR=0x607C0000  [OK  ]
+[BOOT] 10. DMA path            : DFEN=1 RDMAEN=1 NDTR=0      [OK  ] NDTR moves during rec
+[BOOT] 11. DTRBS (shift)       : 0  CH0CFG2=0x00000000      [FAIL] expect 6 (not 5!)
+[BOOT] 12. False DC guard      : 0x1195 plateau=DTRBS=5 bug [PEND - verify after recording]
+[BOOT]     SAI4 PDMCR          : 0x00000000                    [FAIL] expect 0x00000101
+[BOOT] ===== *** CONFIG FAULT - check FAIL items above *** =====
+
+[WARN] DFSDM CKABF0 set (sticky boot flag — SAI4 was absent at init, normal)
+[T+    397 ms] [SD] INIT_OK 0
+[View] setupScreen() — center word display initialised
+[MUSIC] JPEG colour tables initialised
+[MEM] s_ycbcrBuf=d0119400 1800KB  s_rgb888Buf=d02db400 2700KB  s_rgb888Scaled=d057e400 1125KB
+[T+   5200 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+   5201 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+   5201 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+   5201 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+   5201 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  10201 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  10202 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  10202 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  10202 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  10202 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  15202 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  15203 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  15203 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  15203 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  15203 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  20203 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  20204 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  20204 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  20204 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  20204 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  25204 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  25205 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  25205 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  25206 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  25206 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  30205 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  30206 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  30206 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  30206 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  30206 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  35206 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  35207 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  35207 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  35207 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  35208 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  40207 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  40208 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  40208 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  40208 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  40208 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  45208 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  45209 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  45209 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  45209 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  45209 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  50209 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  50210 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  50211 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  50211 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  50211 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  55210 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  55211 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  55211 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  55211 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  55211 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  60211 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  60212 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  60212 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  60212 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  60213 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  65212 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  65213 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  65213 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  65213 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  65214 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  70213 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  70215 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  70215 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  70215 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  70215 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  75215 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  75217 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  75217 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  75217 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  75217 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  80217 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  80219 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  80219 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  80219 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  80219 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  85218 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  85219 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  85219 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  85219 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  85219 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  90219 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  90220 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  90220 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  90220 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  90220 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+  95220 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+  95221 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+  95221 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+  95221 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+  95221 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 100221 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 100223 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 100223 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 100223 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 100223 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 105223 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 105224 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 105224 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 105224 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 105224 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 110224 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 110226 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 110226 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 110226 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 110226 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 115225 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 115226 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 115226 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 115226 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 115227 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 120226 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 120227 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 120227 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 120227 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 120227 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 125227 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 125228 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 125228 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 125228 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 125228 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 130228 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 130229 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 130229 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 130229 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 130230 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 135229 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 135231 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 135231 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 135231 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 135231 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 140231 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 140233 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 140233 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 140233 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 140233 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 145232 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 145233 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 145233 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 145233 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 145233 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 150233 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 150234 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 150234 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 150234 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 150234 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 155234 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 155235 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 155235 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 155235 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 155235 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 160235 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 160236 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 160236 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 160236 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 160236 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 165238 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 165239 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 165239 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 165239 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 165239 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 170239 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 170240 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 170240 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 170240 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 170240 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 175240 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 175241 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 175241 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 175241 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 175241 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 180241 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 180242 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 180242 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 180242 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 180242 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 185242 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 185244 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 185244 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 185244 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 185244 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 190244 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 190245 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 190245 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 190245 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 190245 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 195245 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 195246 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 195246 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 195246 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 195246 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 200246 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 200247 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 200247 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 200247 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 200247 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 205247 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 205249 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 205249 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 205249 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 205249 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 210249 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 210250 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 210250 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 210250 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 210250 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 215250 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 215251 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 215251 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 215251 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 215251 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 220251 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 220252 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 220252 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 220252 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 220252 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 225252 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 225253 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 225253 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 225253 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 225253 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 230253 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 230254 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 230254 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 230254 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 230254 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 235254 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 235255 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 235255 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 235255 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 235255 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 240255 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 240256 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 240256 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 240256 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 240256 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 245256 ms] [PING] state=IDLE  sd_free_KB=0  dfsdm_ovr=0  sd_miss=0
+[T+ 245257 ms] [PING] VoiceRecTask HWM=3033/3072 words  sd_worst_ms=0
+[T+ 245257 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/0 B
+[T+ 245257 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 245257 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[BTN] PC13_PRESSED
+PIPELINE_START
+DFSDM3 PASS
+DFSDM4 PASS
+[T+ 246569 ms] [REC] START trigger=BTN nextFile= 1
+DFSDM5 PASS
+SD1 PASS
+SD2 PASS
+SD3 PASS
+SD4 PASS
+SD5 PASS
+REMOUNT1 PASS
+[T+ 249698 ms] [REC] DFSDM_DONE samples= 48000
+[T+ 254630 ms] [SD] SAVING samples= 48000
+[T+ 254630 ms] [SD] SAVING bytes= 96000
+[T+ 254630 ms] [SD] SAVING fileIdx= 405
+REMOUNT2 PASS
+[ERROR] NORA: "unknown command"
+TGFX1 FAIL
+[ERROR] Display error: unknown command
+[Model] MUSIC_DONE_ERROR (cached): "unknown command"
+[Model] requesting screen switch -> MusicScreen
+[Presenter] onMusicPending -- switching to MusicScreen
+[MusicView] setupScreen()
+[Presenter] MusicScreen activated -- dispatching cached data
+[Presenter] activate: pending ERROR "unknown command"
+[MUSIC] Error displayed: unknown command
+STREAM1 PASS
+[T+ 255102 ms] [SD] REMOUNT_FR= 0
+[T+ 255102 ms] REMOUNT3 PASS 0
+[T+ 255126 ms] [SD] UART_TX_FILE_SIZE= 96512
+[T+ 255127 ms] [ROUTE] line_len= 21
+[T+ 255127 ms] [ERROR] NORA_ERR len= 21
+[T+ 255176 ms] [SD] WAIT_AUDIO_READY 0
+[T+ 255177 ms] [ROUTE] line_len= 11
+[T+ 255177 ms] [ROUTE] AUDIO_READY_RCVD 11
+[T+ 255186 ms] STREAM2 PASS 0
+[T+ 255186 ms] [SD] AUDIO_READY_RCVD 0
+[T+ 255479 ms] [PING] state=SAVING  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 255480 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 255480 ms] [PING] uart_tx=0  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=0/96512 B
+[T+ 255480 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 255480 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+REMOUNT1 PASS
+REMOUNT2 PASS
+REMOUNT1 PASS
+REMOUNT2 PASS
+-------- Audio Quality Report --------
+[DFSDM] raw[0..7] : 00005800 00005300 00004300 00003B00 00003B00 00003C00 00004300 00004400
+[DMA]  callbacks=782  warmup=32  stored=750  overflow=0 OK
+[SYNC] latency_max=0 us  headroom=1000 us  qDepth_max=0  desync=0  -> IN SYNC  (>50% headroom)
+[PCM]  out[64..71] : -9 -12 -7 2 -1 -12 -26 -31
+[PCM]  noise_rms=197     speech_rms=175     snr~+0 dB
+[PCM]  peak=3171    dc_offset=140     clip=0
+[PCM]  target : noise<300  speech>2000  snr>20dB  clip=0
+[PCM]  FAIL: speech too quiet -- increase mic_gain or speak closer
+[REG]  DFSDM1_Ch1->CHCFGR1 = 0x00000000  (active ch: CHEN+SPICKSEL=01+SITP=01 expect 0x00000085)
+[REG]  DFSDM1_Ch1->CHCFGR2 = 0x00000000  (DTRBS=6 expect 0x00000030)
+[REG]  DFSDM1_Flt0->FLTCR1 = 0x20240001  (filter enable/DMA/trig)
+[REG]  DFSDM1_Flt0->FLTCR2 = 0x00000000  (IT enables)
+[REG]  DFSDM1_Flt0->FLTISR = 0x00FF0000  (status: bit3=ROVRF ovrun)
+[REG]  DFSDM1_Flt0->FLTFCR = 0x607C0000  (Sinc order / OSR)
+[REG]  DMA1_St1->CR        = 0x00025500  (stream config)
+[REG]  DMA1_St1->NDTR      = 0x00000080  (remaining count)
+[REG]  DMA1_St1->M0AR      = 0x30004000  (expect 0x30000000)
+[SYS]  uptime=257478 ms  fileIdx=405  samples=48000  duration=3000 ms
+[SYS]  VoiceRecTask HWM=3030 words / 3072  SDWriteTask HWM=988 words / 2048
+[SYS]  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0  sd_worst_ms=15  dma_q_ovf=0
+--------------------------------------
+[T+ 257388 ms] STREAM3 PASS 0
+[T+ 257388 ms] [SD] STREAM_DONE_BYTES= 96512
+[T+ 257388 ms] [SD] STREAM_DECLARED_B= 96512
+[T+ 257388 ms] [SD] STREAM_RETRIES= 0
+[T+ 257430 ms] [SD] REMOUNT_FR= 0
+[T+ 257430 ms] REMOUNT3 PASS 0
+[T+ 257430 ms] [SD] UART_STREAM_OK 0
+[T+ 257472 ms] [SD] REMOUNT_FR= 0
+[T+ 257472 ms] REMOUNT3 PASS 0
+[T+ 257479 ms] [HLTH] dfsdm_overruns= 0
+[T+ 257479 ms] [HLTH] sd_write_max_ms= 15
+[T+ 257479 ms] [HLTH] buffer_misses= 0
+[T+ 257479 ms] [HLTH] bytes_written= 96000
+[T+ 257479 ms] [HLTH] sd_free_KB= 31122112
+[T+ 257479 ms] [HLTH] dma_queue_ovf= 0
+[T+ 257479 ms] [SD] WRITE_OK bytes= 96000
+[CLOUD] UPLOAD_OK: "REC_405.wav"
+[T+ 258806 ms] [ROUTE] line_len= 21
+[T+ 258806 ms] [CLOUD] UPLOAD_OK len= 21
+[T+ 260541 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 260542 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 260542 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 260542 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 260542 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+TGFX1 PASS
+TGFX2 PASS
+[4] Track sent to screen: "Beatles" by ""  [4 ms from track received]
+[Model] MUSIC_DONE_TRACK (direct): "Beatles"
+[Presenter] onMusicTrack: "Beatles"
+[MusicView] Title set (Latin LTR): Beatles
+[MusicView] Artist set (Latin LTR): 
+[T+ 263610 ms] [ROUTE] line_len= 26
+[T+ 263610 ms] [1] TRACK_RCVD 0
+[T+ 263610 ms] [2] TRACK_TO_MUSIC_Q 0
+[T+ 264499 ms] [ROUTE] line_len= 11
+[3] Thumbnail JPEG received: 20933 bytes  [transfer: 1175 ms / 470216 Kcycles from track]
+TGFX3 PASS
+[JPEG] Stage1: input=d0697800 size=20933  ycbcr_buf=d0119400 size=1843200
+[MUSIC] JPEG decode started
+[MUSIC] JPEG decode complete: 320 x 180  subsampling=1
+[JPEG] Stage2: 320x180 cs=16 ss=1  ycbcr[0..7]=1314141414141414
+[MUSIC] calling JPEG_GetDecodeColorConvertFunc...
+[MUSIC] JPEG_GetDecodeColorConvertFunc returned: 0  fn=803e6e9  nMCUs=240
+[MUSIC] ColorConvert OK: fn=803e6e9  nMCUs=240  mcuBytes=384
+[JPEG] Stage3: pIn=d0119400 pOut=d02db400 nMCUs=240 mcuBytes=384 fn=803e6e9
+[JPEG] MCU 0/240
+[JPEG] MCU 100/240
+[JPEG] MCU 200/240
+[JPEG] Stage4: YCbCr->RGB DONE  rgb888=d02db400
+[JPEG] Stage5: scale 320x180->800x480  src=d02db400 dst=d057e400
+[MUSIC] Scale 320x180->800x480: 212 ms / 102078 Kcycles
+[JPEG] Stage6: scaling DONE  scaled=d057e400
+[MUSIC] Pixel[0] #07111B  Pixel[1] #07111B
+TGFX4 PASS
+TGFX5 PASS
+[4] Thumbnail sent to screen: 320 x 180 px  [decode: 249 ms  |  total: 1241 ms]
+[Model] MUSIC_DONE_THUMB (direct): 320 x 180
+[Presenter] onMusicThumbnail: 320 x 180
+[MusicView] setThumbnail ptr=d057e400 320x180
+[MusicView] Thumbnail displayed: 320 x 180 -> 800x480 fullscreen
+[DMA2D NULLDST DMA2D_CopyBuffer] FrameBufferAddress=NULL (no MJPEG video active) - skipping & clearing stuck job
+[T+ 265702 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 265703 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 265703 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 265703 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 265703 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 270703 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 270704 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 270704 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 270704 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 270705 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 275704 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 275705 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 275705 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 275705 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 275705 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 280705 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 280706 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 280706 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 280706 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 280706 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 285706 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 285707 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 285707 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 285707 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 285707 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 290707 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 290708 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 290708 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 290708 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 290708 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 295708 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 295709 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 295709 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 295709 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 295709 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 300709 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 300710 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 300710 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 300710 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 300710 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 305710 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 305711 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 305711 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 305711 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 305711 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 310711 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 310712 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 310712 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 310712 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 310712 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 315714 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 315715 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 315715 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 315715 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 315715 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 320715 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 320717 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 320717 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 320717 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 320717 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 325717 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 325718 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 325718 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 325718 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 325718 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 330718 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 330720 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 330720 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 330720 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 330720 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 335720 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 335721 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 335721 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 335721 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 335721 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 340721 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 340722 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 340722 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 340722 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 340722 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 345722 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 345723 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 345723 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 345723 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 345723 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 350723 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 350724 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 350724 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 350724 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 350724 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 355724 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 355725 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 355725 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 355725 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 355725 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 360725 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 360726 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 360726 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 360726 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 360727 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 365726 ms] [PING] state=IDLE  sd_free_KB=31122112  dfsdm_ovr=0  sd_miss=0
+[T+ 365727 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 365727 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 365727 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 365727 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[BTN] PC13_PRESSED
+PIPELINE_START
+DFSDM3 PASS
+DFSDM4 PASS
+[T+ 366324 ms] [REC] START trigger=BTN nextFile= 406
+DFSDM5 PASS
+SD1 PASS
+SD2 PASS
+SD3 PASS
+SD4 PASS
+SD5 PASS
+REMOUNT1 PASS
+[T+ 369452 ms] [REC] DFSDM_DONE samples= 48000
+[T+ 369452 ms] [SD] SAVING samples= 48000
+[T+ 369452 ms] [SD] SAVING bytes= 96000
+[T+ 369452 ms] [SD] SAVING fileIdx= 406
+REMOUNT2 PASS
+STREAM1 PASS
+[T+ 369926 ms] [SD] REMOUNT_FR= 0
+[T+ 369926 ms] REMOUNT3 PASS 0
+[T+ 369950 ms] [SD] UART_TX_FILE_SIZE= 96512
+[T+ 370000 ms] [SD] WAIT_AUDIO_READY 0
+[T+ 370001 ms] [ROUTE] line_len= 11
+[T+ 370001 ms] [ROUTE] AUDIO_READY_RCVD 11
+[T+ 370010 ms] STREAM2 PASS 0
+[T+ 370010 ms] [SD] AUDIO_READY_RCVD 0
+[T+ 371130 ms] [PING] state=SAVING  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 371132 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 371132 ms] [PING] uart_tx=1  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 371132 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 371132 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+REMOUNT1 PASS
+REMOUNT2 PASS
+REMOUNT1 PASS
+REMOUNT2 PASS
+-------- Audio Quality Report --------
+[DFSDM] raw[0..7] : 00008500 00008400 00008500 00008300 00008300 00008700 00008C00 00008E00
+[DMA]  callbacks=782  warmup=32  stored=750  overflow=0 OK
+[SYNC] latency_max=0 us  headroom=1000 us  qDepth_max=0  desync=0  -> IN SYNC  (>50% headroom)
+[PCM]  out[64..71] : 169 162 152 143 134 126 119 110
+[PCM]  noise_rms=194     speech_rms=202     snr~+0 dB
+[PCM]  peak=1013    dc_offset=74      clip=0
+[PCM]  target : noise<300  speech>2000  snr>20dB  clip=0
+[PCM]  FAIL: speech too quiet -- increase mic_gain or speak closer
+[REG]  DFSDM1_Ch1->CHCFGR1 = 0x00000000  (active ch: CHEN+SPICKSEL=01+SITP=01 expect 0x00000085)
+[REG]  DFSDM1_Ch1->CHCFGR2 = 0x00000000  (DTRBS=6 expect 0x00000030)
+[REG]  DFSDM1_Flt0->FLTCR1 = 0x20240001  (filter enable/DMA/trig)
+[REG]  DFSDM1_Flt0->FLTCR2 = 0x00000000  (IT enables)
+[REG]  DFSDM1_Flt0->FLTISR = 0x00FF0000  (status: bit3=ROVRF ovrun)
+[REG]  DFSDM1_Flt0->FLTFCR = 0x607C0000  (Sinc order / OSR)
+[REG]  DMA1_St1->CR        = 0x00025500  (stream config)
+[REG]  DMA1_St1->NDTR      = 0x00000080  (remaining count)
+[REG]  DMA1_St1->M0AR      = 0x30004000  (expect 0x30000000)
+[SYS]  uptime=372302 ms  fileIdx=406  samples=48000  duration=3000 ms
+[SYS]  VoiceRecTask HWM=3030 words / 3072  SDWriteTask HWM=988 words / 2048
+[SYS]  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0  sd_worst_ms=15  dma_q_ovf=0
+--------------------------------------
+[T+ 372212 ms] STREAM3 PASS 0
+[T+ 372212 ms] [SD] STREAM_DONE_BYTES= 96512
+[T+ 372212 ms] [SD] STREAM_DECLARED_B= 96512
+[T+ 372212 ms] [SD] STREAM_RETRIES= 0
+[T+ 372254 ms] [SD] REMOUNT_FR= 0
+[T+ 372254 ms] REMOUNT3 PASS 0
+[T+ 372254 ms] [SD] UART_STREAM_OK 0
+[T+ 372296 ms] [SD] REMOUNT_FR= 0
+[T+ 372296 ms] REMOUNT3 PASS 0
+[T+ 372304 ms] [HLTH] dfsdm_overruns= 0
+[T+ 372304 ms] [HLTH] sd_write_max_ms= 15
+[T+ 372304 ms] [HLTH] buffer_misses= 0
+[T+ 372304 ms] [HLTH] bytes_written= 96000
+[T+ 372304 ms] [HLTH] sd_free_KB= 31122016
+[T+ 372304 ms] [HLTH] dma_queue_ovf= 0
+[T+ 372304 ms] [SD] WRITE_OK bytes= 96000
+[CLOUD] UPLOAD_OK: "REC_406.wav"
+[T+ 373594 ms] [ROUTE] line_len= 21
+[T+ 373594 ms] [CLOUD] UPLOAD_OK len= 21
+[T+ 376166 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 376167 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 376167 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 376167 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 376167 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+TGFX1 PASS
+TGFX2 PASS
+[4] Track sent to screen: "Rod Stewart" by ""  [3 ms from track received]
+[Model] MUSIC_DONE_TRACK (direct): "Rod Stewart"
+[Presenter] onMusicTrack: "Rod Stewart"
+[MusicView] Title set (Latin LTR): Rod Stewart
+[MusicView] Artist set (Latin LTR): 
+[T+ 378299 ms] [ROUTE] line_len= 30
+[T+ 378299 ms] [1] TRACK_RCVD 0
+[T+ 378299 ms] [2] TRACK_TO_MUSIC_Q 0
+[T+ 378960 ms] [ROUTE] line_len= 11
+[3] Thumbnail JPEG received: 15679 bytes  [transfer: 877 ms / 351088 Kcycles from track]
+TGFX3 PASS
+[JPEG] Stage1: input=d0697800 size=15679  ycbcr_buf=d0119400 size=1843200
+[MUSIC] JPEG decode started
+[MUSIC] JPEG decode complete: 320 x 180  subsampling=1
+[JPEG] Stage2: 320x180 cs=16 ss=1  ycbcr[0..7]=0101010101010101
+[MUSIC] calling JPEG_GetDecodeColorConvertFunc...
+[MUSIC] JPEG_GetDecodeColorConvertFunc returned: 0  fn=803e6e9  nMCUs=240
+[MUSIC] ColorConvert OK: fn=803e6e9  nMCUs=240  mcuBytes=384
+[JPEG] Stage3: pIn=d0119400 pOut=d02db400 nMCUs=240 mcuBytes=384 fn=803e6e9
+[JPEG] MCU 0/240
+[JPEG] MCU 100/240
+[JPEG] MCU 200/240
+[JPEG] Stage4: YCbCr->RGB DONE  rgb888=d02db400
+[JPEG] Stage5: scale 320x180->800x480  src=d02db400 dst=d057e400
+[MUSIC] Scale 320x180->800x480: 212 ms / 102077 Kcycles
+[JPEG] Stage6: scaling DONE  scaled=d057e400
+[MUSIC] Pixel[0] #010100  Pixel[1] #010100
+TGFX4 PASS
+TGFX5 PASS
+[4] Thumbnail sent to screen: 320 x 180 px  [decode: 249 ms  |  total: 986 ms]
+[Model] MUSIC_DONE_THUMB (direct): 320 x 180
+[Presenter] onMusicThumbnail: 320 x 180
+[MusicView] setThumbnail ptr=d057e400 320x180
+[MusicView] Thumbnail displayed: 320 x 180 -> 800x480 fullscreen
+[T+ 381284 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 381285 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 381285 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 381285 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 381285 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 386285 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 386286 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 386286 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 386286 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 386286 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 391286 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 391287 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 391287 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 391287 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 391287 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 396287 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 396288 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 396288 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 396288 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 396288 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 401288 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 401289 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 401289 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 401289 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 401289 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 406289 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 406290 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 406290 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 406290 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 406290 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 411290 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 411291 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 411291 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 411291 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 411291 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 416291 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 416292 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 416292 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 416292 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 416292 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 421292 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 421293 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 421293 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 421293 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 421293 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 426293 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 426294 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 426294 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 426294 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 426294 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 431294 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 431295 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 431295 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 431295 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 431295 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 436295 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 436296 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 436296 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 436296 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 436296 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 441296 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 441297 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 441297 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 441297 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 441297 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 446297 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 446298 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 446298 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 446298 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 446298 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 451298 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 451299 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 451299 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 451299 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 451299 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 456299 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 456300 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 456300 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 456300 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 456300 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 461300 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 461301 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 461301 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 461301 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 461301 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 466301 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 466302 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 466302 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 466302 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 466302 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 471302 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 471303 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 471303 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 471303 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 471303 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 476303 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 476304 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 476304 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 476304 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 476304 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 481304 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 481305 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 481305 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 481305 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 481305 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 486305 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 486306 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 486306 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 486306 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 486306 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 491306 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 491307 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 491307 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 491307 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 491307 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 496307 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 496308 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 496308 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 496308 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 496308 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 501308 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 501309 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 501309 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 501309 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 501309 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 506309 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 506310 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 506310 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 506310 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 506310 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 511310 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 511311 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 511311 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 511311 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 511311 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 516311 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 516312 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 516312 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 516312 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 516312 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 521312 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 521313 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 521313 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 521313 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 521313 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 526313 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 526314 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 526314 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 526314 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 526314 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 531314 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 531315 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 531315 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 531315 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 531315 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 536315 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 536316 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 536316 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 536316 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 536316 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 541316 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 541317 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 541317 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 541317 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 541317 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 546317 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 546318 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 546318 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 546318 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 546318 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 551318 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 551319 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 551319 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 551319 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 551319 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 556319 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 556320 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 556320 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 556320 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 556320 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 561320 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 561321 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 561321 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 561321 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 561321 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 566321 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 566322 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 566322 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 566322 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 566322 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 571322 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 571323 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 571323 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 571323 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 571323 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 576323 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 576324 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 576324 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 576324 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 576324 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 581324 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 581325 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 581325 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 581325 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 581325 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 586325 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 586326 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 586326 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 586326 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 586326 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 591326 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 591327 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 591327 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 591327 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 591327 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 596327 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 596328 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 596328 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 596328 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 596328 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 601328 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 601329 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 601329 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 601329 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 601329 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 606329 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 606330 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 606330 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 606330 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 606330 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 611330 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 611331 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 611331 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 611331 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 611331 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 616331 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 616332 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 616332 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 616332 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 616332 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 621332 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 621333 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 621333 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 621333 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 621333 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 626333 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 626334 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 626334 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 626334 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 626334 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 631334 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 631335 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 631335 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 631335 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 631335 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 636335 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 636336 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 636336 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 636336 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 636336 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 641336 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 641337 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 641337 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 641337 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 641337 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 646337 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 646338 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 646338 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 646338 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 646338 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 651338 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 651339 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 651339 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 651339 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 651339 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 656339 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 656340 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 656340 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 656340 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 656340 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 661340 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 661341 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 661341 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 661341 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 661341 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 666341 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 666342 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 666342 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 666342 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 666342 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 671342 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 671343 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 671343 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 671343 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 671343 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 676343 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 676344 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 676344 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 676344 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 676344 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 681344 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 681345 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 681345 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 681345 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 681345 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 686345 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 686346 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 686346 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 686346 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 686346 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 691346 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 691347 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 691347 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 691347 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 691347 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 696347 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 696348 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 696348 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 696348 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 696348 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 701348 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 701349 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 701349 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 701349 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 701349 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 706349 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 706350 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 706350 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 706350 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 706350 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 711350 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 711351 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 711351 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 711351 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 711351 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 716351 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 716352 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 716352 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 716352 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 716352 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 721352 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 721353 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 721353 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 721353 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 721353 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 726353 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 726354 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 726354 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 726354 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 726354 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 731354 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 731355 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 731355 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 731355 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 731355 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 736355 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 736356 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 736356 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 736356 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 736356 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 741356 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 741357 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 741357 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 741357 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 741357 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 746357 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 746358 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 746358 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 746358 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 746358 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 751358 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 751359 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 751359 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 751359 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 751359 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 756359 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 756360 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 756360 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 756360 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 756360 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 761360 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 761361 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 761361 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 761361 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 761361 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 766361 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 766362 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 766362 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 766362 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 766362 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 771362 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 771363 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 771363 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 771363 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 771363 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 776363 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 776364 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 776364 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 776364 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 776364 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 781364 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 781365 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 781365 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 781365 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 781365 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 786365 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 786366 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 786366 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 786366 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 786366 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 791366 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 791367 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 791367 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 791367 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 791367 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 796367 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 796368 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 796368 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 796368 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 796368 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 801368 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 801369 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 801369 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 801369 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 801369 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 806369 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 806370 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 806370 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 806370 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 806370 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 811370 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 811371 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 811371 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 811371 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 811371 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 816371 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 816372 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 816372 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 816372 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 816372 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 821372 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 821373 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 821373 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 821373 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 821373 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 826373 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 826374 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 826374 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 826374 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 826374 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 831374 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 831375 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 831375 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 831375 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 831375 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 836375 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 836376 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 836376 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 836376 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 836376 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 841376 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 841377 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 841377 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 841377 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 841377 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 846377 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 846378 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 846378 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 846378 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 846378 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 851378 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 851379 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 851379 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 851379 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 851379 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 856379 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 856380 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 856380 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 856380 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 856380 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 861380 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 861381 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 861381 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 861381 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 861381 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 866381 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 866382 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 866382 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 866382 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 866382 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 871382 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 871383 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 871383 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 871383 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 871383 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 876383 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 876384 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 876384 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 876384 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 876384 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 881384 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 881385 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 881385 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 881385 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 881385 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 886385 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 886386 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 886386 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 886386 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 886386 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 891386 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 891387 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 891387 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 891387 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 891387 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 896387 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 896388 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 896388 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 896388 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 896388 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 901388 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 901389 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 901389 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 901389 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 901389 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 906389 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 906390 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 906390 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 906390 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 906390 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 911390 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 911391 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 911391 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 911391 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 911391 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 916391 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 916392 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 916392 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 916392 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 916392 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 921392 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 921393 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 921393 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 921393 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 921393 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 926393 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 926394 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 926394 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 926394 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 926394 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 931394 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 931395 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 931395 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 931395 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 931395 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 936395 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 936396 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 936396 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 936396 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 936396 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 941396 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 941397 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 941397 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 941397 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 941397 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 946397 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 946398 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 946398 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 946398 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 946398 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 951398 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 951399 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 951399 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 951399 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 951399 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 956399 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 956400 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 956400 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 956400 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 956400 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 961400 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 961401 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 961401 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 961401 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 961401 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 966401 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 966402 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 966402 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 966402 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 966402 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 971402 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 971403 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 971403 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 971403 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 971403 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 976403 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 976404 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 976404 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 976404 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 976404 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 981404 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 981405 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 981405 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 981405 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 981405 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 986405 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 986406 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 986406 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 986406 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 986406 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 991406 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 991407 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 991407 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 991407 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 991407 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+ 996407 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+ 996408 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+ 996408 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+ 996408 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+ 996408 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1001408 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1001409 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1001409 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1001409 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1001409 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1006409 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1006410 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1006410 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1006410 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1006410 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1011410 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1011411 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1011411 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1011411 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1011411 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1016411 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1016412 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1016412 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1016412 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1016412 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1021412 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1021413 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1021413 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1021413 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1021413 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1026413 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1026414 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1026414 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1026414 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1026414 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1031414 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1031415 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1031415 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1031415 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1031415 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0
+[T+1036415 ms] [PING] state=IDLE  sd_free_KB=31122016  dfsdm_ovr=0  sd_miss=0
+[T+1036416 ms] [PING] VoiceRecTask HWM=3030/3072 words  sd_worst_ms=15
+[T+1036416 ms] [PING] uart_tx=2  tx_retry=0  tx_fail=0  rx_ore=0  last_err=0x00  last=96512/96512 B
+[T+1036416 ms] [CLK] SAI4PDMCR=00000000[FAIL] SAI4CR1=00000000 SAIEN=0[FAIL-PE2_FLAT] CKABF=FF[NO_CLK]
+[T+1036416 ms] [BDMA] CCR=00000000[OFF-PE2_DEAD] CNDTR=0

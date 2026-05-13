@@ -1,0 +1,9 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+// RTT up-channel 0 buffer: pBuffer=0x24026060, WrOff=0x3FC6
+// Read last 1KB of written content: from (0x3FC6-1024)=0x3BC6 → 0x24029C26, 256 words
+mem8 0x24029C26 1024
+g
+exit

@@ -1,0 +1,412 @@
+Digital filter for sigma delta modulators (DFSDM)                                                                                                                                                                                              RM0399
+
+Bits 31:4 CNVCNT[27:0]: 28-bit timer counting conversion time t = CNVCNT[27:0] / fDFSDMCLK
+              The timer has an input clock from DFSDM clock (system clock fDFSDMCLK). Conversion time
+                measurement is started on each conversion start and stopped when conversion finishes (interval
+                between first and last serial sample). Only in case of filter bypass (FOSR[9:0] = 0) is the conversion
+                time measurement stopped and CNVCNT[27:0] = 0. The counted time is:
+
+                if FAST=0 (or first conversion in continuous mode if FAST=1):
+                   t = [FOSR * (IOSR-1 + FORD) + FORD] / fCKIN..... for Sincx filters
+                   t = [FOSR * (IOSR-1 + 4) + 2] / fCKIN..... for FastSinc filter
+
+                if FAST=1 in continuous mode (except first conversion):
+
+                   t = [FOSR * IOSR] / fCKIN
+                in case if FOSR = FOSR[9:0]+1 = 1 (filter bypassed, active only integrator):
+
+                   CNVCNT = 0 (counting is stopped, conversion time: t = IOSR / fCKIN)
+                where: fCKIN is the channel input clock frequency (on given channel CKINy pin) or input data rate in
+                case of parallel data input (from internal ADC or from CPU/DMA write)
+
+             Note: When conversion is interrupted (e.g. by disable/enable selected channel) the timer counts also
+                       this interruption time.
+
+ Bits 3:0 Reserved, must be kept at reset value.
+
+31.8.16    DFSDM register map
+
+           The following table summarizes the DFSDM registers.
+
+                                              Table 259. DFSDM register map and reset values
+
+Offset   Register       31       CKOUTSRC 30  29    28    27    26    25    24    23      22     21    20    19    18    17    16    DATPACK[1:0] 15    DATMPX[1:0] 13    11    10    9     8             7     6            5           4     3         2      1  0
+           name                                                                                                                         14                 12
+
+0x00      DFSDM_        DFSDMEN               Res.  Res.  Res.  Res.  Res.  Res.                 CKOUTDIV[7:0]                                                            Res.  Res.  Res.  CHINSEL       CHEN  CKABEN       SCDEN       Res.  SPICKSEL  [1:0]  SITP[1:0]
+         CH0CFGR1
+
+         reset value    00                                                        000000000000                                                                                              0000                                               0000
+                                                                                          OFFSET[23:0]
+0x04      DFSDM_                                                                                   0                                                                                                            DTRBS[4:0]                               Res.   Res.
+         CH0CFGR2                                                                                                                                                                                                                                                    Res.
+
+         reset value                                                                                                                                                                                                         0
+
+0x08       DFSDM_       Res.     Res.         Res.  Res.  Res.  Res.  Res.  Res.  AWFORD  [1:0]  Res.  AWFOSR[4:0] BKSCD[3:0]                                             Res.  Res.  Res.  Res.                             SCDT[7:0]
+        CH0AWSCDR
+
+         reset value                                                              00                   000000000                                                                                          00000000
+
+0x0C      DFSDM_        Res.     Res.         Res.  Res.  Res.  Res.  Res.  Res.  Res.    Res.   Res.  Res.  Res.  Res.  Res.  Res.                                                   WDATA[15:0]
+        CH0WDATR
+0x10                                                                                                                                 0000000000000000
+0x14 -   reset value
+0x1C                                                                  INDAT1[15:0]                                                                                                    INDAT0[15:0]
+          DFSDM_
+        CH0DATINR       00000000000000000000000000000000
+
+         reset value
+
+           Reserved     Res.     Res.         Res.  Res.  Res.  Res.  Res.  Res.  Res.    Res.   Res.  Res.  Res.  Res.  Res.  Res.  DATPACK[1:0] Res.  DATMPX[1:0] Res.  Res.  Res.  Res.  CHINSEL Res.  Res.  CKABEN Res.  SCDEN Res.  Res.  Res.             Res.
+                                                                                                                                          Res.               Res.                                                                                   Res.             Res.
+
+0x20      DFSDM_        Res.     Res.         Res.  Res.  Res.  Res.  Res.  Res.  Res.    Res.   Res.  Res.  Res.  Res.  Res.  Res.                                       Res.  Res.  Res.                CHEN                           Res.  SPICKSEL         SITP[1:0]
+         CH1CFGR1                                                                                                                                                                                                                                 [1:0]
+
+           reset value                                                                                                               0000                                                   0000                                               0000
+
+1200/3556                                                                                        RM0399 Rev 4
+RM0399                                                                                         Digital filter for sigma delta modulators (DFSDM)
+
+Offset               Table 259. DFSDM register map and reset values (continued)313029282726252423222120191817    16    15  14             13  12            11    10    9     8             7     6            5      4     3  Res. 2           Res. 1  Res. 0
+
+  0x24  Register
+          name
+
+         DFSDM_                                                                    OFFSET[23:0]                                                                                                   DTRBS[4:0]
+        CH1CFGR2
+                      00000000000000000000000000000
+        reset value
+
+0x28       DFSDM_     Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  AWFORD[1:0]  Res.  AWFOSR[4:0] BKSCD[3:0]                                             Res.  Res.  Res.  Res.                             SCDT[7:0]
+        CH1AWSCDR
+
+         reset value                                                  00                 000000000                                                                                          00000000
+
+0x2C      DFSDM_      Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.   Res.  Res.  Res.  Res.  Res.  Res.                                                   WDATA[15:0]
+        CH1WDATR
+0x30                                                                                                             00000000000000000
+0x34 -   reset value
+0x3C                                                      INDAT1[15:0]                                                                                                  INDAT0[15:0]
+          DFSDM_
+        CH1DATINR     00000000000000000000000000000000
+
+         reset value
+
+        Reserved      Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.   Res.  Res.  Res.  Res.  Res.  Res.  DATPACK[1:0] Res.  DATMPX[1:0] Res.  Res.  Res.  Res.  CHINSEL Res.  Res.  CKABEN Res.  Res.   Res.  SPICKSEL[1:0] Res.  Res.
+                                                                                                                            Res.               Res.                                                                              Res.                Res.
+
+0x40     DFSDM_       Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.   Res.  Res.  Res.  Res.  Res.  Res.                                       Res.  Res.  Res.                CHEN               SCDEN  Res.                      SITP[1:0]
+        CH2CFGR1
+
+        reset value                                                                                                    0000                                                   0000                                          0000
+
+0x44     DFSDM_                                                                    OFFSET[23:0]                                                                                                   DTRBS[4:0]                   Res.
+        CH2CFGR2                                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                                         Res.
+        reset value
+                      00000000000000000000000000000
+
+           DFSDM_     Res.
+        CH2AWSCDR          Res.
+                                Res.
+                                     Res.
+                                          Res.
+                                               Res.
+                                                    Res.
+                                                         Res.
+                                                                AWFORD[1:0]
+                                                                        Res.
+                                                                                                                           Res.
+                                                                                                                                Res.
+                                                                                                                                     Res.
+                                                                                                                                          Res.
+0x48                                                                                     AWFOSR[4:0] BKSCD[3:0]                                                                                                SCDT[7:0]
+
+         reset value                                                  00                 000000000                                                                                          00000000
+
+0x4C      DFSDM_      Res.                                                                                                                                              WDATA[15:0]
+        CH2WDATR           Res.
+0x50                            Res.
+0x54 -   reset value                 Res.
+0x5C                                      Res.
+          DFSDM_                               Res.
+        CH2DATINR                                   Res.
+                                                         Res.
+         reset value                                          Res.
+                                                                   Res.
+                                                                        Res.
+                                                                             Res.
+                                                                                  Res.
+                                                                                       Res.
+                                                                                             Res.
+                                                                                                  Res.
+
+                                                                                                                       0000000000000000
+
+                                                          INDAT1[15:0]                                                                                                  INDAT0[15:0]
+
+                      00000000000000000000000000000000
+
+        Reserved      Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.   Res.  Res.  Res.  Res.  Res.  Res.  DATPACK[1:0] Res.  DATMPX[1:0] Res.  Res.  Res.  Res.  CHINSEL Res.  Res.  CKABEN Res.  Res.   Res.  SPICKSEL[1:0] Res.  Res.
+                                                                                                                            Res.               Res.                                                                              Res.                Res.
+
+0x60     DFSDM_       Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.   Res.  Res.  Res.  Res.  Res.  Res.                                       Res.  Res.  Res.                CHEN               SCDEN  Res.                      SITP[1:0]
+        CH3CFGR1
+
+        reset value                                                                                                    0000                                                   0000                                          0000
+
+0x64     DFSDM_                                                                    OFFSET[23:0]                                                                                                   DTRBS[4:0]                   Res.
+        CH3CFGR2                                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                                         Res.
+        reset value
+                      00000000000000000000000000000
+
+                                                                                   RM0399 Rev 4                                                                                                                             1201/3556
+
+                                                                                                                                                                                                                                                        1209
+1202/3556                  0xA8                                                              0xA4                0xA0                                   0x8C                                                                            0x88                                                              0x84                0x80                                   0x6C                                                                            0x68                    Offset                                                             Digital filter for sigma delta modulators (DFSDM)
+
+                                                                                                                                         0x90                                                                                                                                                                                                         0x70
+                                                                                                                               0x94 -                                                                                                                                                                                                       0x74 -
+                                                                                                                            0x9C
+                                                                                                                                                                                                                                                                                                                                         0x
+
+              reset value     DFSDM_                                        reset value                             DFSDM_  Reserved                                       reset value                                                     DFSDM_                                        reset value                             DFSDM_  Reserved                                       reset value                                                     DFSDM_                      Table 259. DFSDM register map and reset values (continued)
+                           CH5AWSCDR                                                                             CH5CFGR1                                                                                                               CH4AWSCDR                                                                             CH4CFGR1                                                                                                               CH3AWSCDR
+                                                                       DFSDM_                                                                                        DFSDM_                                                                                                         DFSDM_                                                                                        DFSDM_                                                                                        Register
+                                                                   CH5CFGR2                                                                                       CH4WDATR                                                                                                      CH4CFGR2                                                                                       CH3WDATR                                                                                      name
+
+                                                              reset value                                                                                   reset value                                                                                                    reset value                                                                                   reset value
+
+                                                                                                                                                       DFSDM_                                                                                                                                                                                                       DFSDM_
+                                                                                                                                                   CH4DATINR                                                                                                                                                                                                    CH3DATINR
+
+                                                                                                                                              reset value                                                                                                                                                                                                  reset value
+
+                                 Res.                         00000000000000000000000000000                      Res.       Res.              00000000000000000000000000000000                                  Res.                          Res.                         00000000000000000000000000000                      Res.       Res.              00000000000000000000000000000000                                  Res.                    Res.                    31
+                                 Res.                                                                                                                                                                           Res.                          Res.
+                                 Res.                                                                            Res.       Res.                                                                                Res.                          Res.                                                                            Res.       Res.                                                                                Res.                    Res.                    30
+                                 Res.                                                                                                                                                                           Res.                          Res.
+                                 Res.                                                                            Res.       Res.                                                                                Res.                          Res.                                                                            Res.       Res.                                                                                Res.                    Res.                    29
+                                 Res.                                                                                                                                                                           Res.                          Res.
+                                 Res.                                                                            Res.       Res.                                                                                Res.                          Res.                                                                            Res.       Res.                                                                                Res.                    Res.                    28
+                                 Res.                                                                                                                                                                           Res.                          Res.
+                           AWFORD[1:0]                                                                           Res.       Res.                                                                                Res.                    AWFORD[1:0]                                                                           Res.       Res.                                                                                Res.                    Res.                    27
+                                 Res.                                                                                                                                                                           Res.                          Res.
+                                                                                                                 Res.       Res.                                                                                Res.                                                                                                          Res.       Res.                                                                                Res.                    Res.                    26
+                                 Res.                                                                                                                                                                           Res.                          Res.
+                                 Res.                                                                            Res.       Res.                                                INDAT1[15:0]                    Res.                          Res.                                                                            Res.       Res.                                                INDAT1[15:0]                    Res.                    Res.                    25
+                                 Res.                                                                                                                                                                           Res.                          Res.
+                                 Res.                                                                            Res.       Res.                                                                                Res.                          Res.                                                                            Res.       Res.                                                                                Res.                    Res.                    24
+                                                                                                                                                                                                                Res.
+              00                                                                                                 Res.       Res.                                                                                             00                                                                                               Res.       Res.                                                                                Res.         00         AWFORD[1:0] 23
+
+RM0399 Rev 4                                                                                                     Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                Res.                                            22
+
+                                                                                             OFFSET[23:0]        Res.       Res.                                                                                                                                                                          OFFSET[23:0]        Res.       Res.                                                                                Res.                    Res.                    21
+
+              000000000               AWFOSR[4:0] BKSCD[3:0]                                                     Res.       Res.                                                                                             000000000             AWFOSR[4:0] BKSCD[3:0]                                                     Res.       Res.                                                                                Res.         000000000  AWFOSR[4:0] BKSCD[3:0]  20
+
+                                                                                                                 Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                Res.                                            19
+
+                                                                                                                 Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                Res.                                            18
+
+                                                                                                                 Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                Res.                                            17
+
+                                                                                                                 Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                Res.                                            16
+
+                                                                                                           0000  DATPACK[1:0] Res.                                                            0000000000000000                                                                                                          0000  DATPACK[1:0] Res.                                                            0000000000000000                                                  15
+                                                                                                                                        Res.                                                                                                                                                                                                         Res.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             14
+
+                                                                                                                 DATMPX[1:0] Res.                                                                                                                                                                                             DATMPX[1:0] Res.                                                                                                                               13
+                                                                                                                                       Res.                                                                                                                                                                                                         Res.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             12
+
+                                                                                                                 Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                                        Res.                    11
+
+                                                                                                                 Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                                        Res.                    10
+
+                                                                                                                 Res.       Res.                                                INDAT0[15:0]                    WDATA[15:0]                                                                                                   Res.       Res.                                                INDAT0[15:0]                    WDATA[15:0]             Res.                    9
+
+                                                                                                           0000  CHINSEL Res.                                                                                                                                                                                           0000  CHINSEL Res.                                                                                                           Res.                    8
+
+                           SCDT[7:0]                                                                             CHEN       Res.                                                                                             00000000                                                                                         CHEN       Res.                                                                                             00000000                           7
+              00000000
+                                                                                             DTRBS[4:0]          CKABEN Res.                                                                                                                                                                              DTRBS[4:0]          CKABEN Res.                                                                                                                                    6
+
+                                                                                                                 SCDEN      Res.                                                                                                        SCDT[7:0]                                                                             SCDEN      Res.                                                                                                        SCDT[7:0]               5
+
+                                                                                                                 Res.       Res.                                                                                                                                                                                              Res.       Res.                                                                                                                                4
+
+                                                                                                           0000  SPICKSEL[1:0] Res.                                                                                                                                                                                     0000  SPICKSEL[1:0] Res.                                                                                                                             3                                                                  RM0399
+                                                                                                                                        Res.                                                                                                                                                                                                         Res.
+                                                                                             Res.                                                                                                                                                                                                         Res.                                                                                                                                                               2
+                                                                                             Res.                                                                                                                                                                                                         Res.
+                                                                                             Res.                SITP[1:0]  Res.                                                                                                                                                                          Res.                SITP[1:0]  Res.                                                                                                                                1
+                                                                                                                            Res.                                                                                                                                                                                                         Res.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             0
+RM0399                                                                                        Digital filter for sigma delta modulators (DFSDM)
+
+Offset               Table 259. DFSDM register map and reset values (continued)
+
+        Register
+          name
+                      Res. 31
+          DFSDM_         Res. 30
+        CH5WDATR             Res. 29
+                                 Res. 28
+         reset value                 Res. 27
+                                         Res. 26
+          DFSDM_                             Res. 25
+        CH5DATINR                                Res. 24
+
+         reset value                                 23
+                                                         Res. 22
+                                                             Res. 21
+                                                                 Res. 20
+                                                                     Res. 19
+                                                                         Res. 18
+                                                                            Res. 17
+                                                                                Res. 16
+
+                                                                                    15
+                                                                                        14
+                                                                                            13
+                                                                                                12
+                                                                                                    11
+                                                                                                        10
+                                                                                                            9
+                                                                                                                8
+                                                                                                                    7
+                                                                                                                        6
+                                                                                                                            5
+                                                                                                                               4
+                                                                                                                                   3
+                                                                                                                                       2
+                                                                                                                                           1
+                                                                                                                                               0
+0xAC                                                                                                                                                                   WDATA[15:0]
+
+0xB0                                                                                                                  0000000000000000
+0xB4 -
+0xBC                                                      INDAT1[15:0]                                                                                                 INDAT0[15:0]
+
+                      00000000000000000000000000000000
+
+        Reserved      Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  DATPACK[1:0] Res.  DATMPX[1:0] Res.  Res.  Res.  Res.  CHINSEL Res.  Res.  CKABEN Res.  Res.   Res.  SPICKSEL[1:0] Res.  Res.
+                                                                                                                           Res.               Res.                                                                              Res.                Res.
+
+0xC0     DFSDM_       Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.                                       Res.  Res.  Res.                CHEN               SCDEN  Res.                      SITP[1:0]
+        CH6CFGR1
+
+        reset value                                                                                                   0000                                                   0000                                          0000
+
+0xC4     DFSDM_                                                                   OFFSET[23:0]                                                                                                   DTRBS[4:0]                Res.
+        CH6CFGR2                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                     Res.
+        reset value
+                      00000000000000000000000000000
+
+           DFSDM_     Res.
+        CH6AWSCDR          Res.
+                                Res.
+                                     Res.
+                                          Res.
+                                               Res.
+                                                    Res.
+                                                         Res.
+                                                                AWFORD[1:0]
+                                                                        Res.
+                                                                                                                           Res.
+                                                                                                                                Res.
+                                                                                                                                     Res.
+                                                                                                                                          Res.
+0xC8                                                                                    AWFOSR[4:0] BKSCD[3:0]                                                                                                SCDT[7:0]
+
+         reset value                                                  00                000000000                                                                                          00000000
+
+0xCC      DFSDM_      Res.                                                                                                                                             WDATA[15:0]
+        CH6WDATR           Res.
+0xD0                            Res.
+0xD4 -   reset value                 Res.
+0xDC                                      Res.
+          DFSDM_                               Res.
+        CH6DATINR                                   Res.
+                                                         Res.
+         reset value                                          Res.
+                                                                   Res.
+                                                                        Res.
+                                                                             Res.
+                                                                                  Res.
+                                                                                       Res.
+                                                                                             Res.
+                                                                                                  Res.
+
+                                                                                                                      0000000000000000
+
+                                                          INDAT1[15:0]                                                                                                 INDAT0[15:0]
+
+                      00000000000000000000000000000000
+
+        Reserved      Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  DATPACK[1:0] Res.  DATMPX[1:0] Res.  Res.  Res.  Res.  CHINSEL Res.  Res.  CKABEN Res.  Res.   Res.  SPICKSEL[1:0] Res.  Res.
+                                                                                                                           Res.               Res.                                                                              Res.                Res.
+
+0xE0     DFSDM_       Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.                                       Res.  Res.  Res.                CHEN               SCDEN  Res.                      SITP[1:0]
+        CH7CFGR1
+
+        reset value                                                                                                   0000                                                   0000                                          0000
+
+0xE4     DFSDM_                                                                   OFFSET[23:0]                                                                                                   DTRBS[4:0]                Res.
+        CH7CFGR2                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                     Res.
+        reset value
+                      00000000000000000000000000000
+
+           DFSDM_     Res.
+        CH7AWSCDR          Res.
+                                Res.
+                                     Res.
+                                          Res.
+                                               Res.
+                                                    Res.
+                                                         Res.
+                                                                AWFORD[1:0]
+                                                                        Res.
+                                                                                                                           Res.
+                                                                                                                                Res.
+                                                                                                                                     Res.
+                                                                                                                                          Res.
+0xE8                                                                                    AWFOSR[4:0] BKSCD[3:0]                                                                                                SCDT[7:0]
+
+         reset value                                                  00                000000000                                                                                          00000000
+
+0xEC      DFSDM_      Res.                                                                                                                                             WDATA[15:0]
+0xF0    CH7WDATR           Res.
+                                Res.
+         reset value                 Res.
+                                          Res.
+          DFSDM_                               Res.
+        CH7DATINR                                   Res.
+                                                         Res.
+         reset value                                          Res.
+                                                                   Res.
+                                                                        Res.
+                                                                             Res.
+                                                                                  Res.
+                                                                                       Res.
+                                                                                             Res.
+                                                                                                  Res.
+
+                                                                                                                      0000000000000000
+
+                                                          INDAT1[15:0]                                                                                                 INDAT0[15:0]
+
+                      00000000000000000000000000000000
+
+                                                                            RM0399 Rev 4                                                                                                                                   1203/3556
+
+                                                                                                                                                                                                                                                       1209
+

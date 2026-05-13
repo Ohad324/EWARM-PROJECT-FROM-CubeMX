@@ -1,0 +1,834 @@
+Digital filter for sigma delta modulators (DFSDM)                                                                                                                                                                                                                                                                                 RM0399
+
+Offset                Table 259. DFSDM register map and reset values (continued)Res. 31AWFSEL Res. 30Res. 29Res. 28Res. 27Res. 26Res. 25Res. 24Res. 23Res. 22RDMAEN Res. 21Res. 20RSYNC Res. 19RCONT Res. 18RSW START Res. 17Res. 16Res. 15JEXTEN[1:0] Res. 14Res. 12Res. 11Res. 10Res. 9Res. 8Res. 7Res. 6JDMAEN Res. 5JSCAN Res. 4JSYNC Res. 3Res. 2  JSW START Res. 1  Res. 0
+         Register                                                                                                                                                                                                       Res. 13
+ 0xF4 -
+  0xFC     name
+
+          Reserved
+
+0x100      DFSDM_       Res.                     FAST     Res.     Res.     RCH[2:0]                   Res.     Res.                     Res.                                                      Res.     Res.                          JEXTSEL[4:0]                               Res.    Res.                                               Res.                      DFEN
+           FLT0CR1
+
+           reset value           00                                         000                                          0                        000                                                                0000000                                                                         000                                                00
+
+            DFSDM_      Res.
+           FLT0CR2           Res.
+                                  Res.
+           reset value                 Res.
+                                            Res.
+            DFSDM_                               Res.
+            FLT0ISR                                   Res.
+                                                           Res.
+           reset value                                                                                                                           Res.
+                                                                                                                                                      CKABIE
+                                                                                                                                                           SCDIE
+                                                                                                                                                                 AWDIE
+                                                                                                                                                                      ROVRIE
+                                                                                                                                                                           JOVRIE
+                                                                                                                                                                                REOCIE
+                                                                                                                                                                                     JEOCIE
+0x104                                                                                                                    AWDCH[7:0]                                                                                  EXCH[7:0]
+0x108
+                                                                                                       0000000000000000                                                                                                                                                                      0000000
+                                                                                                                                                                                                                                                                                                       00000
+                                                 SCDF[7:0]                                                               CKABF[7:0]                                                                         Res.
+                                                                                                                                                                                                                 RCIP
+                                                                                                                                                                                                                      JCIP
+                                                                                                                                                                                                                           Res.
+                                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                                          Res.
+                                                                                                                                                                                                                                               Res.
+                                                                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                                                         Res.
+                                                                                                                                                                                                                                                              Res.
+                                                                                                                                                                                                                                                                   AWDF
+                                                                                                                                                                                                                                                                        ROVRF
+                                                                                                                                                                                                                                                                              JOVRF
+                                                                                                                                                                                                                                                                                   REOCF
+                                                                                                                                                                                                                                                                                        JEOCF
+
+                        0000000011111111                                                                                                                                                                             00
+
+0x10C      DFSDM_                                CLRSCDF[7:0]                                                         CLRCKABF[7:0]                                                                         Res.
+           FLT0ICR                                                                                                                                                                                               Res.
+                                                                                                                                                                                                                      Res.
+                                                                                                                                                                                                                           Res.
+                                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                                          Res.
+                                                                                                                                                                                                                                               Res.
+                                                                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                                                         Res.
+                                                                                                                                                                                                                                                              Res.
+                                                                                                                                                                                                                                                                   Res.
+                                                                                                                                                                                                                                                                        CLR ROVRF
+                                                                                                                                                                                                                                                                              CLR JOVRF
+                                                                                                                                                                                                                                                                                   Res.
+                                                                                                                                                                                                                                                                                        Res.
+
+          reset value   0000000000000000                                                                                                                                                                                                                                                                 00
+                                                                                                                                                                                                                                                                                                JCHG[7:0]
+0x110      DFSDM_       Res.                                                                                                                                                                                                                                                         00000001
+         FLT0JCHGR           Res.
+                                  Res.                                                                                                                                                                                                                                                          IOSR[7:0]
+          reset value                  Res.
+                                            Res.                                                                                                                                                                                                                                     00000000
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+                                                                                                         Res.
+                                                                                                              Res.
+                                                                                                                   Res.
+                                                                                                                        Res.
+                                                                                                                             Res.
+                                                                                                                                  Res.
+                                                                                                                                       Res.
+                                                                                                                                            Res.
+
+            DFSDM_               FORD[2:0]
+           FLT0FCR                         Res.
+                                                Res.
+           reset value 0 0 0                         Res.
+                                                                                                             Res.
+                                                                                                                  Res.
+                                                                                                                       Res.
+                                                                                                                            Res.
+                                                                                                                                 Res.
+                                                                                                                                      Res.
+                                                                                                                                           Res.
+                                                                                                                                                Res.
+0x114                                                                                                FOSR[9:0]
+                                                                                     0000000000
+
+0x118       DFSDM_                                                                                                       JDATA[23:0]                                                                                                                                                 Res.
+         FLT0JDATAR                                                                                                                                                                                                                                                                       Res.
+                                                                                                                                                                                                                                                                                               Res.
+                                                                                                                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                                                                                                         Res.
+                                                                                                                                                                                                                                                                                                                   JDATACH [2:0]
+
+           reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                                                                                                                                                                                                                                                                          000
+
+0x11C       DFSDM_                                                                                                       RDATA[23:0]                                                                                                                                                 Res.                                                       RDATA
+0x120    FLT0RDATAR                                                                                                                                                                                                                                                                       Res.                                                  CH[2:0]
+0x124                                                                                                                                                                                                                                                                                          Res.
+0x128                                                                                                                                                                                                                                                                                               RPEND
+0x12C                                                                                                                                                                                                                                                                                                    Res.
+
+          reset value   000000000000000000000000                                                                                                                                                                                                                                                                    0                           000
+
+           DFSDM_                                                                                                        AWHT[23:0]                                                                                                                                                  Res.                                         BKAWH[3:0]
+         FLT0AWHTR                                                                                                                                                                                                                                                                        Res.
+                                                                                                                                                                                                                                                                                               Res.
+          reset value                                                                                                                                                                                                                                                                               Res.
+
+           DFSDM_       000000000000000000000000                                                                                                                                                                                                                                                                                  0000
+         FLT0AWLTR
+                                                                                                                         AWLT[23:0]                                                                                                                                                  Res.                                         BKAWL[3:0]
+          reset value                                                                                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                                                                                               Res.
+           DFSDM_                                                                                                                                                                                                                                                                                   Res.
+          FLT0AWSR
+                        000000000000000000000000                                                                                                                                                                                                                                                                                  0000
+          reset value
+                        Res.                                                                                                                                                                                         AWHTF[7:0]                                                                      AWLTF[7:0]
+           DFSDM_            Res.
+         FLT0AWCFR                Res.
+                                       Res.
+          reset value                       Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+
+                                                                                                                                                                                                            0000000000000000
+
+                        Res.                                                                                                                                                                                         CLRAWHTF[7:0]                                                                 CLRAWLTF[7:0]
+                             Res.
+                                  Res.
+                                       Res.
+                                            Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+
+                                                                                                                                                                                                            0000000000000000
+
+1204/3556                                                                                                       RM0399 Rev 4
+                                                                            0x198                             0x194      0x190                      0x18C                                                 0x184                             0x180            0x13C -                                                                       0x138                                                                      0x134                                                                      0x130        Offset                                                             RM0399
+                                                                                                                                                                                       0x188                                                              0x17C
+
+               reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0     DFSDM_                  DFSDM_                          reset value     DFSDM_                                         reset value                              DFSDM_     Reserved    reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0     DFSDM_     reset value 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1     DFSDM_     reset value 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0     DFSDM_           Table 259. DFSDM register map and reset values (continued)
+                                                                            FLT1JDATAR             FLT1FCR                                          FLT1ICR                                                                                 FLT1CR1                                                                                        FLT0CNVTIMR                                                                FLT0EXMIN                                                                  FLT0EXMAX
+                                                                                                                                  DFSDM_                                                     DFSDM_                                                                                                                                                                                                                                                                                                              Register
+                                                                                          reset value 0 0 0                   FLT1JCHGR                                                   FLT1CR2                                                                                                                                                                                                                                                                                                             name
+
+                                                                                                                         reset value                                              reset value
+
+                                                                                                                                                                          DFSDM_
+                                                                                                                                                                      FLT1ISR
+
+                                                                                                                                                               reset value
+
+                                                                                                                         Res.                            Res.                            Res.                      Res.                     Res.          Res.                                                                                                                                                                                                                                                31
+                                                                                                                         Res.                            Res.                            Res.                      Res.
+                                                                                                              FORD[2:0]  Res.                            Res.                            Res.                      Res.            00       AWFSEL Res.                                                                                                                                                                                                                                                       30
+                                                                                                                  Res.   Res.                            Res.                            Res.                      Res.
+                                                                                                                  Res.   Res.                            Res.                            Res.                      Res.                     FAST          Res.                                                                                                                                                                                                                                                29
+                                                                                                                  Res.   Res.                            Res.                            Res.                      Res.
+                                                                                                                         Res.                            Res.                            Res.                      Res.                     Res.          Res.                                                                                                                                                                                                                                                28
+                                                                                                                  Res.   Res.                            Res.                            Res.                      Res.
+                                                                                                                  Res.   Res.                            Res.                            Res.                                               Res.          Res.                                                                                                                                                                                                                                                27
+                                                                                                                  Res.   Res.                            Res.                            Res.                      Res.
+                                                                                                                  Res.   Res.                            Res.                            Res.                      Res.            000      RCH[2:0]      Res.                                                                                                                                                                                                                                                26
+                                                                                                                  Res.   Res.                            Res.                            Res.                      Res.
+                                                                                                     FOSR[9:0]    Res.   Res.                            Res.                            Res.                    AWDIE                                    Res.                                                                                                                                                                                                                                                25
+                                                                                          0000000000              Res.   Res.                            Res.                            Res.                    ROVRIE
+                                                                                                                  Res.   Res.                            Res.                            Res.                    JOVRIE                                   Res.                                                                                                                                                                                                                                                24
+                                                                                                                         Res.                            Res.                            Res.                    REOCIE
+                                                                                                                         Res.                            Res.                            Res.  0000000000000000  JEOCIE                     Res.          Res.                                                                                                                                                                                                                                                23
+                                                                                                                         Res.                            Res.                           RCIP
+RM0399 Rev 4                                                                                                             Res.                            Res.                            JCIP                                               Res.          Res.                                                                                                                                                                                                                                                22
+                                                                                                                         Res.                            Res.                            Res.
+                                                                            JDATA[23:0]                                  Res.                            Res.                            Res.                          AWDCH[7:0]  0        RDMAEN Res.                                                                                                                                                               EXMIN[23:0]                                                                EXMAX[23:0]  21
+                                                                                                                         Res.                            Res.                            Res.
+                                                                                                                         Res.                            Res.                            Res.                                               Res.          Res.                                                                                                                                                                                                                                                20
+                                                                                                                         Res.                            Res.                            Res.
+                                                                                                                                                         Res.                            Res.                                      000      RSYNC Res.                                                                                     CNVCNT[27:0]                                                                                                                                                       19                                                                 Digital filter for sigma delta modulators (DFSDM)
+                                                                                                                                                         Res.                            Res.
+                                                                                                                                                         Res.                            Res.                                               RCONT Res.                                                                                                                                                                                                                                                        18
+                                                                                                                                                         Res.                          AWDF
+                                                                                                                                                    CLR ROVRF                          ROVRF                                                RSW START Res.                                                                                                                                                                                                                                                    17
+                                                                                                                                                    CLR JOVRF                          JOVRF
+                                                                                                                                                         Res.                          REOCF                                                Res.          Res.                                                                                                                                                                                                                                                16
+                                                                                                                                                         Res.                          JEOCF
+                                                                                                                                                                                                                                            Res.          Res.                                                                                                                                                                                                                                                15
+
+                                                                                                                                                               00                                                                  0000000  JEXTEN[1:0] Res.                                                                                                                                                                                                                                                  14
+                                                                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                       EXCH[7:0]                                                                                                                                                                                                                                                                              13
+
+                                                                                                                                                                                                                                            JEXTSEL[4:0]  Res.                                                                                                                                                                                                                                                12
+
+                                                                                                                                                                                                                                                          Res.                                                                                                                                                                                                                                                11
+
+                                                                                                                                                                                                                                                          Res.                                                                                                                                                                                                                                                10
+
+                                                                                                                                                                                                                                                          Res.                                                                                                                                                                                                                                                9
+
+                                                                                                                                                                                                                                                          Res.                                                                                                                                                                                                                                                8
+
+                                                                                  Res.                                         00                                                                                                           Res.          Res.                                                                                                                                                              Res.                                                                 Res.         7
+                                                                                  Res.                                  JCHG[7:0]                                                                                                                                                                                                                                                                                           Res.
+                                                                                  Res.                           00000001                                                                                                                   Res.          Res.                                                                                                                                                              Res.                                                                 Res.         6
+                                                                                  Res.                                                                                                                                                                                                                                                                                                                                      Res.
+                                                                                  Res.               IOSR[7:0]                                                                                                                     000      JDMAEN Res.                                                                                                                                                                     Res.                                                                 Res.         5
+
+                                                                            JDATACH[2:0]  00000000                                                                                00000                                                     JSCAN Res.                                                                                                                                                                EXMINCH[2:0]                                                               Res.         4
+                                                                                                                                                               00000
+    1205/3556                                                                                                                                                                                                                               JSYNC Res.                                                                                     Res.                                                                                                                                                  Res.         3
+                                                                                                                                                                                                                                                                                                                                           Res.
+1209           000                                                                                                                                                                                                                          Res.          Res.                                                                             Res.          000                                                                        000                                                                       2
+                                                                                                                                                                                                                                                                                                                                           Res.
+                                                                                                                                                                                                                                   00       JSW START Res.                                                                                                                                                                                                                                       EXMAXCH[2:0] 1
+
+                                                                                                                                                                                                                                            DFEN          Res.                                                                                                                                                                                                                                                0
+Digital filter for sigma delta modulators (DFSDM)                                                                                                                                                                                                      RM0399
+
+Offset                Table 259. DFSDM register map and reset values (continued)3130292827262524232221  20    19          18          17              16    15    14  13            12    11    10    9     8     7     6     5            RPEND 4     3           2     1               0
+
+         Register
+           name
+
+0x19C       DFSDM_                                                                         RDATA[23:0]                                                                                                            Res.  Res.  Res.                     Res.        RDATA
+0x1A0    FLT1RDATAR                                                                                                                                                                                                                                                CH[2:0]
+0x1A4
+0x1A8      reset value  000000000000000000000000                                                                                                                                                                                           0                       000
+0x1AC
+            DFSDM_                                                                         AWHT[23:0]                                                                                                             Res.                                 BKAWH[3:0]
+         FLT1AWHTR                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                            Res.
+           reset value                                                                                                                                                                                                           Res.
+
+            DFSDM_      000000000000000000000000                                                                                                                                                                                                       0000
+         FLT1AWLTR
+                                                                                           AWLT[23:0]                                                                                                             Res.                                 BKAWL[3:0]
+           reset value                                                                                                                                                                                                 Res.
+                                                                                                                                                                                                                            Res.
+            DFSDM_                                                                                                                                                                                                               Res.
+          FLT1AWSR
+                        000000000000000000000000                                                                                                                                                                                                       0000
+           reset value
+                        Res.                                                                                                                                          AWHTF[7:0]                                              AWLTF[7:0]
+            DFSDM_           Res.
+         FLT1AWCFR                Res.
+                                       Res.
+           reset value                      Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+
+                                                                                                                                                            0000000000000000
+
+                        Res.                                                                                                                                      CLRAWHTF[7:0]                                               CLRAWLTF[7:0]
+                             Res.
+                                  Res.
+                                       Res.
+                                            Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+
+                                                                                                                                                            0000000000000000
+
+0x1B0      DFSDM_                                                                          EXMAX[23:0]                                                                                                            Res.
+         FLT1EXMAX                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                            Res.
+                                                                                                                                                                                                                                 Res.
+                                                                                                                                                                                                                                      Res.
+                                                                                                                                                                                                                                                EXMAXCH[2:0]
+
+           reset value 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                                                                                                                                                                                             000
+
+0x1B4      DFSDM_                                                                          EXMIN[23:0]                                                                                                            Res.
+         FLT1EXMIN                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                            Res.
+                                                                                                                                                                                                                                 Res.
+                                                                                                                                                                                                                                      Res.
+                                                                                                                                                                                                                                                EXMINCH[2:0]
+
+           reset value 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1                                                                                                                                                                                             000
+
+0x1B8        DFSDM_                                                                                           CNVCNT[27:0]                                                                                                                             Res.
+         FLT1CNVTIMR                                                                                                                                                                                                                                        Res.
+                                                                                                                                                                                                                                                                 Res.
+                                                                                                                                                                                                                                                                      Res.
+
+           reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+0x1BC -    Reserved     Res.  AWFSEL Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  RDMAEN Res.  Res.  RSYNC Res.  RCONT Res.  RSW START Res.  Res.  Res.  JEXTEN[1:0] Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  JDMAEN Res.  JSCAN Res.  JSYNC Res.  Res.  JSW START Res.  Res.
+ 0x1FC                                                                                                                                                                 Res.
+
+0x200      DFSDM_       Res.               FAST  Res.  Res.  RCH[2:0]          Res.  Res.               Res.                                          Res.  Res.                    JEXTSEL[4:0]                  Res.  Res.                                       Res.                  DFEN
+           FLT2CR1
+
+           reset value        00                             000                           0                  000                                                 0000000                                                     000                                        00
+
+            DFSDM_      Res.
+           FLT2CR2           Res.
+                                  Res.
+           reset value                 Res.
+                                            Res.
+            DFSDM_                               Res.
+            FLT2ISR                                   Res.
+                                                           Res.
+           reset value                                                                                                                           Res.
+                                                                                                                                                      Res.
+                                                                                                                                                           Res.
+                                                                                                                                                                 AWDIE
+                                                                                                                                                                      ROVRIE
+                                                                                                                                                                           JOVRIE
+                                                                                                                                                                                REOCIE
+                                                                                                                                                                                     JEOCIE
+0x204                                                                                      AWDCH[7:0]                                                                 EXCH[7:0]
+0x208
+                                                                               0000000000000000                                                                                                                                            00000
+                                                                                                                                                                                                                                           00000
+                        Res.
+                             Res.
+                                  Res.
+                                       Res.
+                                            Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+                                                                                                         Res.
+                                                                                                              RCIP
+                                                                                                                   JCIP
+                                                                                                                        Res.
+                                                                                                                             Res.
+                                                                                                                                  Res.
+                                                                                                                                       Res.
+                                                                                                                                            Res.
+                                                                                                                                                 Res.
+                                                                                                                                                      Res.
+                                                                                                                                                           Res.
+                                                                                                                                                                 AWDF
+                                                                                                                                                                      ROVRF
+                                                                                                                                                                           JOVRF
+                                                                                                                                                                                REOCF
+                                                                                                                                                                                     JEOCF
+
+                                                                                                                                                                  00
+
+0x20C      DFSDM_       Res.
+           FLT2ICR           Res.
+                                  Res.
+                                       Res.
+                                            Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+                                                                                                         Res.
+                                                                                                              Res.
+                                                                                                                   Res.
+                                                                                                                        Res.
+                                                                                                                             Res.
+                                                                                                                                  Res.
+                                                                                                                                       Res.
+                                                                                                                                            Res.
+                                                                                                                                                 Res.
+                                                                                                                                                      Res.
+                                                                                                                                                           Res.
+                                                                                                                                                                 Res.
+                                                                                                                                                                      CLR ROVRF
+                                                                                                                                                                           CLR JOVRF
+                                                                                                                                                                                Res.
+                                                                                                                                                                                     Res.
+
+           reset value                                                                                                                                                                                                                                 00
+
+1206/3556                                                                            RM0399 Rev 4
+RM0399                                                                                                       Digital filter for sigma delta modulators (DFSDM)
+
+Offset                Table 259. DFSDM register map and reset values (continued)
+
+ 0x210   Register
+           name
+                       Res. 31
+           DFSDM_         Res. 30
+         FLT2JCHGR            Res. 29
+                                  Res. 28
+          reset value                 Res. 27
+                                          Res. 26
+                                              Res. 25
+                                                  Res. 24
+                                                      Res. 23
+                                                          Res. 22
+                                                              Res. 21
+                                                                  Res. 20
+                                                                      Res. 19
+                                                                          Res. 18
+                                                                             Res. 17
+                                                                                 Res. 16
+                                                                                     Res. 15
+                                                                                         Res. 14
+                                                                                             Res. 13
+                                                                                                 Res. 12
+                                                                                                     Res. 11
+                                                                                                         Res. 10
+                                                                                                             Res. 9
+                                                                                                                 Res. 8
+
+                                                                                                                     7
+                                                                                                                         6
+                                                                                                                             5
+                                                                                                                                4
+                                                                                                                                    3
+                                                                                                                                        2
+                                                                                                                                            1
+                                                                                                                                                0
+                                                                                                                                                                                                                            JCHG[7:0]
+                                                                                                                                                                                                                 00000001
+
+          DFSDM_             FORD[2:0]                                                                                                                                                                                      IOSR[7:0]
+         FLT2FCR                       Res.                                                                                                                                                                      00000000
+                                            Res.
+         reset value 0 0 0                       Res.
+                                                                                                         Res.
+                                                                                                              Res.
+                                                                                                                   Res.
+                                                                                                                        Res.
+                                                                                                                             Res.
+                                                                                                                                  Res.
+                                                                                                                                       Res.
+                                                                                                                                            Res.
+0x214                                                                             FOSR[9:0]
+                                                                  0000000000
+
+0x218       DFSDM_                                                                        JDATA[23:0]                                                                                                            Res.
+         FLT2JDATAR                                                                                                                                                                                                   Res.
+                                                                                                                                                                                                                           Res.
+                                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                                               JDATACH[2:0]
+
+         reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                                                                                                                                                                                              000
+
+0x21C       DFSDM_                                                                        RDATA[23:0]                                                                                                            Res.                                             RDATA
+0x220    FLT2RDATAR                                                                                                                                                                                                   Res.                                        CH[2:0]
+0x224                                                                                                                                                                                                                      Res.
+0x228                                                                                                                                                                                                                           RPEND
+0x22C                                                                                                                                                                                                                                Res.
+
+          reset value  000000000000000000000000                                                                                                                                                                                           0                       000
+
+           DFSDM_                                                                         AWHT[23:0]                                                                                                             Res.                                 BKAWH[3:0]
+         FLT2AWHTR                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                           Res.
+          reset value                                                                                                                                                                                                           Res.
+
+           DFSDM_      000000000000000000000000                                                                                                                                                                                                       0000
+         FLT2AWLTR
+                                                                                          AWLT[23:0]                                                                                                             Res.                                 BKAWL[3:0]
+          reset value                                                                                                                                                                                                 Res.
+                                                                                                                                                                                                                           Res.
+           DFSDM_                                                                                                                                                                                                               Res.
+          FLT2AWSR
+                       000000000000000000000000                                                                                                                                                                                                       0000
+          reset value
+                       Res.                                                                                                                                                      AWHTF[7:0]                                  AWLTF[7:0]
+           DFSDM_           Res.
+         FLT2AWCFR               Res.
+                                      Res.
+          reset value                      Res.
+                                                Res.
+                                                     Res.
+                                                          Res.
+                                                               Res.
+                                                                    Res.
+                                                                         Res.
+                                                                              Res.
+                                                                                   Res.
+                                                                                        Res.
+                                                                                              Res.
+                                                                                                   Res.
+
+                                                                                                                                                           0000000000000000
+
+                       Res.                                                                                                                                                      CLRAWHTF[7:0]                               CLRAWLTF[7:0]
+                            Res.
+                                 Res.
+                                      Res.
+                                           Res.
+                                                Res.
+                                                     Res.
+                                                          Res.
+                                                               Res.
+                                                                    Res.
+                                                                         Res.
+                                                                              Res.
+                                                                                   Res.
+                                                                                        Res.
+                                                                                              Res.
+                                                                                                   Res.
+
+                                                                                                                                                           0000000000000000
+
+0x230      DFSDM_                                                                         EXMAX[23:0]                                                                                                            Res.
+         FLT2EXMAX                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                           Res.
+                                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                                               EXMAXCH[2:0]
+
+         reset value 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                                                                                                                                                                                              000
+
+0x234      DFSDM_                                                                         EXMIN[23:0]                                                                                                            Res.
+         FLT2EXMIN                                                                                                                                                                                                    Res.
+                                                                                                                                                                                                                           Res.
+                                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                     Res.
+                                                                                                                                                                                                                                               EXMINCH[2:0]
+
+         reset value 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1                                                                                                                                                                                              000
+
+0x238        DFSDM_                                                                                          CNVCNT[27:0]                                                                                                                             Res.
+         FLT2CNVTIMR                                                                                                                                                                                                                                       Res.
+                                                                                                                                                                                                                                                                Res.
+                                                                                                                                                                                                                                                                     Res.
+
+         reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+0x23C -  Reserved      Res.  AWFSEL Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  RDMAEN Res.  Res.  RSYNC Res.  RCONT Res.  RSW START Res.  Res.  Res.  JEXTEN[1:0] Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  JDMAEN Res.  JSCAN Res.  JSYNC Res.  Res.  JSW START Res.  Res.
+0x27C                                                                                                                                                                 Res.
+
+0x280    DFSDM_        Res.               FAST  Res.  Res.  RCH[2:0]          Res.  Res.               Res.                                          Res.  Res.                             JEXTSEL[4:0]         Res.  Res.                                       Res.                  DFEN
+         FLT3CR1                                            000                                                                                                                  0000000
+
+         reset value         00                                                           0                  000                                                                                                             000                                        00
+
+                                                                                    RM0399 Rev 4                                                                                                                                                      1207/3556
+
+                                                                                                                                                                                                                                                                                  1209
+Digital filter for sigma delta modulators (DFSDM)                                                                                                                             RM0399
+
+Offset               Table 259. DFSDM register map and reset values (continued)31302928272625242322212019181716151413 12  11  10  9  8             7     6     5     AWDIE 4  ROVRIE 3  JOVRIE 2  REOCIE 1  JEOCIE 0
+
+        Register
+          name
+
+0x284       DFSDM_      Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.          AWDCH[7:0]                        EXCH[7:0]                        Res.  Res.  Res.
+0x288      FLT3CR2
+                                                                        0000000000000000                                                                             00000
+           reset value                                                                                                                                               00000
+                        Res.
+            DFSDM_           Res.
+            FLT3ISR               Res.
+                                       Res.
+           reset value                      Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+                                                                                                         Res.
+                                                                                                              RCIP
+                                                                                                                   JCIP
+                                                                                                                        Res.
+                                                                                                                             Res.
+                                                                                                                                  Res.
+                                                                                                                                       Res.
+                                                                                                                                            Res.
+                                                                                                                                                 Res.
+                                                                                                                                                      Res.
+                                                                                                                                                           Res.
+                                                                                                                                                                 AWDF
+                                                                                                                                                                      ROVRF
+                                                                                                                                                                           JOVRF
+                                                                                                                                                                                REOCF
+                                                                                                                                                                                     JEOCF
+
+                                                                                                              00
+
+0x28C      DFSDM_       Res.
+           FLT3ICR           Res.
+                                  Res.
+                                       Res.
+                                            Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+                                                                                                         Res.
+                                                                                                              Res.
+                                                                                                                   Res.
+                                                                                                                        Res.
+                                                                                                                             Res.
+                                                                                                                                  Res.
+                                                                                                                                       Res.
+                                                                                                                                            Res.
+                                                                                                                                                 Res.
+                                                                                                                                                      Res.
+                                                                                                                                                           Res.
+                                                                                                                                                                 Res.
+                                                                                                                                                                      CLR ROVRF
+                                                                                                                                                                           CLR JOVRF
+                                                                                                                                                                                Res.
+                                                                                                                                                                                     Res.
+
+0x290    reset value    Res.                                                                                                                                           00
+                             Res.                                                                                                                             JCHG[7:0]
+          DFSDM_                  Res.                                                                                                             00000001
+        FLT3JCHGR                      Res.
+                                            Res.                                                                                                              IOSR[7:0]
+         reset value                             Res.
+                                                      Res.                                                                                         00000000
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+                                                                                                         Res.
+                                                                                                              Res.
+                                                                                                                   Res.
+                                                                                                                        Res.
+                                                                                                                             Res.
+                                                                                                                                  Res.
+                                                                                                                                       Res.
+                                                                                                                                            Res.
+
+            DFSDM_            FORD[2:0]
+           FLT3FCR                      Res.
+                                             Res.
+           reset value 0 0 0                      Res.
+                                                                                                          Res.
+                                                                                                               Res.
+                                                                                                                    Res.
+                                                                                                                         Res.
+                                                                                                                              Res.
+                                                                                                                                   Res.
+                                                                                                                                        Res.
+                                                                                                                                             Res.
+0x294                                                                       FOSR[9:0]
+                                                            0000000000
+
+0x298      DFSDM_                                                               JDATA[23:0]                                                        Res.
+        FLT3JDATAR                                                                                                                                      Res.
+                                                                                                                                                             Res.
+                                                                                                                                                                  Res.
+                                                                                                                                                                       Res.
+                                                                                                                                                                                 JDATACH[2:0]
+
+           reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                                                                                                                  000
+
+0x29C      DFSDM_                                                               RDATA[23:0]                                                        Res.                                 RDATA
+0x2A0   FLT3RDATAR                                                                                                                                      Res.                            CH[2:0]
+0x2A4                                                                                                                                                        Res.
+0x2A8     reset value                                                                                                                                             RPEND
+0x2AC                                                                                                                                                                  Res.
+           DFSDM_
+        FLT3AWHTR       000000000000000000000000                                                                                                                     0                  000
+
+          reset value                                                           AWHT[23:0]                                                         Res.                       BKAWH[3:0]
+                                                                                                                                                        Res.
+           DFSDM_                                                                                                                                            Res.
+        FLT3AWLTR                                                                                                                                                 Res.
+
+          reset value   000000000000000000000000                                                                                                                              0000
+
+           DFSDM_                                                               AWLT[23:0]                                                         Res.                       BKAWL[3:0]
+         FLT3AWSR                                                                                                                                       Res.
+                                                                                                                                                             Res.
+          reset value                                                                                                                                             Res.
+
+           DFSDM_       000000000000000000000000                                                                                                                              0000
+        FLT3AWCFR
+                        Res.                                                                                      AWHTF[7:0]                                   AWLTF[7:0]
+          reset value        Res.
+                                  Res.
+                                       Res.
+                                            Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+
+                                                                                                          0000000000000000
+
+                        Res.                                                                                  CLRAWHTF[7:0]                                    CLRAWLTF[7:0]
+                             Res.
+                                  Res.
+                                       Res.
+                                            Res.
+                                                 Res.
+                                                      Res.
+                                                           Res.
+                                                                Res.
+                                                                     Res.
+                                                                          Res.
+                                                                               Res.
+                                                                                    Res.
+                                                                                         Res.
+                                                                                               Res.
+                                                                                                    Res.
+
+                                                                                                          0000000000000000
+
+0x2B0     DFSDM_                                                                EXMAX[23:0]                                                        Res.
+        FLT3EXMAX                                                                                                                                       Res.
+                                                                                                                                                             Res.
+                                                                                                                                                                  Res.
+                                                                                                                                                                       Res.
+                                                                                                                                                                                 EXMAXCH[2:0]
+
+           reset value 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0                                                                                                                  000
+
+1208/3556                                                                   RM0399 Rev 4
+RM0399                                                                                        Digital filter for sigma delta modulators (DFSDM)
+
+Offset                Table 259. DFSDM register map and reset values (continued)313029282726252423222120191817  16    15    14    13    12    11    10    9     8     7     6     5     4     3     2     EXMINCH[2:0] 1  0
+
+         Register
+           name
+
+0x2B4      DFSDM_                                                                 EXMIN[23:0]                                                                         Res.  Res.  Res.  Res.  Res.
+         FLT3EXMIN
+
+         reset value 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1                                                                                                                                000
+
+0x2B8        DFSDM_                                                                           CNVCNT[27:0]                                                                                    Res.  Res.  Res.            Res.
+         FLT3CNVTIMR
+
+         reset value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+0x2BC -  Reserved     Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.  Res.            Res.
+ 0x3FC
+
+         Refer to Section 2.3 on page 134 for the register boundary addresses.
+
+                                                                            RM0399 Rev 4                                                                                                      1209/3556
+
+                                                                                                                                                                                                                          1209
+

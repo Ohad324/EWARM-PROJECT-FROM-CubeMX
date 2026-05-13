@@ -1,0 +1,741 @@
+{
+    "Analysis": {
+        "Architecture": {
+            "child_order": [
+                "Architecture-CyclesView 1",
+                "Architecture-DeadCodeView 1"
+            ]
+        },
+        "Architecture-CyclesView 1": {
+            "_active": true,
+            "_copy_from": "Architecture-CyclesView"
+        },
+        "Architecture-DeadCodeView 1": {
+            "_active": true,
+            "_copy_from": "Architecture-DeadCodeView"
+        },
+        "CloneDetection": {
+            "_active": true
+        },
+        "CycleDetection-CallgraphCycles": {
+            "_active": true
+        },
+        "CycleDetection-IncludeCycles": {
+            "_active": true
+        },
+        "DeadCodeDetection": {
+            "_active": true
+        },
+        "Generic-NoCompilerWarnings": {
+            "_active": true,
+            "reported_severities": [
+                "error"
+            ]
+        },
+        "Generic-NoLinkerWarnings": {
+            "_active": true,
+            "reported_severities": [
+                "error"
+            ]
+        },
+        "Metric-Lines.Comment": {
+            "_active": true
+        },
+        "Metric-Lines.LOC": {
+            "_active": true
+        },
+        "Metric-McCabeComplexity": {
+            "_active": true
+        },
+        "Metric-NumberOfStatements": {
+            "_active": true
+        },
+        "MisraC2012-1.1": {
+            "_active": true
+        },
+        "MisraC2012-1.2": {
+            "_active": true
+        },
+        "MisraC2012-1.3": {
+            "_active": true
+        },
+        "MisraC2012-1.4": {
+            "_active": true
+        },
+        "MisraC2012-1.5": {
+            "_active": true
+        },
+        "MisraC2012-10.1": {
+            "_active": true
+        },
+        "MisraC2012-10.2": {
+            "_active": true
+        },
+        "MisraC2012-10.3": {
+            "_active": true
+        },
+        "MisraC2012-10.4": {
+            "_active": true
+        },
+        "MisraC2012-10.5": {
+            "_active": true
+        },
+        "MisraC2012-10.6": {
+            "_active": true
+        },
+        "MisraC2012-10.7": {
+            "_active": true
+        },
+        "MisraC2012-10.8": {
+            "_active": true
+        },
+        "MisraC2012-11.1": {
+            "_active": true
+        },
+        "MisraC2012-11.10": {
+            "_active": true
+        },
+        "MisraC2012-11.2": {
+            "_active": true
+        },
+        "MisraC2012-11.3": {
+            "_active": true
+        },
+        "MisraC2012-11.4": {
+            "_active": true
+        },
+        "MisraC2012-11.5": {
+            "_active": true
+        },
+        "MisraC2012-11.6": {
+            "_active": true
+        },
+        "MisraC2012-11.7": {
+            "_active": true
+        },
+        "MisraC2012-11.8": {
+            "_active": true
+        },
+        "MisraC2012-11.9": {
+            "_active": true
+        },
+        "MisraC2012-12.1": {
+            "_active": true
+        },
+        "MisraC2012-12.2": {
+            "_active": true
+        },
+        "MisraC2012-12.3": {
+            "_active": true
+        },
+        "MisraC2012-12.4": {
+            "_active": true
+        },
+        "MisraC2012-12.5": {
+            "_active": true
+        },
+        "MisraC2012-12.6": {
+            "_active": true
+        },
+        "MisraC2012-13.1": {
+            "_active": true
+        },
+        "MisraC2012-13.2": {
+            "_active": true
+        },
+        "MisraC2012-13.3": {
+            "_active": true
+        },
+        "MisraC2012-13.4": {
+            "_active": true
+        },
+        "MisraC2012-13.5": {
+            "_active": true
+        },
+        "MisraC2012-13.6": {
+            "_active": true
+        },
+        "MisraC2012-14.1": {
+            "_active": true
+        },
+        "MisraC2012-14.2": {
+            "_active": true
+        },
+        "MisraC2012-14.3": {
+            "_active": true
+        },
+        "MisraC2012-14.4": {
+            "_active": true
+        },
+        "MisraC2012-15.1": {
+            "_active": true
+        },
+        "MisraC2012-15.2": {
+            "_active": true
+        },
+        "MisraC2012-15.3": {
+            "_active": true
+        },
+        "MisraC2012-15.4": {
+            "_active": true
+        },
+        "MisraC2012-15.5": {
+            "_active": true
+        },
+        "MisraC2012-15.6": {
+            "_active": true
+        },
+        "MisraC2012-15.7": {
+            "_active": true
+        },
+        "MisraC2012-16.1": {
+            "_active": true
+        },
+        "MisraC2012-16.2": {
+            "_active": true
+        },
+        "MisraC2012-16.3": {
+            "_active": true
+        },
+        "MisraC2012-16.4": {
+            "_active": true
+        },
+        "MisraC2012-16.5": {
+            "_active": true
+        },
+        "MisraC2012-16.6": {
+            "_active": true
+        },
+        "MisraC2012-16.7": {
+            "_active": true
+        },
+        "MisraC2012-17.1": {
+            "_active": true
+        },
+        "MisraC2012-17.10": {
+            "_active": true
+        },
+        "MisraC2012-17.11": {
+            "_active": true
+        },
+        "MisraC2012-17.12": {
+            "_active": true
+        },
+        "MisraC2012-17.13": {
+            "_active": true
+        },
+        "MisraC2012-17.2": {
+            "_active": true
+        },
+        "MisraC2012-17.3": {
+            "_active": true
+        },
+        "MisraC2012-17.4": {
+            "_active": true
+        },
+        "MisraC2012-17.5": {
+            "_active": true
+        },
+        "MisraC2012-17.6": {
+            "_active": true
+        },
+        "MisraC2012-17.7": {
+            "_active": true
+        },
+        "MisraC2012-17.8": {
+            "_active": true
+        },
+        "MisraC2012-17.9": {
+            "_active": true
+        },
+        "MisraC2012-18.1": {
+            "_active": true
+        },
+        "MisraC2012-18.10": {
+            "_active": true
+        },
+        "MisraC2012-18.2": {
+            "_active": true
+        },
+        "MisraC2012-18.3": {
+            "_active": true
+        },
+        "MisraC2012-18.4": {
+            "_active": true
+        },
+        "MisraC2012-18.5": {
+            "_active": true
+        },
+        "MisraC2012-18.6": {
+            "_active": true
+        },
+        "MisraC2012-18.7": {
+            "_active": true
+        },
+        "MisraC2012-18.8": {
+            "_active": true
+        },
+        "MisraC2012-18.9": {
+            "_active": true
+        },
+        "MisraC2012-19.1": {
+            "_active": true
+        },
+        "MisraC2012-19.2": {
+            "_active": true
+        },
+        "MisraC2012-2.1": {
+            "_active": true
+        },
+        "MisraC2012-2.2": {
+            "_active": true
+        },
+        "MisraC2012-2.3": {
+            "_active": true
+        },
+        "MisraC2012-2.4": {
+            "_active": true
+        },
+        "MisraC2012-2.5": {
+            "_active": true
+        },
+        "MisraC2012-2.6": {
+            "_active": true
+        },
+        "MisraC2012-2.7": {
+            "_active": true
+        },
+        "MisraC2012-2.8": {
+            "_active": true
+        },
+        "MisraC2012-20.1": {
+            "_active": true
+        },
+        "MisraC2012-20.10": {
+            "_active": true
+        },
+        "MisraC2012-20.11": {
+            "_active": true
+        },
+        "MisraC2012-20.12": {
+            "_active": true
+        },
+        "MisraC2012-20.13": {
+            "_active": true
+        },
+        "MisraC2012-20.14": {
+            "_active": true
+        },
+        "MisraC2012-20.2": {
+            "_active": true
+        },
+        "MisraC2012-20.3": {
+            "_active": true
+        },
+        "MisraC2012-20.4": {
+            "_active": true
+        },
+        "MisraC2012-20.5": {
+            "_active": true
+        },
+        "MisraC2012-20.6": {
+            "_active": true
+        },
+        "MisraC2012-20.7": {
+            "_active": true
+        },
+        "MisraC2012-20.8": {
+            "_active": true
+        },
+        "MisraC2012-20.9": {
+            "_active": true
+        },
+        "MisraC2012-21.1": {
+            "_active": true
+        },
+        "MisraC2012-21.10": {
+            "_active": true
+        },
+        "MisraC2012-21.11": {
+            "_active": true
+        },
+        "MisraC2012-21.12": {
+            "_active": true
+        },
+        "MisraC2012-21.13": {
+            "_active": true
+        },
+        "MisraC2012-21.14": {
+            "_active": true
+        },
+        "MisraC2012-21.15": {
+            "_active": true
+        },
+        "MisraC2012-21.16": {
+            "_active": true
+        },
+        "MisraC2012-21.17": {
+            "_active": true
+        },
+        "MisraC2012-21.18": {
+            "_active": true
+        },
+        "MisraC2012-21.19": {
+            "_active": true
+        },
+        "MisraC2012-21.2": {
+            "_active": true
+        },
+        "MisraC2012-21.20": {
+            "_active": true
+        },
+        "MisraC2012-21.21": {
+            "_active": true
+        },
+        "MisraC2012-21.22": {
+            "_active": true
+        },
+        "MisraC2012-21.23": {
+            "_active": true
+        },
+        "MisraC2012-21.24": {
+            "_active": true
+        },
+        "MisraC2012-21.25": {
+            "_active": true
+        },
+        "MisraC2012-21.26": {
+            "_active": true
+        },
+        "MisraC2012-21.3": {
+            "_active": true
+        },
+        "MisraC2012-21.4": {
+            "_active": true
+        },
+        "MisraC2012-21.5": {
+            "_active": true
+        },
+        "MisraC2012-21.6": {
+            "_active": true
+        },
+        "MisraC2012-21.7": {
+            "_active": true
+        },
+        "MisraC2012-21.8": {
+            "_active": true
+        },
+        "MisraC2012-21.9": {
+            "_active": true
+        },
+        "MisraC2012-22.1": {
+            "_active": true
+        },
+        "MisraC2012-22.10": {
+            "_active": true
+        },
+        "MisraC2012-22.11": {
+            "_active": true
+        },
+        "MisraC2012-22.12": {
+            "_active": true
+        },
+        "MisraC2012-22.13": {
+            "_active": true
+        },
+        "MisraC2012-22.14": {
+            "_active": true
+        },
+        "MisraC2012-22.15": {
+            "_active": true
+        },
+        "MisraC2012-22.16": {
+            "_active": true
+        },
+        "MisraC2012-22.17": {
+            "_active": true
+        },
+        "MisraC2012-22.18": {
+            "_active": true
+        },
+        "MisraC2012-22.19": {
+            "_active": true
+        },
+        "MisraC2012-22.2": {
+            "_active": true
+        },
+        "MisraC2012-22.20": {
+            "_active": true
+        },
+        "MisraC2012-22.3": {
+            "_active": true
+        },
+        "MisraC2012-22.4": {
+            "_active": true
+        },
+        "MisraC2012-22.5": {
+            "_active": true
+        },
+        "MisraC2012-22.6": {
+            "_active": true
+        },
+        "MisraC2012-22.7": {
+            "_active": true
+        },
+        "MisraC2012-22.8": {
+            "_active": true
+        },
+        "MisraC2012-22.9": {
+            "_active": true
+        },
+        "MisraC2012-23.1": {
+            "_active": true
+        },
+        "MisraC2012-23.2": {
+            "_active": true
+        },
+        "MisraC2012-23.3": {
+            "_active": true
+        },
+        "MisraC2012-23.4": {
+            "_active": true
+        },
+        "MisraC2012-23.5": {
+            "_active": true
+        },
+        "MisraC2012-23.6": {
+            "_active": true
+        },
+        "MisraC2012-23.7": {
+            "_active": true
+        },
+        "MisraC2012-23.8": {
+            "_active": true
+        },
+        "MisraC2012-3.1": {
+            "_active": true
+        },
+        "MisraC2012-3.2": {
+            "_active": true
+        },
+        "MisraC2012-4.1": {
+            "_active": true
+        },
+        "MisraC2012-4.2": {
+            "_active": true
+        },
+        "MisraC2012-5.1": {
+            "_active": true
+        },
+        "MisraC2012-5.2": {
+            "_active": true
+        },
+        "MisraC2012-5.3": {
+            "_active": true
+        },
+        "MisraC2012-5.4": {
+            "_active": true
+        },
+        "MisraC2012-5.5": {
+            "_active": true
+        },
+        "MisraC2012-5.6": {
+            "_active": true
+        },
+        "MisraC2012-5.7": {
+            "_active": true
+        },
+        "MisraC2012-5.8": {
+            "_active": true
+        },
+        "MisraC2012-5.9": {
+            "_active": true
+        },
+        "MisraC2012-6.1": {
+            "_active": true
+        },
+        "MisraC2012-6.2": {
+            "_active": true
+        },
+        "MisraC2012-6.3": {
+            "_active": true
+        },
+        "MisraC2012-7.1": {
+            "_active": true
+        },
+        "MisraC2012-7.2": {
+            "_active": true
+        },
+        "MisraC2012-7.3": {
+            "_active": true
+        },
+        "MisraC2012-7.4": {
+            "_active": true
+        },
+        "MisraC2012-7.5": {
+            "_active": true
+        },
+        "MisraC2012-7.6": {
+            "_active": true
+        },
+        "MisraC2012-8.1": {
+            "_active": true
+        },
+        "MisraC2012-8.10": {
+            "_active": true
+        },
+        "MisraC2012-8.11": {
+            "_active": true
+        },
+        "MisraC2012-8.12": {
+            "_active": true
+        },
+        "MisraC2012-8.13": {
+            "_active": true
+        },
+        "MisraC2012-8.14": {
+            "_active": true
+        },
+        "MisraC2012-8.15": {
+            "_active": true
+        },
+        "MisraC2012-8.16": {
+            "_active": true
+        },
+        "MisraC2012-8.17": {
+            "_active": true
+        },
+        "MisraC2012-8.2": {
+            "_active": true
+        },
+        "MisraC2012-8.3": {
+            "_active": true
+        },
+        "MisraC2012-8.4": {
+            "_active": true
+        },
+        "MisraC2012-8.5": {
+            "_active": true
+        },
+        "MisraC2012-8.6": {
+            "_active": true
+        },
+        "MisraC2012-8.7": {
+            "_active": true
+        },
+        "MisraC2012-8.8": {
+            "_active": true
+        },
+        "MisraC2012-8.9": {
+            "_active": true
+        },
+        "MisraC2012-9.1": {
+            "_active": true
+        },
+        "MisraC2012-9.2": {
+            "_active": true
+        },
+        "MisraC2012-9.3": {
+            "_active": true
+        },
+        "MisraC2012-9.4": {
+            "_active": true
+        },
+        "MisraC2012-9.5": {
+            "_active": true
+        },
+        "MisraC2012-9.6": {
+            "_active": true
+        },
+        "MisraC2012-9.7": {
+            "_active": true
+        },
+        "MisraC2012Directive-1.1": {
+            "_active": true
+        },
+        "MisraC2012Directive-2.1": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.1": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.10": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.11": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.12": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.13": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.14": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.15": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.2": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.3": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.4": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.5": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.6": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.7": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.8": {
+            "_active": true
+        },
+        "MisraC2012Directive-4.9": {
+            "_active": true
+        },
+        "MisraC2012Directive-5.1": {
+            "_active": true
+        },
+        "MisraC2012Directive-5.2": {
+            "_active": true
+        },
+        "MisraC2012Directive-5.3": {
+            "_active": true
+        },
+        "StaticSemanticAnalysis": {
+            ".#": "from preset 'focus_on_few_false_positives'",
+            "_active": true,
+            "performance": {
+                "general": {
+                    "enhanced_analysis": true,
+                    "query_timeout": 100
+                }
+            },
+            "semantics": {
+                "advanced": {
+                    "apply_virtual_call_this_adjustment": true,
+                    "filter_enums_to_enumerator_range": false
+                },
+                "pointer_analysis": {
+                    "use_pointer_filter": true,
+                    "use_type_filter": true
+                }
+            }
+        }
+    },
+    "_Format": "1.0",
+    "_VersionNum": [
+        7,
+        11,
+        4,
+        18993
+    ]
+}

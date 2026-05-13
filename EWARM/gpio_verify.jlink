@@ -1,0 +1,43 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Force D3CCIPR and trigger recording
+w4 0x58024454 0x00800000
+w4 0x58000088 0x00002000
+w4 0x58000008 0x00002000
+
+g
+sleep 800
+h
+
+// GPIOC_AFRL (0x58020820) — PC1 AF is in bits[7:4]
+// AF6 = 0x6 -> bits[7:4]=0110 -> AFRL & 0xFF = 0x6X
+// AF10 = 0xA -> bits[7:4]=1010 -> AFRL & 0xFF = 0xAX
+mem32 0x58020820 1
+
+// GPIOE_AFRL (0x58020420) — PE2 AF is in bits[11:8]
+// AF10 = 0xA -> bits[11:8]=1010
+mem32 0x58020420 1
+
+// GPIOC MODER (0x58020800) — PC1 should be AF=10
+mem32 0x58020800 1
+
+// D3CCIPR
+mem32 0x58024454 1
+
+// SAI4 CR1
+mem32 0x58005404 1
+
+// g_DfsdmBuf first 4 words (raw DMA samples)
+mem32 0x30000000 4
+
+// g_State
+mem8  0x24037876 1
+
+// g_SampleCount
+mem32 0x240377FC 1
+
+g
+exit

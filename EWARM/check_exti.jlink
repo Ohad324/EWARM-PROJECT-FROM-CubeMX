@@ -1,0 +1,21 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+// EXTI_IMR1 = 0x58000480 (interrupt mask register 1 — D3 domain)
+// EXTI_IMR2 = 0x58000490
+// EXTI_SWIER1 = 0x58000418
+// EXTI_PR1 = 0x58000488 (pending)
+// EXTI_C1IMR1 = 0x58000500 (CPU1 interrupt mask)
+// EXTI_C1EMR1 = 0x58000504
+mem32 0x58000418 1
+mem32 0x58000480 1
+mem32 0x58000488 1
+mem32 0x58000500 1
+mem32 0x58000504 1
+// Also check g_SysMode and voiceRecTaskHandle
+mem32 0x240377FE 1
+mem32 0x24037784 1
+g
+exit

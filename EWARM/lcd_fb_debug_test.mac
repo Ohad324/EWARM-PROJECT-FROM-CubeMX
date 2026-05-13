@@ -1,0 +1,116 @@
+/*
+ * lcd_fb_debug_test.mac - Headless C-SPY macro for the debug-only
+ * framebuffer test image path guarded by #ifndef RELEASE_BUILD.
+ *
+ * Goal:
+ *   Validate whether the debug firmware paints the expected image directly
+ *   into the framebuffer and whether LTDC layer configuration still matches
+ *   the intended 832-byte stride / 400-pixel visible window model.
+ *
+ * Expected debug-only pattern written by TouchGFXHAL.cpp:
+ *   - top-left marker      = red      (B,G,R = 0,0,255)
+ *   - top-right marker     = green    (0,255,0)
+ *   - bottom-left marker   = blue     (255,0,0)
+ *   - bottom-right marker  = yellow   (0,255,255)
+ *   - center cross         = white    (255,255,255)
+ *   - first padding column = black    (0,0,0)
+ *
+ * Usage:
+ *   Run via lcd_fb_debug_test.bat. The batch rebuilds/flashes the Debug
+ *   firmware, then CSpyBat drives this macro and saves the log.
+ */
+
+DumpLtdc(tag)
+{
+    __var awcr, twcr, isr, whpcr, cfbar, cfblr, cfblnr;
+
+    awcr   = __readMemory32(0x50001010, "Memory");
+    twcr   = __readMemory32(0x50001014, "Memory");
+    isr    = __readMemory32(0x50001038, "Memory");
+    whpcr  = __readMemory32(0x50001088, "Memory");
+    cfbar  = __readMemory32(0x500010AC, "Memory");
+    cfblr  = __readMemory32(0x500010B0, "Memory");
+    cfblnr = __readMemory32(0x500010B4, "Memory");
+
+    __message "\n===== ", tag, " LTDC =====\n";
+    __message "  AWCR   = 0x", awcr:%08X, "\n";
+    __message "  TWCR   = 0x", twcr:%08X, "\n";
+    __message "  ISR    = 0x", isr:%08X, "\n";
+    __message "  WHPCR  = 0x", whpcr:%08X, "\n";
+    __message "  CFBAR  = 0x", cfbar:%08X, "\n";
+    __message "  CFBLR  = 0x", cfblr:%08X, "\n";
+    __message "  CFBLNR = 0x", cfblnr:%08X, "\n";
+}
+
+DumpRgb(tag, addr)
+{
+    __var b, g, r;
+    b = __readMemory8(addr + 0, "Memory");
+    g = __readMemory8(addr + 1, "Memory");
+    r = __readMemory8(addr + 2, "Memory");
+    __message "  ", tag, " @0x", addr:%08X,
+              " -> B=", b:%d,
+              " G=", g:%d,
+              " R=", r:%d, "\n";
+}
+
+DumpFramebufferSamples(tag)
+{
+    __message "===== ", tag, " FRAMEBUFFER SAMPLES =====\n";
+
+    /* row 0, col 0 */
+    DumpRgb("TOP_LEFT_RED", 0xD0000000);
+    /* row 0, col 752 */
+    DumpRgb("TOP_RIGHT_GREEN", 0xD00008D0);
+    /* row 432, col 0 */
+    DumpRgb("BOTTOM_LEFT_BLUE", 0xD0107400);
+    /* row 432, col 752 */
+    DumpRgb("BOTTOM_RIGHT_YELLOW", 0xD0107CD0);
+    /* row 240, col 400 */
+    DumpRgb("CENTER_WHITE", 0xD00928B0);
+    /* row 0, col 800 (padding column) */
+    DumpRgb("PAD_COLUMN", 0xD0000960);
+}
+
+DumpRuntimeState(tag)
+{
+    __message "===== ", tag, " RUNTIME =====\n";
+    __message "  refreshRequested = ", refreshRequested:%d, "\n";
+    __message "  displayRefreshing = ", displayRefreshing:%d, "\n";
+    __message "  updateRegion = ", updateRegion:%d, "\n";
+    __message "  currFbBase = 0x", currFbBase:%08X, "\n";
+}
+
+Snapshot(tag)
+{
+    DumpRuntimeState(tag);
+    DumpLtdc(tag);
+    DumpFramebufferSamples(tag);
+}
+
+execUserConnect()
+{
+    __message "\n*** lcd_fb_debug_test.mac - Debug framebuffer probe ***\n";
+    __message "This test assumes RELEASE_BUILD is NOT defined.\n";
+
+    /* Let firmware boot, initialize FMC/LTDC/DSI, and render a few frames. */
+    __go();
+    __delay(4000);
+    __stop();
+    Snapshot("SNAP1_AFTER_BOOT");
+
+    __go();
+    __delay(1000);
+    __stop();
+    Snapshot("SNAP2_PLUS_1S");
+
+    __go();
+    __delay(1000);
+    __stop();
+    Snapshot("SNAP3_PLUS_2S");
+
+    __message "\n*** lcd_fb_debug_test.mac COMPLETE ***\n";
+    __message "Expected marker summary:\n";
+    __message "  TL red, TR green, BL blue, BR yellow, center white, pad black.\n";
+    __message "If samples are correct but the LCD still looks broken, the fault is in LTDC/DSI scanout geometry, not framebuffer content generation.\n";
+}

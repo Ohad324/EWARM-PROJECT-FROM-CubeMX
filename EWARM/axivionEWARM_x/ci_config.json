@@ -1,0 +1,53 @@
+{
+    "Project": {
+        "BuildSystemIntegration": {
+            "child_order": [
+                "IARIntegration 1"
+            ]
+        },
+        "Git": {
+            "_active": true,
+            "rootpath": "../"
+        },
+        "GitEWARM": {
+            "_active": false,
+            "_copy_from": "Git"
+        },
+        "IARIntegration 1": {
+            "_active": true,
+            "_copy_from": "IARIntegration",
+            "config": "STM32H747I-DISCO_CM7",
+            "ewp_file": "STM32H747I-DISCO.ewp",
+            "eww_file": "Project.eww"
+        },
+        "Project-GlobalOptions": {
+            "advanced": {
+                "check_installation_integrity": false
+            },
+            "ci_mode": {
+                "clean_after": false
+            },
+            "directory": "../",
+            "ir": "STM32H747I-DISCO_CM7/Exe/STM32H747I-DISCO_CM7.out",
+            "name": "EWARM"
+        },
+        "Shadow": {
+            "_active": false,
+            "rootpath": ".",
+            "shadow_directory": "../../../Axivion/Dashboard/shadow"
+        }
+    },
+    "Results": {
+        "Dashboard": {
+            "dashboard_url": "http://localhost:9090/axivion",
+            "database_mode": "managed_upload"
+        }
+    },
+    "_Format": "1.0",
+    "_VersionNum": [
+        7,
+        11,
+        4,
+        18993
+    ]
+}

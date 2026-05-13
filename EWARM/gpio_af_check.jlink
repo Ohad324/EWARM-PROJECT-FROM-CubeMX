@@ -1,0 +1,41 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Force D3CCIPR and trigger
+w4 0x58024454 0x00800000
+w4 0x58000088 0x00002000
+w4 0x58000008 0x00002000
+g
+sleep 800
+h
+
+// GPIOC_AFRL @ 0x58020820 — PC1 in bits[7:4] (AF6=0x6 expected now)
+mem32 0x58020820 1
+
+// GPIOE_AFRL @ 0x58021020 — PE2 in bits[11:8] (AF10=0xA expected)
+// GPIOE_BASE = 0x58021000 (D3_AHB1PERIPH + 0x1000), AFRL offset = 0x20
+mem32 0x58021020 1
+
+// GPIOE_AFRH @ 0x58021024 — PE4,PE5 in bits [19:16] and [23:20] -- just in case they're in AFRH
+// Actually PE4,PE5 are still < pin8 so they're in AFRL, but let me read AFRH for reference
+mem32 0x58021024 1
+
+// D3CCIPR
+mem32 0x58024454 1
+
+// SAI4 CR1
+mem32 0x58005404 1
+
+// BDMA_Channel1 CCR (confirm still running)
+mem32 0x5802541C 1
+
+// g_DfsdmBuf — first 4 words
+mem32 0x30000000 4
+
+// g_SampleCount
+mem32 0x240377FC 1
+
+g
+exit

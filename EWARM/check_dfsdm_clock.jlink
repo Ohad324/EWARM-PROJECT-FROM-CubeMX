@@ -1,0 +1,40 @@
+// AUDIO BISECT 2026-05-10 — read DFSDM CH0/CH1 register state + PC2 GPIO config
+// without halting the CPU (free-running). Confirms whether DFSDM CKOUT is
+// being generated and whether PC2 is muxed to AF6.
+si SWD
+speed 4000
+device STM32H747II_M7
+connect
+
+// === DFSDM1 channel 0 (clock master) ===
+// Expect CHCFGR1 = 0x80310085: DFSDMEN(31)+CKOUTSRC(30)+CKOUTDIV=49(23:16)+CHEN(7)+SPICKSEL=01+SITP=01
+mem32 0x40017000 1
+// Expect CHCFGR2 = 0x00000030: DTRBS=6 (bits 7:3)
+mem32 0x40017004 1
+
+// === DFSDM1 channel 1 (NOT used in Path C-PC2) ===
+mem32 0x40017020 1
+mem32 0x40017024 1
+
+// === DFSDM1 Filter 0 ===
+// Expect FLTCR1 = 0x20240001: RCH=0 (CH0), RCONT=1, RDMAEN=1, DFEN=1
+mem32 0x40017100 1
+// Expect FLTFCR = 0x607C0000: FORD=Sinc3 (bits 31:29 = 011), FOSR=125 (bits 24:16 = 124)
+mem32 0x40017134 1
+
+// === GPIOC MODER (PC1, PC2 should be AF mode = 10) ===
+// Bits[5:4] = PC2 mode (expect 10 = AF), Bits[3:2] = PC1 mode (expect 10 = AF)
+mem32 0x58020800 1
+
+// === GPIOC AFRL (AFR[0], pins 0-7) ===
+// Bits[11:8] = PC2 AF (expect 6), Bits[7:4] = PC1 AF (expect 3)
+mem32 0x58020820 1
+
+// === RCC APB2ENR — DFSDM1 clock gate must be set ===
+// Bit 4 = DFSDM1EN
+mem32 0x580244F0 1
+
+// === g_dbg snapshot at 0x24070000 (captured after MX_DFSDM1_Init) ===
+mem32 0x24070000 16
+
+exit

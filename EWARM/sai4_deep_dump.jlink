@@ -1,0 +1,51 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Force D3CCIPR = CLKP for SAI4A BEFORE triggering
+w4 0x58024454 0x00800000
+
+// Clear stale PR1 and fire EXTI13
+w4 0x58000088 0x00002000
+w4 0x58000008 0x00002000
+
+g
+sleep 1000
+h
+
+// --- D3CCIPR: SAI4ASEL[23:21] should be 100 = 0x00800000 ---
+mem32 0x58024454 1
+
+// --- SAI4 Block_A CR1 ---
+mem32 0x58005404 1
+
+// --- SAI4 PDMCR ---
+mem32 0x58005444 1
+
+// --- BDMA ISR (global status) @ 0x58025400 ---
+mem32 0x58025400 1
+
+// --- BDMA_Channel1 registers ---
+// BDMA_Channel1_BASE = BDMA_BASE(0x58025400) + 0x1C = 0x5802541C
+// CCR  @ 0x5802541C — bit0=EN, bit5=CIRC, bit4=DIR
+mem32 0x5802541C 1
+// CNDTR @ 0x58025420 — remaining transfers (counts down in linear, reloads in circular)
+mem32 0x58025420 1
+// CPAR  @ 0x58025424 — peripheral address (must be SAI4_Block_A DR = 0x58005408)
+mem32 0x58025424 1
+// CM0AR @ 0x58025428 — memory address (must be s_sai4KickBuf = 0x38000100)
+mem32 0x58025428 1
+
+// --- PE2 IDR (GPIOE IDR) — bit2 toggles if PE2 clock is running ---
+mem32 0x58020410 1
+
+// --- DFSDM FLTISR — CKABF bits[23:16] should be 0x00 when clock running ---
+mem32 0x40017108 1
+
+// --- g_State and g_SampleCount ---
+mem8  0x24037876 1
+mem32 0x240377FC 1
+
+g
+exit

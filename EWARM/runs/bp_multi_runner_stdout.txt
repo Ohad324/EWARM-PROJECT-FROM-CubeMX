@@ -1,0 +1,39 @@
+[1/3] Stopping any running debugger tools...
+[2/3] Building Release configuration...
+[3/3] Orchestrating 10 cspybat invocations (one BP each)...
+[1/25] cspybat probe at checkpoint: SystemInit
+[2/25] cspybat probe at checkpoint: main
+[3/25] cspybat probe at checkpoint: HAL_Init
+[4/25] cspybat probe at checkpoint: MPU_Config
+[5/25] cspybat probe at checkpoint: SystemClock_Config
+[6/25] cspybat probe at checkpoint: HAL_RCC_OscConfig
+[7/25] cspybat probe at checkpoint: HAL_RCC_ClockConfig
+[8/25] cspybat probe at checkpoint: MX_GPIO_Init
+[9/25] cspybat probe at checkpoint: MX_MDMA_Init
+[10/25] cspybat probe at checkpoint: MX_FMC_Init
+[11/25] cspybat probe at checkpoint: MX_DMA2D_Init
+[12/25] cspybat probe at checkpoint: MX_CRC_Init
+[13/25] cspybat probe at checkpoint: MX_JPEG_Init
+[14/25] cspybat probe at checkpoint: MX_QUADSPI_Init
+[15/25] cspybat probe at checkpoint: MX_UART8_Init
+[16/25] cspybat probe at checkpoint: MX_TouchGFX_PreOSInit
+[17/25] cspybat probe at checkpoint: osKernelInitialize
+[18/25] cspybat probe at checkpoint: osThreadNew
+[19/25] cspybat probe at checkpoint: vTaskStartScheduler
+[20/25] cspybat probe at checkpoint: TouchGFX_Task
+[21/25] cspybat probe at checkpoint: MX_DSIHOST_DSI_Init
+[22/25] cspybat probe at checkpoint: MX_LTDC_Init
+[23/25] cspybat probe at checkpoint: MX_TouchGFX_Init
+[24/25] cspybat probe at checkpoint: touchgfx_taskEntry
+[25/25] cspybat probe at checkpoint: HAL_DSI_Refresh
+
+================================================================
+  boot_pipeline_multi complete -- 25 checkpoints
+  Combined: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_multi.log
+  Per-checkpoint: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_multi\*.log
+================================================================
+
+================================================================
+  boot_pipeline_multi complete  (orchestrator exit = 0)
+  Combined log: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_multi.log
+================================================================

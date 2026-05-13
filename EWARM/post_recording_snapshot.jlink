@@ -1,0 +1,21 @@
+/* post_recording_snapshot.jlink — non-intrusive read of buffer + filter state
+ * after the user pressed the blue button. CPU keeps running. */
+
+mem32 0x40017000 1     /* CH0 CFGR1 — expect 0x80310085 */
+mem32 0x40017100 1     /* FLT0CR1   — expect 0x20240001 */
+mem32 0x40017108 1     /* FLT0ISR */
+mem32 0x4001711C 1     /* FLT0RDATAR — should still be varying if DMA still running */
+mem32 0x40020028 4     /* DMA CR/NDTR/PAR/M0AR */
+
+/* live-read RDATAR three times spaced apart — values should differ if mic is live */
+sleep 50
+mem32 0x4001711C 1
+sleep 50
+mem32 0x4001711C 1
+sleep 50
+mem32 0x4001711C 1
+
+/* dump buffer */
+mem32 0x30004000 32
+
+q

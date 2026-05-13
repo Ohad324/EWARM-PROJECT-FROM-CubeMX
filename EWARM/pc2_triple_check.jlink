@@ -1,0 +1,48 @@
+/* pc2_triple_check.jlink — live read PC2 AF + DFSDM kernel + actual signal level
+ *
+ * No reset, no flash — connects to running CPU and reads:
+ *   GPIOC->MODER     0x58020800   bits[5:4] for PC2  → 10 = AF mode (REQUIRED)
+ *   GPIOC->OSPEEDR   0x58020808   bits[5:4] for PC2  → 11 = very-high speed
+ *   GPIOC->PUPDR     0x5802080C   bits[5:4] for PC2  → 00 = no pull
+ *   GPIOC->AFR[0]    0x58020820   bits[11:8] for PC2 → 0011 = AF3 (DFSDM1_CKIN1)
+ *   GPIOC->IDR       0x58020810   bit 2 = live PC2 level (toggling means clock arriving)
+ *
+ *   RCC_D2CCIP1R     0x58024450   bit 24 = DFSDM1SEL (0 = pclk2, 1 = sys_ck)
+ *   RCC_APB2ENR      0x580244F4   bit 4 = DFSDM1EN
+ *   RCC_C1_APB2ENR   0x58024550   bit 4 = CM7 DFSDM1EN
+ *
+ *   DFSDM1 CH1 CHCFGR1  0x40017020  expect 0x00000081
+ *   DFSDM1 FLT0 ISR     0x40017108  CKABF byte (bits 23:16)
+ *   DFSDM1 FLT0 RDATAR  0x4001711C  live data (must vary if clock arrives)
+ *
+ *   SAI4 BlockA CR1     0x58005404  bit 16 = SAIEN
+ *   SAI4 BlockA PDMCR   0x58005444  bit 0 = PDMEN, bit 8 = CKEN1
+ */
+
+sleep 100
+mem32 0x58020800 1
+mem32 0x58020808 1
+mem32 0x5802080C 1
+mem32 0x58020820 1
+mem32 0x58020810 1
+sleep 50
+mem32 0x58020810 1
+sleep 50
+mem32 0x58020810 1
+
+mem32 0x58024450 1
+mem32 0x580244F4 1
+mem32 0x58024550 1
+
+mem32 0x40017020 1
+mem32 0x40017108 1
+mem32 0x4001711C 1
+sleep 50
+mem32 0x4001711C 1
+sleep 50
+mem32 0x4001711C 1
+
+mem32 0x58005404 1
+mem32 0x58005444 1
+
+q

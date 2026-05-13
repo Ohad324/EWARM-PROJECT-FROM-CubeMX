@@ -1,0 +1,20 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+
+// Read D3CCIPR before write
+mem32 0x58024454 1
+
+// Write SAI4ASEL = CLKP (bits[23:21] = 100 = 0x00800000)
+w4 0x58024454 0x00800000
+
+// Read back immediately — should show 0x00800000
+mem32 0x58024454 1
+
+// Also read RCC_CR to confirm HSI status
+mem32 0x58024400 1
+
+g
+exit

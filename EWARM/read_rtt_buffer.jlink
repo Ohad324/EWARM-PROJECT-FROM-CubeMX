@@ -1,0 +1,22 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+// ── g_dbg struct (18 fields, 72 bytes at 0x24000050) ─────────────
+mem32 0x24000050 18
+// ── g_State and g_SampleCount ────────────────────────────────────
+mem8  0x24037876 1
+mem32 0x240377FC 1
+// ── DFSDM Filter0 FLTISR (CKABF bits[23:16]) ─────────────────────
+mem32 0x40017108 1
+// ── SAI4 CR1 (SAIEN + MCKDIV) ────────────────────────────────────
+mem32 0x58005404 1
+// ── PE2 IDR (bit2=SAI4_CK1 clock) ────────────────────────────────
+mem32 0x58020410 1
+// ── PC1 IDR (bit1=SAI4_D1 PDM data) ─────────────────────────────
+mem32 0x58020810 1
+// ── _SEGGER_RTT up-channel 0: pBuffer=+0x18, SizeOfBuffer=+0x1C
+//    WrOff=+0x20, RdOff=+0x24 ─────────────────────────────────────
+mem32 0x24000118 4
+g
+exit

@@ -1,0 +1,218 @@
+// dfsdm_3dump.jlink — JLink Commander: 3 timed register dumps
+// Replaces CSpyBat __go() approach with native JLink go/halt/sleep
+//
+// Flow:
+//   DUMP 1: halt at reset — pre-init baseline
+//   go 5s — firmware boots, FreeRTOS starts
+//   DUMP 2: halt — firmware initialized, idle
+//   SW trigger blue button (SWIER1 bit13)
+//   go 1.5s — mid-recording
+//   DUMP 3: halt — mid-recording snapshot
+//   go 3.5s
+//   DUMP 4: halt — post-recording snapshot
+
+r
+h
+sleep 200
+
+// ===== DUMP 1: AT RESET (pre-init) =====
+// Tag line for Python parser
+// @DUMP 1/4 AT_RESET (before peripheral init)
+// RCC
+mem32 0x580244F0 1
+mem32 0x58024590 1
+mem32 0x580244F8 1
+mem32 0x580244D8 1
+mem32 0x580244E0 1
+// DFSDM CH0
+mem32 0x40017000 1
+// DFSDM CH1
+mem32 0x40017020 1
+mem32 0x40017024 1
+mem32 0x40017030 1
+// DFSDM FLT0
+mem32 0x40017100 1
+mem32 0x40017104 1
+mem32 0x40017108 1
+mem32 0x40017114 1
+mem32 0x4001711C 1
+// SAI4 Block A
+mem32 0x58005404 1
+mem32 0x58005408 1
+mem32 0x58005410 1
+mem32 0x58005418 1
+mem32 0x58005420 1
+mem32 0x58005444 1
+mem32 0x58005448 1
+// DMA1 Stream 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x40020030 1
+mem32 0x40020034 1
+mem32 0x40020000 1
+// GPIO PC1
+mem32 0x58020800 1
+mem32 0x5802080C 1
+mem32 0x58020810 1
+mem32 0x58020820 1
+// GPIO PE2
+mem32 0x58021000 1
+mem32 0x58021010 1
+mem32 0x58021020 1
+// Firmware state
+mem32 0x24037784 1
+mem32 0x24037790 1
+mem8  0x240377FE 1
+// g_dbg hub
+mem32 0x24000050 18
+// Live globals
+mem32 0x240000E8 4
+// DfsdmBuf[0..7]
+mem32 0x30000000 8
+
+// ===== Let firmware boot =====
+g
+sleep 5000
+h
+sleep 200
+
+// ===== DUMP 2: IDLE (5s after boot) =====
+// @DUMP 2/4 IDLE (5s after boot, firmware initialized)
+mem32 0x580244F0 1
+mem32 0x58024590 1
+mem32 0x580244F8 1
+mem32 0x580244D8 1
+mem32 0x580244E0 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x40017024 1
+mem32 0x40017030 1
+mem32 0x40017100 1
+mem32 0x40017104 1
+mem32 0x40017108 1
+mem32 0x40017114 1
+mem32 0x4001711C 1
+mem32 0x58005404 1
+mem32 0x58005408 1
+mem32 0x58005410 1
+mem32 0x58005418 1
+mem32 0x58005420 1
+mem32 0x58005444 1
+mem32 0x58005448 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x40020030 1
+mem32 0x40020034 1
+mem32 0x40020000 1
+mem32 0x58020800 1
+mem32 0x5802080C 1
+mem32 0x58020810 1
+mem32 0x58020820 1
+mem32 0x58021000 1
+mem32 0x58021010 1
+mem32 0x58021020 1
+mem32 0x24037784 1
+mem32 0x24037790 1
+mem8  0x240377FE 1
+mem32 0x24000050 18
+mem32 0x240000E8 4
+mem32 0x30000000 8
+
+// ===== SW trigger blue button =====
+w4 0x58000008 0x00002000
+g
+sleep 1500
+h
+sleep 200
+
+// ===== DUMP 3: MID-RECORDING (1.5s after trigger) =====
+// @DUMP 3/4 MID-RECORDING (1.5s after trigger)
+mem32 0x580244F0 1
+mem32 0x58024590 1
+mem32 0x580244F8 1
+mem32 0x580244D8 1
+mem32 0x580244E0 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x40017024 1
+mem32 0x40017030 1
+mem32 0x40017100 1
+mem32 0x40017104 1
+mem32 0x40017108 1
+mem32 0x40017114 1
+mem32 0x4001711C 1
+mem32 0x58005404 1
+mem32 0x58005408 1
+mem32 0x58005410 1
+mem32 0x58005418 1
+mem32 0x58005420 1
+mem32 0x58005444 1
+mem32 0x58005448 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x40020030 1
+mem32 0x40020034 1
+mem32 0x40020000 1
+mem32 0x58020800 1
+mem32 0x5802080C 1
+mem32 0x58020810 1
+mem32 0x58020820 1
+mem32 0x58021000 1
+mem32 0x58021010 1
+mem32 0x58021020 1
+mem32 0x24037784 1
+mem32 0x24037790 1
+mem8  0x240377FE 1
+mem32 0x24000050 18
+mem32 0x240000E8 4
+mem32 0x30000000 8
+
+// ===== Let recording finish =====
+g
+sleep 3500
+h
+sleep 200
+
+// ===== DUMP 4: POST-RECORDING (5s after trigger) =====
+// @DUMP 4/4 POST-RECORDING (5s after trigger)
+mem32 0x580244F0 1
+mem32 0x58024590 1
+mem32 0x580244F8 1
+mem32 0x580244D8 1
+mem32 0x580244E0 1
+mem32 0x40017000 1
+mem32 0x40017020 1
+mem32 0x40017024 1
+mem32 0x40017030 1
+mem32 0x40017100 1
+mem32 0x40017104 1
+mem32 0x40017108 1
+mem32 0x40017114 1
+mem32 0x4001711C 1
+mem32 0x58005404 1
+mem32 0x58005408 1
+mem32 0x58005410 1
+mem32 0x58005418 1
+mem32 0x58005420 1
+mem32 0x58005444 1
+mem32 0x58005448 1
+mem32 0x40020028 1
+mem32 0x4002002C 1
+mem32 0x40020030 1
+mem32 0x40020034 1
+mem32 0x40020000 1
+mem32 0x58020800 1
+mem32 0x5802080C 1
+mem32 0x58020810 1
+mem32 0x58020820 1
+mem32 0x58021000 1
+mem32 0x58021010 1
+mem32 0x58021020 1
+mem32 0x24037784 1
+mem32 0x24037790 1
+mem8  0x240377FE 1
+mem32 0x24000050 18
+mem32 0x240000E8 4
+mem32 0x30000000 8
+
+q

@@ -1,0 +1,38 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Clear stale PR1 pending flag
+w4 0x58000088 0x00002000
+
+// Force D3CCIPR SAI4ASEL = CLKP (PER_CK = HSI 64MHz)
+// bits[23:21] = 100 = 0x00800000
+w4 0x58024454 0x00800000
+
+// Fire EXTI13 via SWIER1 to trigger recording
+w4 0x58000008 0x00002000
+
+// Run, wait 1s mid-recording
+g
+sleep 1000
+h
+
+// Verify D3CCIPR was accepted
+mem32 0x58024454 1
+
+// SAI4 CR1 — SAIEN and MCKDIV
+mem32 0x58005404 1
+
+// GPIOE IDR — bit2=PE2=SAI4_CK1
+mem32 0x58020410 1
+
+// FLTISR — CKABF bits[23:16]
+mem32 0x40017108 1
+
+// g_State and g_SampleCount
+mem8  0x24037876 1
+mem32 0x240377FC 1
+
+g
+exit

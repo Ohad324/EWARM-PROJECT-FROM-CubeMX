@@ -1,0 +1,41 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Force D3CCIPR and trigger
+w4 0x58024454 0x00800000
+w4 0x58000088 0x00002000
+w4 0x58000008 0x00002000
+
+g
+sleep 1500
+h
+
+// --- DFSDM1_Filter0 registers ---
+// FLTCR1
+mem32 0x40017100 1
+// FLTCR2
+mem32 0x40017104 1
+// FLTISR
+mem32 0x40017108 1
+// FLTFCR (filter config: Sinc order + OSR)
+mem32 0x40017110 1
+// FLTRDATAR (last sample)
+mem32 0x40017114 1
+// FLTJDATAR
+mem32 0x40017118 1
+
+// --- DFSDM Ch1 CHCFGR1/2 (SPICKSEL, DTRBS, etc.) ---
+mem32 0x40017020 1
+mem32 0x40017024 1
+
+// --- g_DfsdmBuf first 8 words (D2 SRAM at 0x30000000) ---
+mem32 0x30000000 8
+
+// --- g_State and g_SampleCount ---
+mem8  0x24037876 1
+mem32 0x240377FC 1
+
+g
+exit

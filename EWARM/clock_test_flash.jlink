@@ -1,0 +1,7 @@
+/* clock_test_flash.jlink — flash CM7 firmware and let it run.
+ * Called by run_clock_test.bat before the register check sequence. */
+r
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+exit

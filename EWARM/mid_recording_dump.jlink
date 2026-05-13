@@ -1,0 +1,55 @@
+// ================================================================
+// mid_recording_dump.jlink — Dump mid-recording registers
+// STM32H747I-DISCO CM7
+//
+// USAGE:
+//   1. Press the physical blue button on the board
+//   2. Immediately run this script (you have ~3 seconds)
+//
+// Connects without halting, waits 500ms, then halts and dumps.
+// ================================================================
+
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Wait briefly so recording is fully started
+sleep 500
+
+// Halt mid-recording
+h
+
+// g_State (expect 1 = REC_RECORDING)
+mem8 0x24037876 1
+
+// SAI4 CR1 (expect SAIEN=1, MCKDIV=0x10)
+mem32 0x58005404 1
+
+// DFSDM FLTISR — CKABF bits[23:16] (expect 0x00 = clock seen)
+mem32 0x40017108 1
+
+// DFSDM FLTRDATAR — audio data (expect varying, NOT 0x00000000)
+mem32 0x4001711C 1
+
+// PE2 GPIOE IDR bit2 (expect 1 = SAI4 clock toggling)
+mem32 0x58020410 1
+
+// PC1 GPIOC IDR bit1 (expect varying = PDM data)
+mem32 0x58020810 1
+
+// DMA1 Stream1 CR (expect EN=1)
+mem32 0x40020028 1
+
+// DMA1 Stream1 NDTR (expect counting down from 32)
+mem32 0x4002002C 1
+
+// g_SampleCount (expect >0 and <48000)
+mem32 0x240377FC 1
+
+// g_dbg struct (18 fields from 0x24000050)
+mem32 0x24000050 18
+
+// Resume
+g
+exit

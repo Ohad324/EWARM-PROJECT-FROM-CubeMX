@@ -1,0 +1,80 @@
+/*
+ * trigger_and_dump_session.mac
+ *
+ * Step 2 of flash_trigger_dump.bat:
+ *   - Attaches to running app via --attach_to_running_target
+ *   - execUserConnect() fires on attach (not execUserSetup which needs download)
+ *   - Fires EXTI13 software trigger (simulates blue button press)
+ *   - Resumes CPU for 2s so ISR + FreeRTOS run and recording starts
+ *   - Halts mid-recording and calls DFSDM_BootCheck() to refresh g_dbg
+ *   - Reads and prints g_dbg struct for all key pipeline registers
+ *   - Resumes for 4s, halts post-recording and dumps again
+ *
+ * DFSDM_BootCheck @ 0x0804E0C5 (static, rtt_log_task.o)
+ * Refreshes all g_dbg fields from live registers + prints RTT self-check.
+ */
+
+execUserConnect()
+{
+    __var exti_pr1, exti_c1imr1, exti_swier1;
+    __var g_state, g_sc;
+
+    exti_pr1     = 0x58000488;
+    exti_c1imr1  = 0x58000500;
+    exti_swier1  = 0x58000418;
+
+    __message "\n[TRIGGER] Connected to running app.";
+
+    /* ── Fire EXTI13 software trigger ──────────────────────────────── */
+    __writeMemory32(1 << 13, exti_pr1,    "Memory");   /* clear stale pending */
+    __writeMemory32(__readMemory32(exti_c1imr1, "Memory") | (1 << 13), exti_c1imr1, "Memory");
+    __writeMemory32(1 << 13, exti_swier1, "Memory");   /* fire trigger */
+    __message "[TRIGGER] EXTI13 fired. Resuming CPU for 2s...";
+
+    /* ── Resume so ISR + scheduler can process the trigger ─────────── */
+    __go();
+    __delay(2000);
+    __stop();
+
+    /* ── Mid-recording: call DFSDM_BootCheck() to refresh g_dbg ────── */
+    g_state = __readMemory8(__symbolAddress("g_State"), "Memory");
+    __message "\n[MID-RECORDING] g_State = ", g_state:%d, "  (expect 1)";
+    __message "[MID-RECORDING] Calling DFSDM_BootCheck() to refresh g_dbg...";
+    __call(0x0804E0C4);   /* thumb address = map addr - 1 (strip Thumb bit) */
+
+    /* ── Read g_dbg after BootCheck refreshed it ────────────────────── */
+    __message "\n[g_dbg snapshot — mid-recording]";
+    __message "  ch0_cfg1  (CHEN/SPICKSEL/SITP) = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x00, "Memory"):%X;
+    __message "  flt0_isr  (CKABF bits[23:16])  = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x14, "Memory"):%X;
+    __message "  sai4_pdm  (PDMEN/CKEN1)        = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x18, "Memory"):%X;
+    __message "  dma_cr    (EN bit0)             = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x1C, "Memory"):%X;
+    __message "  dma_ndtr  (counting down)       = ",   __readMemory32(__symbolAddress("g_dbg") + 0x20, "Memory"):%d;
+    __message "  dma_m0ar  (expect 0x30000000)   = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x24, "Memory"):%X;
+    __message "  spicksel  (expect 1=CKOUT)      = ",   __readMemory32(__symbolAddress("g_dbg") + 0x2C, "Memory"):%d;
+    __message "  last_raw  (expect != 0)         = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x34, "Memory"):%X;
+    __message "  g_SampleCount                   = ",   __readMemory32(__symbolAddress("g_SampleCount"), "Memory"):%d;
+
+    /* ── GPIOE/C direct reads (not in g_dbg) ────────────────────────── */
+    __message "  GPIOE IDR PE2(bit2)             = ", (__readMemory32(0x58020410, "Memory") >> 2) & 1:%d,  "  (1=clock toggling)";
+    __message "  GPIOC IDR PC1(bit1)             = ", (__readMemory32(0x58020810, "Memory") >> 1) & 1:%d,  "  (1=PDM data)";
+
+    /* ── Resume for 4s (recording window = 3s + margin) ────────────── */
+    __message "\n[TRIGGER] Resuming for 4s (recording window)...";
+    __go();
+    __delay(4000);
+    __stop();
+
+    /* ── Post-recording: call BootCheck again ───────────────────────── */
+    g_state = __readMemory8(__symbolAddress("g_State"), "Memory");
+    g_sc    = __readMemory32(__symbolAddress("g_SampleCount"), "Memory");
+    __message "\n[POST-RECORDING] g_State = ", g_state:%d, "  g_SampleCount = ", g_sc:%d, "  (expect 48000)";
+    __message "[POST-RECORDING] Calling DFSDM_BootCheck() again...";
+    __call(0x0804E0C4);
+
+    __message "\n[g_dbg snapshot — post-recording]";
+    __message "  flt0_isr  (CKABF)  = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x14, "Memory"):%X;
+    __message "  last_raw           = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x34, "Memory"):%X;
+    __message "  dma_cr             = 0x", __readMemory32(__symbolAddress("g_dbg") + 0x1C, "Memory"):%X;
+
+    __message "\n[DONE] Resume target.";
+}

@@ -1,0 +1,11 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+// Let firmware finish FMC/LTDC/DSI init so SDRAM is accessible
+sleep 1500
+halt
+loadbin "C:\TouchGFXProjects\MyApplication\EWARM\fb_test_image_832x480_rgb888.bin", 0xD0000000
+mem32 0xD0000000 8
+go
+exit

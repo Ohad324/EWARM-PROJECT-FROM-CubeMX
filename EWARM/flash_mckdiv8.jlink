@@ -1,0 +1,9 @@
+r
+erase
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+sleep 500
+w4 0x58000008 0x00002000
+sleep 200
+exit

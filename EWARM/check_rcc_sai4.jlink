@@ -1,0 +1,16 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+// RCC base = 0x58024400
+// RCC_D1CCIPR @ 0x5802444C — CKPERSEL[1:0]=bits[29:28], SAI4ASEL[2:0]=bits[2:0]
+mem32 0x5802444C 1
+// RCC_CR @ 0x58024400 — HSION(bit0), HSIRDY(bit1), HSIDIV[3:2]=bits[4:3]
+mem32 0x58024400 1
+// RCC_D3CCIPR @ 0x58024454 — SAI4BSEL
+mem32 0x58024454 1
+// SAI4 CR1 live
+mem32 0x58005404 1
+g
+exit

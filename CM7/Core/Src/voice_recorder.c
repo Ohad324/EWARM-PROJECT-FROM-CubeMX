@@ -45,7 +45,7 @@
  *   RM0399 p1158: data always from DATINy for all SPICKSEL values.
  *
  *   DFSDM1 Filter0: Sinc3, hardware decimation → 16-bit PCM output
- *   DMA1_Stream1 (DMA_REQUEST_DFSDM1_FLT0) → s_DfsdmBuf (0x30004000, D2 SRAM1)
+ *   DMA1_Stream1 (DMA_REQUEST_DFSDM1_FLT0) → s_DfsdmBuf (0x3003B800, D2 SRAM2)
  *   Button: PC13 EXTI15_10 rising edge  |  LED: PI12
  *
  * ── CLOCK MATH ───────────────────────────────────────────────────────────────
@@ -69,6 +69,9 @@
 #include "log_mutex.h"   /* RLOG — button diagnostic only, not in audio hot path */
 #include "itm_log.h"     /* STAGE() — ITM PORT[0] + RTT WriteString, zero printf */
 #include "music_display_task.h"  /* Music_RequestTestThumbFromISR() */
+#ifdef WAKE_WORD_TEST
+#include "wake_word_test.h"  /* WakeWordTest_Trigger() — quick EI classifier test */
+#endif
 #include <string.h>
 #include <stdio.h>       /* snprintf */
 #include <limits.h>      /* ULONG_MAX */
@@ -161,7 +164,7 @@ extern volatile uint32_t g_dbg_live_fltcr1;
 
 /* ── [Step 7] Option B: DMA1 only pipeline ────────────────────────────────────
  * DMA1_Stream1 (D2 bus master, DMAMUX1=DMA_REQUEST_DFSDM1_FLT0) writes
- * DFSDM Filter0 results directly to s_DfsdmBuf in D2 SRAM1 (0x30004000).
+ * DFSDM Filter0 results directly to s_DfsdmBuf in D2 SRAM2 (0x3003B800).
  * DMA1 can reach D2 SRAM; no domain bridge (MDMA) required.
  * CPU callbacks read from s_DfsdmBuf directly — zero-copy into g_AudioBuf. */
 static DMA_HandleTypeDef s_hdma_dfsdm;   /* DMA1_Stream1 — private to this file */
@@ -177,9 +180,15 @@ DMA_HandleTypeDef hdma_sai4_a_rx;
 #pragma location = 0x38000000
 static __no_init uint16_t s_sai4KickBuf[8] __attribute__((aligned(32)));
 
-/* ── [Step 7] DFSDM DMA buffer — D2 SRAM1, accessible by DMA1 ─────────────── */
-#pragma location = 0x30004000
-static __no_init int32_t s_DfsdmBuf[AUDIO_SAMPLES] __attribute__((aligned(32)));
+/* ── [Step 7] DFSDM DMA buffer — D2 SRAM2, accessible by DMA1 ─────────────── */
+/* Moved from D2 SRAM1 @ 0x30004000 to D2 SRAM2 @ 0x3003B800 (just past
+ * s_idleStack, which ends at 0x3003B7FF) to free the entire 128 KB SRAM1
+ * region for s_ei_pool (Edge Impulse MFCC). DMA1 can reach both D2 SRAMs;
+ * MPU attributes are identical (Non-Cacheable+Shareable), so cache
+ * coherency is unchanged. */
+#pragma data_alignment = 32
+#pragma location = 0x3003B800
+static __no_init int32_t s_DfsdmBuf[AUDIO_SAMPLES];
 
 /* Audio accumulation buffer — 3 s × 16000 Hz × 2 bytes = 96 KB in AXI SRAM.
  * Previously in SDRAM (.sdram_bss) which shares AHB3 with SDMMC1 IDMA —
@@ -453,6 +462,14 @@ void VoiceRecTask(void *arg)
         RLOG("[REC] DFSDM_DONE samples=", g_SampleCount);
 
         LED_ON();   /* stay ON — recording done, saving to SD */
+
+#ifdef WAKE_WORD_TEST
+        /* Quick EI bench: classify the first 1 s (16000 samples) of the captured
+         * buffer via the idle hook. Non-blocking — just arms a flag. Results
+         * appear in RTT as `[EI] HEY NOA = <pct>` / `Noise = <pct>` after the
+         * next idle slice (typically tens of ms once SD write yields). */
+        WakeWordTest_Trigger(g_AudioBuf, (size_t)16000u);
+#endif
 
         /* Signal SDWriteTask to write WAV file */
         uint32_t msg = 1u;

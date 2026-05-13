@@ -1,0 +1,7 @@
+// flash_and_run.jlink — load current firmware and release CPU
+EoE 1
+LoadFile C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.hex
+Reset
+Go
+Sleep 500
+Exit

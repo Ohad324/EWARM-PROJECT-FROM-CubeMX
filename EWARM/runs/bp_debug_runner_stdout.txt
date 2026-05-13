@@ -1,0 +1,64 @@
+[1/4] Stopping any running debugger tools...
+[2/4] Building Debug (CM7) configuration...
+[3/4] Flashing CM7 Debug .out via J-Link (loadfile + reset + go)...
+[4/4] Running boot_pipeline.jlink probe via J-Link Commander...
+
+================================================================
+  J-Link probe complete  (JLink exit = 0)
+  Raw log: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_debug.log
+================================================================
+
+==========================================================
+  Gated-Multitasking boot pipeline -- post-boot register snapshot
+  Source: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_debug.log
+==========================================================
+
+RAW REGISTER VALUES
+  LTDC->GCR     = 0x00000000
+  LTDC->ISR  #1 = 0x00000000   (initial, sticky from boot)
+  LTDC->ISR  #2 = 0x00000000   (after 2s with cleared sticky)
+  LTDC L1PFCR   = 0x00000000
+  LTDC L1CFBAR  = 0x00000000
+  LTDC L1CFBLR  = 0x00000000
+  LTDC L1CFBLNR = 0x00000000
+  DSI->CR       = 0x00000000
+  DSI->WCR      = 0x00000000
+  FMC SDCR1     = 0x00001AD0
+  MPU CTRL      = 0x00000005
+  FB[0,0]              = 0x00000000
+  FB[100,100]          = 0x00000000
+  FB[240,400] center   = 0x00000000
+  FB[240,750] right tail = 0x00000000
+
+POST-BOOT EXPECTATIONS
+  (DSI Command Mode: LTDC clock gates off between frames, so GCR.LTDCEN
+   may sample as 0 even though Phase 2 ran MX_LTDC_Init. The reliable
+   indicator is L1CFBAR pointing at 0xD0000000.)
+  FAIL DSI host enabled (CR.EN=1)                    bit0=0  (expect 1)
+  PASS MPU enabled (CTRL.ENABLE=1)                   bit0=1  (expect 1)
+  FAIL Layer1 CFBAR = 0xD0000000 (LTDC inited)       = 0x00000000  (expect 0xD0000000)
+  FAIL Layer1 PixelFormat = RGB888 (0x01)            = 0x00000000  (expect 0x00000001)
+  INFO  LTDC->GCR  bit0 LTDCEN = 0   (gates off between DSI frames in Command Mode)
+  INFO  DSI->WCR   bit3 DSIEN  = 0   (DSI wrapper -- verify address against RM0399 ֲ§31)
+
+LTDC ERROR FLAGS (snapshot 1, sticky from boot)
+  PASS LIF    bit0  Line Interrupt Flag              bit0=0  (expect 0)
+  PASS FUIF   bit1  FIFO Underrun (boot-time)        bit1=0  (expect 0)
+  PASS TERRIF bit2  Transfer Error (boot-time)       bit2=0  (expect 0)
+  PASS RRIF   bit3  Register Reload Flag             bit3=0  (expect 0)
+
+LTDC ERROR FLAGS (snapshot 2, after sticky cleared + 2s of run)
+  PASS FUIF   bit1  FIFO Underrun (steady-state)     bit1=0  (expect 0)
+  PASS TERRIF bit2  Transfer Error (steady-state)    bit2=0  (expect 0)
+
+FRAMEBUFFER CONTENT
+  FAIL  framebuffer all-zero -- TouchGFX never painted (or D-cache hasn't flushed)
+  WARN  right-half tail (col=750) is zero -- DMA2D may not be reaching the cushion
+
+==========================================================
+ Read interpretation:
+   Snapshot 1 FUIF=1 -> contention happened during boot bring-up.
+   Snapshot 2 FUIF=1 -> contention is ongoing in steady state.
+   FB all-zero       -> guiTask never painted (Phase 2 stalled).
+   LTDC GCR.LTDCEN=0 -> Phase 2 never reached MX_LTDC_Init.
+==========================================================

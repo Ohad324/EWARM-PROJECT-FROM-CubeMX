@@ -1,0 +1,23 @@
+[1/3] Stopping any running debugger tools...
+[2/3] Building Debug (CM7) configuration...
+[3/3] Orchestrating 9 LCD probes (skip-count BPs catch later refreshes)...
+[1/9] LCD probe: first_refresh_baseline (HAL_DSI_Refresh, skip=0)
+[2/9] LCD probe: refresh_60_early_render (HAL_DSI_Refresh, skip=60)
+[3/9] LCD probe: refresh_200_post_thumb_inject (HAL_DSI_Refresh, skip=200)
+[4/9] LCD probe: refresh_300_sustained (HAL_DSI_Refresh, skip=300)
+[5/9] LCD probe: first_EOR (HAL_DSI_EndOfRefreshCallback, skip=0)
+[6/9] LCD probe: EOR_200_post_thumb (HAL_DSI_EndOfRefreshCallback, skip=200)
+[7/9] LCD probe: first_LTDC_error (LTDC_ER_IRQHandler, skip=0)
+[8/9] LCD probe: first_thumb_inject (Music_InjectTestThumb, skip=0)
+[9/9] LCD probe: second_thumb_inject (Music_InjectTestThumb, skip=1)
+
+================================================================
+  boot_pipeline_lcd complete -- 9 LCD probes
+  Combined: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_lcd.log
+  Per-checkpoint: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_lcd\*.log
+================================================================
+
+================================================================
+  boot_pipeline_lcd complete  (orchestrator exit = 0)
+  Combined log: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_lcd.log
+================================================================

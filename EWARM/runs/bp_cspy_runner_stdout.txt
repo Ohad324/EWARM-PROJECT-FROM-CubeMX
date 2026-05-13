@@ -1,0 +1,51 @@
+[1/3] Stopping any running debugger tools...
+[2/3] Building Release configuration...
+[3/3] cspybat: download .out + execUserSetup installs BPs + run...
+
+================================================================
+  cspybat boot probe complete  (cspybat exit = 0)
+  Log: C:\TouchGFXProjects\MyApplication\EWARM\runs\boot_pipeline_cspy.log
+================================================================
+
+     IAR C-SPY Command Line Utility V9.4.6.1706
+     Copyright 2000-2025 IAR Systems AB.
+
+DMAC: Cortex-M4 state: Lockup.
+
+*** boot_pipeline.mac (action-on-BP probe) ***
+
+    4 BPs installed across the boot path.
+
+[SETUP] BP handles -- SystemInit=1  MPU_Config=2  SystemClock_Config=3  vTaskStartScheduler=4
+
+[SETUP] returning -- CPU starts running.
+
+
+DMAC/Trace: Enabling GPIOB clock ...
+DMAC/Trace: GPIOB 3 port configured as SWO (AF0, Very high speed).
+DMAC/Trace: Other than PLL1 clock as CPU clock detected.
+DMAC/Trace: Trace clock should be 1/2 of CPU clock frequency.
+
+[BP-HIT] SystemInit entry (early Reset_Handler -> SystemInit -> main)
+
+    cyc=0x000000ab
+
+    RCC.CR=0x0000c025  CFGR=0x00000000  PLLCKSEL=0x02020200  D1CFGR=0x00000000
+
+    AHB1=0x00000000  AHB3=0x00000000  AHB4=0x00000002  APB2=0x00000000  APB3=0x00000000
+
+    FLASH=0x00000037  PWR.D3CR=0x00006000  FMC.SDCR1=0x00000000
+
+    MPU.CTRL=0x00000000  SCB.CCR=0x00040200
+
+    LTDC.GCR=0x00000000  ISR=0x00000000  L1PFCR=0x00000000  L1CFBAR=0x00000000
+
+    DSI.CR=0x00000000  WCR=0x00000000
+
+    GPIOE.MODER=0xffffffff  GPIOC.MODER=0xffffffff
+
+[BP-HIT] action complete
+
+
+     CSpyBat terminating.
+

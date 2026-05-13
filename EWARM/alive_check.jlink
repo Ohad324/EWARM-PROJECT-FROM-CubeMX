@@ -1,0 +1,8 @@
+/* Verify firmware is alive: CH0 CFGR1 should be 0x80310085, PC2 toggling */
+mem32 0x40017000 1
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+q

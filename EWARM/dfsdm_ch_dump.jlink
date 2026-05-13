@@ -1,0 +1,62 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+
+// Force D3CCIPR = CLKP for SAI4A BEFORE triggering
+w4 0x58024454 0x00800000
+
+// Fire EXTI13 to trigger recording
+w4 0x58000088 0x00002000
+w4 0x58000008 0x00002000
+
+g
+sleep 1200
+h
+
+// --- D3CCIPR: SAI4ASEL[23:21] ---
+mem32 0x58024454 1
+
+// --- SAI4 CR1 ---
+mem32 0x58005404 1
+
+// --- DFSDM1_Channel0 CHCFGR1 (global enable + CKOUTDIV + clock master) ---
+// DFSDM1_Channel0_BASE = 0x40017000
+// CHCFGR1 offset = 0x00 -> 0x40017000
+mem32 0x40017000 1
+
+// --- DFSDM1_Channel1 CHCFGR1 (SPICKSEL, SITP, CHEN) ---
+// DFSDM1_Channel1_BASE = 0x40017020
+// CHCFGR1 offset = 0x00 -> 0x40017020
+mem32 0x40017020 1
+
+// --- DFSDM1_Channel1 CHCFGR2 (DTRBS, gain) ---
+mem32 0x40017024 1
+
+// --- DFSDM1_Filter0 FLTCR1 (RCHSEL, DFEN, RDMAEN, RCONT, FAST) ---
+// DFSDM1_Filter0_BASE = 0x40017100
+// FLTCR1 offset = 0x00 -> 0x40017100
+mem32 0x40017100 1
+
+// --- DFSDM1_Filter0 FLTCR2 ---
+mem32 0x40017104 1
+
+// --- DFSDM1_Filter0 FLTISR (CKABF, overrun flags) ---
+mem32 0x40017108 1
+
+// --- DFSDM1_Filter0 FLTRDATAR (last sample value) ---
+mem32 0x40017114 1
+
+// --- g_State ---
+mem8  0x24037876 1
+
+// --- g_SampleCount ---
+mem32 0x240377FC 1
+
+// --- DMAMUX2_Channel1 (maps BDMA Ch1 to SAI4A request) ---
+// DMAMUX2_BASE = 0x58025800
+// Channel1 CCR offset = 0x04 -> 0x58025804
+mem32 0x58025804 1
+
+g
+exit

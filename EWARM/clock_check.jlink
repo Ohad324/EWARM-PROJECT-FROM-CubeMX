@@ -1,0 +1,36 @@
+/* clock_check.jlink — attach to running target and read clock/DMA registers.
+ * Use DURING recording (button pressed, LED on) so SAI4/BDMA/DMA1 clocks are live.
+ * Run: JLink.exe -device STM32H747XI_M7 -if SWD -speed 4000 -autoconnect 1 -CommandFile clock_check.jlink
+ *
+ * EXPECTED VALUES:
+ *   SAI4 ACR1  : bit16=SAIEN=1, bits[1:0]=01 (MODEMASTER_RX)
+ *   SAI4 PDMCR : 0x00000101 (PDM_EN + MICNBR=1)
+ *   RCC D3CCIPR: bits[23:21]=100 = per_ck source for SAI4
+ *   BDMA Ch1 CCR  : bit0=1 (EN), bit5=1 (CIRC)
+ *   BDMA Ch1 CNDTR: 8 (circular, counting)
+ *   DFSDM Ch1 CFG1: 0x00000085 (CHEN|SPICKSEL=01|SITP=01)
+ *   DMA1 S1 CR    : bit0=1 (EN), bit8=1 (CIRC)
+ *   DMA1 S1 M0AR  : 0x30004000
+ *   GPIOE AFRL    : bits[11:8]=0xA (AF10 = SAI4_CK1 on PE2)
+ */
+
+connect
+sleep 100
+
+mem32 0x58005004 1
+mem32 0x58005044 1
+mem32 0x58024490 1
+mem32 0x58025408 1
+mem32 0x5802540C 1
+mem32 0x58025410 1
+mem32 0x58025414 1
+mem32 0x40017420 1
+mem32 0x40017500 1
+mem32 0x4001750C 1
+mem32 0x40026028 1
+mem32 0x4002602C 1
+mem32 0x40026034 1
+mem32 0x58021020 1
+mem32 0x58021000 1
+
+exit

@@ -1,0 +1,112 @@
+/*
+ * pipeline_10bp_working.mac
+ *
+ * Purpose:
+ *   Trace one known-good end-to-end cycle with 10 breakpoints:
+ *   button -> record start -> first DFSDM drain -> DFSDM done -> SD open ->
+ *   SD close -> NORA ready -> UART stream done -> thumbnail queued -> LCD shown.
+ *
+ * Notes:
+ *   - Breakpoints are one-shot by default (count="1") so one cycle stays readable.
+ *   - Messages capture "register truth" where it matters:
+ *       DFSDM1 / DMA1 / BDMA / SAI4 / SDMMC1 / UART8 / DMA2D / LTDC.
+ *   - This macro is designed for the current source line numbers in May 2026.
+ *
+ * Expected working-system signatures:
+ *   BP02: SAI4 enabled, BDMA running, DFSDM filter enabled.
+ *   BP03: DMA pointer valid, NDTR moving, sample count begins to rise.
+ *   BP04: g_SampleCount = 48000, no DFSDM overruns.
+ *   BP05/BP06: SDMMC1 status sane, hsd1.ErrorCode = 0.
+ *   BP07/BP08: UART8 active, tx_last_err_code = 0, sentTotal == fileSize.
+ *   BP09: decoded RGB buffer pointer non-zero, width/height valid.
+ *   BP10: LTDC layer framebuffer address non-zero, DMA2D ISR no CE/TE fault.
+ */
+
+execUserSetup()
+{
+    __var bp01, bp02, bp03, bp04, bp05, bp06, bp07, bp08, bp09, bp10;
+
+    /* BP01 — Blue button accepted by EXTI callback */
+    bp01 = __setCodeBreak("{voice_recorder.c}.293", 0, "1", "TRUE",
+        "__message \"\n[BP01] BUTTON_ISR_ACCEPTED\\n\""
+        " __message \"  g_State=\", g_State:%d, \"  voiceRecTaskHandle=0x\", voiceRecTaskHandle:%X, \"\\n\""
+        " __message \"  Expect: g_State=0 (REC_IDLE) before task wake.\\n\"");
+
+    /* BP02 — Recording pipeline started (BDMA + DFSDM armed) */
+    bp02 = __setCodeBreak("{voice_recorder.c}.385", 0, "1", "TRUE",
+        "__message \"\n[BP02] PIPELINE_START\\n\""
+        " __message \"  g_State=\", g_State:%d, \"  g_SampleCount=\", g_SampleCount:%d, \"\\n\""
+        " __message \"  g_dbg_live_sai4_cr1=0x\", g_dbg_live_sai4_cr1:%X, \"  SAIEN=\", ((g_dbg_live_sai4_cr1>>16)&1):%d, \"\\n\""
+        " __message \"  g_dbg_live_fltcr1=0x\", g_dbg_live_fltcr1:%X, \"  g_dbg_live_fltisr=0x\", g_dbg_live_fltisr:%X, \"\\n\""
+        " __message \"  BDMA_CCR=0x\", __readMemory32(0x5802541C,\"Memory\"):%X, \"  BDMA_CNDTR=\", __readMemory32(0x58025420,\"Memory\"):%d, \"\\n\""
+        " __message \"  DMA1_S1_CR=0x\", __readMemory32(0x40020028,\"Memory\"):%X, \"  DMA1_S1_NDTR=\", __readMemory32(0x4002002C,\"Memory\"):%d, \"\\n\""
+        " __message \"  Expect: SAIEN=1, BDMA EN=1, DFSDM DFEN=1/RDMAEN=1.\\n\"");
+
+    /* BP03 — First drain-loop StoreDmaChunk call */
+    bp03 = __setCodeBreak("{voice_recorder.c}.423", 0, "1", "TRUE",
+        "__message \"\n[BP03] FIRST_DMA_CHUNK\\n\""
+        " __message \"  e.ptr=0x\", e.ptr:%X, \"  g_DmaCallCount=\", g_DmaCallCount:%d, \"  g_SampleCount=\", g_SampleCount:%d, \"\\n\""
+        " __message \"  s_DfsdmBuf[0..3]=\", s_DfsdmBuf[0]:%d, \" \", s_DfsdmBuf[1]:%d, \" \", s_DfsdmBuf[2]:%d, \" \", s_DfsdmBuf[3]:%d, \"\\n\""
+        " __message \"  FLTISR=0x\", __readMemory32(0x40017118,\"Memory\"):%X, \"  DMA1_S1_NDTR=\", __readMemory32(0x4002002C,\"Memory\"):%d, \"\\n\""
+        " __message \"  Expect: e.ptr non-zero, NDTR moving, buffer not flat saturated.\\n\"");
+
+    /* BP04 — Recording completed, DMA stopped */
+    bp04 = __setCodeBreak("{voice_recorder.c}.445", 0, "1", "TRUE",
+        "__message \"\n[BP04] DFSDM_DONE\\n\""
+        " __message \"  g_SampleCount=\", g_SampleCount:%d, \"  g_DmaCallCount=\", g_DmaCallCount:%d, \"\\n\""
+        " __message \"  dfsdm_overruns=\", g_AudioHealth.dfsdm_overruns:%d, \"  dma_q_ovf=\", s_dmaQueueOverflow:%d, \"\\n\""
+        " __message \"  FLTCR1=0x\", __readMemory32(0x40017100,\"Memory\"):%X, \"  FLTISR=0x\", __readMemory32(0x40017118,\"Memory\"):%X, \"\\n\""
+        " __message \"  DMA1_S1_CR=0x\", __readMemory32(0x40020028,\"Memory\"):%X, \"  DMA1_S1_NDTR=\", __readMemory32(0x4002002C,\"Memory\"):%d, \"\\n\""
+        " __message \"  Expect: g_SampleCount=48000, overruns=0.\\n\"");
+
+    /* BP05 — SD file open succeeded */
+    bp05 = __setCodeBreak("{voice_recorder.c}.542", 0, "1", "TRUE",
+        "__message \"\n[BP05] SD_OPEN_OK\\n\""
+        " __message \"  filename=\", filename, \"  g_FileIndex=\", g_FileIndex:%d, \"\\n\""
+        " __message \"  recSizeBytes=\", recSizeBytes:%d, \"  samplesSnapshot=\", samplesSnapshot:%d, \"\\n\""
+        " __message \"  SDMMC1_CLKCR=0x\", __readMemory32(0x52007004,\"Memory\"):%X, \"  SDMMC1_STA=0x\", __readMemory32(0x52007034,\"Memory\"):%X, \"\\n\""
+        " __message \"  hsd1.ErrorCode=0x\", hsd1.ErrorCode:%X, \"\\n\""
+        " __message \"  Expect: hsd1.ErrorCode=0, open path clean.\\n\"");
+
+    /* BP06 — WAV file closed successfully */
+    bp06 = __setCodeBreak("{voice_recorder.c}.643", 0, "1", "TRUE",
+        "__message \"\n[BP06] SD_CLOSE_OK\\n\""
+        " __message \"  bytes_written=\", g_AudioHealth.total_bytes_written:%d, \"  sd_write_max_ms=\", g_AudioHealth.sd_write_max_ms:%d, \"\\n\""
+        " __message \"  buffer_misses=\", g_AudioHealth.buffer_misses:%d, \"  sd_free_KB=\", g_sdFreeKB:%d, \"\\n\""
+        " __message \"  SDMMC1_STA=0x\", __readMemory32(0x52007034,\"Memory\"):%X, \"  hsd1.ErrorCode=0x\", hsd1.ErrorCode:%X, \"\\n\""
+        " __message \"  Expect: bytes_written=96000, buffer_misses=0.\\n\"");
+
+    /* BP07 — NORA ready, stream can begin */
+    bp07 = __setCodeBreak("{audio_sd.c}.466", 0, "1", "TRUE",
+        "__message \"\n[BP07] NORA_READY\\n\""
+        " __message \"  fileSize=\", fileSize:%d, \"  UART8_ISR=0x\", __readMemory32(0x40007C1C,\"Memory\"):%X, \"\\n\""
+        " __message \"  UART8_CR3=0x\", __readMemory32(0x40007C08,\"Memory\"):%X, \"  tx_last_err=0x\", g_UartHealth.tx_last_err_code:%X, \"\\n\""
+        " __message \"  Expect: no UART error bits latched before stream.\\n\"");
+
+    /* BP08 — UART stream completed */
+    bp08 = __setCodeBreak("{audio_sd.c}.537", 0, "1", "TRUE",
+        "__message \"\n[BP08] STREAM_DONE\\n\""
+        " __message \"  sentTotal=\", sentTotal:%d, \"  fileSize=\", fileSize:%d, \"  retryTotal=\", retryTotal:%d, \"\\n\""
+        " __message \"  tx_count=\", g_UartHealth.tx_transfer_count:%d, \"  tx_hard_fails=\", g_UartHealth.tx_hard_fails:%d, \"\\n\""
+        " __message \"  UART8_ISR=0x\", __readMemory32(0x40007C1C,\"Memory\"):%X, \"  tx_last_err=0x\", g_UartHealth.tx_last_err_code:%X, \"\\n\""
+        " __message \"  Expect: sentTotal == fileSize, tx_hard_fails=0.\\n\"");
+
+    /* BP09 — Thumbnail decode complete, queued to UI */
+    bp09 = __setCodeBreak("{music_display_task.c}.131", 0, "1", "TRUE",
+        "__message \"\n[BP09] THUMB_QUEUED_TO_UI\\n\""
+        " __message \"  done.thumb.rgb888=0x\", done.thumb.rgb888:%X, \"  w=\", w:%d, \"  h=\", h:%d, \"\\n\""
+        " __message \"  hjpeg.State=\", hjpeg.State:%d, \"  hjpeg.ErrorCode=0x\", hjpeg.ErrorCode:%X, \"\\n\""
+        " __message \"  Expect: rgb888 non-zero, w/h decoded, JPEG HAL OK.\\n\"");
+
+    /* BP10 — Final LCD handoff */
+    bp10 = __setCodeBreak("{MusicScreenView.cpp}.128", 0, "1", "TRUE",
+        "__message \"\n[BP10] LCD_THUMBNAIL_DISPLAYED\\n\""
+        " __message \"  rgb888=0x\", rgb888:%X, \"  width=\", width:%d, \"  height=\", height:%d, \"\\n\""
+        " __message \"  LTDC_SRCR=0x\", __readMemory32(0x50001024,\"Memory\"):%X, \"  LTDC_L1CFBAR=0x\", __readMemory32(0x500010B0,\"Memory\"):%X, \"\\n\""
+        " __message \"  LTDC_L1CFBLR=0x\", __readMemory32(0x500010B4,\"Memory\"):%X, \"  DMA2D_ISR=0x\", __readMemory32(0x52001004,\"Memory\"):%X, \"\\n\""
+        " __message \"  DMA2D_OMAR=0x\", __readMemory32(0x5200103C,\"Memory\"):%X, \"  DMA2D_FGMAR=0x\", __readMemory32(0x5200100C,\"Memory\"):%X, \"\\n\""
+        " __message \"  Expect: LTDC framebuffer non-zero, DMA2D ISR no CE/TE fault.\\n\"");
+
+    __message "pipeline_10bp_working.mac loaded — 10 one-shot breakpoints armed.\n";
+    __message "BP01 button | BP02 start | BP03 first DMA | BP04 done | BP05 open | BP06 close | BP07 ready | BP08 stream done | BP09 thumb queued | BP10 LCD shown\n";
+}

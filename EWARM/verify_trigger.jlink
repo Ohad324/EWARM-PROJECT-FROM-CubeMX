@@ -1,0 +1,22 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+// CPU already running — no g needed
+// Write C1IMR1 and SWIER while running
+w4 0x58000488 0x00002000
+w4 0x58000500 0x00012000
+w4 0x58000418 0x00002000
+sleep 200
+// Halt and verify what happened
+h
+// Did C1IMR1 stick?
+mem32 0x58000500 1
+// Is SWIER still set (means ISR never cleared it)?
+mem32 0x58000418 1
+// g_State
+mem8 0x24037876 1
+// voiceRecTaskHandle notification value (offset +52 = 0x34 in FreeRTOS TCB)
+mem32 0x2400BF68 16
+g
+exit

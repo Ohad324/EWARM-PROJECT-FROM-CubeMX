@@ -1,0 +1,16 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+// Read g_dbg struct at 0x24000050, 18 fields x 4 bytes = 72 bytes = 18 words
+mem32 0x24000050 18
+// Also read g_State and g_SampleCount
+mem32 0x240377FE 1
+mem32 0x24037784 1
+// SAI4 CR1 live
+mem32 0x58005404 1
+// SAI4 PDMCR live
+mem32 0x58005444 1
+g
+exit

@@ -1,0 +1,162 @@
+/*
+ * boot_pipeline_lcd_one_bp.mac.tpl -- LCD/DMA2D-focused single-BP probe.
+ *
+ * Two template substitutions performed by boot_pipeline_lcd.ps1:
+ *   HAL_DSI_Refresh  function symbol name (e.g. "HAL_DSI_Refresh")
+ *   300        integer skip count (0 = break first time, N = skip N
+ *                   hits then break on the (N+1)th)
+ *
+ * Action dumps:
+ *   - DWT cycle counter
+ *   - DMA2D registers (CR, ISR, NLR, OMAR, FGMAR, BGMAR, FG/BG/O PFCCR)
+ *     plus decoded TEIF / CEIF / SUSP / MODE / OMAR-in-SDRAM
+ *   - LTDC.ISR (sticky -- FUIF/TERRIF)
+ *   - DSI host (CR, WCR, ISR0, IER0, VMCR, LPMCR)
+ *   - Framebuffer 4 sample pixels (post-MX_FMC_Init only, 832-pitch RGB888)
+ *
+ * Avoids LTDC layer registers per the halt-mode aliasing finding (see
+ * CLAUDE.md "LTDC reads alias when CPU halted post-init"). Read the
+ * C-side hltdc struct via __evaluate if you need configured values.
+ */
+
+ReadCycle()
+{
+    __var c;
+    c = __readMemory32(0xE0001004, "Memory");
+    __message "    cyc=0x", c:%08X, "\n";
+}
+
+DumpLcd()
+{
+    /* DMA2D (base 0x52001000) -- the part that does NOT alias at halt */
+    __var d2d_cr, d2d_isr, d2d_nlr, d2d_omar, d2d_fgmar, d2d_bgmar;
+    __var d2d_fgpfccr, d2d_bgpfccr, d2d_opfccr;
+    /* LTDC -- only the registers that are reliable at halt */
+    __var ltdc_isr, ltdc_ier;
+    /* DSI host */
+    __var dsi_cr, dsi_wcr, dsi_isr0, dsi_ier0, dsi_vmcr, dsi_lpmcr;
+    /* Framebuffer samples */
+    __var fb0, fb_mid_l, fb_mid_r, fb_far;
+
+    d2d_cr      = __readMemory32(0x52001000, "Memory");
+    d2d_isr     = __readMemory32(0x52001004, "Memory");
+    d2d_fgmar   = __readMemory32(0x5200100C, "Memory");
+    d2d_bgmar   = __readMemory32(0x52001020, "Memory");
+    d2d_fgpfccr = __readMemory32(0x5200101C, "Memory");
+    d2d_bgpfccr = __readMemory32(0x52001030, "Memory");
+    d2d_opfccr  = __readMemory32(0x52001034, "Memory");
+    d2d_omar    = __readMemory32(0x5200103C, "Memory");
+    d2d_nlr     = __readMemory32(0x52001044, "Memory");
+
+    ltdc_isr    = __readMemory32(0x50001038, "Memory");
+    ltdc_ier    = __readMemory32(0x50001034, "Memory");
+
+    dsi_cr      = __readMemory32(0x50000004, "Memory");
+    dsi_wcr     = __readMemory32(0x50000024, "Memory");
+    dsi_isr0    = __readMemory32(0x500000FC, "Memory");
+    dsi_ier0    = __readMemory32(0x50000104, "Memory");
+    dsi_vmcr    = __readMemory32(0x50000138, "Memory");
+    dsi_lpmcr   = __readMemory32(0x50000064, "Memory");
+
+    /* IRQ ring buffer counter at 0x24008800 -- this is g_irq_idx in
+     * stm32h7xx_it.c, incremented every time LTDC_ER (89), DSI (123),
+     * DMA2D (90), JPEG (121), or MDMA (122) fires.  Reads from AXI SRAM,
+     * not affected by LTDC alias-on-halt.  This is the AUTHORITATIVE
+     * way to count FUIF events independent of LTDC.ISR. */
+    __var irq_idx;
+    irq_idx  = __readMemory32(0x24008800, "Memory");
+
+    /* Framebuffer 832-pitch RGB888 (832 cols * 3 = 2496 B/row).  Sample
+     * 4 pixels: top-left, mid-left half, mid-right half, far-right tail.
+     * SDRAM is up by all LCD checkpoints (post MX_FMC_Init), so safe. */
+    fb0      = __readMemory32(0xD0000000, "Memory");
+    fb_mid_l = __readMemory32(0xD0000000 + 240*2496 + 200*3, "Memory");
+    fb_mid_r = __readMemory32(0xD0000000 + 240*2496 + 600*3, "Memory");
+    fb_far   = __readMemory32(0xD0000000 + 240*2496 + 750*3, "Memory");
+
+    __message "  ---- DMA2D ----\n";
+    __message "    CR=0x",  d2d_cr:%08X,  "  ISR=0x", d2d_isr:%08X,
+              "  NLR=0x",   d2d_nlr:%08X, "  OMAR=0x", d2d_omar:%08X, "\n";
+    __message "    FGMAR=0x", d2d_fgmar:%08X, "  BGMAR=0x", d2d_bgmar:%08X,
+              "  FGPFCCR=0x", d2d_fgpfccr:%08X,
+              "  BGPFCCR=0x", d2d_bgpfccr:%08X,
+              "  OPFCCR=0x",  d2d_opfccr:%08X, "\n";
+    __message "    [decode] CR.START=", (d2d_cr & 1):%d,
+              " SUSP=", ((d2d_cr >> 1) & 1):%d,
+              " ABORT=", ((d2d_cr >> 2) & 1):%d,
+              " MODE=", ((d2d_cr >> 16) & 3):%d,
+              "  ISR.TEIF=", (d2d_isr & 1):%d,
+              " CEIF=", ((d2d_isr >> 1) & 1):%d,
+              " TCIF=", ((d2d_isr >> 3) & 1):%d, "\n";
+    __message "    [decode] NLR.PL=", ((d2d_nlr >> 16) & 0x3FFF):%d,
+              " NL=", (d2d_nlr & 0xFFFF):%d,
+              "  OMAR.in_SDRAM=", ((d2d_omar >= 0xD0000000) && (d2d_omar < 0xD0200000)):%d,
+              "  FGMAR.in_SDRAM=", ((d2d_fgmar >= 0xD0000000) && (d2d_fgmar < 0xD0200000)):%d, "\n";
+    __message "  ---- LTDC error flags ----\n";
+    __message "    ISR=0x", ltdc_isr:%08X, "  IER=0x", ltdc_ier:%08X, "\n";
+    __message "    [decode] FUIF=", ((ltdc_isr >> 1) & 1):%d,
+              " TERRIF=", ((ltdc_isr >> 2) & 1):%d,
+              " LIF=", (ltdc_isr & 1):%d,
+              " RRIF=", ((ltdc_isr >> 3) & 1):%d, "\n";
+    __message "  ---- DSI host ----\n";
+    __message "    CR=0x", dsi_cr:%08X, "  WCR=0x", dsi_wcr:%08X,
+              "  VMCR=0x", dsi_vmcr:%08X, "  LPMCR=0x", dsi_lpmcr:%08X,
+              "  ISR0=0x", dsi_isr0:%08X, "  IER0=0x", dsi_ier0:%08X, "\n";
+    __message "  ---- IRQ ring buffer counter (LTDC alias-immune) ----\n";
+    __message "    g_irq_idx @ 0x24008800 = ", irq_idx:%d, " IRQs since boot\n";
+
+    /* Scan first 32 ring-buffer entries.  Each entry is 8 bytes
+     * (uint8_t irq_num + 3 bytes padding + uint32_t cycle).  Count by
+     * IRQ type to see if LTDC_ER (89) ever fired. */
+    {
+        __var i, irq_n, n_total, n_dsi, n_ltdc_err, n_dma2d, n_jpeg, n_mdma;
+        n_total = 0; n_dsi = 0; n_ltdc_err = 0; n_dma2d = 0; n_jpeg = 0; n_mdma = 0;
+        i = 0;
+        while (i < 32 && i < irq_idx) {
+            irq_n = __readMemory8(0x24008000 + i*8, "Memory");
+            n_total = n_total + 1;
+            if (irq_n == 123) n_dsi      = n_dsi      + 1;
+            if (irq_n ==  89) n_ltdc_err = n_ltdc_err + 1;
+            if (irq_n ==  90) n_dma2d    = n_dma2d    + 1;
+            if (irq_n == 121) n_jpeg     = n_jpeg     + 1;
+            if (irq_n == 122) n_mdma     = n_mdma     + 1;
+            i = i + 1;
+        }
+        __message "    [first ", n_total:%d, " entries] DSI=", n_dsi:%d,
+                  "  LTDC_ER(FUIF/TERRIF)=", n_ltdc_err:%d,
+                  "  DMA2D=", n_dma2d:%d,
+                  "  JPEG=", n_jpeg:%d,
+                  "  MDMA=", n_mdma:%d, "\n";
+    }
+
+    __message "  ---- Framebuffer pixels (832-pitch RGB888) ----\n";
+    __message "    FB[0,0]                = 0x", fb0:%08X, "\n";
+    __message "    FB[200,240] mid-LEFT   = 0x", fb_mid_l:%08X, "\n";
+    __message "    FB[600,240] mid-RIGHT  = 0x", fb_mid_r:%08X, "\n";
+    __message "    FB[750,240] right-tail = 0x", fb_far:%08X, "\n";
+}
+
+HitCheckpoint()
+{
+    __message "\n[BP-HIT] HAL_DSI_Refresh  (skip=300, hook: execUserExecutionStopped)\n";
+    ReadCycle();
+    DumpLcd();
+    __message "[BP-HIT] action complete\n";
+}
+
+execUserSetup()
+{
+    __var bp;
+    __message "[CSPY] LCD probe: checkpoint='HAL_DSI_Refresh'  skip=300\n";
+    bp = __setCodeBreak("HAL_DSI_Refresh", 300, "1", "TRUE", "HitCheckpoint()");
+    if (bp == 0)
+        __message "[CSPY] BP install FAILED -- symbol may be inlined or absent\n";
+    else
+        __message "[CSPY] BP installed h=", bp:%d, "\n";
+}
+
+execUserExit()
+{
+    __message "[CSPY] session ending\n";
+}
+

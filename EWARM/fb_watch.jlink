@@ -1,0 +1,281 @@
+// ============================================================================
+// fb_watch.jlink — Data watchpoints on framebuffer 0xD0000000.
+//
+// Hunts for CPU-side writers that could cut/corrupt the rendered image.
+// 4 DWT comparators (Cortex-M7) at quartile boundaries. DMA2D blits do NOT
+// trigger these (DMA2D is not the CPU bus master); only CPU stores do.
+//
+// Framebuffer layout: 800 x 480 x 3 RGB888 = 0x119000.
+//   Row  60: 0xD0011300 (top quartile)
+//   Row 240: 0xD008CA00 (vertical center)
+//   Row 360: 0xD00D2F00 (3/4 down)
+//   Row 240, col 400: 0xD008D580 (dead-center pixel)
+//
+// SYNTAX FIX (from previous run): SetWP <Addr> <AccessType> sets address-
+// match only (1 DWT comparator). Adding a 3rd argument would be DataMatch
+// which consumes a SECOND comparator and starves the rest.
+//
+// KEEP-ALIVE: script ends with periodic IsHalted polls. CPU runs free with
+// watchpoints armed. When any WP fires the CPU halts; subsequent IsHalted
+// prints "1" and `regs` shows the offending PC. After ~10 minutes the
+// script exits and watchpoints clear (rerun if more time is needed).
+// ============================================================================
+
+si SWD
+speed 4000
+device STM32H747XIHX
+connect
+
+halt
+
+// 4 watchpoints — write access only, address match only (1 comparator each)
+SetWP 0xD0011300 W
+SetWP 0xD008CA00 W
+SetWP 0xD00D2F00 W
+SetWP 0xD008D580 W
+
+// Resume CPU. WPs stay armed as long as J-Link session is alive.
+go
+
+// ── Keep-alive loop with halt detection (~10 min total) ─────────────────
+// Each block: 5-second sleep, then IsHalted print. If a WP fires, CPU
+// halts and IsHalted prints "1"; on the next iteration `regs` then dumps
+// the PC. Until then, IsHalted prints "0".
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+sleep 5000
+IsHalted
+
+// Final dump: full register state when script exits (or after a halt).
+regs
+
+// Show all WPs that survived (or fired).
+ShowWP
+
+exit

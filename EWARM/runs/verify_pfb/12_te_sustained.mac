@@ -1,0 +1,173 @@
+/*
+ * verify_pfb_one_bp.mac.tpl
+ * --------------------------------------------------------------------------
+ * Single-BP probe template for the Partial Framebuffer (PFB) architecture.
+ * One cspybat invocation = one BP installed = one useful hit captured.
+ * Driven by verify_pfb.ps1 which renders this template per checkpoint.
+ *
+ * Substitutions performed by verify_pfb.ps1:
+ *   HAL_DSI_TearingEffectCallback   function symbol name (e.g. "HAL_DSI_Refresh")
+ *   10         integer skip count (0 = first hit)
+ *
+ * On hit, dumps:
+ *   - DWT cycle counter
+ *   - MPU regions 0..4 (verifies REGION 3 NC + Shareable on AXI)
+ *   - RCC clocks (AHB2ENR.D2SRAM1EN, APB3ENR.LTDCEN)
+ *   - Framebuffer head bytes at 0x24000000
+ *   - IRQ ring buffer counter @ 0x24050800 + first 32 entry types
+ *   - LTDC global regs (ISR, IER, GCR) -- safe at halt
+ *   - DSI host (CR, WCR, ISR0, VMCR)
+ *   - hltdc.LayerCfg[0] from C struct (LTDC LAYER MMIO aliases at halt)
+ *
+ * Avoids: LTDC LAYER MMIO regs (alias to GCR per CLAUDE.md).
+ */
+
+ReadCycle()
+{
+    __message "  cyc=0x", __readMemory32(0xE0001004, "Memory"):%08X, "\n";
+}
+
+DumpMpu()
+{
+    __var n, rbar, rasr, base, size, tex, c, b, s, en;
+    n = 0;
+    while (n < 5) {
+        __writeMemory32(n, 0xE000ED98, "Memory");          /* MPU_RNR */
+        rbar = __readMemory32(0xE000ED9C, "Memory");
+        rasr = __readMemory32(0xE000EDA0, "Memory");
+        base = rbar & 0xFFFFFFE0;
+        en   =  rasr        & 0x1;
+        size = (rasr >>  1) & 0x1F;
+        b    = (rasr >> 16) & 0x1;
+        c    = (rasr >> 17) & 0x1;
+        s    = (rasr >> 18) & 0x1;
+        tex  = (rasr >> 19) & 0x7;
+        __message "  R", n:%d,
+                  " base=0x", base:%08X,
+                  " size=2^", (size+1):%d,
+                  " EN=", en:%d,
+                  " TEX=", tex:%d, " C=", c:%d, " B=", b:%d, " S=", s:%d, "\n";
+        n = n + 1;
+    }
+}
+
+DumpClocks()
+{
+    __var ahb2enr, apb3enr;
+    ahb2enr = __readMemory32(0x580244DC, "Memory");
+    apb3enr = __readMemory32(0x580244E0, "Memory");
+    __message "  RCC.AHB2ENR=0x", ahb2enr:%08X,
+              "  D2SRAM1EN(b29)=", ((ahb2enr >> 29) & 1):%d, "\n";
+    __message "  RCC.APB3ENR=0x", apb3enr:%08X,
+              "  LTDCEN(b3)=",   ((apb3enr >> 3)  & 1):%d, "\n";
+}
+
+DumpFbHead()
+{
+    __message "  frameBuf @0x24000000 [0]=0x",
+              __readMemory32(0x24000000, "Memory"):%08X,
+              "  [+0x10]=0x",
+              __readMemory32(0x24000010, "Memory"):%08X, "\n";
+    __message "  ucHeap   @0x30000000 [0]=0x",
+              __readMemory32(0x30000000, "Memory"):%08X, "\n";
+    __message "  g_dbg    @0x24070000 [0]=0x",
+              __readMemory32(0x24070000, "Memory"):%08X, "\n";
+}
+
+DumpIrqRing()
+{
+    __var idx, i, n_total, n_dsi, n_ltdc_err, n_dma2d, n_jpeg, n_mdma, irq_n;
+    idx = __readMemory32(0x24050800, "Memory");        /* g_irq_idx (relocated) */
+    __message "  IRQ ring  g_irq_idx=", idx:%d, "\n";
+    n_total = 0; n_dsi = 0; n_ltdc_err = 0; n_dma2d = 0; n_jpeg = 0; n_mdma = 0;
+    i = 0;
+    while (i < 32 && i < idx) {
+        irq_n = __readMemory8(0x24050000 + i*8, "Memory");
+        n_total = n_total + 1;
+        if (irq_n == 123) n_dsi      = n_dsi      + 1;
+        if (irq_n ==  89) n_ltdc_err = n_ltdc_err + 1;
+        if (irq_n ==  90) n_dma2d    = n_dma2d    + 1;
+        if (irq_n == 121) n_jpeg     = n_jpeg     + 1;
+        if (irq_n == 122) n_mdma     = n_mdma     + 1;
+        i = i + 1;
+    }
+    __message "  [first ", n_total:%d, "] DSI=", n_dsi:%d,
+              "  LTDC_ER(FUIF/TERRIF)=", n_ltdc_err:%d,
+              "  DMA2D=", n_dma2d:%d,
+              "  JPEG=", n_jpeg:%d,
+              "  MDMA=", n_mdma:%d, "\n";
+}
+
+DumpLtdcGlobal()
+{
+    __var isr, ier, gcr;
+    isr = __readMemory32(0x50001038, "Memory");
+    ier = __readMemory32(0x50001034, "Memory");
+    gcr = __readMemory32(0x50001018, "Memory");
+    __message "  LTDC.ISR=0x", isr:%08X, "  IER=0x", ier:%08X,
+              "  GCR=0x", gcr:%08X,
+              "  FUIF=", ((isr >> 1) & 1):%d,
+              "  TERRIF=", ((isr >> 2) & 1):%d, "\n";
+}
+
+DumpDsiHost()
+{
+    __var cr, wcr, isr0, vmcr;
+    cr   = __readMemory32(0x50000004, "Memory");
+    wcr  = __readMemory32(0x50000024, "Memory");
+    isr0 = __readMemory32(0x500000FC, "Memory");
+    vmcr = __readMemory32(0x50000138, "Memory");
+    __message "  DSI.CR=0x", cr:%08X, "  WCR=0x", wcr:%08X,
+              "  ISR0=0x", isr0:%08X, "  VMCR=0x", vmcr:%08X, "\n";
+    __message "  [decode] DSI.EN=", (cr & 1):%d,
+              "  WCR.LTDCEN=", ((wcr >> 1) & 1):%d, "\n";
+}
+
+DumpHltdcStruct()
+{
+    /* C-struct reads (safe at halt -- LAYER MMIO aliases) */
+    __message "  hltdc.LayerCfg[0].FBStartAdress = 0x",
+              __readMemory32(&hltdc.LayerCfg[0].FBStartAdress, "Memory"):%08X, "\n";
+    __message "  hltdc.LayerCfg[0].ImageWidth=",
+              __readMemory32(&hltdc.LayerCfg[0].ImageWidth, "Memory"):%d,
+              "  ImageHeight=",
+              __readMemory32(&hltdc.LayerCfg[0].ImageHeight, "Memory"):%d, "\n";
+}
+
+HitCheckpoint()
+{
+    __message "\n[BP-HIT] HAL_DSI_TearingEffectCallback  (skip=10)\n";
+    ReadCycle();
+    __message "  ---- MPU regions ----\n";
+    DumpMpu();
+    __message "  ---- RCC clocks ----\n";
+    DumpClocks();
+    __message "  ---- RAM (FB / heap / dbg-hub) ----\n";
+    DumpFbHead();
+    __message "  ---- IRQ ring buffer (LTDC alias-immune) ----\n";
+    DumpIrqRing();
+    __message "  ---- LTDC global regs ----\n";
+    DumpLtdcGlobal();
+    __message "  ---- DSI host ----\n";
+    DumpDsiHost();
+    __message "  ---- hltdc C struct ----\n";
+    DumpHltdcStruct();
+    __message "[BP-HIT] action complete\n";
+}
+
+execUserSetup()
+{
+    __var bp;
+    __message "[CSPY] verify_pfb probe: 'HAL_DSI_TearingEffectCallback'  skip=10\n";
+    bp = __setCodeBreak("HAL_DSI_TearingEffectCallback", 10, "1", "TRUE", "HitCheckpoint()");
+    if (bp == 0)
+        __message "[CSPY] BP install FAILED -- symbol absent / inlined / target locked\n";
+    else
+        __message "[CSPY] BP installed h=", bp:%d, "\n";
+}
+
+execUserExit()
+{
+    __message "[CSPY] session ending\n";
+}
+

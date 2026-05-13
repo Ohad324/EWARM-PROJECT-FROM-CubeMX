@@ -1,0 +1,175 @@
+/*
+ * lcd_broken_picture_v1.mac
+ *
+ * Goal:
+ *   Diagnose the current "Version 1" broken-picture bug on the LCD using
+ *   a small number of targeted C-SPY breakpoints and quick snapshot helpers.
+ *
+ * Working hypothesis for this version:
+ *   TouchGFXGeneratedHAL still allocates an 800x480 RGB888 framebuffer,
+ *   but TouchGFXHAL programs LTDC CFBLR with a stride of 832*3 bytes during
+ *   the left/right partial-refresh sequence. That produces a 96-byte row drift
+ *   per line (2496 - 2400), which is exactly the kind of mismatch that causes
+ *   sliced/diagonal/broken pictures.
+ *
+ * Key source anchors in this version:
+ *   - TouchGFXGeneratedHAL.cpp : frameBuf[(800 * 480 * 3 + 3) / 4]
+ *   - TouchGFXHAL.cpp          : CFBLR uses (832 * 3) at the EOR callbacks
+ *
+ * Breakpoints:
+ *   LCDV1-BP1  MusicScreenView.cpp:148  post-thumbnail invalidate
+ *   LCDV1-BP2  TouchGFXHAL.cpp:449      TE callback entry
+ *   LCDV1-BP3  TouchGFXHAL.cpp:530      EOR left->right switch (CFBLR=832*3)
+ *   LCDV1-BP4  TouchGFXHAL.cpp:549      EOR restore-left/full done
+ *   LCDV1-BP5  STM32DMA.cpp:48          DMA2D error callback
+ *
+ * Usage:
+ *   1. Add this macro in C-SPY debugger setup.
+ *   2. Run until a thumbnail is displayed.
+ *   3. At each stop, inspect Debug Log output.
+ *   4. Use Quicklaunch helpers:
+ *        QLCD()     -> all-in-one LCD/DMA2D snapshot
+ *        QSTRIDE()  -> focused stride mismatch decode
+ *        QDMA2D()   -> DMA2D fault/status registers only
+ */
+
+execUserSetup()
+{
+    __var bp1, bp2, bp3, bp4, bp5;
+
+    /* BP1 — Thumbnail invalidate returned. Confirms UI side handed off a new
+     * SDRAM pointer and asked TouchGFX to redraw. */
+    bp1 = __setCodeBreak("{MusicScreenView.cpp}.148", 0, "1", "TRUE",
+        "__message \"\n[LCDV1-BP1] THUMB_INVALIDATED\\n\""
+        " __message \"  rgb888=0x\", rgb888:%X, \"  width=\", width:%d, \"  height=\", height:%d, \"\\n\""
+        " __message \"  img ptr should be non-zero; next TE should start refresh.\\n\""
+        " QLCD();");
+
+    /* BP2 — TE callback entry. Shows whether refreshRequested actually becomes
+     * active and whether currFbBase is valid before the DSI refresh starts. */
+    bp2 = __setCodeBreak("{TouchGFXHAL.cpp}.449", 0, "1", "TRUE",
+        "__message \"\n[LCDV1-BP2] TE_CALLBACK\\n\""
+        " __message \"  refreshRequested=\", refreshRequested:%d, \"  displayRefreshing=\", displayRefreshing:%d, \"  updateRegion=\", updateRegion:%d, \"\\n\""
+        " __message \"  currFbBase=0x\", currFbBase:%X, \"\\n\""
+        " QSTRIDE();");
+
+    /* BP3 — End-of-refresh left half; code switches to the right half and
+     * programs CFBLR with 832*3 stride. This is the key proof point. */
+    bp3 = __setCodeBreak("{TouchGFXHAL.cpp}.530", 0, "1", "TRUE",
+        "__message \"\n[LCDV1-BP3] EOR_LEFT_TO_RIGHT\\n\""
+        " __message \"  updateRegion=\", updateRegion:%d, \"  currFbBase=0x\", currFbBase:%X, \"\\n\""
+        " QSTRIDE();");
+
+    /* BP4 — End-of-refresh restore path. Confirms whether the same 832*3
+     * stride is still programmed on the restore-to-left phase. */
+    bp4 = __setCodeBreak("{TouchGFXHAL.cpp}.549", 0, "1", "TRUE",
+        "__message \"\n[LCDV1-BP4] EOR_RESTORE_LEFT\\n\""
+        " __message \"  displayRefreshing=\", displayRefreshing:%d, \"  updateRegion=\", updateRegion:%d, \"\\n\""
+        " QSTRIDE();");
+
+    /* BP5 — DMA2D error callback. Useful to distinguish broken-picture-only
+     * from broken-picture + CE fault. */
+    bp5 = __setCodeBreak("{STM32DMA.cpp}.48", 0, "1", "TRUE",
+        "__message \"\n[LCDV1-BP5] DMA2D_ERROR_CALLBACK\\n\""
+        " QDMA2D();");
+
+    __message "============================================\n";
+    __message "  lcd_broken_picture_v1.mac loaded\n";
+    __message "  Focus: prove/disprove 800-vs-832 stride mismatch\n";
+    __message "  BPs: BP1 thumb invalidate, BP2 TE, BP3 EOR switch, BP4 EOR restore, BP5 DMA2D err\n";
+    __message "  Quicklaunch: QLCD() / QSTRIDE() / QDMA2D()\n";
+    __message "============================================\n";
+}
+
+/* Full LCD snapshot. */
+QLCD()
+{
+    __var ltdc_isr, ltdc_srcr, awcr, twcr, whpcr, cfbar, cfblr, cfblnr;
+    __var dma2d_isr, dma2d_cr, dma2d_omar, dma2d_fgmar, dma2d_nlr, dma2d_fgpfccr;
+
+    ltdc_isr  = __readMemory32(0x50001000, "Memory");
+    ltdc_srcr = __readMemory32(0x50001024, "Memory");
+    awcr      = __readMemory32(0x50001010, "Memory");
+    twcr      = __readMemory32(0x50001014, "Memory");
+    whpcr     = __readMemory32(0x50001098, "Memory");
+    cfbar     = __readMemory32(0x500010AC, "Memory");
+    cfblr     = __readMemory32(0x500010B0, "Memory");
+    cfblnr    = __readMemory32(0x500010B4, "Memory");
+
+    dma2d_isr    = __readMemory32(0x52001004, "Memory");
+    dma2d_cr     = __readMemory32(0x52001000, "Memory");
+    dma2d_fgmar  = __readMemory32(0x5200100C, "Memory");
+    dma2d_omar   = __readMemory32(0x5200103C, "Memory");
+    dma2d_nlr    = __readMemory32(0x52001044, "Memory");
+    dma2d_fgpfccr= __readMemory32(0x5200101C, "Memory");
+
+    __message "[QLCD] refReq=", refreshRequested,
+              " dispRef=", displayRefreshing,
+              " updReg=", updateRegion,
+              " currFbBase=0x", currFbBase:%X, "\n";
+    __message "[QLCD] LTDC ISR=0x", ltdc_isr:%X,
+              " SRCR=0x", ltdc_srcr:%X,
+              " AWCR=0x", awcr:%X,
+              " TWCR=0x", twcr:%X, "\n";
+    __message "[QLCD] WHPCR=0x", whpcr:%X,
+              " CFBAR=0x", cfbar:%X,
+              " CFBLR=0x", cfblr:%X,
+              " CFBLNR=0x", cfblnr:%X, "\n";
+    __message "[QLCD] DMA2D ISR=0x", dma2d_isr:%X,
+              " CR=0x", dma2d_cr:%X,
+              " FGMAR=0x", dma2d_fgmar:%X,
+              " OMAR=0x", dma2d_omar:%X,
+              " NLR=0x", dma2d_nlr:%X,
+              " FGPFCCR=0x", dma2d_fgpfccr:%X, "\n";
+}
+
+/* Decode the critical stride mismatch directly from LTDC CFBLR. */
+QSTRIDE()
+{
+    __var cfbar, cfblr, cfblnr, lineLength, pitchBytes, visibleBytes, expected800, expected832;
+
+    cfbar      = __readMemory32(0x500010AC, "Memory");
+    cfblr      = __readMemory32(0x500010B0, "Memory");
+    cfblnr     = __readMemory32(0x500010B4, "Memory");
+    pitchBytes = (cfblr >> 16) & 0xFFFF;
+    lineLength = cfblr & 0xFFFF;
+    visibleBytes = lineLength - 3;
+    expected800 = 800 * 3;
+    expected832 = 832 * 3;
+
+    __message "[QSTRIDE] currFbBase=0x", currFbBase:%X,
+              " CFBAR=0x", cfbar:%X,
+              " CFBLR=0x", cfblr:%X,
+              " CFBLNR=0x", cfblnr:%X, "\n";
+    __message "[QSTRIDE] pitchBytes=", pitchBytes:%d,
+              " visibleBytes=", visibleBytes:%d,
+              " expected800=", expected800:%d,
+              " expected832=", expected832:%d, "\n";
+    __message "[QSTRIDE] drift_per_row = pitchBytes - expected800 = ", (pitchBytes - expected800):%d, " bytes\n";
+    __message "[QSTRIDE] Expected good for THIS source version: if frameBuf is still 800-wide, pitchBytes should be 2400. If you see 2496, the bug is confirmed.\n";
+}
+
+/* DMA2D snapshot for CE/TE faults or stale YCbCr state. */
+QDMA2D()
+{
+    __var isr, cr, fgmar, bgmar, omar, nlr, fgpfccr, bgpfccr, opfccr;
+    isr     = __readMemory32(0x52001004, "Memory");
+    cr      = __readMemory32(0x52001000, "Memory");
+    fgmar   = __readMemory32(0x5200100C, "Memory");
+    bgmar   = __readMemory32(0x52001014, "Memory");
+    omar    = __readMemory32(0x5200103C, "Memory");
+    nlr     = __readMemory32(0x52001044, "Memory");
+    fgpfccr = __readMemory32(0x5200101C, "Memory");
+    bgpfccr = __readMemory32(0x52001024, "Memory");
+    opfccr  = __readMemory32(0x52001034, "Memory");
+
+    __message "[QDMA2D] ISR=0x", isr:%X,
+              " CR=0x", cr:%X,
+              " FGMAR=0x", fgmar:%X,
+              " BGMAR=0x", bgmar:%X,
+              " OMAR=0x", omar:%X,
+              " NLR=0x", nlr:%X, "\n";
+    __message "[QDMA2D] FGPFCCR=0x", fgpfccr:%X,
+              " BGPFCCR=0x", bgpfccr:%X,
+              " OPFCCR=0x", opfccr:%X, "\n";
+}

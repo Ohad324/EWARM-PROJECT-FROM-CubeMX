@@ -1,0 +1,149 @@
+// ============================================================================
+// lcd_geom.mac - C-SPY macro for Bug X right-half LTDC geometry capture.
+//
+// Drops two stopping breakpoints on the LCD partial-refresh path and provides
+// helpers GL() / GR() / FB() that dump LTDC + framebuffer state at each halt.
+//
+// USAGE:
+//   1. In IAR debugger: View -> Macros -> Use macro file...
+//      Pick this file. Or set it as the C-SPY setup macro in
+//      Project Options -> Debugger -> Setup -> Use macro file(s).
+//   2. F5 (Go).
+//   3. Do one valid voice press (must produce a real transcript, not
+//      "unknown command"). The CPU halts twice per refresh:
+//        a. BP-LEFT  fires at TouchGFXHAL.cpp line 485 - just before
+//           HAL_DSI_Refresh(hdsi) for the LEFT half.
+//        b. BP-RIGHT fires at TouchGFXHAL.cpp line 537 - just before
+//           HAL_DSI_Refresh(hdsi) for the RIGHT half.
+//   4. At each halt, in the Macro Quicklaunch window, run:
+//        GL()    -> at BP-LEFT
+//        GR()    -> at BP-RIGHT
+//        FB()    -> at either, dumps framebuffer sample pixels
+//   5. F5 to continue. Compare the two dumps - any diff besides
+//      CFBAR offset of +0x4B0 (400*3 bytes) is a real geometry mismatch.
+//
+// REGISTER REFERENCE (STM32H747 RM0399 chapter 32):
+//   LTDC base   = 0x50001000
+//     SSCR     +0x08      synchronization size config
+//     BPCR     +0x0C      back porch config
+//     AWCR     +0x10      accumulated active width [26:16] / height [10:0]
+//     TWCR     +0x14      total width / height
+//     GCR      +0x18      global control (bit 0 = LTDCEN)
+//     ISR      +0x38      interrupt status
+//   LTDC_Layer1 = 0x50001084  (LTDC + 0x84)
+//     CR       +0x00      bit 0 = LEN (layer enable)
+//     WHPCR    +0x04      window horizontal position [27:16] stop / [11:0] start
+//     WVPCR    +0x08      window vertical position
+//     CFBAR    +0x2C      color frame buffer address
+//     CFBLR    +0x30      color frame buffer length: [28:16]=pitch, [12:0]=line len
+//     CFBLNR   +0x34      color frame buffer line number (= active rows)
+//
+// EXPECTED VALUES (post Fix 1+2+3, frameBuf=832 wide, geometry cleaned):
+//   LEFT half  CFBAR  = 0xD0000000   (start of framebuffer)
+//   RIGHT half CFBAR  = 0xD00004B0   (offset by 400*3 = 1200 bytes)
+//   Both halves:
+//     AWCR   = 0x01920_1E2   (active width 402, active height 482)
+//     TWCR   = 0x01930_1E3   (total 403 / 483)
+//     WHPCR  = 0x01920_003   (window cols 3..402)
+//     CFBLR  = 0x09C0_04B3   (pitch 832*3=2496=0x9C0, line len 400*3+3=1203=0x4B3)
+//     CFBLNR = 0x000_01E0    (480 rows)
+// ============================================================================
+
+execUserSetup()
+{
+    __var bp_left;
+    __var bp_right;
+
+    /* Two stopping BPs - condition "1" = always halt. */
+    bp_left  = __setCodeBreak("{$PROJ_DIR$\\..\\CM7\\TouchGFX\\target\\TouchGFXHAL.cpp}.485",
+                              0, "1", "TRUE", "");
+    bp_right = __setCodeBreak("{$PROJ_DIR$\\..\\CM7\\TouchGFX\\target\\TouchGFXHAL.cpp}.537",
+                              0, "1", "TRUE", "");
+
+    __message "[lcd_geom.mac] Loaded.\n";
+    __message "  BP-LEFT  installed at TouchGFXHAL.cpp:485 (handle ", bp_left,  ")\n";
+    __message "  BP-RIGHT installed at TouchGFXHAL.cpp:537 (handle ", bp_right, ")\n";
+    __message "  At each halt, run GL() (left half) or GR() (right half) or FB().\n";
+}
+
+/* ----- helper: dump 10 LTDC registers + Layer1 ----- */
+DumpLtdc(label)
+{
+    __var awcr;  __var twcr;  __var gcr;   __var isr;
+    __var l1cr;  __var whpcr; __var wvpcr;
+    __var cfbar; __var cfblr; __var cfblnr;
+
+    awcr   = __readMemory32(0x50001010, "Memory");
+    twcr   = __readMemory32(0x50001014, "Memory");
+    gcr    = __readMemory32(0x50001018, "Memory");
+    isr    = __readMemory32(0x50001038, "Memory");
+    l1cr   = __readMemory32(0x50001084, "Memory");
+    whpcr  = __readMemory32(0x50001088, "Memory");
+    wvpcr  = __readMemory32(0x5000108C, "Memory");
+    cfbar  = __readMemory32(0x500010AC, "Memory");
+    cfblr  = __readMemory32(0x500010B0, "Memory");
+    cfblnr = __readMemory32(0x500010B4, "Memory");
+
+    __message "===== LTDC ", label, " =====\n";
+    __message "  AWCR   = 0x", awcr:%08x,
+              "   (active width  high16, height low11)\n";
+    __message "  TWCR   = 0x", twcr:%08x,
+              "   (total  width  high16, height low11)\n";
+    __message "  GCR    = 0x", gcr:%08x,
+              "   (bit0 LTDCEN should be 1)\n";
+    __message "  ISR    = 0x", isr:%08x,
+              "   (bit1 FUIF, bit2 TERRIF -> non-zero = error)\n";
+    __message "  L1.CR  = 0x", l1cr:%08x,
+              "   (bit0 LEN -> layer enable)\n";
+    __message "  WHPCR  = 0x", whpcr:%08x,
+              "   (window cols: high16 stop, low12 start)\n";
+    __message "  WVPCR  = 0x", wvpcr:%08x,
+              "   (window rows: high16 stop, low11 start)\n";
+    __message "  CFBAR  = 0x", cfbar:%08x,
+              "   (frame buffer address)\n";
+    __message "  CFBLR  = 0x", cfblr:%08x,
+              "   (high13 pitch, low13 line length)\n";
+    __message "  CFBLNR = 0x", cfblnr:%08x,
+              "   (active row count)\n";
+}
+
+/* ----- GL: capture at BP-LEFT (just before LEFT-half DSI refresh) ----- */
+GL()
+{
+    DumpLtdc("LEFT-HALF (about to refresh)");
+}
+
+/* ----- GR: capture at BP-RIGHT (just before RIGHT-half DSI refresh) ----- */
+GR()
+{
+    DumpLtdc("RIGHT-HALF (about to refresh)");
+}
+
+/* ----- FB: dump strategic framebuffer pixels (RGB888) ----- */
+FB()
+{
+    __var p_top;     __var p_q1;     __var p_mid;
+    __var p_q3;      __var p_bot;    __var p_pad;
+
+    /* Row 0 col 0 (very top-left)             */
+    p_top = __readMemory32(0xD0000000, "Memory");
+    /* Row 60 col 0 (top quartile)             */
+    p_q1  = __readMemory32(0xD0011300, "Memory");
+    /* Row 240 col 0 (vertical center)         */
+    p_mid = __readMemory32(0xD008CA00, "Memory");
+    /* Row 360 col 0 (3/4 down)                */
+    p_q3  = __readMemory32(0xD00D2F00, "Memory");
+    /* Row 479 col 0 (last visible row)        */
+    p_bot = __readMemory32(0xD0118500, "Memory");
+    /* Row 0  col 800 (first padding column)   */
+    p_pad = __readMemory32(0xD0000960, "Memory");
+
+    __message "===== Framebuffer pixel sample =====\n";
+    __message "  row   0 col   0 (TL)        = 0x", p_top:%08x, "\n";
+    __message "  row  60 col   0 (top quart) = 0x", p_q1:%08x,  "\n";
+    __message "  row 240 col   0 (mid row)   = 0x", p_mid:%08x, "\n";
+    __message "  row 360 col   0 (3/4 row)   = 0x", p_q3:%08x,  "\n";
+    __message "  row 479 col   0 (bottom)    = 0x", p_bot:%08x, "\n";
+    __message "  row   0 col 800 (pad area)  = 0x", p_pad:%08x,
+              "  (should stay 0 - padding never written)\n";
+}

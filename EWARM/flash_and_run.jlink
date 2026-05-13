@@ -1,0 +1,10 @@
+/* flash_and_run.jlink — flash latest .out, reset, run, quit.
+ * After this script ends the CPU runs free; user presses the blue button
+ * to trigger the 3-second recording. */
+
+r
+erase
+loadfile "C:\TouchGFXProjects\MyApplication\EWARM\STM32H747I-DISCO_CM7\Exe\STM32H747I-DISCO_CM7.out"
+r
+g
+q

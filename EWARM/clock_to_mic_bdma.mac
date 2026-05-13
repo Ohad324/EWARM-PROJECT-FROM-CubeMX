@@ -1,0 +1,248 @@
+/*
+ * clock_to_mic_bdma.mac
+ * No auto-breakpoints. Set BPs manually, then call:
+ *   dump_init()    at main() or after boot
+ *   dump_active()  at Start_Recording_Pipeline()
+ * Or type them in the Debug Log command line any time.
+ */
+
+dump_init()
+{
+    __message "\n=== INIT PHASE ===\n";
+    __message "RCC_CR          = 0x", __readMemory32(0x58024400,"Memory"):%08X, "\n";
+    __message "RCC_CFGR        = 0x", __readMemory32(0x58024410,"Memory"):%08X, "\n";
+    __message "RCC_D3CCIPR     = 0x", __readMemory32(0x58024854,"Memory"):%08X, "\n";
+    __message "  SAI4ASEL[23:21]= ", ((__readMemory32(0x58024854,"Memory")>>21)&0x7):%d, "  (want 4=CLKP/HSI64))\n";
+    __message "RCC_D3AMR       = 0x", __readMemory32(0x58024518,"Memory"):%08X, "\n";
+    __message "  GPIOEEN(4)    = ", ((__readMemory32(0x58024518,"Memory")>>4)&1):%d, "  (want 1)\n";
+    __message "  SAI4EN(28)    = ", ((__readMemory32(0x58024518,"Memory")>>28)&1):%d, "  (want 1)\n";
+    __message "RCC_AHB4ENR     = 0x", __readMemory32(0x580244E0,"Memory"):%08X, "\n";
+    __message "  BDMAEN(21)    = ", ((__readMemory32(0x580244E0,"Memory")>>21)&1):%d, "  (want 1)\n";
+    __message "PWR_D3CR        = 0x", __readMemory32(0x58024818,"Memory"):%08X, "\n";
+    __message "  VOSRDY(13)    = ", ((__readMemory32(0x58024818,"Memory")>>13)&1):%d, "\n";
+    __message "GPIOE_MODER     = 0x", __readMemory32(0x58020000,"Memory"):%08X, "\n";
+    __message "  PE2 MODE[5:4] = ", ((__readMemory32(0x58020000,"Memory")>>4)&0x3):%d, "  (want 2=AF)\n";
+    __message "GPIOE_AFR0      = 0x", __readMemory32(0x58020020,"Memory"):%08X, "\n";
+    __message "  PE2 AF[11:8]  = 0x", ((__readMemory32(0x58020020,"Memory")>>8)&0xF):%X, "  (want A=AF10)\n";
+    __message "GPIOE_OSPEEDR   = 0x", __readMemory32(0x58020008,"Memory"):%08X, "\n";
+    __message "  PE2 SPD[5:4]  = ", ((__readMemory32(0x58020008,"Memory")>>4)&0x3):%d, "  (want 3=High)\n";
+    __message "SAI4_CR1        = 0x", __readMemory32(0x5800D804,"Memory"):%08X, "\n";
+    __message "  MODE[1:0]     = ", (__readMemory32(0x5800D804,"Memory")&0x3):%d, "  (want 1=RX Master)\n";
+    __message "  MCKDIV[8:4]   = ", ((__readMemory32(0x5800D804,"Memory")>>4)&0x1F):%d, "\n";
+    __message "  SAIEN(16)     = ", ((__readMemory32(0x5800D804,"Memory")>>16)&1):%d, "  (expect 0 at boot)\n";
+    __message "BDMA_CM0AR      = 0x", __readMemory32(0x58025010,"Memory"):%08X, "\n";
+    __message "  Domain[31:24] = 0x", (__readMemory32(0x58025010,"Memory")>>24):%X, "  (want 38=D3)\n";
+    __message "=== INIT DONE ===\n\n";
+}
+
+dump_active()
+{
+    __message "\n=== ACTIVE PHASE ===\n";
+    __message "PE2 MODE[5:4]   = ", ((__readMemory32(0x58020000,"Memory")>>4)&0x3):%d, "  (want 2)\n";
+    __message "PE2 AF[11:8]    = 0x", ((__readMemory32(0x58020020,"Memory")>>8)&0xF):%X, "  (want A)\n";
+    __message "PE2 SPD[5:4]    = ", ((__readMemory32(0x58020008,"Memory")>>4)&0x3):%d, "  (want 3)\n";
+    __message "D3CCIPR[23:21] = ", ((__readMemory32(0x58024854,"Memory")>>21)&0x7):%d, "  (want 4))\n";
+    __message "RCC_D3AMR       = 0x", __readMemory32(0x58024518,"Memory"):%08X, "\n";
+    __message "  GPIOEEN(4)    = ", ((__readMemory32(0x58024518,"Memory")>>4)&1):%d, "  (0=GATED!)\n";
+    __message "  SAI4EN(28)    = ", ((__readMemory32(0x58024518,"Memory")>>28)&1):%d, "  (0=GATED!)\n";
+    __message "RCC_AHB4ENR     = 0x", __readMemory32(0x580244E0,"Memory"):%08X, "\n";
+    __message "  BDMAEN(21)    = ", ((__readMemory32(0x580244E0,"Memory")>>21)&1):%d, "  (0=GATED!)\n";
+    __message "RCC_CR          = 0x", __readMemory32(0x58024400,"Memory"):%08X, "\n";
+    __message "SAI4_CR1        = 0x", __readMemory32(0x5800D804,"Memory"):%08X, "\n";
+    __message "  MODE          = ", (__readMemory32(0x5800D804,"Memory")&0x3):%d, "\n";
+    __message "  MCKDIV        = ", ((__readMemory32(0x5800D804,"Memory")>>4)&0x1F):%d, "\n";
+    __message "  SAIEN         = ", ((__readMemory32(0x5800D804,"Memory")>>16)&1):%d, "\n";
+    __message "BDMA_CPAR       = 0x", __readMemory32(0x5802500C,"Memory"):%08X, "  (want 5800DA28)\n";
+    __message "BDMA_CM0AR      = 0x", __readMemory32(0x58025010,"Memory"):%08X, "\n";
+    __message "  Domain[31:24] = 0x", (__readMemory32(0x58025010,"Memory")>>24):%X, "  (38=D3 OK)\n";
+    __message "BDMA_CCR        = 0x", __readMemory32(0x58025004,"Memory"):%08X, "\n";
+    __message "  EN(0)         = ", (__readMemory32(0x58025004,"Memory")&1):%d, "  (expect 0)\n";
+    __message "BDMA_CNDTR      = ", __readMemory32(0x58025008,"Memory"):%d, "\n";
+    __message "BDMA_ISR        = 0x", __readMemory32(0x58025400,"Memory"):%08X, "\n";
+    __message "  TCIF(4)       = ", ((__readMemory32(0x58025400,"Memory")>>4)&1):%d, "\n";
+    __message "FLTCR1          = 0x", __readMemory32(0x40017100,"Memory"):%08X, "\n";
+    __message "  DFEN(0)       = ", (__readMemory32(0x40017100,"Memory")&1):%d, "\n";
+    __message "  RDMAEN(1)     = ", ((__readMemory32(0x40017100,"Memory")>>1)&1):%d, "\n";
+    __message "  RSWSTART(2)   = ", ((__readMemory32(0x40017100,"Memory")>>2)&1):%d, "\n";
+    __message "  RCONT(18)     = ", ((__readMemory32(0x40017100,"Memory")>>18)&1):%d, "\n";
+    __message "  FAST(29)      = ", ((__readMemory32(0x40017100,"Memory")>>29)&1):%d, "\n";
+    __message "CHCFGR1         = 0x", __readMemory32(0x40017000,"Memory"):%08X, "\n";
+    __message "  CHEN(7)       = ", ((__readMemory32(0x40017000,"Memory")>>7)&1):%d, "\n";
+    __message "  SITP[5:4]     = ", ((__readMemory32(0x40017000,"Memory")>>4)&0x3):%d, "  (1=falling)\n";
+    __message "  SPICKSEL[2:0] = ", (__readMemory32(0x40017000,"Memory")&0x7):%d, "  (1=PE2)\n";
+    __message "DFSDM_ISR       = 0x", __readMemory32(0x40017118,"Memory"):%08X, "\n";
+    __message "  CKABF(19)     = ", ((__readMemory32(0x40017118,"Memory")>>19)&1):%d, "  (1=NO CLOCK!)\n";
+    __message "  ROVRF(3)      = ", ((__readMemory32(0x40017118,"Memory")>>3)&1):%d, "\n";
+    __message "DMA1_S1_CR      = 0x", __readMemory32(0x40020028,"Memory"):%08X, "\n";
+    __message "  EN(0)         = ", (__readMemory32(0x40020028,"Memory")&1):%d, "  (expect 0)\n";
+    __message "  CIRC(8)       = ", ((__readMemory32(0x40020028,"Memory")>>8)&1):%d, "\n";
+    __message "DMA1_S1_NDTR    = ", __readMemory32(0x4002002C,"Memory"):%d, "  (expect 128)\n";
+    __message "=== ACTIVE DONE ===\n\n";
+}
+
+/* * trigger_recording()
+ * Simulates a blue-button press (PC13) via EXTI software trigger.
+ * Sequence:
+ *   1. Clear any stale EXTI13 pending flag (EXTI_PR1 bit13)
+ *   2. Write EXTI_SWIER1 bit13 → fires EXTI15_10 IRQ → ISR notifies voiceRecTask
+ *   3. Resume target (__go) for 1 s so task can reach Start_Recording_Pipeline()
+ *   4. Halt and snapshot the key pipeline registers
+ *
+ * Precondition: target is halted at any safe point after VoiceRec_Init() ran.
+ * Call from Quick Watch: trigger_recording()
+ */
+trigger_recording()
+{
+    __message "\n=== SW-TRIGGER: PC13 EXTI13 ===\n";
+
+    /* Verify EXTI_C1IMR1 has bit13 unmasked (interrupt enabled for CM7) */
+    __message "EXTI_C1IMR1     = 0x", __readMemory32(0x58000500,"Memory"):%08X;
+    __message "  bit13=", ((__readMemory32(0x58000500,"Memory")>>13)&1):%d, "  (want 1=unmasked)\n";
+
+    /* 1. Clear stale pending bit (write-1-to-clear) */
+    __writeMemory32(0x00002000, 0x58000488, "Memory");   /* EXTI_PR1 bit13 */
+    __message "EXTI_PR1 cleared (bit13)\n";
+
+    /* 2. Fire software EXTI13 */
+    __writeMemory32(0x00002000, 0x58000418, "Memory");   /* EXTI_SWIER1 bit13 */
+    __message "EXTI_SWIER1 bit13 written — IRQ pending\n";
+
+    /* 3. Resume target so ISR + voiceRecTask can run */
+    __message "Resuming target for 1000 ms...\n";
+    __go();
+    __delay(1000);
+    __halt();
+    __message "Target halted — post-trigger snapshot:\n";
+
+    /* 4. Snapshot: clock enables, PE2 pin, SAI4 enable, DFSDM clock-absent flag */
+    __message "  GPIOEEN(4)   = ", ((__readMemory32(0x58024518,"Memory")>>4)&1):%d,  "  (want 1)\n";
+    __message "  SAI4EN(28)   = ", ((__readMemory32(0x58024518,"Memory")>>28)&1):%d, "  (want 1)\n";
+    __message "  BDMAEN(21)   = ", ((__readMemory32(0x580244E0,"Memory")>>21)&1):%d, "  (want 1)\n";
+    __message "  PE2_MODE[5:4]= ", ((__readMemory32(0x58020000,"Memory")>>4)&0x3):%d, "  (want 2=AF)\n";
+    __message "  PE2_AF[11:8] = 0x", ((__readMemory32(0x58020020,"Memory")>>8)&0xF):%X, "  (want A=AF10)\n";
+    __message "  SAI4_CR1     = 0x", __readMemory32(0x5800D804,"Memory"):%08X, "\n";
+    __message "  SAIEN(16)    = ", ((__readMemory32(0x5800D804,"Memory")>>16)&1):%d, "  (want 1)\n";
+    __message "  BDMA_CCR EN  = ", (__readMemory32(0x58025004,"Memory")&1):%d, "  (want 1)\n";
+    __message "  DFSDM_CKABF  = ", ((__readMemory32(0x40017118,"Memory")>>19)&1):%d, "  (0=clock OK, 1=NO CLOCK)\n";
+    __message "  DMA1_S1 EN   = ", (__readMemory32(0x40020028,"Memory")&1):%d, "  (want 1)\n";
+    __message "=== TRIGGER DONE ===\n\n";
+}
+
+/*
+ * full_run()
+ * Full automated pipeline: boot-phase monitor → SW trigger recording → recording-phase monitor.
+ * Precondition: target halted anywhere after main() entry (e.g. main BP before osKernelStart).
+ *
+ * PHASE 1 — Boot monitor: 25 x 200ms = 5s, target running freely between each read.
+ *   Watches: GPIOEEN, SAI4EN, BDMAEN, PE2_MODE, PE2_AF, SAIEN, CKABF
+ * TRIGGER  — fires EXTI13 (≡ blue button PC13) while halted between two reads.
+ * PHASE 2 — Record monitor: 50 x 200ms = 10s, target running freely between each read.
+ *   Watches: SAIEN, BDMA_CCR EN, CKABF, DMA1_S1 EN, BDMA_CNDTR (data counter)
+ *
+ * Call from Quick Watch: full_run()
+ */
+full_run()
+{
+    int i;
+
+    /* ---- PHASE 1: BOOT MONITOR (target must be halted before calling) ---------- */
+    __message "\n=== FULL_RUN PHASE 1: BOOT (25x200ms=5s) ===\n";
+    for (i = 0; i < 25; i++)
+    {
+        __go();
+        __delay(200);
+        __halt();
+        __message "[BOOT ", i*200:%d, "ms]";
+        __message " GPIOEEN=",  ((__readMemory32(0x58024518,"Memory")>>4)&1):%d;
+        __message " SAI4EN=",   ((__readMemory32(0x58024518,"Memory")>>28)&1):%d;
+        __message " BDMAEN=",   ((__readMemory32(0x580244E0,"Memory")>>21)&1):%d;
+        __message " PE2_MODE=", ((__readMemory32(0x58020000,"Memory")>>4)&0x3):%d;
+        __message " PE2_AF=0x", ((__readMemory32(0x58020020,"Memory")>>8)&0xF):%X;
+        __message " SAIEN=",    ((__readMemory32(0x5800D804,"Memory")>>16)&1):%d;
+        __message " CKABF=",    ((__readMemory32(0x40017118,"Memory")>>19)&1):%d, "\n";
+    }
+
+    /* ---- SW TRIGGER: fire PC13 EXTI13 (target is halted here) ----------------- */
+    __message "\n--- SW TRIGGER: firing EXTI13 (PC13 blue button) ---\n";
+    __message "EXTI_C1IMR1=0x", __readMemory32(0x58000500,"Memory"):%08X;
+    __message " bit13=", ((__readMemory32(0x58000500,"Memory")>>13)&1):%d, " (want 1=unmasked)\n";
+    __writeMemory32(0x00002000, 0x58000488, "Memory");  /* EXTI_PR1:   clear bit13 */
+    __writeMemory32(0x00002000, 0x58000418, "Memory");  /* EXTI_SWIER1: set  bit13 */
+    __message "SWIER1 fired — ISR will notify voiceRecTask\n";
+
+    /*
+     * CRITICAL STARTUP WINDOW — 800 ms free-run before first halt.
+     * Path: EXTI ISR → xTaskNotifyFromISR → voiceRecTask wakes →
+     *       HAL_SAI_Receive_DMA() → BDMA armed → first BDMA transfers
+     *       drain SAI4 RX FIFO → SAI4 MCLK starts on PE2.
+     * Halting before those first BDMA cycles complete = PE2 never clocks
+     * = CKABF stays 1 forever. 800 ms gives the full chain time to run.
+     */
+    __go();
+    __delay(800);
+    __halt();
+    __message "\n--- POST-TRIGGER BDMA STARTUP SNAPSHOT (t=800ms) ---\n";
+    __message " BDMA_CCR =0x", __readMemory32(0x58025004,"Memory"):%08X;
+    __message "  EN=",         (__readMemory32(0x58025004,"Memory")&1):%d, " (want 1)\n";
+    __message " BDMA_CNDTR=",  __readMemory32(0x58025008,"Memory"):%d, "  (>0 = DMA active)\n";
+    __message " BDMA_CPAR =0x",__readMemory32(0x5802500C,"Memory"):%08X, " (want 5800DA28=SAI4_RDR)\n";
+    __message " BDMA_ISR  =0x",__readMemory32(0x58025400,"Memory"):%08X;
+    __message "  TCIF1=",      ((__readMemory32(0x58025400,"Memory")>>4)&1):%d;
+    __message "  TEIF1=",      ((__readMemory32(0x58025400,"Memory")>>3)&1):%d, " (1=DMA ERROR!)\n";
+    __message " SAIEN=",       ((__readMemory32(0x5800D804,"Memory")>>16)&1):%d, " (want 1)\n";
+    __message " PE2_MODE=",    ((__readMemory32(0x58020000,"Memory")>>4)&0x3):%d, " (want 2=AF)\n";
+    __message " CKABF=",       ((__readMemory32(0x40017118,"Memory")>>19)&1):%d, " (0=clock OK)\n";
+
+    /* ---- PHASE 2: RECORDING MONITOR (50x200ms=10s) ---------------------------- */
+    __message "\n=== FULL_RUN PHASE 2: RECORDING (50x200ms=10s) ===\n";
+    for (i = 0; i < 50; i++)
+    {
+        __go();
+        __delay(200);
+        __halt();
+        __message "[REC ", (800 + i*200):%d, "ms]";
+        __message " SAIEN=",   ((__readMemory32(0x5800D804,"Memory")>>16)&1):%d;
+        __message " BDMA_EN=", (__readMemory32(0x58025004,"Memory")&1):%d;
+        __message " CNDTR=",   __readMemory32(0x58025008,"Memory"):%d;
+        __message " BDMA_ISR=0x", __readMemory32(0x58025400,"Memory"):%08X;
+        __message " CKABF=",   ((__readMemory32(0x40017118,"Memory")>>19)&1):%d;
+        __message " DMA1_EN=", (__readMemory32(0x40020028,"Memory")&1):%d;
+        __message " PE2_MODE=",((__readMemory32(0x58020000,"Memory")>>4)&0x3):%d;
+        __message " PE2_AF=0x",((__readMemory32(0x58020020,"Memory")>>8)&0xF):%X, "\n";
+    }
+    __message "=== FULL_RUN DONE ===\n";
+}
+
+/*
+ * watch_loop()
+ * Free-running 200ms poller — target runs between each sample.
+ * Call from Quick Watch: watch_loop()
+ * 50 iterations = 10 s. Edit the limit as needed.
+ */
+watch_loop()
+{
+    int i;
+    __message "\n=== WATCH LOOP START (50 x 200ms) ===\n";
+    for (i = 0; i < 50; i++)
+    {
+        __go();
+        __delay(200);
+        __halt();
+        __message "[t=", i*200:%d, "ms]";
+        __message " D3AMR=0x",  __readMemory32(0x58024518,"Memory"):%08X;
+        __message " GPIOEEN=",  ((__readMemory32(0x58024518,"Memory")>>4)&1):%d;
+        __message " SAI4EN=",   ((__readMemory32(0x58024518,"Memory")>>28)&1):%d;
+        __message " BDMAEN=",   ((__readMemory32(0x580244E0,"Memory")>>21)&1):%d;
+        __message " PE2_MODE=", ((__readMemory32(0x58020000,"Memory")>>4)&0x3):%d;
+        __message " PE2_AF=0x", ((__readMemory32(0x58020020,"Memory")>>8)&0xF):%X;
+        __message " CKABF=",    ((__readMemory32(0x40017118,"Memory")>>19)&1):%d, "\n";
+    }
+    __message "=== WATCH LOOP END ===\n";
+}
+
+execUserSetup()
+{
+    __message "clock_to_mic_bdma.mac loaded\n";
+    __message "  dump_init()   -> call at boot\n";
+    __message "  dump_active() -> call before recording\n";
+}

@@ -1,0 +1,13 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+h
+// g_State          @ 0x24037876
+// g_usbMscActive   @ 0x240377F8
+// voiceRecTaskHandle @ 0x2403780C
+mem32 0x24037876 1
+mem32 0x240377F8 1
+mem32 0x2403780C 1
+g
+exit

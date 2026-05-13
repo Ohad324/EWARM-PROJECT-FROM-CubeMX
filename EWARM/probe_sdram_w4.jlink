@@ -1,0 +1,12 @@
+si SWD
+speed 4000
+device STM32H747XI_M7
+connect
+sleep 1500
+halt
+mem32 0xD0000000 2
+w4 0xD0000000 0x11223344
+w4 0xD0000004 0x55667788
+mem32 0xD0000000 2
+go
+exit

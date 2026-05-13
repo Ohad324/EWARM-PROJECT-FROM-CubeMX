@@ -1,0 +1,4 @@
+/* reset_only.jlink — reset target without reflashing */
+r
+g
+q

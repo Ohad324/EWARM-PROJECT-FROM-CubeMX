@@ -1,0 +1,37 @@
+/* pd6_check.jlink — verify PD6 state + multiple PC2 IDR samples
+ *
+ * GPIOD->MODER     0x58020C00  bits[13:12] for PD6
+ *                              00 = Input, 01 = Output, 10 = AF, 11 = Analog (default)
+ * GPIOD->OTYPER    0x58020C04  bit 6 for PD6 (0=PP, 1=OD)
+ * GPIOD->PUPDR     0x58020C0C  bits[13:12] for PD6
+ * GPIOD->ODR       0x58020C14  bit 6 for PD6 — what it would drive if Output
+ * GPIOD->IDR       0x58020C10  bit 6 for PD6 — live level
+ *
+ * GPIOC->IDR       0x58020810  bit 2 for PC2 — sampled ×6 to see toggling
+ */
+
+sleep 100
+
+mem32 0x58020C00 1
+mem32 0x58020C04 1
+mem32 0x58020C0C 1
+mem32 0x58020C14 1
+mem32 0x58020C10 1
+sleep 30
+mem32 0x58020C10 1
+sleep 30
+mem32 0x58020C10 1
+
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+sleep 5
+mem32 0x58020810 1
+
+q

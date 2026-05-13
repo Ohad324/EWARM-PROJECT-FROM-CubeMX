@@ -4,6 +4,77 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## SAVE STATE — 2026-05-13 (evening) — Edge Impulse "Hey Noa" MFCC blocked on pool size, model needs EON+int8 optimization
+
+### Where we left off
+
+End-to-end pipeline still works (boot → button → DFSDM record → SD write → UART stream → GCS HTTP 200 → STT call). LCD also fine. **What does NOT work yet:** Edge Impulse classifier call from the FreeRTOS idle hook returns `EIDSP_OUT_OF_MEM (-1002)` from inside MFCC.
+
+### What was done this session
+
+1. **Idle-hook architecture in place.** `wake_word_test.cpp` overrides `vApplicationGetIdleTaskMemory` to supply a 14 KB idle stack at `0x30038000` (D2 SRAM2) so TFLite Micro inference has stack room. `WakeWordTest_Trigger(g_AudioBuf, 16000)` is called from `voice_recorder.c` after `[REC] DFSDM_DONE`; `WakeWordTest_OnIdle()` is called from `vApplicationIdleHook` in `freertos.c`. Confirmed in IDE task list: IDLE running, hook firing.
+
+2. **Hard Rule #1 compliance — bump-allocator override of `ei_malloc`/`ei_calloc`/`ei_free`.** Strong symbols in `wake_word_test.o` (linker confirms `Gb` linkage). Pool is a `__no_init static uint8_t s_ei_pool[]` in `.sram1` with `ei_pool_reset()` called before each `run_classifier()`. No real malloc anywhere.
+
+3. **Section attribution migrated to IAR-canonical `#pragma`.** All new placement uses `#pragma data_alignment = N` + `#pragma location = ".section"`. CLAUDE.md Hard Rule #3 updated to **forbid GCC `__attribute__((section/aligned))` for new code** — `#pragma` only. Existing legacy `__attribute__` usage should be migrated when the buffer is touched.
+
+4. **DFSDM buffer relocated to free SRAM1 for the pool.** `s_DfsdmBuf` moved from `0x30004000` (D2 SRAM1) to `0x3003B800` (D2 SRAM2, just past `s_idleStack`). DMA1 reaches both D2 SRAMs identically; MPU attrs same; no cache-coherency change. After the move, `s_ei_pool` starts at `0x30000000` and can use nearly the full 128 KB SRAM1.
+
+5. **Pool size progression observed:** all failed with `-1002`:
+   - 96 KB pool → `s_ei_pool_used = 97'472` at fail
+   - 108 KB pool → `used = 110'176`
+   - 124 KB pool → `used = 126'016` (after DFSDM relocation)
+   - **128 KB pool — edited in source but NOT YET BUILT.** Requires the IAR define change below.
+
+6. **`tensor_arena` (2.2 KB) still in `.sram1`** — currently steals the top of SRAM1 from the pool (linker error at 127 KB). Plan is to move it to `.sram2` via the IAR project define so the pool gets the full 128 KB.
+
+### What to do FIRST tomorrow
+
+**Two-step rebuild:**
+
+1. **In IAR** — Project → Options → C/C++ Compiler → Preprocessor → Defined symbols: change `EI_TENSOR_ARENA_LOCATION=.sram1` to `EI_TENSOR_ARENA_LOCATION=.sram2`. This frees the 2.2 KB at the top of SRAM1.
+
+2. **Build (already done)** — `wake_word_test.cpp` has `EI_POOL_SIZE = 128u*1024u`. After the IAR define change, the linker should place `s_ei_pool` at `0x30000000` size `0x20000` (128 KB exact) with `tensor_arena` now in SRAM2 alongside `s_DfsdmBuf` + `s_idleStack`.
+
+3. **Verify in .map** — grep for `s_ei_pool` (expect `0x30000000`, `0x20000` size) and `tensor_arena` (expect in `0x3003xxxx` range).
+
+4. **Flash + button + "Hey Noa"** — read `s_ei_pool_used` at `0x2407E944` via Live Watch.
+   - If `used < 128 KB` and `[EI] classify START` appears → **WIN.** Proceed to verify HEY NOA vs Noise probabilities.
+   - If `used` reaches 128 KB and `-1002` persists → the model genuinely exceeds 128 KB. Go to "If 128 KB still fails" below.
+
+### If 128 KB still fails — the real fix is model optimization, not more memory
+
+Edge Impulse Studio offers three optimizations that would dramatically shrink the MFCC scratch peak (typically from 126 KB down to **30–50 KB**):
+
+1. **EON Compiler** (Deployment → Model optimizations → "Enable EON compiler") — 30-50% RAM reduction over the default TFLite runtime.
+2. **int8 quantization** (NN Classifier → "Quantized (int8)" instead of float32) — ~4× reduction for tensor_arena and activations.
+3. **Smaller DSP window** (Studio → Impulse design → MFCC block) — reduce `frame_length` (e.g. 0.02 → 0.01 s) or `num_cepstral_coefficients`. Scratch buffers scale linearly.
+
+**Recommended:** EON + int8 first. Re-export the C++ library from Studio, replace the vendored `Edge Impulse/` folder, rebuild. Pool can then drop back to ~64 KB and still have headroom.
+
+If the user wants to avoid re-training/re-exporting tonight, the only remaining hardware lever is a **multi-segment allocator** spanning SRAM1 (128 KB) + SRAM4 D3 (48 KB free past RTT) = ~176 KB. Significantly more complex to implement and SRAM4 is in D3 domain (slower CPU access). Treat as last resort.
+
+**SDRAM is explicitly off-table** per the [project_ei_pool_fallback_plan](memory/project_ei_pool_fallback_plan.md) — FMC latency adds ~10 ms per MFCC and contends with framebuffer/JPEG/video traffic.
+
+### Files modified this session (uncommitted)
+
+| File | Change |
+|---|---|
+| `CM7/Core/Src/wake_word_test.cpp` | Pool 96 → 128 KB; section attr migrated to `#pragma` |
+| `CM7/Core/Src/voice_recorder.c` | `s_DfsdmBuf` relocated to SRAM2 `0x3003B800`; comments updated; `#pragma` form |
+| `CLAUDE.md` | Hard Rule #3 updated: `#pragma` only, no GCC attributes |
+| (IAR project) | **NOT YET DONE — `EI_TENSOR_ARENA_LOCATION=.sram1` → `.sram2`** |
+
+### Methodology notes worth keeping
+
+- **`s_ei_pool_high` was misleading earlier.** It captures peak before failure — undersized runs give false ceilings. Always read `s_ei_pool_used` (current accumulator) after a failed run to see what the model actually wanted.
+- **Forgetting `tensor_arena` cost one build cycle.** When changing pool placement always grep for OTHER objects in the same section. EI's `tensor_arena[2176]` in `tflite_learn_985318_3_compiled.cpp` shares `.sram1` via `EI_TENSOR_ARENA_LOCATION`.
+- **Pragma vs attribute lesson confirmed** — uniform style + greppability matter. Project rule now: `#pragma` only.
+
+
+
+---
+
 # STM32H747I-DISCO Voice Recorder
 
 ## ST Documentation — Design Reference Table
@@ -222,28 +293,31 @@ These are project rules, not suggestions:
 
    When declaring a static buffer that must live in a specific memory region (because of MPU attributes, DMA reachability, cache policy, or domain isolation), Claude MUST explicitly attach a section attribute and state in the comment which region was chosen and why. Buffers that "just work" in default `.bss` (AXI SRAM in this project) do NOT need an attribute — but anything DMA-touched, cache-sensitive, or domain-pinned MUST be tagged.
 
-   **Syntax — IAR EWARM canonical form (prefer this):**
+   **Syntax — IAR EWARM canonical form (MANDATORY for new code — `#pragma` only, no GCC attributes):**
    ```c
    /* Named section — selects a region defined in stm32h747xx_flash_CM7.icf
     * via `place in <region> { section <name> };`. This is the IAR idiom. */
-   #pragma location = ".sram2"
-   static StaticQueue_t s_queueCB;
+   #pragma data_alignment = 32
+   #pragma location = ".sram1"
+   __no_init static uint8_t dma_buf[N];
 
    /* Alternative IAR syntax with @ operator — equivalent to #pragma location: */
    static uint8_t buf[N] @ ".sram2";
 
    /* Literal absolute address — bypasses section regions entirely.
     * Use only when a peripheral / DMA constraint demands a specific address. */
+   #pragma data_alignment = 32
    #pragma location = 0x30000000
-   static __no_init uint8_t dfsdm_buf[N];
+   __no_init static uint8_t dfsdm_buf[N];
    ```
 
-   **Syntax — GCC-style attribute (also works on IAR as compatibility extension):**
-   ```c
-   __attribute__((section(".sram1"))) static uint8_t dma_buf[N];
-   __attribute__((section(".axi_sram"))) static uint8_t cpu_buf[N];
-   ```
-   Use `#pragma location` for new code; the GCC attribute is acceptable when porting from another toolchain or matching surrounding style.
+   **DO NOT USE `__attribute__((section(...)))` or `__attribute__((aligned(N)))`** — these are GCC extensions. IAR accepts them as a compatibility convenience, but the IAR-canonical equivalents are `#pragma location` and `#pragma data_alignment`. **Project rule: `#pragma` only, no GCC `__attribute__` for placement or alignment.** Reasons:
+   - Uniform style across the codebase — no toolchain-mixing confusion
+   - No risk of subtly different semantics between IAR versions (the GCC-compat path is "convenience", not the supported front door)
+   - Grep'ing for `#pragma location` reliably finds every section-placed buffer — `__attribute__((section(...)))` would slip through any such audit
+   - Matches surrounding project code (e.g. `s_DfsdmBuf`, RTT CB)
+
+   If you find an existing `__attribute__((section(...)))` or `__attribute__((aligned(N)))` in the codebase, treat it as legacy and migrate to `#pragma` form when touching that buffer.
 
    **Section ↔ memory map (this project, see `EWARM/stm32h747xx_flash_CM7.icf`):**
    | Section | Domain | Base | Size | DMA reach | Cache | Typical use |

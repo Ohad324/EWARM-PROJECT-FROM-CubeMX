@@ -1,0 +1,299 @@
+/*
+ * boot_pipeline_one_bp.mac.tpl  -- C-SPY macro template, one BP per session.
+ *
+ * The orchestrator (boot_pipeline_multi.ps1) substitutes osKernelInitialize
+ * with a function name (e.g. "SystemInit", "MX_LTDC_Init") and writes
+ * the result as a per-iteration .mac that cspybat consumes.
+ *
+ * Why a template instead of one big macro:
+ *   CSpyBat 9.4.6.1706 (bundled in EWARM 9.70.2) only fires the FIRST
+ *   code BP action per invocation, then the session ends with the CPU
+ *   halted. Documented behavior; not a config bug. Workaround: one BP
+ *   per cspybat run, orchestrated by an outer script.
+ */
+
+ReadCycle()
+{
+    __var c;
+    c = __readMemory32(0xE0001004, "Memory");
+    __message "    cyc=0x", c:%08X, "\n";
+}
+
+DumpKeyRegs()
+{
+    /* Comprehensive boot-state dump.  Peripheral register apertures on
+     * STM32H7 are always alive even before the relevant clock enable
+     * is set -- registers just read 0 in that state.  SDRAM (0xD0...)
+     * and QSPI mem-mapped (0x9000_0000) are NOT read here -- those WILL
+     * bus-fault before their controllers are initialized. */
+
+    /* RCC clock tree (base 0x58024400) */
+    __var rcc_cr, rcc_cfgr, rcc_pllckselr, rcc_pllcfgr;
+    __var rcc_pll1divr, rcc_pll2divr, rcc_d1cfgr;
+    __var rcc_ahb1, rcc_ahb2, rcc_ahb3, rcc_ahb4;
+    __var rcc_apb1l, rcc_apb1h, rcc_apb2, rcc_apb3, rcc_apb4;
+    __var rcc_d1ccipr, rcc_d2ccip1r, rcc_d3ccipr;
+    /* PWR + FLASH */
+    __var pwr_cr1, pwr_cr3, pwr_d3cr, flash_acr, flash_optcr;
+    /* MPU */
+    __var mpu_type, mpu_ctrl, mpu_rnr, mpu_rbar, mpu_rasr;
+    /* SCB */
+    __var scb_vtor, scb_aircr, scb_icsr, scb_ccr, scb_cpacr;
+    /* FMC SDRAM (base 0x52004140) */
+    __var fmc_sdcr1, fmc_sdcr2, fmc_sdtr1, fmc_sdtr2, fmc_sdrtr, fmc_sdsr;
+    /* LTDC (base 0x50001000) */
+    __var ltdc_gcr, ltdc_isr, ltdc_ier, ltdc_bccr, ltdc_lipcr;
+    __var ltdc_l1whpcr, ltdc_l1wvpcr, ltdc_l1pfcr, ltdc_l1cfbar, ltdc_l1cfblr, ltdc_l1cfblnr;
+    /* DSI host (base 0x50000000) */
+    __var dsi_vr, dsi_cr, dsi_ccr, dsi_lvcidr, dsi_wcr, dsi_lcr, dsi_lpmcr;
+    __var dsi_vmcr, dsi_isr0, dsi_ier0, dsi_wpcr0;
+    /* DMA2D (base 0x52001000) -- diagnostic-relevant set:
+     *   ISR    -- TEIF(bit0)=Transfer Error, CEIF(bit1)=Config Error,
+     *             TWIF(bit2)=Transfer Watermark, TCIF(bit3)=Transfer Complete,
+     *             CAEIF(bit4)=CLUT Access Error, CTCIF(bit5)=CLUT Transfer
+     *             Complete, CEIF(bit6)=CLUT Error
+     *   CR     -- START(bit0), SUSP(bit1)=engine suspended (sw error?),
+     *             ABORT(bit2), MODE[17:16] (M2M/M2M-PFC/M2M-Blend/R2M)
+     *   NLR    -- bits[15:0]=NL (number of lines), bits[29:16]=PL (pixels per line);
+     *             "image dimensions" -- if unreasonable, CEIF will fire
+     *   OMAR   -- destination address; must be inside framebuffer (0xD0000000+)
+     *   FGMAR  -- foreground source address
+     *   BGMAR  -- background source address (M2M-Blend only)
+     *   FG/BG/OPFCCR -- pixel format codes for FG/BG/output layers
+     */
+    __var d2d_cr, d2d_isr, d2d_nlr, d2d_omar, d2d_fgmar, d2d_bgmar;
+    __var d2d_fgpfccr, d2d_bgpfccr, d2d_opfccr;
+    /* JPEG (base 0x52003000) */
+    __var jpeg_cr, jpeg_sr, jpeg_confr0;
+    /* GPIO MODER for all ports A..K */
+    __var gpa_m, gpb_m, gpc_m, gpd_m, gpe_m, gpf_m, gpg_m, gph_m, gpi_m, gpj_m, gpk_m;
+    /* SysTick + NVIC */
+    __var st_ctrl, st_load, st_val, nvic_iser0, nvic_iser1;
+
+    /* RCC */
+    rcc_cr         = __readMemory32(0x58024400, "Memory");
+    rcc_cfgr       = __readMemory32(0x58024410, "Memory");
+    rcc_pllckselr  = __readMemory32(0x58024428, "Memory");
+    rcc_pllcfgr    = __readMemory32(0x5802442C, "Memory");
+    rcc_pll1divr   = __readMemory32(0x58024430, "Memory");
+    rcc_pll2divr   = __readMemory32(0x58024438, "Memory");
+    rcc_d1cfgr     = __readMemory32(0x58024418, "Memory");
+    rcc_ahb1       = __readMemory32(0x580244D8, "Memory");
+    rcc_ahb2       = __readMemory32(0x580244DC, "Memory");
+    rcc_ahb3       = __readMemory32(0x580244D4, "Memory");
+    rcc_ahb4       = __readMemory32(0x580244E0, "Memory");
+    rcc_apb1l      = __readMemory32(0x580244E8, "Memory");
+    rcc_apb1h      = __readMemory32(0x580244EC, "Memory");
+    rcc_apb2       = __readMemory32(0x580244F0, "Memory");
+    rcc_apb3       = __readMemory32(0x580244E4, "Memory");
+    rcc_apb4       = __readMemory32(0x580244F4, "Memory");
+    rcc_d1ccipr    = __readMemory32(0x58024450, "Memory");
+    rcc_d2ccip1r   = __readMemory32(0x58024454, "Memory");
+    rcc_d3ccipr    = __readMemory32(0x58024458, "Memory");
+    /* PWR + FLASH */
+    pwr_cr1        = __readMemory32(0x58024800, "Memory");
+    pwr_cr3        = __readMemory32(0x5802480C, "Memory");
+    pwr_d3cr       = __readMemory32(0x58024818, "Memory");
+    flash_acr      = __readMemory32(0x52002000, "Memory");
+    flash_optcr    = __readMemory32(0x52002018, "Memory");
+    /* MPU */
+    mpu_type       = __readMemory32(0xE000ED90, "Memory");
+    mpu_ctrl       = __readMemory32(0xE000ED94, "Memory");
+    mpu_rnr        = __readMemory32(0xE000ED98, "Memory");
+    mpu_rbar       = __readMemory32(0xE000ED9C, "Memory");
+    mpu_rasr       = __readMemory32(0xE000EDA0, "Memory");
+    /* SCB */
+    scb_vtor       = __readMemory32(0xE000ED08, "Memory");
+    scb_aircr      = __readMemory32(0xE000ED0C, "Memory");
+    scb_icsr       = __readMemory32(0xE000ED04, "Memory");
+    scb_ccr        = __readMemory32(0xE000ED14, "Memory");
+    scb_cpacr      = __readMemory32(0xE000ED88, "Memory");
+    /* FMC SDRAM */
+    fmc_sdcr1      = __readMemory32(0x52004140, "Memory");
+    fmc_sdcr2      = __readMemory32(0x52004144, "Memory");
+    fmc_sdtr1      = __readMemory32(0x52004148, "Memory");
+    fmc_sdtr2      = __readMemory32(0x5200414C, "Memory");
+    fmc_sdrtr      = __readMemory32(0x52004154, "Memory");
+    fmc_sdsr       = __readMemory32(0x52004158, "Memory");
+    /* LTDC */
+    ltdc_gcr       = __readMemory32(0x50001018, "Memory");
+    ltdc_isr       = __readMemory32(0x50001038, "Memory");
+    ltdc_ier       = __readMemory32(0x50001034, "Memory");
+    ltdc_bccr      = __readMemory32(0x5000102C, "Memory");
+    ltdc_lipcr     = __readMemory32(0x50001040, "Memory");
+    ltdc_l1whpcr   = __readMemory32(0x50001088, "Memory");
+    ltdc_l1wvpcr   = __readMemory32(0x5000108C, "Memory");
+    ltdc_l1pfcr    = __readMemory32(0x50001094, "Memory");
+    ltdc_l1cfbar   = __readMemory32(0x500010AC, "Memory");
+    ltdc_l1cfblr   = __readMemory32(0x500010B0, "Memory");
+    ltdc_l1cfblnr  = __readMemory32(0x500010B4, "Memory");
+    /* DSI */
+    dsi_vr         = __readMemory32(0x50000000, "Memory");
+    dsi_cr         = __readMemory32(0x50000004, "Memory");
+    dsi_ccr        = __readMemory32(0x50000008, "Memory");
+    dsi_lvcidr     = __readMemory32(0x5000000C, "Memory");
+    dsi_wcr        = __readMemory32(0x50000024, "Memory");
+    dsi_lcr        = __readMemory32(0x50000034, "Memory");
+    dsi_lpmcr      = __readMemory32(0x50000064, "Memory");
+    dsi_vmcr      = __readMemory32(0x50000138, "Memory");
+    dsi_isr0       = __readMemory32(0x500000FC, "Memory");
+    dsi_ier0       = __readMemory32(0x50000104, "Memory");
+    dsi_wpcr0      = __readMemory32(0x500000E4, "Memory");
+    /* DMA2D */
+    d2d_cr         = __readMemory32(0x52001000, "Memory");
+    d2d_isr        = __readMemory32(0x52001004, "Memory");
+    d2d_fgmar      = __readMemory32(0x5200100C, "Memory");
+    d2d_bgmar      = __readMemory32(0x52001020, "Memory");
+    d2d_fgpfccr    = __readMemory32(0x5200101C, "Memory");
+    d2d_bgpfccr    = __readMemory32(0x52001030, "Memory");
+    d2d_opfccr     = __readMemory32(0x52001034, "Memory");
+    d2d_omar       = __readMemory32(0x5200103C, "Memory");
+    d2d_nlr        = __readMemory32(0x52001044, "Memory");
+    /* JPEG */
+    jpeg_cr        = __readMemory32(0x52003000, "Memory");
+    jpeg_sr        = __readMemory32(0x52003004, "Memory");
+    jpeg_confr0    = __readMemory32(0x5200300C, "Memory");
+    /* GPIO MODER (port bases at 0x58020000 + 0x400 * port_index) */
+    gpa_m          = __readMemory32(0x58020000, "Memory");
+    gpb_m          = __readMemory32(0x58020400, "Memory");
+    gpc_m          = __readMemory32(0x58020800, "Memory");
+    gpd_m          = __readMemory32(0x58020C00, "Memory");
+    gpe_m          = __readMemory32(0x58021000, "Memory");
+    gpf_m          = __readMemory32(0x58021400, "Memory");
+    gpg_m          = __readMemory32(0x58021800, "Memory");
+    gph_m          = __readMemory32(0x58021C00, "Memory");
+    gpi_m          = __readMemory32(0x58022000, "Memory");
+    gpj_m          = __readMemory32(0x58022400, "Memory");
+    gpk_m          = __readMemory32(0x58022800, "Memory");
+    /* SysTick + NVIC */
+    st_ctrl        = __readMemory32(0xE000E010, "Memory");
+    st_load        = __readMemory32(0xE000E014, "Memory");
+    st_val         = __readMemory32(0xE000E018, "Memory");
+    nvic_iser0     = __readMemory32(0xE000E100, "Memory");
+    nvic_iser1     = __readMemory32(0xE000E104, "Memory");
+
+    __message "  ---- RCC clock tree ----\n";
+    __message "    RCC.CR=0x", rcc_cr:%08X, "  CFGR=0x", rcc_cfgr:%08X,
+              "  PLLCKSEL=0x", rcc_pllckselr:%08X, "  PLLCFGR=0x", rcc_pllcfgr:%08X, "\n";
+    __message "    PLL1DIVR=0x", rcc_pll1divr:%08X, "  PLL2DIVR=0x", rcc_pll2divr:%08X,
+              "  D1CFGR=0x", rcc_d1cfgr:%08X, "\n";
+    __message "    AHB1=0x", rcc_ahb1:%08X, "  AHB2=0x", rcc_ahb2:%08X,
+              "  AHB3=0x", rcc_ahb3:%08X,  "  AHB4=0x", rcc_ahb4:%08X, "\n";
+    __message "    APB1L=0x", rcc_apb1l:%08X, "  APB1H=0x", rcc_apb1h:%08X,
+              "  APB2=0x", rcc_apb2:%08X,    "  APB3=0x", rcc_apb3:%08X,
+              "  APB4=0x", rcc_apb4:%08X, "\n";
+    __message "    D1CCIPR=0x", rcc_d1ccipr:%08X, "  D2CCIP1R=0x", rcc_d2ccip1r:%08X,
+              "  D3CCIPR=0x", rcc_d3ccipr:%08X, "\n";
+    __message "  ---- PWR + FLASH ----\n";
+    __message "    PWR.CR1=0x", pwr_cr1:%08X, "  CR3=0x", pwr_cr3:%08X,
+              "  D3CR=0x", pwr_d3cr:%08X,
+              "  FLASH.ACR=0x", flash_acr:%08X, "  OPTCR=0x", flash_optcr:%08X, "\n";
+    __message "  ---- MPU ----\n";
+    __message "    TYPE=0x", mpu_type:%08X, "  CTRL=0x", mpu_ctrl:%08X,
+              "  RNR=", mpu_rnr:%d,
+              "  RBAR=0x", mpu_rbar:%08X, "  RASR=0x", mpu_rasr:%08X, "\n";
+    __message "  ---- SCB (CPU control) ----\n";
+    __message "    VTOR=0x", scb_vtor:%08X, "  AIRCR=0x", scb_aircr:%08X,
+              "  ICSR=0x", scb_icsr:%08X,
+              "  CCR=0x", scb_ccr:%08X,    "  CPACR=0x", scb_cpacr:%08X, "\n";
+    __message "  ---- FMC SDRAM ----\n";
+    __message "    SDCR1=0x", fmc_sdcr1:%08X, "  SDCR2=0x", fmc_sdcr2:%08X,
+              "  SDTR1=0x", fmc_sdtr1:%08X,   "  SDTR2=0x", fmc_sdtr2:%08X, "\n";
+    __message "    SDRTR=0x", fmc_sdrtr:%08X, "  SDSR=0x", fmc_sdsr:%08X, "\n";
+    __message "  ---- LTDC ----\n";
+    __message "    GCR=0x", ltdc_gcr:%08X, "  ISR=0x", ltdc_isr:%08X,
+              "  IER=0x", ltdc_ier:%08X,   "  BCCR=0x", ltdc_bccr:%08X,
+              "  LIPCR=0x", ltdc_lipcr:%08X, "\n";
+    __message "    L1WHPCR=0x", ltdc_l1whpcr:%08X, "  L1WVPCR=0x", ltdc_l1wvpcr:%08X,
+              "  L1PFCR=0x", ltdc_l1pfcr:%08X,
+              "  L1CFBAR=0x", ltdc_l1cfbar:%08X,
+              "  L1CFBLR=0x", ltdc_l1cfblr:%08X,
+              "  L1CFBLNR=0x", ltdc_l1cfblnr:%08X, "\n";
+    __message "  ---- DSI host ----\n";
+    __message "    VR=0x", dsi_vr:%08X, "  CR=0x", dsi_cr:%08X,
+              "  CCR=0x", dsi_ccr:%08X,
+              "  LVCIDR=0x", dsi_lvcidr:%08X,
+              "  WCR=0x", dsi_wcr:%08X, "\n";
+    __message "    LCR=0x", dsi_lcr:%08X, "  LPMCR=0x", dsi_lpmcr:%08X,
+              "  VMCR=0x", dsi_vmcr:%08X,
+              "  ISR0=0x", dsi_isr0:%08X, "  IER0=0x", dsi_ier0:%08X,
+              "  WPCR0=0x", dsi_wpcr0:%08X, "\n";
+    __message "  ---- DMA2D ----\n";
+    __message "    CR=0x", d2d_cr:%08X,    "  ISR=0x", d2d_isr:%08X,
+              "  NLR=0x", d2d_nlr:%08X,    "  OMAR=0x", d2d_omar:%08X, "\n";
+    __message "    FGMAR=0x", d2d_fgmar:%08X, "  BGMAR=0x", d2d_bgmar:%08X,
+              "  FGPFCCR=0x", d2d_fgpfccr:%08X,
+              "  BGPFCCR=0x", d2d_bgpfccr:%08X,
+              "  OPFCCR=0x", d2d_opfccr:%08X, "\n";
+    /* Diagnostic decode: fault flags + state */
+    __message "    [decode] CR.START=", (d2d_cr & 1):%d,
+              " SUSP=", ((d2d_cr >> 1) & 1):%d,
+              " ABORT=", ((d2d_cr >> 2) & 1):%d,
+              " MODE=", ((d2d_cr >> 16) & 3):%d,
+              "  ISR.TEIF=", (d2d_isr & 1):%d,
+              " CEIF=", ((d2d_isr >> 1) & 1):%d,
+              " TCIF=", ((d2d_isr >> 3) & 1):%d, "\n";
+    __message "    [decode] NLR.PL=", ((d2d_nlr >> 16) & 0x3FFF):%d,
+              "(px/line) NL=", (d2d_nlr & 0xFFFF):%d, "(lines)",
+              "  OMAR.in_SDRAM=", ((d2d_omar >= 0xD0000000) && (d2d_omar < 0xD2000000)):%d,
+              "  LTDC.ISR.FUIF=", ((ltdc_isr >> 1) & 1):%d,
+              " TERRIF=", ((ltdc_isr >> 2) & 1):%d, "\n";
+    __message "  ---- JPEG ----\n";
+    __message "    CR=0x", jpeg_cr:%08X, "  SR=0x", jpeg_sr:%08X,
+              "  CONFR0=0x", jpeg_confr0:%08X, "\n";
+    __message "  ---- GPIO MODER (per port) ----\n";
+    __message "    A=0x", gpa_m:%08X, "  B=0x", gpb_m:%08X, "  C=0x", gpc_m:%08X,
+              "  D=0x", gpd_m:%08X, "  E=0x", gpe_m:%08X, "  F=0x", gpf_m:%08X, "\n";
+    __message "    G=0x", gpg_m:%08X, "  H=0x", gph_m:%08X, "  I=0x", gpi_m:%08X,
+              "  J=0x", gpj_m:%08X, "  K=0x", gpk_m:%08X, "\n";
+    __message "  ---- SysTick + NVIC ----\n";
+    __message "    SysTick.CTRL=0x", st_ctrl:%08X, "  LOAD=0x", st_load:%08X,
+              "  VAL=0x", st_val:%08X,
+              "  NVIC.ISER0=0x", nvic_iser0:%08X,
+              "  ISER1=0x", nvic_iser1:%08X, "\n";
+}
+
+HitCheckpoint()
+{
+    __message "\n[BP-HIT] osKernelInitialize entry  (hook: execUserExecutionStopped)\n";
+    ReadCycle();
+    DumpKeyRegs();
+    __message "[BP-HIT] action complete\n";
+}
+
+/* ----------------------------------------------------------------------
+ * Lifecycle hooks -- per the UCSARM-26 debug-session diagram each fires
+ * at a different point. Snapshotting registers at each gives us state
+ * at: post-download (pre-run), every CPU resume, at the BP, at session
+ * end.  Together: 4 sample points per cspybat invocation per checkpoint.
+ * ---------------------------------------------------------------------- */
+
+execUserSetup()
+{
+    /* Fires once, AFTER firmware is loaded, BEFORE CPU starts.
+     * CPU is paused at the reset vector. Peripherals are in their
+     * post-reset state -- RCC/MPU defaults, no code has run yet. */
+    __var bp;
+    __message "\n[POST-DOWNLOAD] (hook: execUserSetup, CPU at reset vector)\n";
+    DumpKeyRegs();
+
+    __message "[CSPY] checkpoint='osKernelInitialize'  installing single BP...\n";
+    bp = __setCodeBreak("osKernelInitialize", 0, "1", "TRUE", "HitCheckpoint()");
+    if (bp == 0)
+        __message "[CSPY] BP install FAILED -- symbol may be inlined or absent\n";
+    else
+        __message "[CSPY] BP installed h=", bp:%d, "\n";
+}
+
+execUserExit()
+{
+    /* Fires when the debug session is tearing down. After our BP
+     * action ran and cspybat decided to exit, this is the LAST
+     * snapshot we can get -- typically with the CPU still halted at
+     * the BP.  Registers should mirror what the BP action saw, but
+     * if the CPU somehow advanced (single-step), this catches it. */
+    __message "\n[SESSION-END] (hook: execUserExit, just before disconnect)\n";
+    DumpKeyRegs();
+    __message "[CSPY] session ending\n";
+}
+
