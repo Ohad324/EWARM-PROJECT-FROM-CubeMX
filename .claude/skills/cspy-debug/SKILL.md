@@ -124,6 +124,71 @@ Use `boot_pipeline_lcd.bat` (or `verify_pfb.bat` for the PFB-specific 15 checkpo
 ### Single-shot snapshot at one symbol
 `boot_pipeline_cspy.bat` — fastest path for one BP.
 
+## STM32H747 memory architecture — placement rules for DMA debugging
+
+> **Source:** Sightsys Engineering Team blog, "STM32H747 Memory Architecture: Domain Placement & Cache" (2026-05-11). The project author's own write-up of every rule the team had to learn the hard way. Read it before debugging any DMA / cache / SRAM issue. Pairs with CLAUDE.md Hard Rule #3.
+
+### Domain → DMA reach matrix (memorize — dictates buffer placement)
+
+| DMA controller | Can reach | CANNOT reach |
+|---|---|---|
+| **DMA1, DMA2** | D1 AXI, D2 SRAM1, D2 SRAM2, D2 SRAM3 | D3 SRAM4, DTCM, ITCM |
+| **BDMA** | D3 SRAM4 only | Everything in D1 and D2 |
+| **MDMA** | Anywhere → anywhere (memory-to-memory) | n/a |
+
+If you put a DFSDM DMA buffer in D3 SRAM4 expecting DMA1 to fill it: build compiles, link succeeds, chip boots, buffer stays zero forever. Failure is silent. Diagnose with `M0AR` register read in cspybat + a watchpoint on the buffer that never fires.
+
+### Authoritative buffer placement (this project)
+
+| Buffer | Location | Why |
+|---|---|---|
+| LTDC framebuffer | D1 AXI | LTDC is D1 master; AXI = no FUIF |
+| **DFSDM DMA ring** (`s_DfsdmBuf`) | **D2 SRAM1** | DMA1 = D2 master; high-frequency continuous writes |
+| PCM accumulator (`g_AudioBuf`, 96 KB) | D2 SRAM2 | Large, CPU-processed, infrequent DMA contact |
+| UART RX DMA buffer + queue | D1 AXI | CPU↔CPU producer-consumer; no DMA cross-domain |
+| CSTACK | D1 DTCM | No DMA master can corrupt DTCM by construction |
+| FreeRTOS heap (`ucHeap`) | D1 AXI | RTOS allocator is pure CPU |
+| JPEG decode intermediates | External SDRAM | Too large for internal SRAM |
+| SAI4 BDMA buffers | D3 SRAM4 | BDMA can't reach anywhere else |
+
+**Hard placement rule:** place each buffer in the same domain as the master that drives it most frequently.
+
+### D2 SRAM1 vs D2 SRAM2 — looks identical, behaves differently
+
+Both regions are equally reachable by DMA1/DMA2 **in theory**. But the project's MPU configuration has historically defined the Non-Cacheable+Shareable region for SRAM1 specifically. Moving a DMA-target buffer into SRAM2 silently fails: DMA writes reach the SRAM2 bytes, but CPU L1 D-cache returns stale (often zero / DC-drift) values when it reads back. Symptom: `[PCM] peak ~= 100-600 with speech_rms == noise_rms` even though mic is fine.
+
+**Incident (2026-05-17):** moving `s_DfsdmBuf` from SRAM1 (`0x30004000`) → SRAM2 (`0x3003B800`) during EI integration broke audio capture for days. Spent hours chasing gain, mic hardware, voltage. Fix was a one-line `#pragma location` move back to SRAM1 — peak jumped 600 → 3968, STT/EI both recognized "hey Noah" at 98%. **Lesson: DMA target buffers belong in SRAM1 (or AXI), never SRAM2, until the MPU config is proven to cover SRAM2 as Non-Cacheable+Shareable.**
+
+### Cache coherency — three patterns
+
+Cortex-M7 has a write-back L1 D-cache (16 KB, 4-way, 32-byte lines). DMA controllers bypass the cache, producing two failure modes:
+1. **Write-dirty:** CPU writes data → DMA reads stale RAM before the cache flushes
+2. **Read-stale:** DMA writes data → CPU reads stale cache lines
+
+**Pattern A — MPU Non-Cacheable+Shareable** (this project's default for DMA buffers): make the region Non-Cacheable at the MPU level. CPU never caches those addresses. Used for DFSDM in D2 SRAM1. Zero runtime maintenance, but you MUST define the MPU region in `MPU_Config()` AND ensure all your DMA buffers fall inside it.
+
+**Pattern B — Manual cache maintenance** (high-throughput cacheable buffer):
+- `SCB_CleanDCache_by_Addr()` BEFORE the DMA transmit
+- `SCB_InvalidateDCache_by_Addr()` BEFORE the CPU reads after a DMA receive
+- 32-byte alignment required; pad with `__attribute__((aligned(32)))` and size in 32-byte multiples
+
+**Pattern C — Cache-free regions:** DTCM / ITCM bypass the cache entirely. CSTACK must live here so a stray DMA write can't corrupt it.
+
+**Concrete gotcha:** without explicit `SCB_InvalidateDCache_by_Addr`, the wire and the J-Link probe both confirm bytes arriving at the DMA buffer in AXI, but the CPU reads zeros for entire messages. The cache held pre-DMA state. If you see "DMA register says transfer completed, register dump shows good data via cspybat, but the C variable reads stale" — it's cache coherency. ALWAYS the first hypothesis when DMA receives look broken.
+
+### Diagnostic discipline — `.map` is source of truth
+
+After EVERY build that touches a DMA buffer placement:
+1. Grep the .map for the buffer symbol — confirm the address matches the intended region
+2. Check `M0AR` / `M1AR` at runtime via cspybat or the post-recording register dump — it MUST match the .map
+3. If the address falls outside the MPU Non-Cacheable region, you have a coherency bug waiting to happen
+
+Treat memory placement as part of the design, not optimization. Assign every critical buffer to a specific domain BEFORE coding, document via `#pragma location`, configure MPU regions for DMA buffers as Non-Cacheable Shareable, and audit the .map file on every build.
+
+### When to escalate beyond cspybat
+
+cspybat reads via the DAP. If cspybat reports the "expected" DMA-written value but your C variable reads stale, the bug is in the CPU's cache view, not in the DMA. Switch tactics: (a) put `SCB_InvalidateDCache_by_Addr()` before the suspect read and see if the value changes (= confirmed coherency bug), or (b) declare the buffer with `__no_init` in a Non-Cacheable region and re-test.
+
 ## Heap / dynamic-allocation diagnostics — "the silent killer"
 
 > **IRON RULE (Ohad, 2026-05-17):** Every `malloc` MUST be paired with a `free` on every code path that returns. **Unmatched malloc = CPU corruption.** No exceptions, no "I'll free it later", no leaving it to scope exit. If you can't guarantee the matching free on every path (early returns, error branches, exception paths), DO NOT use malloc — use a static buffer instead.
