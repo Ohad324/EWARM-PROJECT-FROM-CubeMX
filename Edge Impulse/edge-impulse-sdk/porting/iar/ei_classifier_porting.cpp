@@ -89,16 +89,30 @@ __attribute__((weak)) void ei_putchar(char data)
     putchar(data);
 }
 
+/* 2026-05-17 (Ohad project edit, NOT EI Studio export):
+ * Hard Rule #1 (Absolute Ban on Dynamic Allocation) — these weak defaults
+ * are intentionally fail-fast NULL/no-op stubs instead of malloc()/calloc()/
+ * free() wrappers. Our project provides STRONG overrides in
+ * CM7/Core/Src/wake_word_test.cpp that slice from a static 128 KB pool in
+ * .sram1 with LIFO bump-back free. If the strong override ever fails to
+ * link (e.g. WAKE_WORD_TEST compile-time gate removed, EI re-export wipes
+ * this patch, linker drops the override for some reason), these stubs make
+ * the failure LOUD and IMMEDIATE — run_classifier() returns -1002
+ * EIDSP_OUT_OF_MEM on the very first allocation — instead of silently
+ * falling back to libc malloc and breaking the no-heap guarantee of the
+ * whole firmware. Re-apply on every Edge Impulse re-export. */
 __attribute__((weak)) void *ei_malloc(size_t size) {
-    return malloc(size);
+    (void)size;
+    return nullptr;
 }
 
 __attribute__((weak)) void *ei_calloc(size_t nitems, size_t size) {
-    return calloc(nitems, size);
+    (void)nitems; (void)size;
+    return nullptr;
 }
 
 __attribute__((weak)) void ei_free(void *ptr) {
-    free(ptr);
+    (void)ptr;
 }
 
 #if defined(__cplusplus) && EI_C_LINKAGE == 1
