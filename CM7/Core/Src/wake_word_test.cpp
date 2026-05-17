@@ -21,11 +21,20 @@
 #include "wake_word_test.h"
 #include "log_mutex.h"
 #include "pfb_itm.h"   /* ITM_EVENT32 — bare-metal SWO trace for ei_malloc sizing */
+#include "voice_recorder.h"  /* Phase 3: WakeWord_GetWindow, voiceRecTaskHandle, RecState_t */
 
 #include "FreeRTOS.h"
 #include "task.h"
 
 #include <string.h>
+
+/* Phase 3 access to the global recording state — declared in voice_recorder.c.
+ * Not in voice_recorder.h because it's a project-internal volatile global, but
+ * we need it here to gate the continuous classifier (skip while a recording
+ * is in flight). */
+extern "C" {
+    extern volatile RecState_t g_State;
+}
 
 /* Edge Impulse public API. EI_PORTING_IAR=1 + EI_CLASSIFIER_ALLOCATION_STATIC=1
  * must already be set in the IAR project's Preprocessor → Defined symbols. */
@@ -105,15 +114,21 @@ extern "C" void WakeWordTest_Trigger(const int16_t *samples, size_t count)
  * Sizing: 40 KB is overkill for our compact keyword model. Resize down
  * (or up) once we observe peak high-water mark via s_ei_pool_high.
  */
-#define EI_POOL_SIZE  (88u * 1024u)   /* 88 KB of SRAM1.
-                                         2026-05-17 night (Phase 2a continuous
-                                         wake-word arch): shrunk from 120 KB
-                                         to 88 KB to free 32 KB at the top of
-                                         SRAM1 for s_wakeWindow[16000] int16_t
-                                         (1 second of PCM at 16 kHz) declared
-                                         in voice_recorder.c at 0x30016000.
+#define EI_POOL_SIZE  (56u * 1024u)   /* 56 KB of SRAM1.
+                                         2026-05-17 late night (Phase 3 build
+                                         fix): shrunk further from 88 KB to
+                                         56 KB to also free 32 KB for
+                                         s_continuousBuf[16000] (classifier
+                                         input snapshot, this file) at
+                                         0x3000E000. Without this move the
+                                         buffer landed in AXI SRAM which is
+                                         saturated at 248/228 KB requested vs
+                                         available -> Lp011 linker error.
                                          Pool peak observed with LIFO ei_free:
-                                         17 KB. 88 KB still gives 5× margin.
+                                         17 KB. 56 KB still gives 3.3× margin.
+                                         Previous step (Phase 2a 88 KB) was OK
+                                         too — we only added s_continuousBuf
+                                         since then. Earlier history:
                                          Previous comment (preserved for full
                                          context): 2026-05-17 evening shrunk
                                          128 KB -> 120 KB to free 8 KB at the
@@ -316,6 +331,170 @@ extern "C" void WakeWordTest_OnIdle(void)
 
     RLOG("[EI] dsp_ms=", (uint32_t)result.timing.dsp);
     RLOG("[EI] inf_ms=", (uint32_t)result.timing.classification);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Phase 3 (2026-05-17): WakeWord_OnIdleContinuous — always-on wake-word
+ * listener. Runs from the idle hook every ~500 ms, reads the latest 1 sec
+ * of audio from voice_recorder.c's rolling window (s_wakeWindow), runs the
+ * EI classifier, and on `HEY NOA > threshold` triggers a button-equivalent
+ * recording via xTaskNotify(voiceRecTaskHandle, 2, eSetBits).
+ *
+ * Phase 3 is the actual "Hey Noa" trigger — no button required. Coexists
+ * with the existing button-test path (WakeWordTest_OnIdle) which classifies
+ * the post-recording g_AudioBuf for benchmark/comparison.
+ *
+ * State gates (skip the classify pass if any of these are true):
+ *   - cooldown timer not yet expired (1.5 s after last detection)
+ *   - g_State != REC_IDLE (currently recording or saving)
+ *   - <500 ms since last classify (rate limit at 2 Hz to leave CPU for UI)
+ *
+ * Memory: a 32 KB int16_t copy buffer for the classifier input (separate
+ * from s_wakeWindow because run_classifier may read samples in any order
+ * via the get_data callback, and we want a stable snapshot independent of
+ * the rolling write head). Lives in default .bss (AXI SRAM).
+ *
+ * Trigger value: notify value 2 distinguishes wake-word from button
+ * (button ISR uses value 1). VoiceRecTask currently treats both
+ * identically; future code may want to differentiate (e.g. add a 500 ms
+ * pre-record delay for wake-word so STT doesn't see the wake word itself).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+#ifndef WAKEWORD_THRESHOLD_PCT
+/* 2026-05-17: dropped 70 -> 50 after first round of testing. First detection
+ * hit 96% but subsequent attempts were only 4-16% (rolling-window slicing
+ * cuts utterances across edges, lowering confidence). 50% still firmly
+ * favors HEY NOA over the other two labels but tolerates partial captures. */
+#define WAKEWORD_THRESHOLD_PCT  50u
+#endif
+#ifndef WAKEWORD_CLASSIFY_INTERVAL_MS
+/* 2026-05-17: dropped 500 -> 250 ms. With a 1-sec window and 250 ms cadence
+ * any 700 ms "Hey Noa" utterance is fully contained in at least 2 of the 4
+ * windows that cover it — gives the model multiple chances to recognize. */
+#define WAKEWORD_CLASSIFY_INTERVAL_MS  250u
+#endif
+#ifndef WAKEWORD_COOLDOWN_MS
+#define WAKEWORD_COOLDOWN_MS  1500u
+#endif
+
+/* Classifier input buffer — copied from rolling window before each inference.
+ * Pinned to D2 SRAM1 at 0x3000E000 (in the 32 KB gap freed by shrinking
+ * s_ei_pool from 88 KB -> 56 KB). AXI was saturated, so this can't live in
+ * default .bss. CPU-only access (no DMA), so D2 SRAM1's Non-Cacheable region
+ * isn't strictly required — but keeping all wake-word buffers in SRAM1 keeps
+ * the placement audit story coherent and avoids any future cache surprises.
+ *
+ * Updated SRAM1 layout post Phase 3:
+ *   0x30000000-0x3000DFFF  56 KB   s_ei_pool        (was 88 KB)
+ *   0x3000E000-0x30015FFF  32 KB   s_continuousBuf  NEW (Phase 3)
+ *   0x30016000-0x3001DFFF  32 KB   s_wakeWindow     (Phase 2a)
+ *   0x3001E000-0x3001E1FF  512 B   s_DfsdmBuf       (DFSDM DMA target)
+ *   0x3001E200-0x3001FFFF  ~7.5KB  FREE             safety margin
+ */
+#pragma data_alignment = 32
+#pragma location = 0x3000E000
+__no_init static int16_t s_continuousBuf[EI_CLASSIFIER_RAW_SAMPLE_COUNT];
+
+extern "C" void WakeWord_OnIdleContinuous(void)
+{
+    static uint32_t s_lastClassifyMs  = 0u;
+    static uint32_t s_cooldownUntilMs = 0u;
+
+    uint32_t now = HAL_GetTick();
+
+    /* Cooldown after a detection — gives VoiceRecTask time to transition to
+     * REC_RECORDING (then the g_State gate below naturally suppresses re-
+     * triggers until the recording + save cycle completes). */
+    if (now < s_cooldownUntilMs) return;
+
+    /* Skip if currently recording or saving. CPU is busy + g_AudioBuf is in
+     * use for the captured-audio path. Wake-word classification can resume
+     * after SDWriteTask sets g_State back to REC_IDLE. */
+    if (g_State != REC_IDLE) return;
+
+    /* Rate limit. */
+    if ((now - s_lastClassifyMs) < WAKEWORD_CLASSIFY_INTERVAL_MS) return;
+    s_lastClassifyMs = now;
+
+    /* Snapshot the most-recent 1 sec from the rolling window. */
+    size_t got = WakeWord_GetWindow(s_continuousBuf,
+                                    (size_t)EI_CLASSIFIER_RAW_SAMPLE_COUNT);
+    if (got != (size_t)EI_CLASSIFIER_RAW_SAMPLE_COUNT) return;
+
+    /* Point the existing signal callback at our snapshot buffer + run. */
+    signal_t signal;
+    signal.total_length = EI_CLASSIFIER_RAW_SAMPLE_COUNT;
+    signal.get_data     = &wake_ei_get_signal_data;
+
+    ei_impulse_result_t result;
+    memset(&result, 0, sizeof(result));
+
+    ei_pool_reset();
+    s_classifyBuf = s_continuousBuf;
+    __DSB();
+
+    EI_IMPULSE_ERROR r = run_classifier(&signal, &result, false);
+    if (r != EI_IMPULSE_OK) {
+        /* Log failures sparingly — once per 5 sec — so we know if EI broke. */
+        static uint32_t s_lastFailMs = 0u;
+        if ((now - s_lastFailMs) > 5000u) {
+            s_lastFailMs = now;
+            RLOG("[WAKE] EI fail rc=", (uint32_t)r);
+        }
+        return;
+    }
+
+    /* Find HEY NOA confidence. Labels are exactly "HEY NOA" / "Noise" /
+     * "unknown" per observed runs — match by first character to avoid
+     * any accidental match on lowercase label variants. */
+    uint32_t heyNoaPct = 0u;
+    for (uint32_t i = 0u; i < (uint32_t)EI_CLASSIFIER_LABEL_COUNT; i++) {
+        const char *lbl = result.classification[i].label;
+        if (lbl && (lbl[0] == 'H' || lbl[0] == 'h')) {  /* "HEY NOA" */
+            heyNoaPct = (uint32_t)(result.classification[i].value * 100.0f);
+            break;
+        }
+    }
+
+    /* Heartbeat: every 10th classify (≈ every 5 sec) print stats to confirm
+     * the continuous path is alive AND the rolling window has real audio.
+     *
+     * Four numbers per heartbeat (4 RLOG lines — RLOG only logs one uint32):
+     *   cnt   = total classifies since boot. Stuck = function isn't running.
+     *   head  = s_wakeWindowHead. Δ between heartbeats should be ~16000
+     *           (16 kHz × 1 sec); 0 means DMA/drainer is dead.
+     *   peak  = max|sample| in this classify's input snapshot. Silence ~10-100;
+     *           normal speech ~1000-5000. Tells us mic is actually capturing.
+     *   pct   = HEY NOA confidence 0..100. Low = mic OK but no wake word said.
+     */
+    static uint32_t s_classifyCnt = 0u;
+    s_classifyCnt++;
+    if ((s_classifyCnt % 10u) == 0u) {
+        /* Compute peak amplitude in the just-classified snapshot. */
+        int32_t peakAbs = 0;
+        for (uint32_t i = 0u; i < (uint32_t)EI_CLASSIFIER_RAW_SAMPLE_COUNT; i++) {
+            int32_t v = s_continuousBuf[i];
+            if (v < 0) v = -v;
+            if (v > peakAbs) peakAbs = v;
+        }
+        RLOG("[WAKE-HB] cnt=",  s_classifyCnt);
+        RLOG("[WAKE-HB] head=", WakeWord_GetWindowHead());
+        RLOG("[WAKE-HB] peak=", (uint32_t)peakAbs);
+        RLOG("[WAKE-HB] pct=",  heyNoaPct);
+    }
+
+    if (heyNoaPct >= WAKEWORD_THRESHOLD_PCT) {
+        RLOG("[WAKE] HEY NOA detected pct=", heyNoaPct);
+
+        /* Trigger recording (same notification the PC13 ISR uses, but value
+         * 2 = wake-word instead of value 1 = button). VoiceRecTask checks
+         * the notify value only to differentiate later if it cares; for
+         * now it starts a 3-sec recording either way. */
+        if (voiceRecTaskHandle != NULL) {
+            xTaskNotify(voiceRecTaskHandle, 2u, eSetBits);
+        }
+
+        s_cooldownUntilMs = now + WAKEWORD_COOLDOWN_MS;
+    }
 }
 
 #endif /* WAKE_WORD_TEST */

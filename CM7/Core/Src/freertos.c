@@ -80,6 +80,12 @@ vTaskSetApplicationTaskTag(NULL, IdleTaskHook);
  * Idle task stack is bumped to 14 KB in wake_word_test.cpp to accommodate
  * TF-Lite Micro inference. */
 WakeWordTest_OnIdle();
+
+/* Phase 3 (2026-05-17): always-on wake-word listener. Rate-limited
+ * internally to one classify pass every 500 ms. Reads the rolling
+ * 1-sec window maintained by VoiceRecTask (Phase 2b) and on HEY NOA
+ * detection triggers a recording the same way the PC13 button would. */
+WakeWord_OnIdleContinuous();
 #endif
 }
 /* USER CODE END 2 */

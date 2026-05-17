@@ -99,6 +99,14 @@
                                   * WARNING: if AUDIO_SAMPLES changes, recalculate:
                                   * warmup_ms = WARMUP_CALLS × (AUDIO_SAMPLES/2) / 16000 × 1000 */
 
+/* 2026-05-17 Phase 2b: hoisted from inside StoreDmaChunk to file scope so
+ * the new WriteToWakeWindow() (defined earlier) can also use it. Override
+ * via IAR Preprocessor: EI_PCM_GAIN=N (e.g. 4, 16, 32). See StoreDmaChunk
+ * comment block for tuning guidance + clip-counter monitoring. */
+#ifndef EI_PCM_GAIN
+#define EI_PCM_GAIN  8
+#endif
+
 /* ── WAV header — 512 bytes, sector-aligned (little-endian, packed) ─────────
  * Standard 44-byte WAV header leaves PCM data at offset 44 — not sector-aligned.
  * On exFAT + SDMMC 4-bit mode, writes not aligned to 512-byte sector boundaries
@@ -401,149 +409,143 @@ void HAL_DFSDM_FilterRegConvErrorCallback(DFSDM_Filter_HandleTypeDef *hdfsdm)
 /* ═══════════════════════════════════════════════════════════════════════════
  *  VoiceRecTask — wakes on trigger, active-drains DMA for 3 s (fixed), signals SD
  * ═══════════════════════════════════════════════════════════════════════════ */
+/* ───────────────────────────────────────────────────────────────────────────
+ * Phase 2b (2026-05-17): WriteToWakeWindow — convert one DMA half-chunk
+ * (DFSDM 32-bit raw output) into int16_t PCM and append to s_wakeWindow,
+ * wrapping the head pointer at WAKEWORD_WINDOW_SAMPLES. Runs every DMA
+ * call (~4 ms cadence) whether or not we're actively recording.
+ *
+ * Same conversion math as StoreDmaChunk: src32[i] >> 8 to skip the
+ * 8-bit channel-id field in FLTRDATAR, then EI_PCM_GAIN multiplier (8x
+ * default) with saturate to int16_t range.
+ *
+ * Warmup: we use a SEPARATE counter from StoreDmaChunk's g_DmaCallCount
+ * because that one is reset per-recording. The wake-window warmup is a
+ * one-shot at boot (Sinc3 filter takes ~32 chunks to settle ≈ 128 ms).
+ * ─────────────────────────────────────────────────────────────────────── */
+#define WAKEWORD_WARMUP_CHUNKS  32u
+
+static void WriteToWakeWindow(const int32_t *src32)
+{
+    static uint32_t s_wakeWarmup = 0u;
+    if (s_wakeWarmup < WAKEWORD_WARMUP_CHUNKS) {
+        s_wakeWarmup++;
+        return;
+    }
+
+    uint32_t head = s_wakeWindowHead;
+    for (uint32_t i = 0u; i < DMA_HALF_SIZE; i++)
+    {
+        int32_t scaled = ((int32_t)(src32[i] >> 8)) * (int32_t)EI_PCM_GAIN;
+        if (scaled >  32767) scaled =  32767;
+        if (scaled < -32768) scaled = -32768;
+        s_wakeWindow[head] = (int16_t)scaled;
+        head = (head + 1u) % WAKEWORD_WINDOW_SAMPLES;
+    }
+    s_wakeWindowHead = head;
+}
+
 void VoiceRecTask(void *arg)
 {
     QueueHandle_t q = (QueueHandle_t)arg;
-    (void)q;   /* SDWriteTask handoff disabled during DFSDM debug — suppress unused warning */
-    uint32_t notif;
 
-    /* 2026-05-17 Phase 1 of continuous wake-word architecture:
-     * Start the audio pipeline ONCE here, before entering the wait loop.
-     * After this call, SAI4 BDMA + DFSDM circular DMA run forever. The DMA
-     * ISR keeps posting half/full chunks to s_dmaQueue every ~4 ms even when
-     * we're not actively recording — the queue fills to its 32-entry capacity
-     * (~128 ms of audio history) and then ISR-side drops are counted in
-     * s_dmaQueueOverflow until the next recording drains it. This always-on
-     * audio is the foundation for Phase 3's continuous wake-word classifier
-     * (which will read a rolling window of the most recent samples in the
-     * idle hook). Button-triggered recordings inside the loop are unchanged
-     * in behavior — they just no longer toggle the DMA on/off. */
+    /* 2026-05-17 Phase 1: start audio pipeline ONCE at boot; runs forever.
+     * Phase 2b: this task now CONTINUOUSLY drains s_dmaQueue into the
+     * rolling wake-word window (s_wakeWindow @ 0x30016000) on every chunk.
+     * On a button notification (or future wake-word detection), it ALSO
+     * appends each subsequent chunk to g_AudioBuf until 48000 samples are
+     * captured (3 sec recording), then signals SDWriteTask. The button
+     * path semantics are preserved bit-for-bit; we just never block
+     * between recordings — keeps the wake-word window fresh. */
     Start_Recording_Pipeline();
 
     for (;;)
     {
-        /* Block until button ISR (Phase 1) or WakeWordTask (Phase 2) notifies */
-        xTaskNotifyWait(0u, ULONG_MAX, &notif, portMAX_DELAY);
+        /* Block here at most ~4 ms (next DMA half-complete) — keeps the
+         * wake-word window fed at DFSDM cadence. */
+        DmaEntry_t e = { NULL };
+        if (xQueueReceive(s_dmaQueue, &e, portMAX_DELAY) != pdTRUE) continue;
 
-        /* Skip recording while USB MSC format mode owns SDMMC1 */
-        if (g_usbMscActive) continue;
+        /* ALWAYS: convert + write this chunk to the rolling wake-word window. */
+        WriteToWakeWindow(e.ptr);
 
-        /* Ignore spurious notifications if not idle */
-        if (g_State != REC_IDLE) continue;
-
-        g_SampleCount        = 0u;
-        g_DmaCallCount       = 0u;
-        s_dmaQueueOverflow   = 0u;
-        g_State              = REC_RECORDING;
-        /* Reset health counters for this recording */
-        g_AudioHealth.dfsdm_overruns      = 0u;
-        g_AudioHealth.sd_write_max_ms     = 0u;
-        g_AudioHealth.buffer_misses       = 0u;
-        g_AudioHealth.total_bytes_written = 0u;
-        __DSB();
-
-        RLOG("[REC] START trigger=BTN nextFile=", g_FileIndex + 1u);
-
-        /* ── [Step 1] Re-lock kernel clock before enabling DMA ────────────────────
-         * D3CCIPR may drift across domain sleep/wake events. Ensure PER_CK is set
-         * before the MDMA's first read activates the SAI4 clock on PE2. */
-        MODIFY_REG(RCC->D3CCIPR, RCC_D3CCIPR_SAI4ASEL, RCC_SAI4ACLKSOURCE_CLKP);
-
-        /* ╔══════════════════════════════════════════════════════════════════╗
-         * ║  HOLY CODE — Step 7: Activate recording pipeline (button press)  ║
-         * ║  MDMA is Sole Owner (Option B). No BDMA kick buffer needed.      ║
-         * ║  MDMA first read → FIFO cleared → SAI4 starts PE2 at 2.0 MHz.   ║
-         * ╚══════════════════════════════════════════════════════════════════╝ */
-        Start_Recording_Pipeline();
-        STAGE("PIPELINE_START");
-
-        /* Snapshot debug registers for IAR Live Watch / RTT */
-        g_dbg_live_sai4_cr1 = hsai_BlockA4.Instance->CR1;   /* bit16=SAIEN should be 1 */
-        g_dbg_live_fltcr1   = hdfsdm1_filter0.Instance->FLTCR1;
-        g_dbg_live_fltisr   = hdfsdm1_filter0.Instance->FLTISR;
-        g_dbg_live_hal_ok   = 0x00000000u;                  /* pipeline started — no HAL error path here */
-        STAGE("DFSDM3 PASS");
-
-        /* ── Active drain loop ──────────────────────────────────────────── */
-        /* NEVER use vTaskDelay here — DMA is running and must be drained.  */
-        /* Always fill the complete buffer (48000 samples = 3 s).           */
-        /* Button is a start trigger only — file size is always fixed.      */
-
-        /* Queue-based drain: each DMA callback posts its buffer pointer + DWT stamp.
-         * The drain loop pops in FIFO order — always the correct half, in order.
-         *
-         * Sync measurement (software oscilloscope):
-         *   ISR stamps DWT at post  = "pin HIGH"
-         *   Task reads DWT at pop   = "pin LOW"
-         *   delta = latency = time the half sat waiting for the CPU
-         *   If delta > 480,000 cycles (1 ms @ 480 MHz) → desync */
-        STAGE("DFSDM4 PASS");
-        TickType_t ledToggle = xTaskGetTickCount() + pdMS_TO_TICKS(500u);
-
-        /* Phase 1: DMA is always-on, so s_dmaQueue may hold up to ~128 ms of
-         * pre-trigger audio history. Flush it so this recording starts from
-         * a fresh, known sample (the next DMA half-complete after this point).
-         * Without this flush the first ~128 ms of g_AudioBuf would be audio
-         * from just BEFORE the button press / wake-word detection. */
+        /* If a button-triggered recording is active, ALSO append to g_AudioBuf
+         * via the existing StoreDmaChunk path (it handles per-recording warmup
+         * via g_DmaCallCount, saturation, and the 48000-sample stop). */
+        if (g_State == REC_RECORDING)
         {
-            DmaEntry_t stale = { NULL };
-            while (xQueueReceive(s_dmaQueue, &stale, 0) == pdTRUE) {}
+            StoreDmaChunk(e.ptr);
         }
 
-        while (g_SampleCount < AUDIO_BUFFER_SAMPLES)
+        /* Non-blocking check for a button-press / wake-word notification.
+         * Only honored while idle — re-trigger during a recording is ignored. */
+        if (g_State == REC_IDLE)
         {
-            /* if (xTaskGetTickCount() >= ledToggle)
+            uint32_t notif = 0u;
+            if (xTaskNotifyWait(0u, ULONG_MAX, &notif, 0) == pdTRUE)
             {
-                LED_TOGGLE();
-                ledToggle += pdMS_TO_TICKS(500u);
-            } */
+                if (g_usbMscActive) continue;  /* USB MSC owns SDMMC — skip */
 
-            DmaEntry_t e = { NULL };
-            if (xQueueReceive(s_dmaQueue, &e, pdMS_TO_TICKS(10u)) == pdTRUE)
-            {
-                /* No SCB_InvalidateDCache needed — s_DfsdmBuf (0x30004000) is in
-                 * D2 SRAM1, not cached by the M7 D-Cache (no MPU region covers it). */
-                StoreDmaChunk(e.ptr);
+                /* Begin a new 3-sec recording into g_AudioBuf. */
+                g_SampleCount      = 0u;
+                g_DmaCallCount     = 0u;
+                s_dmaQueueOverflow = 0u;
+                g_State            = REC_RECORDING;
+                g_AudioHealth.dfsdm_overruns      = 0u;
+                g_AudioHealth.sd_write_max_ms     = 0u;
+                g_AudioHealth.buffer_misses       = 0u;
+                g_AudioHealth.total_bytes_written = 0u;
+                __DSB();
+
+                RLOG("[REC] START trigger=BTN nextFile=", g_FileIndex + 1u);
+
+                /* Re-lock kernel clock for SAI4 (idempotent, defensive). */
+                MODIFY_REG(RCC->D3CCIPR, RCC_D3CCIPR_SAI4ASEL,
+                           RCC_SAI4ACLKSOURCE_CLKP);
+
+                /* Idempotent — pipeline is already running since boot. */
+                Start_Recording_Pipeline();
+                STAGE("PIPELINE_START");
+
+                /* Snapshot debug registers for IAR Live Watch / RTT */
+                g_dbg_live_sai4_cr1 = hsai_BlockA4.Instance->CR1;
+                g_dbg_live_fltcr1   = hdfsdm1_filter0.Instance->FLTCR1;
+                g_dbg_live_fltisr   = hdfsdm1_filter0.Instance->FLTISR;
+                g_dbg_live_hal_ok   = 0x00000000u;
+                STAGE("DFSDM3 PASS");
+                STAGE("DFSDM4 PASS");
+                /* No queue flush — next chunk arrives and is captured by the
+                 * `if (g_State == REC_RECORDING) StoreDmaChunk(...)` above. */
             }
         }
 
-        /* 2026-05-17 Phase 1: DO NOT stop DMA between recordings.
-         * The audio pipeline must run forever to feed the always-on wake-word
-         * classifier in the idle hook (Phase 3, upcoming). Stopping here
-         * would gate off PE2 mic clock and the wake-word listener would
-         * see nothing until the next button press.
-         *
-         * Pre-Phase-1 code (commented for history):
-         *   HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);
-         *   HAL_SAI_DMAStop(&hsai_BlockA4);
-         *
-         * The post-stop queue-flush is also removed — we now flush at the
-         * START of each recording (above) instead of at the end. */
-        STAGE("DFSDM5 PASS");
-
-        /* Safety: if DMA gave no samples, reset and retry */
-        if (g_SampleCount == 0u)
+        /* Check for end-of-recording: g_AudioBuf full. Signal SDWriteTask
+         * and transition to SAVING. Drain loop keeps running (rolling
+         * window stays fresh while SD write happens in parallel). */
+        if (g_State == REC_RECORDING && g_SampleCount >= AUDIO_BUFFER_SAMPLES)
         {
-            g_State = REC_IDLE; __DSB();
-            continue;
-        }
-
-        RLOG("[REC] DFSDM_DONE samples=", g_SampleCount);
-
-        LED_ON();   /* stay ON — recording done, saving to SD */
+            STAGE("DFSDM5 PASS");
+            RLOG("[REC] DFSDM_DONE samples=", g_SampleCount);
+            LED_ON();   /* stay ON — recording done, saving to SD */
 
 #ifdef WAKE_WORD_TEST
-        /* Quick EI bench: classify the first 1 s (16000 samples) of the captured
-         * buffer via the idle hook. Non-blocking — just arms a flag. Results
-         * appear in RTT as `[EI] HEY NOA = <pct>` / `Noise = <pct>` after the
-         * next idle slice (typically tens of ms once SD write yields). */
-        WakeWordTest_Trigger(g_AudioBuf, (size_t)16000u);
+            /* Bench: classify the first 1 s of the captured 3-sec buffer.
+             * Result printed via RLOG. Phase 3 will REPLACE this with a
+             * continuous time-gated classifier reading from s_wakeWindow. */
+            WakeWordTest_Trigger(g_AudioBuf, (size_t)16000u);
 #endif
 
-        /* Signal SDWriteTask to write WAV file */
-        uint32_t msg = 1u;
-        xQueueSend(q, &msg, 0);
-        /* g_State reset + LED_OFF() is now owned by SDWriteTask */
+            /* Signal SDWriteTask to write WAV file */
+            uint32_t msg = 1u;
+            xQueueSend(q, &msg, 0);
+
+            /* Transition to SAVING so we don't keep appending to g_AudioBuf.
+             * The rolling-window write above CONTINUES — wake-word listening
+             * stays live while SDWriteTask uploads. SDWriteTask sets state
+             * back to REC_IDLE after the file is closed. */
+            g_State = REC_SAVING;
+            __DSB();
+        }
     }
 }
 
@@ -1159,6 +1161,11 @@ static void AudioQuality_Report(void)
  *  continuous drainer). Wired now so Phase 3 only needs to change the
  *  call site, not add new infrastructure.
  * ═══════════════════════════════════════════════════════════════════════════ */
+uint32_t WakeWord_GetWindowHead(void)
+{
+    return s_wakeWindowHead;
+}
+
 size_t WakeWord_GetWindow(int16_t *out, size_t n_samples)
 {
     if (out == NULL || n_samples == 0u) return 0u;

@@ -77,6 +77,11 @@ void VoiceRec_DMA_IRQHandler(void);
  * of audio every ~500 ms. */
 size_t WakeWord_GetWindow(int16_t *out, size_t n_samples);
 
+/* Diagnostic: current write-head position in the rolling window. Lets
+ * heartbeat logging confirm the DMA + drainer chain is alive (head should
+ * advance by ~16000 per second). Range 0..16000-1. */
+uint32_t WakeWord_GetWindowHead(void);
+
 /* ── Audio health monitor ────────────────────────────────────────────────── */
 typedef struct {
     uint32_t dfsdm_overruns;      /* hardware overrun count — should always be 0 */

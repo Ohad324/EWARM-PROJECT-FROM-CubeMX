@@ -40,6 +40,15 @@ void WakeWordTest_Trigger(const int16_t *samples, size_t count);
  * request is pending. Internal — declared here so freertos.c can call it. */
 void WakeWordTest_OnIdle(void);
 
+/* Phase 3 (2026-05-17): always-on wake-word listener. Called from
+ * vApplicationIdleHook every idle slice; rate-limited internally to one
+ * classify pass every 500 ms. Reads the latest 1 sec of audio from
+ * voice_recorder.c's rolling window and on HEY NOA > threshold triggers
+ * a button-equivalent recording via xTaskNotify(voiceRecTaskHandle, 2, ...).
+ * Skips automatically while a recording is already in progress
+ * (g_State != REC_IDLE) and during a 1.5 s cooldown after each detection. */
+void WakeWord_OnIdleContinuous(void);
+
 #ifdef __cplusplus
 }
 #endif
