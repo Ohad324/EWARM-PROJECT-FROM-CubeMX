@@ -457,7 +457,13 @@ Error_Handler();
   xTaskCreate(CommandHandler_TaskEntry, "VoiceCMDhandler", 1536u, NULL,
               osPriorityBelowNormal, NULL);
   ITM_STAGE(ITM_INIT_TASK_CMDHANDLER);
-  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  3072u, xVoiceQueue, 32u, &voiceRecTaskHandle);
+  /* 2026-05-17: bumped 3072 -> 4096 words after HardFault. Previous run
+   * showed HWM=3025/3072 (98.5%), only 47 words of margin. Added EI
+   * idle-hook activity (vApplicationIdleHook -> WakeWordTest_OnIdle ->
+   * run_classifier) plus the WakeWordTest_Trigger() call from this task
+   * pushed transient stack use over the edge. 4096 words = 16 KB gives
+   * a comfortable ~26% margin (projected HWM 3025/4096 = 73.8%). */
+  xTaskCreate(VoiceRecTask,  "VoiceRecTask",  4096u, xVoiceQueue, 32u, &voiceRecTaskHandle);
   ITM_STAGE(ITM_INIT_TASK_VOICEREC);
   xTaskCreate(SDWriteTask,   "SDWriteTask",   2048u, xVoiceQueue, 20u, NULL);
   ITM_STAGE(ITM_INIT_TASK_SDWRITE);

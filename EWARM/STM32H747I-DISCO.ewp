@@ -1382,7 +1382,6 @@
                     <state>EIDSP_USE_CMSIS_DSP=0</state>
                     <state>EI_CLASSIFIER_TFLITE_ENABLE_CMSIS_NN=0</state>
                     <state>EI_PORTING_IAR</state>
-                    <state>EI_PORTING_IAR=1</state>
                 </option>
                 <option>
                     <name>CCPreprocFile</name>
@@ -8415,6 +8414,9 @@
     </file>
     <file>
         <name>$PROJ_DIR$\stm32h747xx_flash_CM7.icf</name>
+    </file>
+    <file>
+        <name>$PROJ_DIR$\..\Edge Impulse\tflite-model\tflite_learn_985318_52_compiled.cpp</name>
     </file>
     <projectSettings>
         <general>

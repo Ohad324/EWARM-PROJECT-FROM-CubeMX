@@ -763,10 +763,28 @@ static void StoreDmaChunk(const int32_t *src32)
      * DTRBS=6 in hardware), bits[7:0] = channel ID.
      * >> 8 extracts the 24-bit value sign-extended to int32.
      * With DTRBS=6: max value = 125³ >> 6 = ±30,517 → fits int16_t (±32,767) safely.
-     * (DTRBS=5 gave ±61,035 which overflowed int16_t and wrapped to false DC=4501.) */
+     * (DTRBS=5 gave ±61,035 which overflowed int16_t and wrapped to false DC=4501.)
+     *
+     * ───────────────────────────────────────────────────────────────────────
+     * 2026-05-17: Added EI_PCM_GAIN multiplier (default 8×). The on-board
+     * MEMS mic + current DFSDM config produces very low-amplitude PCM —
+     * observed peak ≈ 116 vs the ≥2000 needed for STT / wake-word recog.
+     * The 8× gain (with saturation to int16_t range) lifts speech into the
+     * recognition window without clipping normal voice. To tune:
+     *   IAR → Project → Options → C/C++ Compiler → Preprocessor → Defined
+     *   symbols → add EI_PCM_GAIN=N (e.g. 4, 16, 32). The #ifndef below
+     *   only sets the default when no project-level value is provided.
+     * Watch the post-recording report's `clip=` counter — if it grows,
+     * lower the gain. */
+#ifndef EI_PCM_GAIN
+#define EI_PCM_GAIN  8
+#endif
     for (uint32_t i = 0u; i < toCopy; i++)
     {
-        g_AudioBuf[g_SampleCount + i] = (int16_t)(src32[i] >> 8);
+        int32_t scaled = ((int32_t)(src32[i] >> 8)) * (int32_t)EI_PCM_GAIN;
+        if (scaled >  32767) scaled =  32767;
+        if (scaled < -32768) scaled = -32768;
+        g_AudioBuf[g_SampleCount + i] = (int16_t)scaled;
     }
     g_SampleCount += toCopy;
 }

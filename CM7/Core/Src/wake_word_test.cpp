@@ -20,6 +20,7 @@
 
 #include "wake_word_test.h"
 #include "log_mutex.h"
+#include "pfb_itm.h"   /* ITM_EVENT32 — bare-metal SWO trace for ei_malloc sizing */
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -104,18 +105,38 @@ extern "C" void WakeWordTest_Trigger(const int16_t *samples, size_t count)
  * Sizing: 40 KB is overkill for our compact keyword model. Resize down
  * (or up) once we observe peak high-water mark via s_ei_pool_high.
  */
-#define EI_POOL_SIZE  (96u * 1024u)   /* 96 KB pool in D2 SRAM1. After EON+int8
-                                         export, observed s_ei_pool_used = 62,976
-                                         on-device (cut from 110 KB pre-EON — 43%
-                                         reduction). 96 KB gives ~33 KB margin over
-                                         the observed peak. 96 + 2.2 KB tensor_arena
-                                         = 98.2 KB → fits in 128 KB SRAM1 with
-                                         ~30 KB region safety margin too. */
+#define EI_POOL_SIZE  (128u * 1024u)  /* Full 128 KB SRAM1 region.
+                                         2026-05-17: grown 96 → 128 KB.
+                                         New EON-tuned MFCC model (_51 + _52)
+                                         from Studio EON Tuner still hit
+                                         -1002 EIDSP_OUT_OF_MEM at 96 KB.
+                                         tensor_arena was moved to AXI SRAM
+                                         (0x24048280, 2.7 KB) so SRAM1 is
+                                         exclusively for s_ei_pool — no
+                                         collision with anything in the
+                                         region. Read s_ei_pool_used /
+                                         s_ei_pool_high via IAR Live Watch
+                                         after first successful inference to
+                                         see actual peak vs 131,072 ceiling.
+                                         History: 96 KB worked for old _3
+                                         MFCC model (62,976 peak), too small
+                                         for new _51/_52 EON-tuned MFCC. */
 #pragma data_alignment = 32
 #pragma location = ".sram1"
 __no_init static uint8_t s_ei_pool[EI_POOL_SIZE];
 static volatile size_t   s_ei_pool_used = 0u;
 static volatile size_t   s_ei_pool_high = 0u;   /* peak high-water mark for tuning */
+
+/* ── ITM allocation tracing ───────────────────────────────────────────────
+ * Set to 0 to silence the per-allocation ITM stream once pool sizing is
+ * resolved (the classifier itself keeps running — this only gates tracing).
+ * Ports (view in IAR: View → SWO Trace, hex view):
+ *   port 2 ← aligned size of each successful allocation
+ *   port 3 ← s_ei_pool_used running total after each allocation
+ *   port 4 ← the aligned size that overflowed the pool (ei_malloc → nullptr)
+ * NOTE: enable ports 2/3/4 in IAR SWO Trace → Stimulus ports, else the
+ * ITM_EVENT32 macro silently no-ops (it checks TER before writing). */
+#define WAKE_EI_ITM_TRACE  1
 
 /* Reset the pool — call once before each run_classifier(). */
 static void ei_pool_reset(void)
@@ -129,16 +150,67 @@ static void ei_pool_reset(void)
 /* Override the weak defaults in porting/iar/ei_classifier_porting.cpp.
  * NOTE: NO `extern "C"` — the header (ei_classifier_porting.h:197/231/258)
  * declares these with C++ linkage unless EI_C_LINKAGE == 1 is set. Our
- * definitions must match the header's linkage exactly. */
+ * definitions must match the header's linkage exactly.
+ *
+ * ──────────────────────────────────────────────────────────────────────────
+ * 2026-05-17: UPGRADED FROM PURE BUMP → STACK ALLOCATOR (LIFO bump-back).
+ * ──────────────────────────────────────────────────────────────────────────
+ * Why: the previous no-op ei_free caused s_ei_pool_used to accumulate every
+ * scratch buffer EI's MFCC code allocated during a single classify pass,
+ * even though EI's code follows the standard pattern:
+ *     scratch1 = ei_malloc(N); use; ei_free(scratch1);
+ *     scratch2 = ei_malloc(M); use; ei_free(scratch2);
+ * With a no-op free, we observed s_ei_pool_used = 130,944 B (overflowed
+ * 128 KB) when Studio claimed only 4.7 KB peak live memory was needed.
+ * That ~28× discrepancy was OUR bug, not Studio's estimate.
+ *
+ * Fix: each allocation gets a 32-byte header that records its aligned size.
+ * In ei_free, if the freed block ends exactly at the current bump pointer
+ * (i.e. it was the most-recently-allocated chunk), rewind the bump pointer
+ * to reclaim its space. If freed out of order (rare), the chunk leaks until
+ * the next ei_pool_reset() — bounded by pool size, never crashes.
+ *
+ * Still Hard Rule #1 compliant — no real malloc/free, just smarter slicing
+ * of the same static s_ei_pool[].
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/* 32-byte header per allocation. Layout in pool:
+ *   [4B aligned-size][28B pad to keep user ptr 32-aligned][N bytes user data]
+ * Header lives at user_ptr - 32. */
+#define EI_HDR_BYTES  32u
+
 __attribute__((used)) void *ei_malloc(size_t size)
 {
-    size_t aligned = (size + 31u) & ~31u;   /* 32-byte alignment for cache safety */
-    if (s_ei_pool_used + aligned > EI_POOL_SIZE) {
+    size_t aligned = (size + 31u) & ~31u;       /* 32-byte alignment for cache/CMSIS */
+    size_t total   = aligned + EI_HDR_BYTES;    /* user data + header */
+
+    if (s_ei_pool_used + total > EI_POOL_SIZE) {
+#if WAKE_EI_ITM_TRACE
+        /* port 4: the allocation that overflowed the pool — the "killer". */
+        ITM_EVENT32(4, (uint32_t)aligned);
+#endif
         return nullptr;
     }
-    void *p = &s_ei_pool[s_ei_pool_used];
-    s_ei_pool_used += aligned;
-    return p;
+
+    /* Write the header (size) at the start of the new block, then return
+     * the address EI_HDR_BYTES bytes past it. */
+    uint8_t  *header = &s_ei_pool[s_ei_pool_used];
+    *(uint32_t *)header = (uint32_t)aligned;
+    uint8_t  *p      = header + EI_HDR_BYTES;
+    s_ei_pool_used  += total;
+
+    /* Track real-time peak (was only updated at ei_pool_reset() before —
+     * which meant peak never registered if classifier failed mid-pass). */
+    if (s_ei_pool_used > s_ei_pool_high) {
+        s_ei_pool_high = s_ei_pool_used;
+    }
+
+#if WAKE_EI_ITM_TRACE
+    /* port 2: this allocation's aligned size; port 3: running pool total. */
+    ITM_EVENT32(2, (uint32_t)aligned);
+    ITM_EVENT32(3, (uint32_t)s_ei_pool_used);
+#endif
+    return (void *)p;
 }
 
 __attribute__((used)) void *ei_calloc(size_t nitems, size_t size)
@@ -153,9 +225,29 @@ __attribute__((used)) void *ei_calloc(size_t nitems, size_t size)
 
 __attribute__((used)) void ei_free(void *ptr)
 {
-    /* Bump allocator — free is intentionally a no-op. The pool is reset
-     * en masse at the start of each inference via ei_pool_reset(). */
-    (void)ptr;
+    /* LIFO bump-back. If ptr is the most-recently-allocated chunk, rewind
+     * s_ei_pool_used to reclaim its space. Otherwise leak it (bounded by
+     * pool — reclaimed at next ei_pool_reset()). */
+    if (ptr == nullptr) return;
+
+    uint8_t *user = (uint8_t *)ptr;
+
+    /* Sanity: ptr must be inside our pool, past room for a header. */
+    if (user < &s_ei_pool[EI_HDR_BYTES] ||
+        user >= &s_ei_pool[EI_POOL_SIZE]) {
+        return;  /* foreign pointer — ignore */
+    }
+
+    uint8_t  *header  = user - EI_HDR_BYTES;
+    uint32_t  aligned = *(uint32_t *)header;
+    size_t    total   = (size_t)aligned + EI_HDR_BYTES;
+
+    /* If this block ends exactly at the current bump pointer, it was the
+     * most recent allocation → rewind. Otherwise an interleaving free —
+     * leak it for now. */
+    if (header + total == &s_ei_pool[s_ei_pool_used]) {
+        s_ei_pool_used -= total;
+    }
 }
 
 /* Called from vApplicationIdleHook (freertos.c). Must not block. Runs the

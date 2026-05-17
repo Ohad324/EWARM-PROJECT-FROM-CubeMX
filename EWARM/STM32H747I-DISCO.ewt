@@ -9813,4 +9813,7 @@
     <file>
         <name>$PROJ_DIR$\stm32h747xx_flash_CM7.icf</name>
     </file>
+    <file>
+        <name>$PROJ_DIR$\..\Edge Impulse\tflite-model\tflite_learn_985318_52_compiled.cpp</name>
+    </file>
 </project>

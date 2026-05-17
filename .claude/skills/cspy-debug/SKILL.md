@@ -124,6 +124,39 @@ Use `boot_pipeline_lcd.bat` (or `verify_pfb.bat` for the PFB-specific 15 checkpo
 ### Single-shot snapshot at one symbol
 `boot_pipeline_cspy.bat` — fastest path for one BP.
 
+## Heap / dynamic-allocation diagnostics — "the silent killer"
+
+> **IRON RULE (Ohad, 2026-05-17):** Every `malloc` MUST be paired with a `free` on every code path that returns. **Unmatched malloc = CPU corruption.** No exceptions, no "I'll free it later", no leaving it to scope exit. If you can't guarantee the matching free on every path (early returns, error branches, exception paths), DO NOT use malloc — use a static buffer instead.
+
+In embedded (especially this STM32H7 project running for hours/days without reset), `malloc` without matching `free` is the worst class of bug. Hard Rule #1 in CLAUDE.md bans it project-wide, but vendored code (Edge Impulse SDK, TouchGFX framework, ST HAL) sometimes ships with `malloc/free` patterns we have to intercept. Reference this section the moment you see `*alloc` anywhere in the call graph.
+
+### Three failure modes to recognize on sight
+
+1. **Out-of-memory crash (the obvious one).** Each unmatched `malloc` locks another chunk of the heap. With no OS to clean up (firmware never exits), the heap fills monotonically. Next `malloc` returns `NULL`. If the caller doesn't check (and most embedded code doesn't), the next dereference is a NULL write → **HardFault**. On Cortex-M7 the fault handler sees `SP=0x1`, `BFAR=0x0`, and the original PC is sometimes lost in a stack-corruption double-fault.
+
+2. **Heap fragmentation (the sneaky one).** Even with freed space, the heap looks like Swiss cheese — many small free regions, none large enough for a single contiguous big request. **You can have 50 KB free in total but `ei_malloc(10*1024)` still returns NULL** because no single hole is ≥ 10 KB. This is what bit us on 2026-05-17 with the EI MFCC pool: the LIFO `ei_free` reclaimed most chunks but out-of-order frees left holes; total used was only 17 KB but the killer alloc still failed for a few iterations until we added headers + LIFO bump-back.
+
+3. **The "works in lab, dies at customer" pattern.** Heap leaks compound at fractions of a KB per inference cycle. Lab tests run for minutes — heap fills minimally, system passes. Customer leaves it running for 8 hours — heap fills, system crashes Thursday afternoon. **There will be no compile-time warning, no log line at boot, no easy reproduction.** This is why CLAUDE.md Hard Rule #1 is absolute.
+
+### Diagnostic recipe when you SUSPECT a heap leak
+
+1. **Static counter on every allocator path.** Add a `volatile uint32_t s_<pool>_used` that increments on alloc and decrements on free. Read via IAR Live Watch — if it monotonically grows across inferences/frames/iterations, you have a leak. (We do this for `s_ei_pool_used` in [CM7/Core/Src/wake_word_test.cpp](CM7/Core/Src/wake_word_test.cpp).)
+2. **ITM stream per allocation event.** Use `ITM_EVENT32(<port>, <size>)` on alloc, free, and overflow paths. View in IAR SWO Trace stimulus ports. Gives you a cycle-accurate event log of every heap touch.
+3. **BP at the overflow branch.** The instant the allocator returns NULL, you want to halt and inspect: current pool usage, requested size, call stack. Place the BP at the actual `return nullptr` line (or an ITM_EVENT32 marker on that branch — compiler can fold bare `return` into shared epilogue and break our BP).
+4. **Per-allocation header for forensics.** Add a small (4–8 byte) header before each user pointer that records the aligned size. Lets `ei_free` do LIFO bump-back AND lets you walk the pool offline to enumerate live allocations.
+
+### Three prevention rules (project-wide)
+
+1. **Every `malloc` MUST have a matching `free` on the same logical path** — including all early-return / error-handling branches. Use `goto cleanup;` patterns rather than scattered returns.
+2. **Prefer static allocation.** A `static uint8_t buf[N]` in `.bss` is heap-independent, address-stable across builds, and visible in the `.map` for sizing audits. CLAUDE.md Hard Rule #1 makes this mandatory project-wide.
+3. **Use SEGGER SystemView's Heap Monitor** when a leak proves hard to find by code review. It shows graphically which function allocated and never freed. (SystemView is downloaded under [EWARM/SystemView/](EWARM/SystemView/) but not currently wired into the firmware — would need to be integrated if we go this route.)
+
+### Project-specific landmines
+
+- **`xQueueCreate` / `xSemaphoreCreate*` / `xTaskCreate` are heap-backed** even though they look like one-time init calls. Hard Rule #1 mandates the `*Static` variants. The 2026-05-11 silent UART failure documented in CLAUDE.md was caused by `xQueueCreate` putting `xRawBleQueue` at an address that moved when the heap moved.
+- **Edge Impulse SDK uses `ei_malloc`/`ei_free` extensively in MFCC.** We override both with a static-pool bump allocator in [wake_word_test.cpp](CM7/Core/Src/wake_word_test.cpp). The override has its own pitfalls (LIFO-only reclaim, 32-byte header overhead per allocation) — see the comment block there for the full story.
+- **TouchGFX `OSWrappers::xMessageQueueNew(NULL)` falls back to dynamic** when `NULL` attributes are passed. Always pass a `osMessageQueueAttr_t` with static `cb_mem` and `mq_mem`. The 2026-05-07 deadlock at first VSync was this exact bug.
+
 ## Anti-patterns to refuse
 
 - Multi-`.mac`-file sprawl when user wants sequential probes — use one templated file overwritten per iteration

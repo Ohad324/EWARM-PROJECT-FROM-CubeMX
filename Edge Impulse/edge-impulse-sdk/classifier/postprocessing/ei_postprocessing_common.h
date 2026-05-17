@@ -53,7 +53,7 @@
 int16_t get_block_number(ei_impulse_handle_t *handle, void *init_func)
 {
     for (size_t i = 0; i < handle->impulse->postprocessing_blocks_size; i++) {
-        if ((void*)handle->impulse->postprocessing_blocks[i].init_fn == init_func) {
+        if ((uintptr_t)handle->impulse->postprocessing_blocks[i].init_fn == (uintptr_t)init_func) {
             return i;
         }
     }
