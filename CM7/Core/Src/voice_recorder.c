@@ -205,6 +205,33 @@ static __no_init int32_t s_DfsdmBuf[AUDIO_SAMPLES];
 #pragma location = 0x30020000
 __no_init int16_t g_AudioBuf[AUDIO_BUFFER_SAMPLES] __attribute__((aligned(32)));
 
+/* ── Phase 2a (2026-05-17 night): Rolling wake-word window ──────────────────
+ * 16000 int16_t samples = 1 second of PCM at 16 kHz = 32 KB.
+ * Lives in D2 SRAM1 at 0x30016000 (just past the 88 KB s_ei_pool which
+ * occupies 0x30000000–0x30015FFF, with 8 KB free padding before this).
+ * Both producer (VoiceRecTask drainer) and consumer (idle-hook classifier)
+ * are CPU code, but per CLAUDE.md Hard Rule #3 + the blog's placement table
+ * we keep ALL DFSDM-side buffers in SRAM1 for consistency with the
+ * MPU Non-Cacheable+Shareable region that proved necessary to avoid the
+ * SRAM2 cache-coherency trap (commit 8f94bdc).
+ *
+ * Layout in SRAM1 (post Phase 2a):
+ *   0x30000000–0x30015FFF (88 KB)  s_ei_pool          (Edge Impulse MFCC)
+ *   0x30016000–0x3001DFFF (32 KB)  s_wakeWindow       (this buffer)
+ *   0x3001E000–0x3001E1FF (512 B)  s_DfsdmBuf         (DFSDM DMA ring)
+ *   0x3001E200–0x3001FFFF (7.5 KB) FREE
+ *
+ * Currently DECLARED but NOT YET POPULATED by any drain logic. Phase 2b
+ * will refactor VoiceRecTask to continuously drain s_dmaQueue into this
+ * window (in addition to g_AudioBuf when a button-recording is active).
+ * Phase 3 will have the idle-hook classifier read from this window via
+ * WakeWord_GetWindow() every ~500 ms. */
+#define WAKEWORD_WINDOW_SAMPLES  16000u
+#pragma data_alignment = 32
+#pragma location = 0x30016000
+__no_init static int16_t s_wakeWindow[WAKEWORD_WINDOW_SAMPLES];
+static volatile uint32_t s_wakeWindowHead = 0u;  /* next-write index, 0..16000-1 */
+
 /* No staging buffer needed — DFSDM hardware does PDM→PCM decimation. */
 
 /* ── Audio health monitor ────────────────────────────────────────────────── */
@@ -1106,4 +1133,54 @@ static void AudioQuality_Report(void)
         (unsigned long)g_AudioHealth.sd_write_max_ms,
         (unsigned long)s_dmaQueueOverflow);
     QRPT("--------------------------------------");
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ *  Phase 2a (2026-05-17): WakeWord_GetWindow — public accessor for the
+ *  rolling 1-second wake-word window.
+ *
+ *  Copies the most-recent N samples from s_wakeWindow into the caller's
+ *  buffer, in chronological order (oldest to newest). Handles the circular
+ *  wrap internally so the caller sees a flat linear array.
+ *
+ *  Phase 3's idle-hook classifier will call this every ~500 ms with
+ *  N = EI_CLASSIFIER_RAW_SAMPLE_COUNT (16000) to get the latest 1 sec.
+ *
+ *  Safe to call from any task / context — single 32-bit head snapshot at
+ *  entry, then memcpy. Worst-case race: 1-2 samples may be overwritten
+ *  during the copy by a concurrent DMA-half write (4 ms cadence). For
+ *  wake-word inference on 16000 samples, this is below noise.
+ *
+ *  Returns number of samples actually copied (always == n_samples unless
+ *  n_samples > WAKEWORD_WINDOW_SAMPLES, in which case it's clamped).
+ *
+ *  Phase 2a state: this function works but always returns zeros because
+ *  no producer is writing to s_wakeWindow yet (Phase 2b will add the
+ *  continuous drainer). Wired now so Phase 3 only needs to change the
+ *  call site, not add new infrastructure.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+size_t WakeWord_GetWindow(int16_t *out, size_t n_samples)
+{
+    if (out == NULL || n_samples == 0u) return 0u;
+    if (n_samples > WAKEWORD_WINDOW_SAMPLES) n_samples = WAKEWORD_WINDOW_SAMPLES;
+
+    /* Snapshot the head pointer atomically (single 32-bit volatile read). */
+    uint32_t head = s_wakeWindowHead;
+
+    /* Compute the start index = head - n_samples (wrapped). */
+    uint32_t start = (head + WAKEWORD_WINDOW_SAMPLES - (uint32_t)n_samples)
+                     % WAKEWORD_WINDOW_SAMPLES;
+
+    /* Two-part copy if the requested range wraps around the buffer end. */
+    if (start + n_samples <= WAKEWORD_WINDOW_SAMPLES) {
+        /* No wrap — single contiguous memcpy. */
+        memcpy(out, &s_wakeWindow[start], n_samples * sizeof(int16_t));
+    } else {
+        /* Wraps — copy tail then head. */
+        uint32_t tail_len = WAKEWORD_WINDOW_SAMPLES - start;
+        uint32_t head_len = (uint32_t)n_samples - tail_len;
+        memcpy(out,             &s_wakeWindow[start], tail_len * sizeof(int16_t));
+        memcpy(out + tail_len,  &s_wakeWindow[0],     head_len * sizeof(int16_t));
+    }
+    return n_samples;
 }

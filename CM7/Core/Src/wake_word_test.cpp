@@ -105,10 +105,20 @@ extern "C" void WakeWordTest_Trigger(const int16_t *samples, size_t count)
  * Sizing: 40 KB is overkill for our compact keyword model. Resize down
  * (or up) once we observe peak high-water mark via s_ei_pool_high.
  */
-#define EI_POOL_SIZE  (120u * 1024u)  /* 120 KB of SRAM1 (was 128 KB).
-                                         2026-05-17 evening: shrunk to free
-                                         8 KB at the TOP of SRAM1 so we can
-                                         move s_DfsdmBuf back to D2 SRAM1
+#define EI_POOL_SIZE  (88u * 1024u)   /* 88 KB of SRAM1.
+                                         2026-05-17 night (Phase 2a continuous
+                                         wake-word arch): shrunk from 120 KB
+                                         to 88 KB to free 32 KB at the top of
+                                         SRAM1 for s_wakeWindow[16000] int16_t
+                                         (1 second of PCM at 16 kHz) declared
+                                         in voice_recorder.c at 0x30016000.
+                                         Pool peak observed with LIFO ei_free:
+                                         17 KB. 88 KB still gives 5× margin.
+                                         Previous comment (preserved for full
+                                         context): 2026-05-17 evening shrunk
+                                         128 KB -> 120 KB to free 8 KB at the
+                                         TOP of SRAM1 so we could move
+                                         s_DfsdmBuf back to D2 SRAM1
                                          (it was relocated to SRAM2 during EI
                                          integration; suspected to be the
                                          audio-amplitude regression because

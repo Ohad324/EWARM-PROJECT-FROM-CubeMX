@@ -15,6 +15,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stddef.h>     /* size_t for WakeWord_GetWindow() */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -66,6 +67,15 @@ void SDWriteTask(void *arg);    /* arg = QueueHandle_t xVoiceQueue */
 
 /* IRQ trampoline — called from DMA1_Stream1_IRQHandler in stm32h7xx_it.c */
 void VoiceRec_DMA_IRQHandler(void);
+
+/* Phase 2a (2026-05-17): rolling wake-word window accessor.
+ * Copies the most-recent n_samples from the continuous DFSDM PCM stream
+ * into `out`, in chronological order (oldest to newest). Handles circular
+ * wrap internally. Returns number of samples actually copied (clamped to
+ * the underlying buffer size, 16000). Safe to call from any context.
+ * Phase 3's idle-hook classifier will use this to fetch the latest 1 sec
+ * of audio every ~500 ms. */
+size_t WakeWord_GetWindow(int16_t *out, size_t n_samples);
 
 /* ── Audio health monitor ────────────────────────────────────────────────── */
 typedef struct {
