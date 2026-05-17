@@ -227,6 +227,16 @@ typedef struct {
 static QueueHandle_t s_dmaQueue = NULL;
 static volatile uint32_t s_dmaQueueOverflow = 0u;  /* ISR drop counter (for g_AudioHealth) */
 
+/* 2026-05-17: Phase 1 of continuous wake-word architecture.
+ * Once the audio pipeline (SAI4 BDMA + DFSDM DMA) is started at boot inside
+ * VoiceRecTask, it must run forever to feed the always-on wake-word listener
+ * in the idle hook. This flag makes Start_Recording_Pipeline() idempotent so
+ * subsequent button-triggered calls inside the task loop become no-ops, AND
+ * the Stop_DMA calls at the end of each recording are removed so the DMA
+ * never gates off. Button-recording semantics are unchanged (still drains
+ * 48000 samples / 3 s into g_AudioBuf and signals SDWriteTask). */
+static volatile bool s_pipelineStarted = false;
+
 /* ── Audio Quality Report — static accumulators ──────────────────────────── */
 static uint32_t s_latency_max_us = 0u;  /* worst-case ISR→task latency in µs */
 static uint32_t s_desync_count   = 0u;  /* DMA halves where latency > 1 ms   */
@@ -370,6 +380,19 @@ void VoiceRecTask(void *arg)
     (void)q;   /* SDWriteTask handoff disabled during DFSDM debug — suppress unused warning */
     uint32_t notif;
 
+    /* 2026-05-17 Phase 1 of continuous wake-word architecture:
+     * Start the audio pipeline ONCE here, before entering the wait loop.
+     * After this call, SAI4 BDMA + DFSDM circular DMA run forever. The DMA
+     * ISR keeps posting half/full chunks to s_dmaQueue every ~4 ms even when
+     * we're not actively recording — the queue fills to its 32-entry capacity
+     * (~128 ms of audio history) and then ISR-side drops are counted in
+     * s_dmaQueueOverflow until the next recording drains it. This always-on
+     * audio is the foundation for Phase 3's continuous wake-word classifier
+     * (which will read a rolling window of the most recent samples in the
+     * idle hook). Button-triggered recordings inside the loop are unchanged
+     * in behavior — they just no longer toggle the DMA on/off. */
+    Start_Recording_Pipeline();
+
     for (;;)
     {
         /* Block until button ISR (Phase 1) or WakeWordTask (Phase 2) notifies */
@@ -430,6 +453,16 @@ void VoiceRecTask(void *arg)
         STAGE("DFSDM4 PASS");
         TickType_t ledToggle = xTaskGetTickCount() + pdMS_TO_TICKS(500u);
 
+        /* Phase 1: DMA is always-on, so s_dmaQueue may hold up to ~128 ms of
+         * pre-trigger audio history. Flush it so this recording starts from
+         * a fresh, known sample (the next DMA half-complete after this point).
+         * Without this flush the first ~128 ms of g_AudioBuf would be audio
+         * from just BEFORE the button press / wake-word detection. */
+        {
+            DmaEntry_t stale = { NULL };
+            while (xQueueReceive(s_dmaQueue, &stale, 0) == pdTRUE) {}
+        }
+
         while (g_SampleCount < AUDIO_BUFFER_SAMPLES)
         {
             /* if (xTaskGetTickCount() >= ledToggle)
@@ -447,16 +480,19 @@ void VoiceRecTask(void *arg)
             }
         }
 
-        /* Stop order: DFSDM pump first, then SAI4 BDMA kick */
-        HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);
-        HAL_SAI_DMAStop(&hsai_BlockA4);   /* stops BDMA → PE2 goes idle */
+        /* 2026-05-17 Phase 1: DO NOT stop DMA between recordings.
+         * The audio pipeline must run forever to feed the always-on wake-word
+         * classifier in the idle hook (Phase 3, upcoming). Stopping here
+         * would gate off PE2 mic clock and the wake-word listener would
+         * see nothing until the next button press.
+         *
+         * Pre-Phase-1 code (commented for history):
+         *   HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter0);
+         *   HAL_SAI_DMAStop(&hsai_BlockA4);
+         *
+         * The post-stop queue-flush is also removed — we now flush at the
+         * START of each recording (above) instead of at the end. */
         STAGE("DFSDM5 PASS");
-
-        /* Drain any stale queue entries from callbacks that fired after stop */
-        {
-            DmaEntry_t discard = { NULL };
-            while (xQueueReceive(s_dmaQueue, &discard, 0) == pdTRUE) {}
-        }
 
         /* Safety: if DMA gave no samples, reset and retry */
         if (g_SampleCount == 0u)
@@ -830,6 +866,13 @@ static void BuildWavHdr(WavHdr_t *h, uint32_t nSamples)
  * ╚══════════════════════════════════════════════════════════════════════════╝ */
 static void Start_Recording_Pipeline(void)
 {
+    /* 2026-05-17 Phase 1: idempotent — already started? skip everything.
+     * VoiceRecTask calls this once at boot to enable continuous audio for
+     * wake-word listening; subsequent button-triggered calls inside the
+     * task's drain loop hit this guard and return without re-starting the
+     * SAI4/DFSDM hardware (which HAL would reject as "already busy"). */
+    if (s_pipelineStarted) return;
+
     /* [Step 6] Start BDMA — drains SAI4 RX FIFO so PE2 clock stays alive.
      * BDMA is the ONLY DMA that can reach D3 SAI4. Without it, SAIEN=1
      * alone fills the FIFO in microseconds and hardware kills PE2. */
@@ -844,6 +887,10 @@ static void Start_Recording_Pipeline(void)
     HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter0,
                                      (int32_t *)s_DfsdmBuf,
                                      AUDIO_SAMPLES);    /* 128 samples — DFSDM HAL takes SAMPLES */
+
+    /* Phase 1: latch the idempotency flag so future calls become no-ops. */
+    s_pipelineStarted = true;
+    __DSB();
 }
 
 static void Button_GPIO_Init(void)
