@@ -180,14 +180,20 @@ DMA_HandleTypeDef hdma_sai4_a_rx;
 #pragma location = 0x38000000
 static __no_init uint16_t s_sai4KickBuf[8] __attribute__((aligned(32)));
 
-/* ── [Step 7] DFSDM DMA buffer — D2 SRAM2, accessible by DMA1 ─────────────── */
-/* Moved from D2 SRAM1 @ 0x30004000 to D2 SRAM2 @ 0x3003B800 (just past
- * s_idleStack, which ends at 0x3003B7FF) to free the entire 128 KB SRAM1
- * region for s_ei_pool (Edge Impulse MFCC). DMA1 can reach both D2 SRAMs;
- * MPU attributes are identical (Non-Cacheable+Shareable), so cache
- * coherency is unchanged. */
+/* ── [Step 7] DFSDM DMA buffer — D2 SRAM1, accessible by DMA1 ─────────────── */
+/* 2026-05-17 evening: MOVED BACK to D2 SRAM1 (top of region @ 0x3001E000).
+ * History: was at 0x30004000 in SRAM1 at commit a303dac (song recognition
+ * worked). Moved to SRAM2 @ 0x3003B800 during EI integration to free SRAM1
+ * for the 128 KB s_ei_pool. After the move, PCM amplitude collapsed to
+ * peak≈100-600 with speech_rms == noise_rms (SNR ~0 dB) — the mic appears
+ * dead but actually it's a DMA coherency / MPU / SRAM2-clock issue:
+ *   - DMA writes happen but CPU reads stale data, OR
+ *   - SRAM2 has different cacheable attributes than SRAM1 in MPU_Config, OR
+ *   - SRAM2 D2 clock gate (__HAL_RCC_D2SRAM2_CLK_ENABLE()) was never set
+ *     (SRAM1 needed this per project_sram1_clock_gate memory; SRAM2 may too).
+ * Pool shrunk 128 → 120 KB to free top 8 KB of SRAM1 for this buffer. */
 #pragma data_alignment = 32
-#pragma location = 0x3003B800
+#pragma location = 0x3001E000
 static __no_init int32_t s_DfsdmBuf[AUDIO_SAMPLES];
 
 /* Audio accumulation buffer — 3 s × 16000 Hz × 2 bytes = 96 KB in AXI SRAM.

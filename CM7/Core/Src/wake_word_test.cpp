@@ -105,8 +105,18 @@ extern "C" void WakeWordTest_Trigger(const int16_t *samples, size_t count)
  * Sizing: 40 KB is overkill for our compact keyword model. Resize down
  * (or up) once we observe peak high-water mark via s_ei_pool_high.
  */
-#define EI_POOL_SIZE  (128u * 1024u)  /* Full 128 KB SRAM1 region.
-                                         2026-05-17: grown 96 → 128 KB.
+#define EI_POOL_SIZE  (120u * 1024u)  /* 120 KB of SRAM1 (was 128 KB).
+                                         2026-05-17 evening: shrunk to free
+                                         8 KB at the TOP of SRAM1 so we can
+                                         move s_DfsdmBuf back to D2 SRAM1
+                                         (it was relocated to SRAM2 during EI
+                                         integration; suspected to be the
+                                         audio-amplitude regression because
+                                         SRAM2's MPU/clock config may differ
+                                         from SRAM1 in a way DMA can't tolerate).
+                                         Peak observed with LIFO ei_free: 17 KB.
+                                         120 KB still gives 7× margin.
+                                         Previously: grown 96 → 128 KB.
                                          New EON-tuned MFCC model (_51 + _52)
                                          from Studio EON Tuner still hit
                                          -1002 EIDSP_OUT_OF_MEM at 96 KB.
