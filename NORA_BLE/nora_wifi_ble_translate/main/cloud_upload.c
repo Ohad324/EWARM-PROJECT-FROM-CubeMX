@@ -187,11 +187,10 @@ bool CloudUpload_UploadWav(const char *filename, const uint8_t *data, size_t len
  * Request body (JSON):
  * {
  *   "config": {
- *     "encoding":                 "LINEAR16",
- *     "sampleRateHertz":          16000,
- *     "languageCode":             "iw-IL",
- *     "alternativeLanguageCodes": ["en-US"],
- *     "model":                    "latest_short"
+ *     "encoding":        "LINEAR16",
+ *     "sampleRateHertz": 31250,
+ *     "languageCode":    "en-US",
+ *     "model":           "command_and_search"
  *   },
  *   "audio": {
  *     "uri": "gs://<bucket>/<filename>"
@@ -219,9 +218,8 @@ bool CloudUpload_Transcribe(const char *filename,
             "\"config\":{"
                 "\"encoding\":\"LINEAR16\","
                 "\"sampleRateHertz\":%u,"
-                "\"languageCode\":\"iw-IL\","
-                "\"alternativeLanguageCodes\":[\"en-US\"],"
-                "\"model\":\"latest_short\""
+                "\"languageCode\":\"en-US\","
+                "\"model\":\"command_and_search\""
             "},"
             "\"audio\":{"
                 "\"uri\":\"%s\""
