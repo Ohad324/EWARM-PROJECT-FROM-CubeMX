@@ -14,6 +14,7 @@
 #include "music_task.h"
 #include "nora_ble_bridge.h"
 #include "pc_discovery.h"
+#include "ntfy_client.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -345,67 +346,30 @@ static void post_to_pc_player(const char *video_id, const char *title, const cha
  * ─────────────────────────────────────────────────────────────────────── */
 static bool search_via_pc(const char *query)
 {
-    char body[256];
-    int  blen = snprintf(body, sizeof(body), "{\"query\":\"%s\"}", query);
-
-    char url[64];
-    pc_player_url(url, sizeof(url));
-    esp_http_client_config_t cfg = {
-        .url        = url,
-        .timeout_ms = 15000,   /* PC scrapes YouTube — allow up to 15 s */
-    };
-    esp_http_client_handle_t client = esp_http_client_init(&cfg);
-    if (!client) { ESP_LOGE(MUSIC_TAG, "search_via_pc: init failed"); return false; }
-
-    esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Content-Type", "application/json");
-
-    esp_err_t err = esp_http_client_open(client, blen);
-    if (err != ESP_OK) {
-        ESP_LOGE(MUSIC_TAG, "search_via_pc: open failed: %s", esp_err_to_name(err));
-        esp_http_client_cleanup(client);
+    /* Replaced 2026-05-23: was LAN HTTP POST to pc_player_url().  iPhone
+     * hotspot client-isolation blocks LAN traffic between hotspot clients
+     * (BUG-004), so we now relay through ntfy.sh — both NORA and the PC
+     * bridge make outgoing connections only, which the iPhone permits.
+     *
+     * Requires bridge.py to be running on the PC.  See
+     * C:\Tools\ntfy-music-bridge\README.md. */
+    if (!ntfy_search(query, s_video_id_buf, sizeof(s_video_id_buf), 15000))
+    {
+        ESP_LOGW(MUSIC_TAG, "search_via_ntfy: no result for \"%s\"", query);
         return false;
     }
 
-    esp_http_client_write(client, body, blen);
-    esp_http_client_fetch_headers(client);
-    int status = esp_http_client_get_status_code(client);
+    /* Thumbnail direct from YouTube CDN — no API key needed */
+    snprintf(s_url_buf, sizeof(s_url_buf),
+             "https://img.youtube.com/vi/%s/mqdefault.jpg", s_video_id_buf);
+    /* Use query as title since the PC scrape returns only the videoId */
+    strncpy(s_title_buf, query, sizeof(s_title_buf) - 1);
+    s_title_buf[sizeof(s_title_buf) - 1] = '\0';
+    s_channel_buf[0] = '\0';
 
-    char resp[256] = {0};
-    int  read = 0, n;
-    while ((n = esp_http_client_read(client, resp + read,
-                                     (int)sizeof(resp) - 1 - read)) > 0)
-        read += n;
-    resp[read] = '\0';
-
-    esp_http_client_close(client);
-    esp_http_client_cleanup(client);
-
-    ESP_LOGI(MUSIC_TAG, "search_via_pc: HTTP %d  body=%s", status, resp);
-
-    if (status != 200 || read <= 0) return false;
-
-    /* Parse {"status":"ok","videoId":"xxxxxxxxxxx"} */
-    cJSON *root = cJSON_Parse(resp);
-    if (!root) return false;
-
-    cJSON *jId = cJSON_GetObjectItem(root, "videoId");
-    bool ok = false;
-    if (jId && cJSON_IsString(jId) && jId->valuestring[0] != '\0') {
-        strncpy(s_video_id_buf, jId->valuestring, sizeof(s_video_id_buf) - 1);
-        /* Thumbnail direct from YouTube CDN — no API key needed */
-        snprintf(s_url_buf, sizeof(s_url_buf),
-                 "https://img.youtube.com/vi/%s/mqdefault.jpg", s_video_id_buf);
-        /* Use query as title since we have no metadata from scrape */
-        strncpy(s_title_buf,   query, sizeof(s_title_buf)   - 1);
-        s_channel_buf[0] = '\0';
-        ESP_LOGI(MUSIC_TAG, "search_via_pc: videoId=%s  thumb=%s",
-                 s_video_id_buf, s_url_buf);
-        ok = true;
-    }
-
-    cJSON_Delete(root);
-    return ok;
+    ESP_LOGI(MUSIC_TAG, "search_via_ntfy: videoId=%s  thumb=%s",
+             s_video_id_buf, s_url_buf);
+    return true;
 }
 
 /* ── Music FreeRTOS task ────────────────────────────────────────────────── */
