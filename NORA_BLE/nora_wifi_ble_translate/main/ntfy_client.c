@@ -21,7 +21,6 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 
 /* ── Configuration ──────────────────────────────────────────────────────── */
 
@@ -34,12 +33,18 @@
 #define NTFY_TOPIC_RES  "hey-noa-7f3a9b2c-res"
 #endif
 
-#define NTFY_URL_PUB     "https://ntfy.sh/" NTFY_TOPIC_REQ
-#define NTFY_URL_POLL_FMT \
-    "https://ntfy.sh/" NTFY_TOPIC_RES "/json?since=%lld&poll=1"
+#define NTFY_URL_PUB    "https://ntfy.sh/" NTFY_TOPIC_REQ
 
-#define NTFY_POLL_INTERVAL_MS  250u   /* gap between polls (PC bridge ~30 ms) */
-#define NTFY_RESP_BUF_SIZE     2048u  /* one poll response buffer */
+/* Poll URL uses ntfy.sh's `since=Ns` duration syntax — relative to the
+ * server's clock, NOT NORA's `time(NULL)`.  Required because NORA may
+ * boot before SNTP sync, in which case time(NULL) returns ~0 and the
+ * poll would pull every message ever sent on the topic. */
+#define NTFY_SINCE_WINDOW    "20s"     /* 15 s NORA timeout + 5 s margin */
+#define NTFY_URL_POLL       "https://ntfy.sh/" NTFY_TOPIC_RES \
+                            "/json?since=" NTFY_SINCE_WINDOW "&poll=1"
+
+#define NTFY_POLL_INTERVAL_MS  250u    /* gap between polls (PC bridge ~30 ms) */
+#define NTFY_RESP_BUF_SIZE     2048u   /* one poll response buffer */
 
 /* ── Module state ───────────────────────────────────────────────────────── */
 
@@ -52,6 +57,11 @@ static int  s_respLen;
 
 /* ── Internal helpers ───────────────────────────────────────────────────── */
 
+/* TODO(robustness): HTTP_EVENT_ON_CONNECTED isn't guaranteed to fire
+ * before every ON_DATA across retries/redirects.  Defensive option is
+ * to also reset s_respLen=0 just before each esp_http_client_perform()
+ * call.  Not changed today because all observed traffic is single-shot
+ * POST/GET with no redirect chain (ntfy.sh terminates HTTPS itself).  */
 static esp_err_t http_event(esp_http_client_event_t *evt)
 {
     switch (evt->event_id)
@@ -80,18 +90,27 @@ static esp_err_t http_event(esp_http_client_event_t *evt)
 }
 
 /* Publish {"id":N,"query":"..."} to the request topic.
- * Returns true on HTTP 2xx. */
+ * Returns true on HTTP 2xx.
+ *
+ * Body is built with cJSON so the query string is properly escaped —
+ * Google STT can return any UTF-8 including ", \, control chars, which
+ * would break a raw snprintf("...\"%s\"..."). */
 static bool publish_request(uint32_t req_id, const char *query)
 {
+    cJSON *root = cJSON_CreateObject();
+    if (!root) { ESP_LOGE(TAG, "publish: cJSON_CreateObject failed"); return false; }
+    cJSON_AddNumberToObject(root, "id",    (double)req_id);
+    cJSON_AddStringToObject(root, "query", query);
+
     char body[256];
-    int  blen = snprintf(body, sizeof(body),
-                         "{\"id\":%lu,\"query\":\"%s\"}",
-                         (unsigned long)req_id, query);
-    if (blen <= 0 || blen >= (int)sizeof(body))
+    if (!cJSON_PrintPreallocated(root, body, (int)sizeof(body), /*fmt=*/0))
     {
-        ESP_LOGE(TAG, "publish: body overflow");
+        ESP_LOGE(TAG, "publish: cJSON_PrintPreallocated failed (query too long?)");
+        cJSON_Delete(root);
         return false;
     }
+    cJSON_Delete(root);
+    int blen = (int)strlen(body);
 
     esp_http_client_config_t cfg = {
         .url               = NTFY_URL_PUB,
@@ -179,18 +198,17 @@ static bool scan_response_for_id(uint32_t req_id,
     return false;
 }
 
-/* One GET /res/json?since=<ts>&poll=1.  Populates s_respBuf, then scans
- * it for our req_id.  Returns true if videoId was found this poll. */
+/* One GET /res/json?since=20s&poll=1.  Populates s_respBuf, then scans
+ * it for our req_id.  Returns true if videoId was found this poll.
+ *
+ * Uses ntfy.sh's relative duration syntax (`since=20s`) so the window
+ * doesn't depend on NORA's wall clock — survives unsynced SNTP at boot. */
 static bool poll_for_response(uint32_t req_id,
-                              int64_t  since_ts,
                               char    *out_video_id,
                               size_t   max_len)
 {
-    char url[160];
-    snprintf(url, sizeof(url), NTFY_URL_POLL_FMT, (long long)since_ts);
-
     esp_http_client_config_t cfg = {
-        .url               = url,
+        .url               = NTFY_URL_POLL,
         .method            = HTTP_METHOD_GET,
         .event_handler     = http_event,
         .timeout_ms        = 3000,
@@ -226,12 +244,6 @@ bool ntfy_search(const char *query,
 
     uint32_t req_id = esp_random();
 
-    /* Use a baseline 2 s in the past so the poll sees any reply that
-     * arrives faster than the next poll cycle.  ntfy.sh accepts unix
-     * seconds for the `since=` parameter. */
-    int64_t since_ts = (int64_t)time(NULL);
-    if (since_ts > 2) { since_ts -= 2; }
-
     if (!publish_request(req_id, query)) { return false; }
 
     const TickType_t start    = xTaskGetTickCount();
@@ -240,7 +252,7 @@ bool ntfy_search(const char *query,
     while (xTaskGetTickCount() < deadline)
     {
         vTaskDelay(pdMS_TO_TICKS(NTFY_POLL_INTERVAL_MS));
-        if (poll_for_response(req_id, since_ts, out_video_id, max_len))
+        if (poll_for_response(req_id, out_video_id, max_len))
         {
             ESP_LOGI(TAG, "got response id=%lu videoId=%s",
                      (unsigned long)req_id, out_video_id);
