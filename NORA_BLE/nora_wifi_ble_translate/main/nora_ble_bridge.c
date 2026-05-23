@@ -66,7 +66,7 @@
  * Order matters only as a tiebreaker (first wins on equal RSSI). */
 typedef struct { const char *ssid; const char *pass; } known_ap_t;
 static const known_ap_t s_knownAPs[] = {
-    { "iphone",         "aj3r83520r6bz" },  /* iPhone hotspot — closest, best RSSI */
+    { "iPhone",         "aj3r83520r6bz" },  /* iPhone hotspot — closest, best RSSI (case-sensitive — iOS broadcasts "iPhone") */
     { "Ohad2.4",        "paypal324"     },  /* home AP */
     { "Sightsys_SEC24", "0542584033"    },  /* office AP */
 };
