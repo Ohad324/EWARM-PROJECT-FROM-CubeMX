@@ -269,7 +269,12 @@ def open_youtube(video_id: str, title: str, artist: str) -> None:
     # instead of reusing the existing Chrome window, making it trackable
     # so we can close it when the next song is requested.
     _chrome_proc = subprocess.Popen(
-        [chrome, f"--user-data-dir={CHROME_PROFILE_DIR}", url],
+        [chrome,
+         f"--user-data-dir={CHROME_PROFILE_DIR}",
+         # Bypass Chrome's "no autoplay-with-sound without user gesture" policy
+         # so YouTube starts playing audio immediately on the voice-triggered tab.
+         "--autoplay-policy=no-user-gesture-required",
+         url],
         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP
     )
     # Save PID to file so the next session can close this window even after Python restarts

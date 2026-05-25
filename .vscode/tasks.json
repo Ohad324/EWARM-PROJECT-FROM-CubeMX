@@ -33,10 +33,7 @@
 					]
 				}
 			},
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
+			"group": "build",
 			"presentation": {
 				"reveal": "always",
 				"panel": "dedicated",
@@ -254,7 +251,9 @@
 			"options": {
 				"shell": {
 					"executable": "cmd.exe",
-					"args": ["/c"]
+					"args": [
+						"/c"
+					]
 				}
 			},
 			"group": "build",
@@ -304,7 +303,10 @@
 				}
 			},
 			"isBackground": true,
-			"group": "none",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"presentation": {
 				"reveal": "always",
 				"panel": "dedicated",
@@ -326,6 +328,32 @@
 					]
 				}
 			},
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated",
+				"clear": true,
+				"showReuseMessage": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "NORA Bridge (ntfy.sh relay — bypass iPhone hotspot)",
+			"detail": "ONE-PRESS PC services launcher: kills any prior youtube_player.py + bridge.py, frees ports 5000/5001, installs 'requests' if missing, starts youtube_player.py in a new window (so port 5000 binds), then runs bridge.py in this panel. Required for NORA music search when on iPhone hotspot (BUG-004).",
+			"type": "shell",
+			"command": "$ErrorActionPreference = 'Continue'; try { & python -m pip show requests >$null 2>&1; if ($LASTEXITCODE -ne 0) { Write-Host '[task] installing requests...'; & python -m pip install requests } } catch { Write-Host \"[task] requests check skipped: $_\" }; try { Stop-ScheduledTask -TaskName 'NORA_NtfyMusicBridge' -ErrorAction SilentlyContinue } catch {}; Write-Host '[task] step 1: finding prior python service instances'; try { $killed = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { ($_.Name -eq 'python.exe' -or $_.Name -eq 'pythonw.exe') -and ($_.CommandLine -like '*bridge.py*' -or $_.CommandLine -like '*youtube_player.py*') }); if ($killed.Count -gt 0) { Write-Host ('[task] killing ' + $killed.Count + ' prior service(s)'); $killed | ForEach-Object { try { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } catch {} } } else { Write-Host '[task] no prior services found' } } catch { Write-Host \"[task] kill-services skipped: $_\" }; Write-Host '[task] step 2: freeing port 5000 if held by non-system process'; try { Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 } | ForEach-Object { try { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } catch {} } } catch { Write-Host \"[task] port 5000 cleanup skipped: $_\" }; Write-Host '[task] step 3: freeing UDP port 5001'; try { Get-NetUDPEndpoint -LocalPort 5001 -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 } | ForEach-Object { try { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } catch {} } } catch { Write-Host \"[task] port 5001 cleanup skipped: $_\" }; Start-Sleep -Milliseconds 500; Write-Host '[task] step 4: starting youtube_player.py in new window'; try { Start-Process python -ArgumentList '${workspaceFolder}\\tools\\youtube_player.py' -ErrorAction Stop; Write-Host '[task] youtube_player.py launched OK' } catch { Write-Host \"[task] FAILED to launch youtube_player.py: $_\" -ForegroundColor Red }; Write-Host '[task] step 5: waiting 3 sec for port 5000 to bind'; Start-Sleep -Seconds 3; $listen = $null; try { $listen = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue } catch {}; if ($listen) { Write-Host '[task] youtube_player.py is LISTENING on port 5000 (OK)' } else { Write-Host '[task] WARNING: nothing listening on port 5000 - youtube_player.py crashed or slow to start' }; Write-Host '[task] step 6: starting bridge.py (this panel)'; & python C:\\Tools\\ntfy-music-bridge\\bridge.py",
+			"options": {
+				"shell": {
+					"executable": "powershell.exe",
+					"args": [
+						"-NoProfile",
+						"-ExecutionPolicy",
+						"Bypass",
+						"-Command"
+					]
+				}
+			},
+			"isBackground": true,
 			"group": "build",
 			"presentation": {
 				"reveal": "always",

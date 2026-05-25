@@ -2,7 +2,7 @@
  * command_router.c — voice command keyword router (NORA/ESP32 side)
  *
  * Receives a transcript string from CloudUpload_Transcribe() and applies
- * three routing rules in order:
+ * the routing rules in order:
  *
  *   Rule A1 — "play": music_request() → YouTube search via music_task (voice path)
  *   Rule A2 — stop, pause, next, previous, volume
@@ -11,7 +11,11 @@
  *   Rule B — DISPLAY keywords: show, display, screen, clear, update
  *             → UART "CMD:<transcript>\n" to STM32
  *
- *   Rule C — No match
+ *   Rule D — Bare song / artist name (no "play" prefix), ≥3 non-space chars
+ *             → music_request(<whole transcript>) — treated as a YouTube search
+ *             e.g. "doors", "Zohar Argov", "Beatles"
+ *
+ *   Rule C — No match (transcript too short / garbage)
  *             → UART "CMD:UNKNOWN\n" + ESP_LOG debug print
  *
  * ASSUMPTIONS:
@@ -142,6 +146,33 @@ static void RouteToSTM32(const char *transcript)
     SendUart(msg);
 }
 
+/* ── Rule D — bare-name fallback to music search ────────────────────────────
+ * If transcript doesn't match any explicit rule AND has enough characters
+ * to be meaningful, treat it as a song/artist search.  Rationale: the
+ * wake-word ("Hey Noa") already verifies user intent, and the 3-sec STT
+ * recording window scopes the utterance, so requiring an explicit "play"
+ * prefix is redundant.  Filters out very short transcripts ("the", "yes",
+ * noise) to limit false-positive YouTube searches. */
+#define RULE_D_MIN_NONSPACE_CHARS  3u
+
+static bool LooksLikeMusicQuery(const char *transcript)
+{
+    if (!transcript) { return false; }
+    size_t chars = 0;
+    for (const char *p = transcript; *p; p++)
+    {
+        if (*p != ' ' && *p != '\t' && *p != '\n' && *p != '\r') { chars++; }
+        if (chars >= RULE_D_MIN_NONSPACE_CHARS) { return true; }
+    }
+    return false;
+}
+
+static void RouteAsMusicSearch(const char *transcript)
+{
+    ESP_LOGI(TAG, "Rule D → music_request (bare name): \"%s\"", transcript);
+    music_request(transcript);
+}
+
 /* ── Rule C — unknown command ─────────────────────────────────────────────── */
 static void RouteUnknown(const char *transcript)
 {
@@ -196,8 +227,12 @@ void CommandRouter_Route(const char *transcript)
     {
         RouteToSTM32(transcript);       /* Rule B */
     }
+    else if (LooksLikeMusicQuery(transcript))
+    {
+        RouteAsMusicSearch(transcript); /* Rule D — bare song / artist name */
+    }
     else
     {
-        RouteUnknown(transcript);       /* Rule C */
+        RouteUnknown(transcript);       /* Rule C — too short to be a query */
     }
 }
